@@ -72,7 +72,7 @@ export class PackageRegistry {
       // Import config files from assets - adjust paths as needed
       const configModules: (() => Promise<any>)[] = [
         // Add your config file imports here
-        () => import('../../../../assets/implementation/items/PackageInstallerItem/Planning/package.json'),
+        () => import('../../../../assets/implementation/items/PackageInstallerItem/NewWorkspace/package.json'),
         () => import('../../../../assets/implementation/items/PackageInstallerItem/Sales/package.json'),
         () => import('../../../../assets/implementation/items/PackageInstallerItem/UnifiedAdminMonitoring/package.json'),
       ];
