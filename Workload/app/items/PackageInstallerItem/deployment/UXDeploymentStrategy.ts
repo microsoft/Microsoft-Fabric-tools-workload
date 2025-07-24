@@ -48,10 +48,12 @@ export class UXDeploymentStrategy extends DeploymentStrategy {
                                 this.deployment.workspace?.folder?.id, 
                                 itemNameSuffix);
         percValue +=percIteration
-      }
-      newPackageDeployment.status = DeploymentStatus.Succeeded;
+      }      
       newPackageDeployment.job.endTime = new Date();
-          
+      this.deployment = {
+        ...newPackageDeployment
+      }
+      return await this.updateDeploymentStatus()                
     } catch (error) {
       console.error(`Error in UX deployment: ${error}`);
       newPackageDeployment.status = DeploymentStatus.Failed;
