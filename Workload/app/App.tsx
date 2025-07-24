@@ -2,9 +2,9 @@ import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { HelloWorldItemEditor } from "./implementation/items/HelloWorldItem/HelloWorldItemEditor";
-import { PackageInstallerItemEditor } from "./implementation/items/PackageInstallerItem/PackageInstallerItemEditor";
-import { PackageInstallerDeployDialogWrapper } from "./implementation/items/PackageInstallerItem/components/PackageInstallerDeployDialog";
+import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEditor";
+import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
+import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 
 /*
     Add your Item Editor in the Route section of the App function below

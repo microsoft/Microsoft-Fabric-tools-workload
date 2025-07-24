@@ -1,7 +1,7 @@
 {
   "id": "FUAM",
   "displayName": "Unified Admin Monitoring",
-  "icon": "/assets/implementation/items/PackageInstallerItem/UnifiedAdminMonitoring/icon.png",
+  "icon": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/icon.png",
   "description": "Solution accelerator, which can help you implement a monitoring solution within Fabric",
   "deploymentConfig": {
       "type": "SparkNotebook",
@@ -9,7 +9,7 @@
       "suffixItemNames": false,  
       "deploymentFile": {
         "payloadType": "AssetLink",
-        "payload": "/assets/implementation/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"
+        "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"
       }      
   },  
   "items": [

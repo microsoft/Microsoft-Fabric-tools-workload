@@ -1,6 +1,6 @@
 
 import { PackageDeployment, Package, PackageInstallerItemDefinition, PackageItemDefinition, PackageItemDefinitionPayloadType, PackageItem, PackageItemDefinitionPart, WorkspaceConfig, DeploymentStatus, DeployedItem } from "../PackageInstallerItemModel";
-import { ItemWithDefinition } from "../../../../implementation/controller/ItemCRUDController";
+import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
 import { ItemDefinition } from "@ms-fabric/workload-client";
 import { Item } from "../../../clients/FabricPlatformTypes";

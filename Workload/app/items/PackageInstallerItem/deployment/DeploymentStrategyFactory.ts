@@ -5,7 +5,7 @@ import { SparkLivyDeploymentStrategy } from "./SparkLivyDeploymentStrategy";
 import { SparkNotebookDeploymentStrategy } from "./SparkNotebookDeploymentStrategy";
 import { PackageDeployment, Package, DeploymentType, PackageInstallerItemDefinition } from "../PackageInstallerItemModel";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
-import { ItemWithDefinition } from "src/implementation/controller/ItemCRUDController";
+import { ItemWithDefinition } from "src/controller/ItemCRUDController";
 
 // Deployment Factory
 export class DeploymentStrategyFactory {

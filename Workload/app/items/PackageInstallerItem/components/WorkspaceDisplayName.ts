@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Body1, Text } from "@fluentui/react-components";
-import { navigateToWorkspace } from "../../../../implementation/controller/NavigationController";
+import { navigateToWorkspace } from "../../../controller/NavigationController";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
 
 // Component to fetch and display workspace name

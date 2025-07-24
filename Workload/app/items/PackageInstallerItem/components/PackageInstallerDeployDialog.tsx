@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { PageProps } from "../../../../App";
+import { PageProps } from "../../../App";
 import { Button, Text, Input } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "react-router-dom";
-import { callDialogClose } from "../../../../implementation/controller/DialogController";
+import { callDialogClose } from "../../../controller/DialogController";
 import { CloseMode } from "@ms-fabric/workload-client";
 import { DeploymentLocation, WorkspaceConfig } from "../PackageInstallerItemModel";
 import { CapacityDropdown } from "./CapacityDropdown";

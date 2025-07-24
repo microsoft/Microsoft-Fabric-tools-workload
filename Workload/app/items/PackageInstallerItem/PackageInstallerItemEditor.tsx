@@ -17,7 +17,7 @@ import { PackageInstallerItemEditorRibbon } from "./PackageInstallerItemEditorRi
 import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
-import "./../../../styles.scss";
+import "./../../styles.scss";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus, DeploymentType } from "./PackageInstallerItemModel";
 import { PackageInstallerItemEditorEmpty } from "./PackageInstallerItemEditorEmpty";

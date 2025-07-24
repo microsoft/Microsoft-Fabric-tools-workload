@@ -1,0 +1,207 @@
+{
+    "id": "SemanticLinkLabs",
+    "displayName": "Semantic Link Labs",
+    "icon": "/assets/items/PackageInstallerItem/SemanticLinkLabs/icon.png",
+    "description": "Deploys several notebooks that help you get started with Semantic Link Labs.",
+    "deploymentConfig": {
+        "type": "UX",
+        "suffixItemNames": true 
+    },
+    "items": [
+      {
+        "displayName": "Best Practice Analyzer Report",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Best%20Practice%20Analyzer%20Report.ipynb"              
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Capacity Migration",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Capacity%20Migration.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Delta Analyzer",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Capacity%20Migration.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Migration to Direct Lake",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Migration%20to%20Direct%20Lake.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Model Optimization",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Model%20Optimization.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Query Scale Out",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Query%20Scale%20Out.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Report Analysis",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Report%20Analysis.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "SQL",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/SQL.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Semantic Model Management",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Semantic%20Model%20Management.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Semantic Model Refresh",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Semantic%20Model%20Refresh.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": ""
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Service Principal",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Service%20Principal.ipynb"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Tabular Object Model",
+        "type": "Notebook",
+        "description": "",
+        "definition":{
+          "format": "ipynb",
+          "parts": [
+            {
+              "path": "notebook-content.ipynb",
+              "payloadType": "LinkedFile",
+              "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Tabular%20Object%20Model.ipynb"
+            }
+          ]
+        }
+      }         
+    ]
+}

@@ -1,11 +1,11 @@
 import React from "react";
 import { Stack } from "@fluentui/react";
 import { Text } from "@fluentui/react-components";
-import "./../../../styles.scss";
+import "./../../styles.scss";
 import { PackageInstallerItemDefinition} from "./PackageInstallerItemModel";
 import { PackageSelectionView } from "./PackageSelectionView";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { ItemWithDefinition } from "src/implementation/controller/ItemCRUDController";
+import { ItemWithDefinition } from "src/controller/ItemCRUDController";
 
 interface PackageInstallerItemEmptyStateProps {
   context: PackageInstallerContext,
@@ -31,7 +31,7 @@ export const PackageInstallerItemEditorEmpty: React.FC<PackageInstallerItemEmpty
     <Stack className="empty-item-container" horizontalAlign="center" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
-          src="/assets/implementation/items/PackageInstallerItem/EditorEmpty.png"
+          src="/assets/items/PackageInstallerItem/EditorEmpty.png"
           alt="Empty item illustration"
           className="empty-item-image"
         />

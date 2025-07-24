@@ -2,7 +2,7 @@
     "id": "NewWorkspace",
     "displayName": "Workspace with a Lakehouse",
     "description": "Set up a workspace that will configure every component that is to get started.",
-    "icon": "/assets/implementation/items/PackageInstallerItem/NewWorkspace/icon.png",
+    "icon": "/assets/items/PackageInstallerItem/NewWorkspace/icon.png",
     "deploymentConfig": {
         "type": "UX",
         "location": "NewWorkspace",

@@ -13,7 +13,7 @@ import {
   DocumentAdd24Regular,
 } from "@fluentui/react-icons";
 import { PageProps } from 'src/App';
-import './../../../styles.scss';
+import './../../styles.scss';
 import { t } from "i18next";
 
 const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorRibbonProps) => {

@@ -3,7 +3,7 @@ import { PackageDeployment, DeploymentStatus, PackageItemDefinitionPayloadType }
 import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
 import { getOneLakeFilePath, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
-import { EnvironmentConstants } from "../../../../constants";
+import { EnvironmentConstants } from "../../../constants";
 
 const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/jobs/DefaultPackageInstaller.py";
 
