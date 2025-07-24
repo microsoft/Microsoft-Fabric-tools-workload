@@ -17,7 +17,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Best%20Practice%20Analyzer%20Report.ipynb"              
             }
           ]
@@ -32,7 +32,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Capacity%20Migration.ipynb"
             }
           ]
@@ -47,7 +47,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Capacity%20Migration.ipynb"
             }
           ]
@@ -62,7 +62,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Migration%20to%20Direct%20Lake.ipynb"
             }
           ]
@@ -77,7 +77,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Model%20Optimization.ipynb"
             }
           ]
@@ -92,7 +92,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Query%20Scale%20Out.ipynb"
             }
           ]
@@ -107,7 +107,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Report%20Analysis.ipynb"
             }
           ]
@@ -122,7 +122,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/SQL.ipynb"
             }
           ]
@@ -137,7 +137,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Semantic%20Model%20Management.ipynb"
             }
           ]
@@ -152,23 +152,8 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Semantic%20Model%20Refresh.ipynb"
-            }
-          ]
-        }
-      },
-      {
-        "displayName": "",
-        "type": "Notebook",
-        "description": "",
-        "definition":{
-          "format": "ipynb",
-          "parts": [
-            {
-              "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
-              "payload": ""
             }
           ]
         }
@@ -182,7 +167,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Service%20Principal.ipynb"
             }
           ]
@@ -197,7 +182,7 @@
           "parts": [
             {
               "path": "notebook-content.ipynb",
-              "payloadType": "LinkedFile",
+              "payloadType": "Link",
               "payload": "https://raw.githubusercontent.com/microsoft/semantic-link-labs/refs/heads/main/notebooks/Tabular%20Object%20Model.ipynb"
             }
           ]

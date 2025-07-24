@@ -9,6 +9,7 @@ import {
   TableCell,
   Text,
   Button,
+  ProgressBar,
 } from "@fluentui/react-components";
 import { DeleteRegular, PlayRegular } from "@fluentui/react-icons";
 import React, { useEffect, useState, useCallback } from "react";
@@ -50,6 +51,13 @@ export function PackageInstallerItemEditor(props: PageProps) {
   const [selectedTab, setSelectedTab] = useState<TabValue>("");
   const [selectedSolution, setSelectedDeployment] = useState<PackageDeployment | undefined>(undefined);
   const [context, setContext] = useState<PackageInstallerContext>(new PackageInstallerContext(workloadClient));
+  const [isDeploymentInProgress, setIsDeploymentInProgress] = useState<boolean>(false);
+  const [deploymentProgress, setDeploymentProgress] = useState<{
+    deploymentId: string;
+    packageName: string;
+    currentStep: string;
+    progress: number;
+  } | null>(null);
 
   // Helper function to update item definition immutably
   const updateItemDefinition = useCallback((updates: Partial<PackageInstallerItemDefinition>) => {
@@ -70,6 +78,36 @@ export function PackageInstallerItemEditor(props: PageProps) {
   useEffect(() => {
       loadDataFromUrl(pageContext, pathname);
     }, [pageContext, pathname]);
+
+  // Prevent navigation when deployment is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (isDeploymentInProgress) {
+        event.preventDefault();
+        event.returnValue = 'A deployment is currently in progress. Are you sure you want to leave?';
+        return event.returnValue;
+      }
+    };
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (isDeploymentInProgress) {
+        const confirmLeave = window.confirm('A deployment is currently in progress. Are you sure you want to leave?');
+        if (!confirmLeave) {
+          event.preventDefault();
+          // Push the current state back to prevent navigation
+          window.history.pushState(null, '', window.location.pathname);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isDeploymentInProgress]);
 
   async function saveItemWithSuccessDialog(definition?: PackageInstallerItemDefinition) {
     const successResult = await SaveItem(definition);
@@ -452,9 +490,27 @@ export function PackageInstallerItemEditor(props: PageProps) {
           ...result.workspaceConfig          
         };
       }
+
+      // Set deployment progress state
+      setIsDeploymentInProgress(true);
+      setDeploymentProgress({
+        deploymentId: deployment.id,
+        packageName: pack?.displayName || deployment.packageId,
+        currentStep: 'Initializing deployment...',
+        progress: 0
+      });
     
       // Start the specific deployment strategy
-      startDeployment(context, editorItem, deployment, handleDeploymentUpdate)
+      try {
+        await startDeployment(context, editorItem, deployment,           
+          handleDeploymentUpdate,
+          updateDeploymentProgress
+        );
+      } finally {
+        // Clear deployment progress state
+        setIsDeploymentInProgress(false);
+        setDeploymentProgress(null);
+      }
     } else {
       console.log("Deployment dialog was cancelled");
     }
@@ -515,7 +571,21 @@ async function addDeployment(packageId: string) {
       // Update the item definition and save changes
       updateItemDefinition(newItemDefinition);
       await SaveItem(newItemDefinition);
+      if(updatedDeployment.status === DeploymentStatus.Succeeded){
+        handleRefreshDeployments();
+      }
     }
+  }
+
+  /**
+   * Update deployment progress callback
+   */
+  function updateDeploymentProgress(step: string, progress: number) {
+    setDeploymentProgress(prev => prev ? {
+      ...prev,
+      currentStep: step,
+      progress: Math.max(0, Math.min(100, progress))
+    } : null);
   }
 
   if (isLoadingData) {
@@ -534,10 +604,29 @@ async function addDeployment(packageId: string) {
             refreshDeploymentsCallback={handleRefreshDeployments}
             uploadPackageCallback={uploadPackageJson}
             isSaveButtonEnabled={isUnsaved}
+            isDeploymentInProgress={isDeploymentInProgress}
             saveItemCallback={saveItemWithSuccessDialog}
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
         />
+        
+        {/* Deployment Progress Bar */}
+        {deploymentProgress && (
+          <Stack style={{ padding: '12px 16px', backgroundColor: '#f3f2f1', borderBottom: '1px solid #e1dfdd' }}>
+            <Text style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+              Deploying {deploymentProgress.packageName}...
+            </Text>
+            <ProgressBar 
+              value={deploymentProgress.progress}
+              max={100}
+              thickness="medium"
+            />
+            <Text style={{ fontSize: '12px', color: '#605e5c', marginTop: '4px' }}>
+              {deploymentProgress.currentStep}
+            </Text>
+          </Stack>
+        )}
+        
         <Stack className="main">
           {["empty"].includes(selectedTab as string) && (
             <span>
@@ -582,8 +671,13 @@ async function addDeployment(packageId: string) {
                       {editorItem.definition.deployments.map((deployment: PackageDeployment) => {
                         return (
                           <TableRow key={deployment.id} onClick={() => {
-                            setSelectedDeployment(deployment);
-                            setSelectedTab("deployment");
+                            if (!isDeploymentInProgress) {
+                              setSelectedDeployment(deployment);
+                              setSelectedTab("deployment");
+                            }
+                          }} style={{ 
+                            cursor: isDeploymentInProgress ? 'not-allowed' : 'pointer',
+                            opacity: isDeploymentInProgress && deploymentProgress?.deploymentId !== deployment.id ? 0.6 : 1
                           }}>
                             <TableCell>{deployment.id}</TableCell>
                             <TableCell>
@@ -615,6 +709,7 @@ async function addDeployment(packageId: string) {
                                   <Button
                                     icon={<PlayRegular />}
                                     appearance="subtle"
+                                    disabled={isDeploymentInProgress && deploymentProgress?.deploymentId === deployment.id}
                                     onClick={(e: React.MouseEvent) => handleStartDeployment(deployment, e)}
                                     aria-label={t('Start deployment')}
                                     title={t('Start deployment')}
@@ -623,8 +718,8 @@ async function addDeployment(packageId: string) {
                                 <Button
                                   icon={<DeleteRegular />}
                                   appearance="subtle"
-                                  disabled={deployment.status !== DeploymentStatus.Pending 
-                                    && deployment.status !== DeploymentStatus.Failed}                                   
+                                  disabled={isDeploymentInProgress || (deployment.status !== DeploymentStatus.Pending 
+                                    && deployment.status !== DeploymentStatus.Failed)}                                   
                                   onClick={(e: any) => {
                                     e.stopPropagation(); // Prevent row click from triggering
                                     handleRemoveDeployment(deployment.id);
@@ -659,12 +754,14 @@ function generateUniqueId(): string {
   return '' + Math.random().toString(36).substring(2, 9);
 }
 
-async function startDeployment( context: PackageInstallerContext, 
-                                        item: ItemWithDefinition<PackageInstallerItemDefinition>,  
-                                        deployment: PackageDeployment, 
-                                        onDeploymentUpdate?: (updatedPackage: PackageDeployment) => void) {
+async function startDeployment(context: PackageInstallerContext, 
+          item: ItemWithDefinition<PackageInstallerItemDefinition>, 
+          deployment: PackageDeployment, 
+          onDeploymentUpdate?:(updatedPackage: PackageDeployment) => void, 
+          updateDeploymentProgress?: (step: string, progress: number) => void) {
   console.log(`Starting deployment for package: ${deployment.id}`);
 
+  updateDeploymentProgress?.("Starting deployment", 0);
   // Create a new deployment object to avoid modifying the original
   var newDeployment:PackageDeployment = {
     ...deployment,
@@ -676,8 +773,8 @@ async function startDeployment( context: PackageInstallerContext,
   }; 
 
   try {
-    
     // This allows us to track the deployment status without affecting the original deployment object
+    updateDeploymentProgress?.("Validating config ....", 10);
     if (!newDeployment.workspace) {
       throw new Error("Deployment workspace is not defined");
     }
@@ -694,16 +791,22 @@ async function startDeployment( context: PackageInstallerContext,
         !item.definition?.lakehouseId) {
       throw new Error("Lakehouse ID is required for SparkLivy deployment but not provided in item definition.");
     }
+    //updating the deployment to InProgress
+    newDeployment.status = DeploymentStatus.InProgress
+    if (onDeploymentUpdate) {
+      onDeploymentUpdate(newDeployment);
+    }
 
     // Create the deployment strategy based on the package type
     const strategy = DeploymentStrategyFactory.createStrategy(
               context,
               item,
               pack,
-              newDeployment,
+              newDeployment,              
     );
     //set the updated deployment object
-    newDeployment = await strategy.deploy();
+    updateDeploymentProgress?.("Starting deployment ....", 20);
+    newDeployment = await strategy.deploy(updateDeploymentProgress);
 
     switch (newDeployment.status) {
       case DeploymentStatus.Succeeded:

@@ -5,7 +5,7 @@ import { PackageDeployment, DeploymentStatus } from "../PackageInstallerItemMode
 // UX Deployment Strategy
 export class UXDeploymentStrategy extends DeploymentStrategy {
   
-  async deploy(): Promise<PackageDeployment> {
+  async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
     console.log(`Deploying package via UX for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);
     
     // Check if items are defined in the package
@@ -20,7 +20,8 @@ export class UXDeploymentStrategy extends DeploymentStrategy {
     };
     
     try {
-      // Create workspace and folder if needed
+      // Create workspace and folder if needed      
+      updateDeploymentProgress("Creating Workspace enviroment ....", 30);
       const newWorkspace = await this.createWorkspaceAndFolder(this.deployment.workspace);
       newPackageDeployment.workspace = newWorkspace;
       newPackageDeployment.job = { 
@@ -35,19 +36,22 @@ export class UXDeploymentStrategy extends DeploymentStrategy {
       var itemNameSuffix: string | undefined = this.pack.deploymentConfig.suffixItemNames ? `_${this.deployment.id}` : undefined;
       console.log(`Creating items in workspace: ${newPackageDeployment.workspace.id}, folder: ${this.deployment.workspace?.folder?.id}, itemNameSuffix: ${itemNameSuffix}`);
       
+      var percIteration = 70/this.pack.items?.length
+      var percValue = 30;
       // Create each item defined in the package
       for (const itemDef of this.pack.items) {
         console.log(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`);
-
+        updateDeploymentProgress(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`, percValue);
         itemDef.description = this.pack.deploymentConfig.suffixItemNames ? `${itemDef.displayName}_${this.deployment.id}` : itemDef.displayName;
         await this.createItemUX(itemDef, 
                                 newPackageDeployment.workspace.id, 
                                 this.deployment.workspace?.folder?.id, 
                                 itemNameSuffix);
-}
-      newPackageDeployment.status = DeploymentStatus.InProgress;
+        percValue +=percIteration
+      }
+      newPackageDeployment.status = DeploymentStatus.Succeeded;
       newPackageDeployment.job.endTime = new Date();
-            
+          
     } catch (error) {
       console.error(`Error in UX deployment: ${error}`);
       newPackageDeployment.status = DeploymentStatus.Failed;

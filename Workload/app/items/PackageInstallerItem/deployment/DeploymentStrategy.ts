@@ -11,19 +11,19 @@ export abstract class DeploymentStrategy {
     protected context: PackageInstallerContext,
     protected item: ItemWithDefinition<PackageInstallerItemDefinition>,
     protected pack: Package,
-    protected deployment: PackageDeployment
+    protected deployment: PackageDeployment,    
   ) {}
 
   
 
   // Abstract method that each strategy must implement
-  abstract deploy(): Promise<PackageDeployment>;
+  abstract deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment>;
 
   //Abstract method to update deployment status depending on the underlying strategy
   abstract updateDeploymentStatus(): Promise<PackageDeployment>;
 
   // Common functionality that all strategies can use
-  protected async createWorkspaceAndFolder(workspaceConfig: WorkspaceConfig): Promise<WorkspaceConfig> {
+  protected async createWorkspaceAndFolder(workspaceConfig: WorkspaceConfig): Promise<WorkspaceConfig> {    
     const fabricAPI =this.context.fabricPlatformAPIClient;
 
     const newWorkspaceConfig: WorkspaceConfig = {
@@ -73,6 +73,34 @@ export abstract class DeploymentStrategy {
     }
     return await response.blob();
   }
+
+ protected async getLinkContentAsBase64(url: string): Promise<string> {  
+  // Validate that the URL is absolute
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    throw new Error(`Invalid URL format. Expected absolute URL starting with http:// or https://, got: ${url}`);
+  }
+  
+  // Create a proper URL object to ensure it's valid
+  const validatedUrl = new URL(url);
+  console.log(`Validated URL: ${validatedUrl.toString()}`);
+  
+  const response = await fetch(validatedUrl.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch deployment file from link: ${response.status} ${response.statusText}`);
+  }
+  
+  // Always use arrayBuffer approach for consistent handling of both text and binary
+  const arrayBuffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  
+  // Convert bytes to binary string
+  let binaryString = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binaryString += String.fromCharCode(bytes[i]);
+  }
+  
+  return btoa(binaryString);        
+ }
 
   protected async getAssetContentAsBase64(path: string): Promise<string> {
     const response = await fetch(path);
@@ -161,33 +189,12 @@ export abstract class DeploymentStrategy {
    */
   private async getItemDefinitionPartContent(defPart: PackageItemDefinitionPart): Promise<string> {
 
-    let content: string;
     switch (defPart.payloadType) {
       case PackageItemDefinitionPayloadType.AssetLink:
         // Fetch content from asset and encode as base64 (handles both text and binary)
-        return await this.getAssetContentAsBase64(defPart.payload);
-        
+        return await this.getAssetContentAsBase64(defPart.payload);        
       case PackageItemDefinitionPayloadType.Link:
-        // Download content from HTTP link and encode as base64
-
-        const url = defPart.payload;
-        console.log(`Fetching deployment file from URL: ${url}`);
-        
-        // Validate that the URL is absolute
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw new Error(`Invalid URL format. Expected absolute URL starting with http:// or https://, got: ${url}`);
-        }
-        
-        // Create a proper URL object to ensure it's valid
-        const validatedUrl = new URL(url);
-        console.log(`Validated URL: ${validatedUrl.toString()}`);
-        
-        const response = await fetch(validatedUrl.toString());
-        if (!response.ok) {
-          throw new Error(`Failed to fetch deployment file from link: ${response.status} ${response.statusText}`);
-        }
-        content = await response.text();
-        return btoa(content);        
+        return await this.getLinkContentAsBase64(defPart.payload);
       case PackageItemDefinitionPayloadType.InlineBase64:
         // Use base64 payload directly
         return defPart.payload;

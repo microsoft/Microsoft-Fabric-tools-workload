@@ -5,7 +5,7 @@ import { DeployedItem, PackageDeployment, DeploymentStatus, PackageItem } from "
 export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
 
 
-  async deploy(): Promise<PackageDeployment> {
+  async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
     console.log(`Deploying package via Spark Notebook for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);
     
     if (!this.pack.deploymentConfig.deploymentFile) {
@@ -19,6 +19,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     
     try {
       // Create workspace and folder if needed
+      updateDeploymentProgress("Creating Workspace enviroment ....", 30);
       const newWorkspace = await this.createWorkspaceAndFolder(this.deployment.workspace);
       newPackageDeployment.workspace = newWorkspace;
       console.log(`Created workspace: ${newWorkspace.id} for deployment: ${this.deployment.id}`);
@@ -26,6 +27,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
       const depConfig = this.pack.deploymentConfig;
       const fabricAPI = this.context.fabricPlatformAPIClient;
       
+      updateDeploymentProgress("Deploying Notebook for further deployment  ....", 40);
       const nbItemDef:PackageItem = {
           displayName: `Deploy_${this.pack.id}`,
           type: "Notebook", // Spark Notebook item type
@@ -75,6 +77,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
 
 
       // Start a RunNotebook job on the created notebook
+      updateDeploymentProgress("Starting background deployment job  ....", 50);
       const jobInstanceId = await fabricAPI.scheduler.runOnDemandItemJob(
         newPackageDeployment.workspace.id,
         notebookItem.id,

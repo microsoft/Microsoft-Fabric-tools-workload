@@ -53,7 +53,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content={t("ItemEditor_Ribbon_Save_Label")}
         relationship="label">
         <ToolbarButton
-          disabled={!props.isSaveButtonEnabled}
+          disabled={!props.isSaveButtonEnabled || props.isDeploymentInProgress}
           aria-label={t("ItemEditor_Ribbon_Save_Label")}
           data-testid="item-editor-save-btn"
           icon={<Save24Regular />}
@@ -64,6 +64,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Add Configuration"
         relationship="label">
         <ToolbarButton
+          disabled={props.isDeploymentInProgress}
           aria-label="Add Configuration"
           data-testid="item-editor-add-config-btn"
           icon={<Add24Regular />}
@@ -74,6 +75,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Refresh Deployment Status"
         relationship="label">
         <ToolbarButton
+          disabled={props.isDeploymentInProgress}
           aria-label="Refresh Deployments"
           data-testid="item-editor-refresh-deployments-btn"
           icon={<ArrowSync24Regular />}
@@ -84,6 +86,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Upload Package JSON"
         relationship="label">
         <ToolbarButton
+          disabled={props.isDeploymentInProgress}
           aria-label="Upload Package JSON"
           data-testid="item-editor-upload-package-btn"
           icon={<DocumentAdd24Regular />}
@@ -96,7 +99,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Select Lakehous Configuration"
         relationship="label">
         <ToolbarButton
-          disabled={!props.isLakehouseConnectEnabled}
+          disabled={!props.isLakehouseConnectEnabled || props.isDeploymentInProgress}
           aria-label="Select Lakehouse"
           data-testid="item-editor-add-config-btn"
           icon={<Connector24Regular />}
@@ -115,6 +118,7 @@ export interface PackageInstallerItemEditorRibbonProps extends PageProps {
   uploadPackageCallback: () => Promise<void>;
   saveItemCallback: () => Promise<void>;
   isSaveButtonEnabled?: boolean;
+  isDeploymentInProgress?: boolean;
   onTabChange: (tabValue: TabValue) => void;
   selectedTab: TabValue;
 }

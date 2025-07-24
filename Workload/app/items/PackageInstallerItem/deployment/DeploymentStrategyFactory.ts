@@ -10,10 +10,10 @@ import { ItemWithDefinition } from "src/controller/ItemCRUDController";
 // Deployment Factory
 export class DeploymentStrategyFactory {
   static createStrategy(
-    context: PackageInstallerContext,
-    item: ItemWithDefinition<PackageInstallerItemDefinition>,
-    pack: Package,
-    deployment: PackageDeployment
+      context: PackageInstallerContext, 
+      item: ItemWithDefinition<PackageInstallerItemDefinition>, 
+      pack: Package, 
+      deployment: PackageDeployment
   ): DeploymentStrategy {
     console.info(`Creating deployment strategy for type: ${pack.deploymentConfig.type}, package: ${pack.id}, deployment: ${deployment.id}`);
     switch (pack.deploymentConfig.type) {
