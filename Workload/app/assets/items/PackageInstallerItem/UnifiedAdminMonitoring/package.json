@@ -6,7 +6,6 @@
   "deploymentConfig": {
       "type": "SparkNotebook",
       "location": "NewWorkspace",
-      "suffixItemNames": false,  
       "deploymentFile": {
         "payloadType": "AssetLink",
         "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"

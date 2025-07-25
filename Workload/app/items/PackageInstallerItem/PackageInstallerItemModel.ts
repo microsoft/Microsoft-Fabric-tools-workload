@@ -1,4 +1,4 @@
-import { Item } from "../../clients/FabricPlatformTypes";
+import { Item, ScheduleConfig } from "../../clients/FabricPlatformTypes";
 import { ItemReference } from "../../controller/ItemCRUDController";
 
 export interface PackageInstallerItemDefinition  {
@@ -59,13 +59,13 @@ export interface Package {
   displayName: string;
   description?: string;
   icon?: string;
-  deploymentConfig: DeploymentConfiguration; // Configuration for the deployment
+  deploymentConfig?: DeploymentConfiguration; // Configuration for the deployment
   items?: PackageItem[];
 }
 
 export interface DeploymentConfiguration {
-  type: DeploymentType; // Optional deployment type, default is UX
-  location: DeploymentLocation; // Optional location type, default is NewWorkspace
+  type?: DeploymentType; // Optional deployment type, default is UX
+  location?: DeploymentLocation; // Optional location type, default is NewWorkspace
   deploymentFile?: DeploymentFile; // Optional reference to a deployment file
   suffixItemNames?: boolean; // Flag to indicate if item names should be prefixed with the package name
   ignoreItemDefinitions?: boolean; // Flag to indicate if item definitions should be ignored
@@ -81,7 +81,7 @@ export interface DeploymentParameter {
 }
 
 export interface DeploymentFile {
-  payloadType: PackageItemDefinitionPayloadType;
+  payloadType: PackageItemPayloadType;
   payload: string;
 }
 
@@ -103,9 +103,18 @@ export interface PackageItem {
   displayName: string;
   description: string;
   definition?: PackageItemDefinition; // The item definition that is used to create the item
+  data?: PackageItemData; // potential data that should be uploaded to the OneLake folders of this item
+  creationPayload?: any; // The payload that is used to create the item 
+  schedules?: ItemSchedule[]; // Optional schedules for the item
 }
 
-export enum PackageItemDefinitionPayloadType {
+export interface ItemSchedule {
+  enabled: boolean; // Flag to indicate if the schedule is enabled
+  jobType: string; /// The type of job that is scheduled, e.g., "SparkJob"
+  configuration: ScheduleConfig; // The schedule configuration
+}
+
+export enum PackageItemPayloadType {
   AssetLink = "AssetLink", // Link to an asset in the application
   Link = "Link", // Link to an external resource
   InlineBase64 = "InlineBase64" // Inline base64 encoded content
@@ -113,11 +122,35 @@ export enum PackageItemDefinitionPayloadType {
 
 export interface PackageItemDefinition {
   format?: string; // Format of the item definition, e.g., "ipynb" for Jupyter Notebooks
-  parts?: PackageItemDefinitionPart[]; // Parts of the item definition, e.g., file paths and payloads
+  parts?: PackageItemPart[]; // Parts of the item definition, e.g., file paths and payloads
+  interceptor?: ItemPartInterceptor; // Optional interceptor for the item data
 }
 
-export interface PackageItemDefinitionPart {
-  payloadType: PackageItemDefinitionPayloadType;
+export interface ItemPartInterceptor {
+  type: ItemPartInterceptorType; // Type of the interceptor, e.g., "PythonScript"
+  config: IItemPartInterceptorConfig; // Configuration for the internal script
+}
+
+export enum ItemPartInterceptorType {
+  StringReplace = "StringReplace", // Interceptor for string replacements
+}
+
+export interface IItemPartInterceptorConfig {
+  type: string; // The type of interceptor
+}
+
+export interface StringReplacementInterceptorConfig extends IItemPartInterceptorConfig {
+  type: "StringReplacement"; // Override to specify the exact type
+  replacements: Record<string, string>; // Key-value pairs for string replacements
+}
+
+export interface PackageItemData {
+  files?: PackageItemPart[];
+  interceptor?: ItemPartInterceptor; // Optional interceptor for the item data
+}
+
+export interface PackageItemPart {
+  payloadType: PackageItemPayloadType;
   payload: string;
   path: string;
 }

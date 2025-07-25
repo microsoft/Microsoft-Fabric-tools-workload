@@ -139,6 +139,49 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
                       <div style={{ marginLeft: "0px" }}>
                         <Caption1>{item.description}</Caption1>
                       </div>
+                      {item.data?.files && item.data.files.length > 0 && (
+                        <div style={{ marginLeft: "0px", marginTop: "4px" }}>
+                          <Caption1><strong>{t("Data Files")} ({item.data.files.length}):</strong></Caption1>
+                          <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                            {item.data.files.map((dataFile, dataIndex) => (
+                              <li key={dataIndex} style={{ marginBottom: "2px" }}>
+                                <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
+                                  {dataFile.path}
+                                </Caption1>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {item.schedules && item.schedules.length > 0 && (
+                        <div style={{ marginLeft: "0px", marginTop: "4px" }}>
+                          <Caption1><strong>{t("Schedules")} ({item.schedules.length}):</strong></Caption1>
+                          <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                            {item.schedules.map((schedule, scheduleIndex) => {
+                              const config = schedule.configuration;
+                              let scheduleDetails = "";
+                              
+                              if (config.type === 'Daily' && 'times' in config && Array.isArray(config.times)) {
+                                scheduleDetails = ` at ${config.times.join(", ")}`;
+                              } else if (config.type === 'Weekly' && 'weekdays' in config && 'times' in config && Array.isArray(config.weekdays) && Array.isArray(config.times)) {
+                                scheduleDetails = ` on ${config.weekdays.join(", ")} at ${config.times.join(", ")}`;
+                              } else if (config.type === 'Cron' && 'interval' in config) {
+                                scheduleDetails = ` every ${config.interval} minutes`;
+                              }
+                              
+                              return (
+                                <li key={scheduleIndex} style={{ marginBottom: "2px" }}>
+                                  <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
+                                    {schedule.jobType} - {config.type}
+                                    {scheduleDetails}
+                                    {!schedule.enabled && " (Disabled)"}
+                                  </Caption1>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}

@@ -1,0 +1,37 @@
+{
+  "id": "DAXPerformanceTesting",
+  "displayName": "DAX Performance Testing Admin Monitoring",
+  "icon": "/assets/items/PackageInstallerItem/DAXPerformanceTesting/icon.png",
+  "description": "Adds a notebook and data that is designed to help you with DAX Performance Testing.",
+  "items": [
+    {
+      "displayName": "DAX_Performance_Testing_LH",
+      "description": "Stores the performance data and the queries that should be evaluated.",
+      "type": "Lakehouse",
+      "data": {
+        "files":[
+          {
+            "path": "/Files/DAXQueries.xlsx",
+            "payloadType": "AssetLink",
+            "payload": "/assets/items/PackageInstallerItem/DAXPerformanceTesting/data/DAX_Performance_Testing_LH/DAXQueries.xlsx"
+          }
+        ]
+      }
+    },
+    {
+      "displayName": "DAX_Performance_Testing_NB",
+      "description": "Notebook that runs the DAX Performance Testing.",
+      "type": "Notebook",
+      "definition": {
+        "format": "ipynb",
+        "parts": [
+          {
+            "path": "notebook-content.ipynb",
+            "payloadType": "Link",
+            "payload": "https://raw.githubusercontent.com/microsoft/fabric-toolbox/refs/heads/main/tools/DAXPerformanceTesting/DAXPerformanceTesting.ipynb"
+          }
+        ]
+      }
+    }
+  ]
+}

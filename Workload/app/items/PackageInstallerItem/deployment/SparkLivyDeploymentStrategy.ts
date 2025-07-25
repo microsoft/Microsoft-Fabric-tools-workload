@@ -1,5 +1,5 @@
 import { DeploymentStrategy } from "./DeploymentStrategy";
-import { PackageDeployment, DeploymentStatus, PackageItemDefinitionPayloadType } from "../PackageInstallerItemModel";
+import { PackageDeployment, DeploymentStatus, PackageItemPayloadType } from "../PackageInstallerItemModel";
 import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
 import { getOneLakeFilePath, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
@@ -123,15 +123,15 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
         };
         
         switch (itemDefinitionReference.payloadType) {
-          case PackageItemDefinitionPayloadType.AssetLink:
+          case PackageItemPayloadType.AssetLink:
             definitionPart.payload = await this.copyAssetToOneLake(itemDefinitionReference.payload);
             definitionPart.payloadType = SparkDeploymentReferenceType.OneLake;
             break;
-          case PackageItemDefinitionPayloadType.Link:
+          case PackageItemPayloadType.Link:
             definitionPart.payload = itemDefinitionReference.payload;
             definitionPart.payloadType = SparkDeploymentReferenceType.Link;
             break;
-          case PackageItemDefinitionPayloadType.InlineBase64:
+          case PackageItemPayloadType.InlineBase64:
             definitionPart.payload = itemDefinitionReference.payload;
             definitionPart.payloadType = SparkDeploymentReferenceType.InlineBase64;
             break;
@@ -153,9 +153,9 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     let deploymentFileDestPath;
     if (!deploymentConfig.deploymentFile) {
       deploymentFileDestPath = await this.copyAssetToOneLake(defaultDeploymentSparkFile);
-    } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemDefinitionPayloadType.AssetLink) {
+    } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemPayloadType.AssetLink) {
       deploymentFileDestPath = await this.copyAssetToOneLake(deploymentConfig.deploymentFile.payload);
-    } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemDefinitionPayloadType.Link) {
+    } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemPayloadType.Link) {
       deploymentFileDestPath = await this.copyLinkToOneLake(deploymentConfig.deploymentFile.payload);
     }
 

@@ -5,57 +5,64 @@ export type ConfiguredPackages = {
 };
 
 // Helper function to convert config JSON to Package interface
-function convertConfigToPackage(config: any): Package {
-  const deploymentConfig = config.deploymentConfig || {};
+function convertConfigToPackage(pack: any): Package {
+  // Ensure deploymentConfig is defined;
+  const deploymentConfig = {
+    ...pack.deploymentConfig
+  }
   // Convert string deployment type to enum
-  let deploymentType: DeploymentType;
   if (typeof deploymentConfig.type === 'string') {
     switch (deploymentConfig.type) {
       case "UX":
-        deploymentType = DeploymentType.UX;
+        deploymentConfig.deploymentType = DeploymentType.UX;
         break;
       case "SparkLivy":
-        deploymentType = DeploymentType.SparkLivy;
+        deploymentConfig.deploymentType = DeploymentType.SparkLivy;
         break;
       case "SparkNotebook":
-        deploymentType = DeploymentType.SparkNotebook;
+        deploymentConfig.deploymentType = DeploymentType.SparkNotebook;
         break;
       default:
         throw new Error(`Unsupported deployment type: ${deploymentConfig.type}`);
     }
   } else {
-    deploymentType = deploymentConfig.type || DeploymentType.UX; // Default to UX if not specified
+    deploymentConfig.deploymentType = deploymentConfig.type || DeploymentType.UX; // Default to UX if not specified
   }
 
   // Convert string location type to enum  
-  let locationType: DeploymentLocation;
   if (typeof deploymentConfig.location === 'string') {
   switch (deploymentConfig.location) {
       case "Default":
-        locationType = DeploymentLocation.Default;
+        deploymentConfig.location = DeploymentLocation.Default;
         break;
       case "NewWorkspace":
-        locationType = DeploymentLocation.NewWorkspace;
+        deploymentConfig.location = DeploymentLocation.NewWorkspace;
         break;
       default:
-        locationType = DeploymentLocation.Default; // Default to Default if not specified
+        deploymentConfig.location = DeploymentLocation.Default; // Default to Default if not specified
     }
   } else {
-    locationType = deploymentConfig.location || DeploymentLocation.Default;
+    deploymentConfig.location = deploymentConfig.location || DeploymentLocation.Default;
+  }
+
+  if(deploymentConfig.suffixItemNames === undefined) {
+    switch (deploymentConfig.location) {
+      case DeploymentLocation.Default:
+        deploymentConfig.suffixItemNames = true; //need to make sure we suffix for item name conflicts
+        break;
+      case DeploymentLocation.NewWorkspace:
+        deploymentConfig.suffixItemNames = false;
+        break;
+    }
   }
 
   return {
-    id: config.id,
-    deploymentConfig: {
-      ...config.deploymentConfig,
-      type: deploymentType,
-      location: locationType,
-      suffixItemNames: config.deploymentConfig.suffixItemNames || false,
-    },
-    displayName: config.displayName,
-    description: config.description,
-    icon: config.icon,
-    items: config.items || []
+    id: pack.id,
+    deploymentConfig: deploymentConfig,
+    displayName: pack.displayName,
+    description: pack.description,
+    icon: pack.icon,
+    items: pack.items || []
   };
 }
 
@@ -75,6 +82,9 @@ export class PackageRegistry {
         () => import('../../../assets/items/PackageInstallerItem/NewWorkspace/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/SemanticLinkLabs/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/UnifiedAdminMonitoring/package.json'),
+        () => import('../../../assets/items/PackageInstallerItem/SemanticModelAudit/package.json'),
+        () => import('../../../assets/items/PackageInstallerItem/DAXPerformanceTesting/package.json'),
+        () => import('../../../assets/items/PackageInstallerItem/MDSF/package.json'),
       ];
 
       // Load all config files

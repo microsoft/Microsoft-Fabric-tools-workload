@@ -3,7 +3,7 @@ import { callAcquireFrontendAccessToken } from "../controller/AuthenticationCont
 import { EnvironmentConstants } from "../constants";
 import { FABRIC_BASE_SCOPES } from "./FabricPlatformScopes";
 
-
+//TODO error handling needs to improve for all functions
 
 export async function checkIfFileExists(workloadClient: WorkloadClientAPI, filePath: string): Promise<boolean> {
     const url = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${filePath}?resource=file`;
@@ -25,6 +25,43 @@ export async function checkIfFileExists(workloadClient: WorkloadClientAPI, fileP
     } catch (ex: any) {
         console.error(`checkIfFileExists failed for filePath: ${filePath}. Error: ${ex.message}`);
         return false;
+    }
+}
+
+export async function writeToOneLakeFileAsBase64(workloadClient: WorkloadClientAPI, filePath: string, content: string): Promise<void> {
+    const url = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${filePath}?resource=file`;
+    let accessToken: AccessToken
+    try {
+        accessToken = await callAcquireFrontendAccessToken(workloadClient,
+            FABRIC_BASE_SCOPES.ONELAKE_STORAGE);
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${accessToken.token}` },
+            body: Buffer.from(content).toString("base64")
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        console.log(`writeToOneLakeFileAsBase64 succeeded for filePath: ${filePath}`);
+    } catch (ex: any) {
+        console.error(`writeToOneLakeFileAsBase64 failed for filePath: ${filePath}. Error: ${ex.message}`);
+    }
+}
+
+export async function readOneLakeFileAsBase64(workloadClient: WorkloadClientAPI, filePath: string): Promise<string> {
+    // This function reads a file from OneLake as a base64 encoded string.
+    const url = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${filePath}`;
+    try {
+        const accessToken: AccessToken = await callAcquireFrontendAccessToken(workloadClient,
+            FABRIC_BASE_SCOPES.ONELAKE_STORAGE);
+        const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${accessToken.token}` }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const content = await response.text();
+        console.log(`readOneLakeFileAsBase64 succeeded for filePath: ${filePath}`);
+        return Buffer.from(content, "base64").toString("utf8");
+    } catch (ex: any) {
+        console.error(`readOneLakeFileAsBase64 failed for filePath: ${filePath}. Error: ${ex.message}`);
+        return "";
     }
 }
 

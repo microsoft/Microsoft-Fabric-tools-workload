@@ -1,9 +1,11 @@
 
-import { PackageDeployment, Package, PackageInstallerItemDefinition, PackageItemDefinition, PackageItemDefinitionPayloadType, PackageItem, PackageItemDefinitionPart, WorkspaceConfig, DeploymentStatus, DeployedItem } from "../PackageInstallerItemModel";
+import { PackageDeployment, Package, PackageInstallerItemDefinition, PackageItemDefinition, PackageItemPayloadType, PackageItem, PackageItemPart, WorkspaceConfig, DeploymentStatus, DeployedItem, ItemPartInterceptor } from "../PackageInstallerItemModel";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
 import { ItemDefinition } from "@ms-fabric/workload-client";
-import { Item } from "../../../clients/FabricPlatformTypes";
+import { CreateScheduleRequest, Item } from "../../../clients/FabricPlatformTypes";
+import { getOneLakeFilePath, writeToOneLakeFileAsBase64 } from "../../../clients/OneLakeClient";
+import { InterceptorFactory } from "../package/InterceptorFactory";
 
 // Abstract base class for deployment strategies
 export abstract class DeploymentStrategy {
@@ -131,41 +133,121 @@ export abstract class DeploymentStrategy {
    * @param direct If true, the item will be created directly in the create call if false two api calls for create and update definition will be used. In this case the returned item cann be null because the call is async
    * @returns 
    */
-  protected async createItemUX(item: PackageItem, workspaceId: string, folderId: string, itemNameSuffix: string, direct?: boolean): Promise<Item> {
+  protected async createItemUX(item: PackageItem, workspaceId: string, folderId: string, itemNameSuffix: string): Promise<Item> {
 
-    let itemDef = undefined;
-    if(!this.pack.deploymentConfig.ignoreItemDefinitions) {
-      itemDef = await this.convertPackageItemDefinition(item.definition);
-    }
-    let newItem = await this.context.fabricPlatformAPIClient.items.createItem(
-        workspaceId,
-        {
-          displayName: itemNameSuffix ? `${item.displayName}${itemNameSuffix}` : item.displayName,
-          type: item.type,
-          description: item.description || '',
-          folderId: folderId || undefined,
-          definition: (direct && itemDef?.parts?.length > 0) ? itemDef : undefined,
-        }
-      );
-    if(!direct && itemDef?.parts?.length > 0) {
+    var newItem = await this.createItemDefinitionUX(item, workspaceId, folderId, itemNameSuffix);
+    await this.createItemDataUX(item, workspaceId, newItem)
+    await this.createItemSchedulesUX(item, workspaceId, newItem.id);
+        
+    return newItem;
+  }
+
+  protected async createItemDefinitionUX(packItem: PackageItem, 
+    workspaceId: string, folderId: string, itemNameSuffix: 
+    string): Promise<Item> {
+
+    let newItem;
+    if(packItem.creationPayload){
+      // If creation payload is provided we create the item with the payload
+      newItem = await this.context.fabricPlatformAPIClient.items.createItem(
+          workspaceId,
+          {
+            displayName: itemNameSuffix ? `${packItem.displayName}${itemNameSuffix}` : packItem.displayName,
+            type: packItem.type,
+            description: packItem.description || '',
+            folderId: folderId || undefined,
+            creationPayload: packItem.creationPayload
+          }
+        );
+    } else if(packItem.definition?.interceptor){
+      //If there is an interceptor defined
+      //first create the item to have the context to update the definitions with the interceptor
+      //this is needed because the interceptor needs the item context to replace variables like {{WORKSPACE_ID}}, {{ITEM_ID}}, etc.
+      //and we cannot pass the item to the interceptor directly because it is not available at this point
+      //so we create the item first and then update the definition with the interceptor
+      newItem = await this.context.fabricPlatformAPIClient.items.createItem(
+          workspaceId,
+          {
+            displayName: itemNameSuffix ? `${packItem.displayName}${itemNameSuffix}` : packItem.displayName,
+            type: packItem.type,
+            description: packItem.description || '',
+            folderId: folderId || undefined,
+            creationPayload: undefined
+          }
+        );
+      const itemDef = await this.convertPackageItemDefinition(packItem.definition, newItem);
       await this.context.fabricPlatformAPIClient.items.updateItemDefinition(
-        workspaceId,
-        newItem.id,
-        {
-          definition: itemDef
-        }
-      );
+          workspaceId,
+          newItem.id,
+          {
+            definition: itemDef
+          }
+        );
+    } else {
+      // in all other cases we create the item with the definition directly
+      const itemDef = await this.convertPackageItemDefinition(packItem.definition, newItem);
+      newItem = await this.context.fabricPlatformAPIClient.items.createItem(
+          workspaceId,
+          {
+            displayName: itemNameSuffix ? `${packItem.displayName}${itemNameSuffix}` : packItem.displayName,
+            type: packItem.type,
+            description: packItem.description || '',
+            folderId: folderId || undefined,
+            definition: (itemDef?.parts?.length > 0) ? itemDef : undefined,
+          }
+        );     
     }
     console.log(`Successfully created item: ${newItem.id}`);
     return newItem;
   }
 
-  protected async convertPackageItemDefinition(itemDefinition: PackageItemDefinition): Promise<ItemDefinition | undefined> {
+  protected async createItemDataUX(packItem: PackageItem, workspaceId: string, item: Item): Promise<void> {
+    // Copy every file to the item OneLake storage into the specified path
+    if(packItem.data && packItem.data.files && packItem.data.files.length > 0) {
+      console.log(`Copying ${packItem.data.files.length} data files to OneLake for item: ${packItem.displayName}`);      
+      for (const file of packItem.data.files) {
+        try {
+          // Get the file content based on payload type
+          const fileContent = await this.getPackageItemPartContent(file, packItem.data.interceptor, item);
+          
+          // Construct OneLake file path (files go to the Files folder)
+          const oneLakeFilePath = getOneLakeFilePath(workspaceId, item.id, file.path);
+
+          // Write file to OneLake
+          await writeToOneLakeFileAsBase64(this.context.workloadClientAPI, oneLakeFilePath, fileContent);
+
+          console.log(`Successfully copied file ${file.path} to OneLake for item: ${packItem.displayName}`);
+        } catch (error) {
+          console.error(`Failed to copy file ${file.path} to OneLake for item: ${packItem.displayName}`, error);
+          // Continue with other files even if one fails
+        }
+      }
+    }
+  }
+  
+
+    protected async createItemSchedulesUX(item: PackageItem, workspaceId: string, itemId: string): Promise<void> {
+    if(item.schedules && item.schedules.length > 0) {
+      console.log(`Creating ${item.schedules.length} schedules for item: ${item.displayName}`);
+      for (const schedule of item.schedules) {
+        console.log(`Creating schedule for item: ${item.displayName} with type: ${schedule.configuration.type}`);
+        const request: CreateScheduleRequest = {...schedule };
+        await this.context.fabricPlatformAPIClient.scheduler.createItemSchedule(
+          workspaceId,
+          itemId,
+          schedule.jobType,
+          request
+        );
+      }
+    }
+  } 
+
+  protected async convertPackageItemDefinition(itemDefinition: PackageItemDefinition, item?: Item): Promise<ItemDefinition | undefined> {
 
     const definitionParts = [];
     if(itemDefinition?.parts?.length > 0) {
       for (const defPart of itemDefinition.parts) {
-        let payloadData = await this.getItemDefinitionPartContent(defPart);
+        let payloadData = await this.getPackageItemPartContent(defPart, itemDefinition.interceptor, item);
         
         definitionParts.push({
           path: defPart.path,
@@ -187,20 +269,29 @@ export abstract class DeploymentStrategy {
    * Retrieves the content of the deployment file based on its payload type
    * @returns Promise<string> Base64 encoded content of the deployment file
    */
-  private async getItemDefinitionPartContent(defPart: PackageItemDefinitionPart): Promise<string> {
+  private async getPackageItemPartContent(defPart: PackageItemPart, interceptor?: ItemPartInterceptor, item?: Item): Promise<string> {
 
+    let retVal: string;
     switch (defPart.payloadType) {
-      case PackageItemDefinitionPayloadType.AssetLink:
+      case PackageItemPayloadType.AssetLink:
         // Fetch content from asset and encode as base64 (handles both text and binary)
-        return await this.getAssetContentAsBase64(defPart.payload);        
-      case PackageItemDefinitionPayloadType.Link:
-        return await this.getLinkContentAsBase64(defPart.payload);
-      case PackageItemDefinitionPayloadType.InlineBase64:
+        retVal = await this.getAssetContentAsBase64(defPart.payload);
+        break;
+      case PackageItemPayloadType.Link:
+        retVal = await this.getLinkContentAsBase64(defPart.payload);
+        break;
+      case PackageItemPayloadType.InlineBase64:
         // Use base64 payload directly
-        return defPart.payload;
+        retVal = defPart.payload;
+        break;
       default:
         throw new Error(`Unsupported payload type: ${defPart.payloadType}`);
     }
+    if(interceptor){
+      const interceptorInstance = InterceptorFactory.createInterceptor(interceptor.config);
+      retVal = await interceptorInstance.interceptContent(retVal, item);
+    }
+    return retVal;
   }
 
 
@@ -282,3 +373,4 @@ export abstract class DeploymentStrategy {
     }
   }
 }
+
