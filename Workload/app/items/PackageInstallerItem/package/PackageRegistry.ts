@@ -1,11 +1,69 @@
-import { Package, DeploymentType, DeploymentLocation } from '../PackageInstallerItemModel';
+import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig } from '../PackageInstallerItemModel';
 
 export type ConfiguredPackages = {
   [key: string]: Package;
 };
 
+// Helper function to convert interceptor config and create interceptor instance
+export function convertInterceptor(definition: any): ItemPartInterceptorDefinition<any> | undefined {
+  if (!definition) return undefined;
+  
+  // Validate interceptor structure
+  if (!definition.type) {
+    throw new Error('Interceptor type is required');
+  }
+  
+  // Convert string interceptor type to enum and validate configuration
+  let interceptorType: ItemPartInterceptorType;
+  let config: any;
+  
+  if (typeof definition.type === 'string') {
+    switch (definition.type) {
+      case "StringReplacement":
+        interceptorType = ItemPartInterceptorType.StringReplacement;
+        
+        // Validate StringReplacementInterceptorDefinitionConfig structure
+        if (!definition.config.replacements || typeof definition.config.replacements !== 'object') {
+          throw new Error('StringReplacement interceptor requires a "replacements" object with key-value pairs');
+        }
+        
+        // Validate that replacements is not an array and has string values
+        if (Array.isArray(definition.config.replacements)) {
+          throw new Error('StringReplacement interceptor "replacements" must be an object, not an array');
+        }
+        
+        // Validate that all replacement values are strings
+        for (const [key, value] of Object.entries(definition.config.replacements)) {
+          if (typeof value !== 'string') {
+            throw new Error(`StringReplacement interceptor replacement value for key "${key}" must be a string, got ${typeof value}`);
+          }
+        }
+        
+        // Create proper StringReplacementInterceptorDefinitionConfig
+        config = {
+          replacements: definition.config.replacements
+        } as StringReplacementInterceptorDefinitionConfig;
+        break;
+        
+      default:
+        throw new Error(`Unsupported interceptor type: ${definition.type}`);
+    }
+  } else {
+    throw new Error('Interceptor type must be specified as a string');
+  }
+
+  // Create the interceptor definition
+  const interceptorDefinition: ItemPartInterceptorDefinition<any> = {
+    type: interceptorType,
+    config: config
+  };
+
+  // Use InterceptorFactory to create the actual interceptor instance
+  return interceptorDefinition;
+}
+
 // Helper function to convert config JSON to Package interface
-function convertConfigToPackage(pack: any): Package {
+export function convertConfigToPackage(pack: any): Package {
   // Ensure deploymentConfig is defined;
   const deploymentConfig = {
     ...pack.deploymentConfig
@@ -26,7 +84,7 @@ function convertConfigToPackage(pack: any): Package {
         throw new Error(`Unsupported deployment type: ${deploymentConfig.type}`);
     }
   } else {
-    deploymentConfig.deploymentType = deploymentConfig.type || DeploymentType.UX; // Default to UX if not specified
+    deploymentConfig.deploymentType = DeploymentType.UX; // Default to UX if not specified
   }
 
   // Convert string location type to enum  
@@ -42,7 +100,7 @@ function convertConfigToPackage(pack: any): Package {
         deploymentConfig.location = DeploymentLocation.Default; // Default to Default if not specified
     }
   } else {
-    deploymentConfig.location = deploymentConfig.location || DeploymentLocation.Default;
+    deploymentConfig.location = DeploymentLocation.Default;
   }
 
   if(deploymentConfig.suffixItemNames === undefined) {
@@ -56,13 +114,35 @@ function convertConfigToPackage(pack: any): Package {
     }
   }
 
+  // Process items and their interceptors
+  const processedItems = pack.items?.map((item: any) => {
+    try {
+      const processedItem = { ...item };
+      
+      // Process definition interceptor if present
+      if (processedItem.definition?.interceptor) {
+        processedItem.definition.interceptor = convertInterceptor(processedItem.definition.interceptor);
+      }
+      
+      // Process data interceptor if present
+      if (processedItem.data?.interceptor) {
+        processedItem.data.interceptor = convertInterceptor(processedItem.data.interceptor);
+      }
+      
+      return processedItem;
+    } catch (error) {
+      console.error(`Failed to process interceptors for item ${item.displayName}:`, error);
+      throw error;
+    }
+  }) || [];
+
   return {
     id: pack.id,
     deploymentConfig: deploymentConfig,
     displayName: pack.displayName,
     description: pack.description,
     icon: pack.icon,
-    items: pack.items || []
+    items: processedItems
   };
 }
 
@@ -80,6 +160,7 @@ export class PackageRegistry {
       const configModules: (() => Promise<any>)[] = [
         // Add your config file imports here
         () => import('../../../assets/items/PackageInstallerItem/NewWorkspace/package.json'),
+        () => import('../../../assets/items/PackageInstallerItem/SentimentAnalysis/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/SemanticLinkLabs/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/UnifiedAdminMonitoring/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/SemanticModelAudit/package.json'),
@@ -205,7 +286,7 @@ export class PackageRegistry {
 }
 
 // Create global registry instance
-const packageRegistry = new PackageRegistry();
+export const packageRegistry = new PackageRegistry();
 
 // Initialize packages from assets (call this during app startup)
 export async function initializePackages(): Promise<void> {

@@ -1,0 +1,87 @@
+{
+    "id": "SentimentAnalysis",
+    "displayName": "Sentiment Analysis",
+    "description": "Set up everything that is needed to do sentiment analysis.",
+    "icon": "/assets/items/PackageInstallerItem/SentimentAnalysis/icon.png",
+    "deploymentConfig": {
+        "type": "UX",
+        "location": "Default"
+    },
+    "items": [
+        {
+            "type": "Lakehouse",
+            "displayName": "SentimentAnalysis_LH",
+            "description": "A lakehouse that contains the sentiment analysis data.",
+            "data": {
+                "files": [
+                    {
+                        "payloadType": "AssetLink",
+                        "path": "Files/Data.csv",
+                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/data/SentimentAnalysis_LH/Data.csv"
+                    }
+                ]
+            },
+            "shortcuts":[
+                {
+                    "configuration": {
+                        "path": "Tables/SentimentData",
+                        "name": "SentimentDataFromCSV",
+                        "target": {
+                            "oneLake": {
+                                "workspaceId": "{{WORKSPACE_ID}}",
+                                "itemId": "{{SentimentAnalysis_LH}}",
+                                "path": "Files/Data.csv"
+                            }
+                        },
+                        "transform": {
+                            "type": "csvToDelta",
+                            "properties": {
+                                "delimiter": ",", 
+                                "skipFilesWithErrors": true,
+                                "useFirstRowAsHeader": true
+                            }
+                        }
+                    }
+                }
+            ]
+
+        },
+        {
+            "type": "Notebook",
+            "displayName": "SentimentAnalysis_NB",
+            "description": "A notebook that is doing the sentiment analysis.",
+            "definition": {
+                "format": "ipynb",
+                "parts": [
+                    {
+                        "payloadType": "AssetLink",
+                        "path": "notebook-content.ipynb",
+                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/definitions/SentimentAnalysis_NB/notebook-content.ipynb"
+                    }
+                ],
+                "interceptor": {
+                    "type" : "StringReplacement",  
+                    "config" : {                  
+                        "replacements": {
+                            "{WORKSPACE_ID}": "{{WORKSPACE_ID}}",
+                            "{ITEM_ID}": "{{ITEM_ID}}"
+                        }
+                    }
+                }
+            },
+            "schedules": [
+                {
+                    "enabled": true,
+                    "jobType": "RunNotebook",
+                    "configuration": {
+                        "type": "Cron",
+                        "startDateTime": "2025-01-01T00:00:00",
+                        "endDateTime": "2100-12-31T23:59:00",
+                        "localTimeZoneId": "Central Standard Time",
+                        "interval": 60
+                    }
+                }
+            ]            
+        }
+    ]
+}

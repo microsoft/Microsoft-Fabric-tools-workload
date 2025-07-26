@@ -3,7 +3,8 @@ import { FabricPlatformClient } from "./FabricPlatformClient";
 import {
   Shortcut,
   CreateShortcutRequest,
-  PaginatedResponse
+  PaginatedResponse,
+  ShortcutConflictPolicy
 } from "./FabricPlatformTypes";
 
 // Define specific scopes for OneLake Shortcut operations
@@ -94,9 +95,13 @@ export class OneLakeShortcutClient extends FabricPlatformClient {
   async getShortcut(
     workspaceId: string,
     itemId: string,
-    shortcutPath: string
+    shortcutPath: string,
+    shortcutConflictPolicy?: ShortcutConflictPolicy
   ): Promise<Shortcut> {
-    const encodedPath = encodeURIComponent(shortcutPath);
+    var encodedPath = encodeURIComponent(shortcutPath);
+    if (shortcutConflictPolicy) {
+     encodedPath += `?shortcutConflictPolicy=${shortcutConflictPolicy}`;
+    } 
     return this.get<Shortcut>(
       `/workspaces/${workspaceId}/items/${itemId}/shortcuts/${encodedPath}`
     );

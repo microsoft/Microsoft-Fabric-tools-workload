@@ -13,12 +13,7 @@ import {
   WorkspaceRole,
   WorkspaceIdentity
 } from "./FabricPlatformTypes";
-
-// Define specific scopes for Workspace operations
-const WORKSPACE_SCOPES = [
-  "https://api.fabric.microsoft.com/Workspace.ReadWrite.All", // Primary scope for workspace operations
-  "https://api.fabric.microsoft.com/Capacity.Read.All"       // May need to read capacity info for assignments
-].join(" ");
+import { SCOPES } from "./FabricPlatformScopes";
 
 /**
  * API wrapper for Fabric Platform Workspace operations
@@ -27,7 +22,7 @@ const WORKSPACE_SCOPES = [
 export class WorkspaceClient extends FabricPlatformClient {
   
   constructor(workloadClient: WorkloadClientAPI) {
-    super(workloadClient, WORKSPACE_SCOPES);
+    super(workloadClient, SCOPES.WORKSPACE);
   }
 
   // ============================

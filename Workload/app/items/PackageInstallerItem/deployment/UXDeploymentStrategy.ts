@@ -1,66 +1,46 @@
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import { DeploymentContext, DeploymentStrategy } from "./DeploymentStrategy";
 import { PackageDeployment, DeploymentStatus } from "../PackageInstallerItemModel";
 
 
 // UX Deployment Strategy
 export class UXDeploymentStrategy extends DeploymentStrategy {
-  
-  async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
-    console.log(`Deploying package via UX for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);
-    
-    // Check if items are defined in the package
-    if (!this.pack.items || this.pack.items.length === 0) {
-      console.log("No items defined in package");
-      return { ...this.deployment, status: DeploymentStatus.Succeeded };
-    }
 
-   
-    const newPackageDeployment: PackageDeployment = {
-        ...this.deployment   
-    };
-    
-    try {
-      // Create workspace and folder if needed      
-      updateDeploymentProgress("Creating Workspace enviroment ....", 30);
-      const newWorkspace = await this.createWorkspaceAndFolder(this.deployment.workspace);
-      newPackageDeployment.workspace = newWorkspace;
-      newPackageDeployment.job = { 
+  async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
+    console.log(`Deploying package via UX for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);
+    try {      
+
+      depContext.deployment.job = { 
               id: "",
               startTime: new Date(),
               item: { 
                 id: this.item.id, 
-                workspaceId: newWorkspace.id,
+                workspaceId: depContext.deployment.workspace.id,
               }, 
             }
-      
-      var itemNameSuffix: string | undefined = this.pack.deploymentConfig.suffixItemNames ? `_${this.deployment.id}` : undefined;
-      console.log(`Creating items in workspace: ${newPackageDeployment.workspace.id}, folder: ${this.deployment.workspace?.folder?.id}, itemNameSuffix: ${itemNameSuffix}`);
-      
+                  
       var percIteration = 70/this.pack.items?.length
-      var percValue = 30;
+      depContext.currentProgress = 30;
       // Create each item defined in the package
       for (const itemDef of this.pack.items) {
         console.log(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`);
-        updateDeploymentProgress(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`, percValue);
-        itemDef.description = this.pack.deploymentConfig.suffixItemNames ? `${itemDef.displayName}_${this.deployment.id}` : itemDef.displayName;
-        await this.createItemUX(itemDef, 
-                                newPackageDeployment.workspace.id, 
-                                this.deployment.workspace?.folder?.id, 
-                                itemNameSuffix);
-        percValue +=percIteration
-      }      
-      newPackageDeployment.job.endTime = new Date();
+        depContext.updateProgress(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`);
+
+        //create the item
+        await this.createItemUX(itemDef, depContext);
+        depContext.currentProgress += percIteration;
+      }
+      depContext.deployment.job.endTime = new Date();
       this.deployment = {
-        ...newPackageDeployment
+        ...depContext.deployment
       }
       return await this.updateDeploymentStatus()                
     } catch (error) {
       console.error(`Error in UX deployment: ${error}`);
-      newPackageDeployment.status = DeploymentStatus.Failed;
-      newPackageDeployment.job.endTime = new Date();
-      newPackageDeployment.job.failureReason = error;
+      depContext.deployment.status = DeploymentStatus.Failed;
+      depContext.deployment.job.endTime = new Date();
+      depContext.deployment.job.failureReason = error;
+      throw error;
     }
-    return newPackageDeployment;
   }
 
   async updateDeploymentStatus(): Promise<PackageDeployment>{

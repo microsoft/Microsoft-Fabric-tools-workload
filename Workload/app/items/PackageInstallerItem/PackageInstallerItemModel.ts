@@ -1,5 +1,12 @@
-import { Item, ScheduleConfig } from "../../clients/FabricPlatformTypes";
+import { Item, ScheduleConfig, ShortcutConflictPolicy } from "../../clients/FabricPlatformTypes";
 import { ItemReference } from "../../controller/ItemCRUDController";
+
+export class DeploymentVariables {
+  static readonly PACKAGE_ID: string = "{{PACKAGE_ID}}";
+  static readonly WORKSPACE_ID: string = "{{WORKSPACE_ID}}";
+  static readonly FOLDER_ID: string = "{{FOLDER_ID}}";
+  static readonly ITEM_ID: string = "{{ITEM_ID}}";
+}
 
 export interface PackageInstallerItemDefinition  {
   deployments?: PackageDeployment[];
@@ -106,6 +113,7 @@ export interface PackageItem {
   data?: PackageItemData; // potential data that should be uploaded to the OneLake folders of this item
   creationPayload?: any; // The payload that is used to create the item 
   schedules?: ItemSchedule[]; // Optional schedules for the item
+  shortcuts?: OneLakeShortcutDefintion[]; // Optional shortcuts that should be created
 }
 
 export interface ItemSchedule {
@@ -123,36 +131,39 @@ export enum PackageItemPayloadType {
 export interface PackageItemDefinition {
   format?: string; // Format of the item definition, e.g., "ipynb" for Jupyter Notebooks
   parts?: PackageItemPart[]; // Parts of the item definition, e.g., file paths and payloads
-  interceptor?: ItemPartInterceptor; // Optional interceptor for the item data
+  interceptor?: ItemPartInterceptorDefinition<any>; // Optional interceptor for the item data
 }
 
-export interface ItemPartInterceptor {
+export interface ItemPartInterceptorDefinition<T extends ItemPartInterceptorDefinitionConfig> {
   type: ItemPartInterceptorType; // Type of the interceptor, e.g., "PythonScript"
-  config: IItemPartInterceptorConfig; // Configuration for the internal script
+  config: T; // Configuration for the internal script
 }
 
 export enum ItemPartInterceptorType {
-  StringReplace = "StringReplace", // Interceptor for string replacements
+  StringReplacement = "StringReplacement", // Interceptor for string replacements
 }
 
-export interface IItemPartInterceptorConfig {
-  type: string; // The type of interceptor
+export interface ItemPartInterceptorDefinitionConfig {
 }
 
-export interface StringReplacementInterceptorConfig extends IItemPartInterceptorConfig {
-  type: "StringReplacement"; // Override to specify the exact type
+export interface StringReplacementInterceptorDefinitionConfig extends ItemPartInterceptorDefinitionConfig {
   replacements: Record<string, string>; // Key-value pairs for string replacements
 }
 
 export interface PackageItemData {
   files?: PackageItemPart[];
-  interceptor?: ItemPartInterceptor; // Optional interceptor for the item data
+  interceptor?: ItemPartInterceptorDefinition<any>; // Optional interceptor for the item data
 }
 
 export interface PackageItemPart {
   payloadType: PackageItemPayloadType;
   payload: string;
   path: string;
+}
+
+export interface OneLakeShortcutDefintion {
+  conflictPolicy?: ShortcutConflictPolicy,
+  configuration: any; // Configuration for the shortcut, e.g., target path name, .... same as on the api
 }
 
 

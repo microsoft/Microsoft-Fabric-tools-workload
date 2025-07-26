@@ -5,14 +5,13 @@
     "icon": "/assets/items/PackageInstallerItem/NewWorkspace/icon.png",
     "deploymentConfig": {
         "type": "UX",
-        "location": "NewWorkspace",
-        "suffixItemNames": false 
+        "location": "NewWorkspace"
     },
     "items": [
         {
-            "displayName": "NewLakehouse",
             "type": "Lakehouse",
-            "description": "A lakehouse that contains access to all Planning Data."
+            "displayName": "MyLakehouse",
+            "description": "A lakehouse that contains data."
         }
     ]
 }

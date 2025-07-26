@@ -3,10 +3,6 @@
     "displayName": "Semantic Link Labs",
     "icon": "/assets/items/PackageInstallerItem/SemanticLinkLabs/icon.png",
     "description": "Deploys several notebooks that help you get started with Semantic Link Labs.",
-    "deploymentConfig": {
-        "type": "UX",
-        "suffixItemNames": true 
-    },
     "items": [
       {
         "displayName": "Best Practice Analyzer Report",

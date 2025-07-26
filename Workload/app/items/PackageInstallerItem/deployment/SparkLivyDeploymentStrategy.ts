@@ -1,4 +1,4 @@
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import { DeploymentContext, DeploymentStrategy } from "./DeploymentStrategy";
 import { PackageDeployment, DeploymentStatus, PackageItemPayloadType } from "../PackageInstallerItemModel";
 import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
 import { getOneLakeFilePath, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
@@ -9,25 +9,18 @@ const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/j
 
 // Spark Livy Deployment Strategy
 export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
-  async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
-    // Create workspace and folder if needed
-     const newPackageDeployment: PackageDeployment = {
-        ...this.deployment
-    };
-    updateDeploymentProgress("Creating Workspace enviroment ....", 30);
-    const newWorkspace = await this.createWorkspaceAndFolder(this.deployment.workspace);
-    newPackageDeployment.workspace = newWorkspace;
-    console.log(`Created workspace: ${newWorkspace.id} for deployment: ${this.deployment.id}`);
-    
-    updateDeploymentProgress("Copy data to Onelake  ....", 40);
-    console.log(`Deploying package via Spark Livy for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);    
+
+
+  async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
+
+    depContext.updateProgress("Copy data to Onelake  ....", 40);
     const sparkDeployment = await this.copyPackageContentToItem();
     const lakehouseId = this.item.definition.lakehouseId;
     if (!lakehouseId) {
       throw new Error("Lakehouse ID is not defined for the package deployment.");
     }
 
-    updateDeploymentProgress("Starting deployment batch job  ....", 40);
+    depContext.updateProgress("Starting deployment batch job  ....", 40);
     const batchRequest: BatchRequest = {
       name: `${this.item.displayName} - Deployment - ${this.deployment.packageId} - ${this.deployment.id}`,
       file: sparkDeployment.deploymentScript,
@@ -56,16 +49,16 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     // Map BatchState to DeploymentStatus
     const deploymentStatus = this.mapBatchStateToDeploymentStatus(batchResponse.state);
     
-    newPackageDeployment.job = {
+    depContext.deployment.job = {
         id: batchResponse.id,
         item: {
           id: lakehouseId, 
           workspaceId: this.item.workspaceId,
         },
       };
-      newPackageDeployment.status = deploymentStatus
+      depContext.deployment.status = deploymentStatus
 
-    return newPackageDeployment;
+    return depContext.deployment;
   }
 
   async updateDeploymentStatus(): Promise<PackageDeployment> {

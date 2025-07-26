@@ -5,6 +5,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEditor";
 import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
+import { FileEditorItemEditor } from "./items/FileEditorItem/FileEditorItemEditor";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -61,6 +62,11 @@ export function App({ history, workloadClient }: AppProps) {
                 <Route path="/PackageInstallerItem-deploy-dialog/:itemObjectId">
                 <PackageInstallerDeployDialogWrapper
                     workloadClient={workloadClient} />
+            </Route>
+
+            <Route path="/FileEditorItem-editor/:itemObjectId">
+                <FileEditorItemEditor
+                    workloadClient={workloadClient} data-testid="FileEditorItem-editor" />
             </Route>
 
         </Switch>
