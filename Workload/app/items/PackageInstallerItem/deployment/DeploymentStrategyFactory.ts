@@ -1,7 +1,6 @@
 
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import { DeploymentStrategy } from "./BaseDeploymentStrategy";
 import { UXDeploymentStrategy } from "./UXDeploymentStrategy";
-import { SparkLivyDeploymentStrategy } from "./SparkLivyDeploymentStrategy";
 import { SparkNotebookDeploymentStrategy } from "./SparkNotebookDeploymentStrategy";
 import { PackageDeployment, Package, DeploymentType, PackageInstallerItemDefinition } from "../PackageInstallerItemModel";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
@@ -19,8 +18,6 @@ export class DeploymentStrategyFactory {
     switch (pack.deploymentConfig.type) {
       case DeploymentType.UX:
         return new UXDeploymentStrategy(context, item, pack, deployment);
-      case DeploymentType.SparkLivy:
-        return new SparkLivyDeploymentStrategy(context, item, pack, deployment);
       case DeploymentType.SparkNotebook:
         return new SparkNotebookDeploymentStrategy(context, item, pack, deployment);
       default:

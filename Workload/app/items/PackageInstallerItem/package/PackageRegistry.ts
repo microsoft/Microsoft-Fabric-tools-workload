@@ -74,9 +74,6 @@ export function convertConfigToPackage(pack: any): Package {
       case "UX":
         deploymentConfig.deploymentType = DeploymentType.UX;
         break;
-      case "SparkLivy":
-        deploymentConfig.deploymentType = DeploymentType.SparkLivy;
-        break;
       case "SparkNotebook":
         deploymentConfig.deploymentType = DeploymentType.SparkNotebook;
         break;

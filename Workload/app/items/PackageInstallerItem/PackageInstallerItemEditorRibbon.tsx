@@ -7,10 +7,10 @@ import {
 } from '@fluentui/react-components';
 import {
   Add24Regular,
-  Connector24Regular,
   Save24Regular,
   ArrowSync24Regular,
   DocumentAdd24Regular,
+  Settings24Regular,
 } from "@fluentui/react-icons";
 import { PageProps } from 'src/App';
 import './../../styles.scss';
@@ -24,14 +24,14 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
     return;
   }
 
-  async function onAddSolutionClicked() {
-    if (props.addSolutionCallback) {
-      props.addSolutionCallback();
-    }
+  async function onSettingsClicked() {
+    await props.openSettingsCallback();
+    return;
   }
-  async function onConnectLakehouseClicked() {
-    if (props.connectLakehouseCallback) {
-      props.connectLakehouseCallback();
+
+  async function onCreateInstallationClicked() {
+    if (props.addInstallationCallback) {
+      props.addInstallationCallback();
     }
   }
 
@@ -59,16 +59,25 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           icon={<Save24Regular />}
           onClick={onSaveAsClicked} />
       </Tooltip>
-
       <Tooltip
-        content="Add Configuration"
+        content={t("ItemEditor_Ribbon_Settings_Label")}
+        relationship="label">
+        <ToolbarButton
+          aria-label={t("ItemEditor_Ribbon_Settings_Label")}
+          data-testid="item-editor-settings-btn"
+          icon={<Settings24Regular />}
+          onClick={onSettingsClicked} />
+      </Tooltip>
+      <ToolbarDivider />
+      <Tooltip
+        content="Create Installation"
         relationship="label">
         <ToolbarButton
           disabled={props.isDeploymentInProgress}
-          aria-label="Add Configuration"
-          data-testid="item-editor-add-config-btn"
+          aria-label="Add Package"
+          data-testid="item-editor-add-package-btn"
           icon={<Add24Regular />}
-          onClick={ onAddSolutionClicked } />
+          onClick={ onCreateInstallationClicked } />
       </Tooltip>
 
       <Tooltip
@@ -92,34 +101,19 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           icon={<DocumentAdd24Regular />}
           onClick={ onUploadPackageClicked } />
       </Tooltip>
-
-      <ToolbarDivider />
-
-      <Tooltip
-        content="Select Lakehous Configuration"
-        relationship="label">
-        <ToolbarButton
-          disabled={!props.isLakehouseConnectEnabled || props.isDeploymentInProgress}
-          aria-label="Select Lakehouse"
-          data-testid="item-editor-add-config-btn"
-          icon={<Connector24Regular />}
-          onClick={ onConnectLakehouseClicked } />
-      </Tooltip>
-
     </Toolbar>
   );
 };
 
 export interface PackageInstallerItemEditorRibbonProps extends PageProps {
-  isLakehouseConnectEnabled: boolean;
-  connectLakehouseCallback: () => void;
-  addSolutionCallback: () => void;
+  onTabChange: (tabValue: TabValue) => void;
+  saveItemCallback: () => Promise<void>;
+  openSettingsCallback: () => Promise<void>;
+  addInstallationCallback: () => void;
   refreshDeploymentsCallback: () => Promise<void>;
   uploadPackageCallback: () => Promise<void>;
-  saveItemCallback: () => Promise<void>;
   isSaveButtonEnabled?: boolean;
   isDeploymentInProgress?: boolean;
-  onTabChange: (tabValue: TabValue) => void;
   selectedTab: TabValue;
 }
 

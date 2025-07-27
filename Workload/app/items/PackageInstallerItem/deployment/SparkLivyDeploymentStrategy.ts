@@ -1,9 +1,11 @@
-import { DeploymentContext, DeploymentStrategy } from "./DeploymentStrategy";
+import { DeploymentContext } from "./DeploymentContext";
+import { DeploymentStrategy } from "./BaseDeploymentStrategy";
 import { PackageDeployment, DeploymentStatus, PackageItemPayloadType } from "../PackageInstallerItemModel";
 import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
 import { getOneLakeFilePath, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
 import { EnvironmentConstants } from "../../../constants";
+import { ContentHelper } from "./ContentHelper";
 
 const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/jobs/DefaultPackageInstaller.py";
 
@@ -14,8 +16,9 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
   async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
 
     depContext.updateProgress("Copy data to Onelake  ....", 40);
-    const sparkDeployment = await this.copyPackageContentToItem();
-    const lakehouseId = this.item.definition.lakehouseId;
+    const sparkDeployment = await this.copyPackageContentToItem(depContext);
+    //TODO needs to be implemented!
+    const lakehouseId: string = undefined;
     if (!lakehouseId) {
       throw new Error("Lakehouse ID is not defined for the package deployment.");
     }
@@ -37,7 +40,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
       }
     };
     
-    console.log("Starting the analysis with batch request:", batchRequest);
+    depContext.log("Starting the analysis with batch request:", batchRequest);
     
     const fabricAPI = this.context.fabricPlatformAPIClient;
     const batchResponse = await fabricAPI.sparkLivy.createBatch(
@@ -65,12 +68,12 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     if (!this.deployment.job || !this.deployment.job.id) {
       throw new Error("No job ID found for deployment status update");
     }
-    const newPackageDeployment = await this.checkDeployedItems();
+    const newPackageDeployment = await this.checkDeployementState();
 
     const fabricAPI = this.context.fabricPlatformAPIClient;
     const batch = await fabricAPI.sparkLivy.getBatch(
       this.deployment.workspace.id, 
-      this.item.definition.lakehouseId,
+      undefined,
       this.deployment.job.id
     );
 
@@ -89,8 +92,8 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     return newPackageDeployment;
   }
 
-  private async copyPackageContentToItem(): Promise<SparkDeployment> {
-    console.log(`Copying package content for item: ${this.item.id} and package type: ${this.pack.id}`);
+  private async copyPackageContentToItem(depContext: DeploymentContext): Promise<SparkDeployment> {
+    depContext.log(`Copying package content for item: ${this.item.id} and package type: ${this.pack.id}`);
     
     const sparkDeploymentConf: SparkDeployment = {
       deploymentId: this.deployment.id,
@@ -117,7 +120,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
         
         switch (itemDefinitionReference.payloadType) {
           case PackageItemPayloadType.AssetLink:
-            definitionPart.payload = await this.copyAssetToOneLake(itemDefinitionReference.payload);
+            definitionPart.payload = await this.copyAssetToOneLake(depContext, itemDefinitionReference.payload);
             definitionPart.payloadType = SparkDeploymentReferenceType.OneLake;
             break;
           case PackageItemPayloadType.Link:
@@ -133,7 +136,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
         }
         
         itemConfig.definitionParts.push(definitionPart);
-        console.log(`Successfully uploaded definition in OneLake: ${definitionPart.path}`);
+        depContext.log(`Successfully uploaded definition in OneLake: ${definitionPart.path}`);
       }));
       
       return itemConfig;
@@ -145,16 +148,16 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     const deploymentConfig = this.pack.deploymentConfig;
     let deploymentFileDestPath;
     if (!deploymentConfig.deploymentFile) {
-      deploymentFileDestPath = await this.copyAssetToOneLake(defaultDeploymentSparkFile);
+      deploymentFileDestPath = await this.copyAssetToOneLake(depContext, defaultDeploymentSparkFile);
     } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemPayloadType.AssetLink) {
-      deploymentFileDestPath = await this.copyAssetToOneLake(deploymentConfig.deploymentFile.payload);
+      deploymentFileDestPath = await this.copyAssetToOneLake(depContext, deploymentConfig.deploymentFile.payload);
     } else if (deploymentConfig.deploymentFile?.payloadType === PackageItemPayloadType.Link) {
-      deploymentFileDestPath = await this.copyLinkToOneLake(deploymentConfig.deploymentFile.payload);
+      deploymentFileDestPath = await this.copyLinkToOneLake(depContext, deploymentConfig.deploymentFile.payload);
     }
 
-    console.log(`Successfully uploaded deployment script to OneLake: ${deploymentFileDestPath}`);
+    depContext.log(`Successfully uploaded deployment script to OneLake: ${deploymentFileDestPath}`);
     const oneLakeScriptDeploymentUrl = this.convertOneLakeLinktoABFSSLink(deploymentFileDestPath, this.item.workspaceId);
-    console.log("Deployment script URL:", oneLakeScriptDeploymentUrl);
+    depContext.log("Deployment script URL:", oneLakeScriptDeploymentUrl);
 
     return {
       ...sparkDeploymentConf,
@@ -162,15 +165,15 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     };
   }
 
-  private async copyAssetToOneLake(path: string): Promise<string> {
-    const assetContent = await this.getAssetContent(path);
+  private async copyAssetToOneLake(depContext: DeploymentContext, path: string): Promise<string> {
+    const assetContent = await ContentHelper.getAssetContent(depContext, path);
     const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
     const destinationPath = getOneLakeFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
     await writeToOneLakeFileAsText(this.context.workloadClientAPI, destinationPath, assetContent);
     return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
   }
 
-  private async copyLinkToOneLake(path: string): Promise<string> {
+  private async copyLinkToOneLake(depContext: DeploymentContext, path: string): Promise<string> {
     const response = await fetch(path);
     if (response.ok) {
       const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
@@ -178,7 +181,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
       await writeToOneLakeFileAsText(this.context.workloadClientAPI, destinationPath, response.body.toString());
       return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
     } else {
-      console.error('Error fetching content:', path);
+      depContext.logError('Error fetching content:', path);
       throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
     }
   }

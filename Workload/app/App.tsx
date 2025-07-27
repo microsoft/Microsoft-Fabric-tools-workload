@@ -6,6 +6,8 @@ import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEdito
 import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 import { FileEditorItemEditor } from "./items/FileEditorItem/FileEditorItemEditor";
+import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
+import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -59,8 +61,16 @@ export function App({ history, workloadClient }: AppProps) {
                 <PackageInstallerItemEditor
                     workloadClient={workloadClient} data-testid="PackageInstallerItem-editor" />
             </Route>
-                <Route path="/PackageInstallerItem-deploy-dialog/:itemObjectId">
+            <Route path="/PackageInstallerItem-deploy-dialog/:itemObjectId">
                 <PackageInstallerDeployDialogWrapper
+                    workloadClient={workloadClient} />
+            </Route>
+            <Route path="/PackageInstallerItem-about-page/:itemObjectId">
+                <PackageInstallerItemEditorAboutPage
+                    workloadClient={workloadClient} />
+            </Route>
+            <Route path="/PackageInstallerItem-settings-page/:itemObjectId">
+                <PackageInstallerItemEditorSettingsPage
                     workloadClient={workloadClient} />
             </Route>
 

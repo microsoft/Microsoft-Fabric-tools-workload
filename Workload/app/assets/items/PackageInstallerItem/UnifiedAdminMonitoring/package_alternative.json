@@ -1,0 +1,273 @@
+{
+  "id": "FUAM",
+  "displayName": "Unified Admin Monitoring",
+  "icon": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/icon.png",
+  "description": "Solution accelerator, which can help you implement a monitoring solution within Fabric",
+  "deploymentConfig": {
+      "type": "UX",
+      "location": "NewWorkspace",
+      "onFinishJobs": [
+        {
+          "workspaceId": "{WORKSPACE_ID}",
+          "itemId": "{ITEM_ID_FUAM_Setup}",
+          "jobType": "RunNotebook",
+          "deploymentPolicy": "FailOnError",
+          "executionData": {
+            "parameters": {
+              "WORKSPACE_ID": "{{WORKSPACE_ID}}"
+            }
+          }
+        }
+      ]
+  },  
+  "items": [
+    {
+      "displayName": "FUAM_Setup",
+      "description": "Setup notebook",
+      "type": "Notebook",
+      "definition": {
+        "parts": [
+          {
+            "payloadType": "AssetLink",
+            "path": "notebook-content.ipynb",
+            "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"
+          }
+        ]        
+      }
+    },
+    {
+      "displayName": "01_FUAM_Lakehouse_Backup",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Active_Items_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Capacities_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Capacity_Refreshables_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_CapacityMetricData_Timepoints_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Delegated_Tenant_Settings_Overrides_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Git_Connections_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Incremental_Inventory_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "01_Transfer_Tenant_Admin_Settings_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "02_FUAM_Lakehouse_Optimization",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "02_Transfer_Activities_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "02_Transfer_CapacityMetricData_ItemKind_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "02_Transfer_Workspaces_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "03_Aggregate_Activities_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "03_Transfer_CapacityMetricData_ItemOperation_Unit",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Core_Report",
+      "description": "",
+      "type": "Report",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Core_SM",
+      "description": "",
+      "type": "SemanticModel",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Gateway_Monitoring_From_Files_Report",
+      "description": "",
+      "type": "Report",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Gateway_Monitoring_From_Files_SM",
+      "description": "",
+      "type": "SemanticModel",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Item_Analyzer_Report",
+      "description": "",
+      "type": "Report",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Item_SM",
+      "description": "",
+      "type": "SemanticModel",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Semantic_Model_Meta_Data_Analyzer_Report",
+      "description": "",
+      "type": "Report",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_Semantic_Model_Meta_Data_Analyzer_SM",
+      "description": "",
+      "type": "SemanticModel",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_SQL_Endpoint_Analyzer_Report",
+      "description": "",
+      "type": "Report",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "FUAM_SQL_Endpoint_Analyzer_SM",
+      "description": "",
+      "type": "SemanticModel",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Generate_Calendar_Table",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Init_FUAM_Lakehouse_Tables",
+      "description": "New notebook",
+      "type": "Notebook",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Activities_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Capacities_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Capacity_Metrics_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Capacity_Refreshables_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Delegated_Tenant_Settings_Overrides_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_FUAM_Data_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Git_Connections_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Inventory_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Items_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_PBI_Workspaces_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Load_Tenant_Settings_E2E",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    },
+    {
+      "displayName": "Maintenance_for_FUAM",
+      "description": "",
+      "type": "DataPipeline",
+      "installType": "OnFinishJob"
+    }
+  ]
+}

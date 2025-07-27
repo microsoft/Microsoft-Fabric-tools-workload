@@ -73,7 +73,7 @@ export async function initialize(params: InitParams) {
                         displayName: 'About',
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
-                            route: 'CalculatorSampleItem-about-dialog',
+                            route: 'PackageInstallerItem-about-page',
                         },
                         workloadIframeHeight: '1000px'
                     },
@@ -85,7 +85,7 @@ export async function initialize(params: InitParams) {
                         },
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
-                            route: 'CalculatorSampleItem-settings-dialog',
+                            route: 'PackageInstallerItem-settings-page',
                         },
                         workloadIframeHeight: '1000px'
                     }

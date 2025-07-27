@@ -15,17 +15,16 @@ import { DeleteRegular, PlayRegular } from "@fluentui/react-icons";
 import React, { useEffect, useState, useCallback } from "react";
 import { ContextProps, PageProps } from "src/App";
 import { PackageInstallerItemEditorRibbon } from "./PackageInstallerItemEditorRibbon";
-import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "./../../styles.scss";
 import { useTranslation } from "react-i18next";
-import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus, DeploymentType } from "./PackageInstallerItemModel";
+import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus } from "./PackageInstallerItemModel";
 import { PackageInstallerItemEditorEmpty } from "./PackageInstallerItemEditorEmpty";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { DeploymentDetailView } from "./DeploymentDetailView";
-import { callDatahubOpen } from "../../controller/DataHubController";
 import { DeploymentStrategyFactory } from "./deployment/DeploymentStrategyFactory";
 import { WorkspaceDisplayNameCell } from "./components/WorkspaceDisplayName";
 import { FolderDisplayNameCell } from "./components/FolderDisplayName";
@@ -36,6 +35,7 @@ import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { t } from "i18next";
 import { writeToOneLakeFileAsText, getOneLakeFilePath, readOneLakeFileAsText} from "../../clients/OneLakeClient";
+import { callOpenSettings } from "../../controller/SettingsController";
 
 // Component to fetch and display folder name
 
@@ -108,6 +108,14 @@ export function PackageInstallerItemEditor(props: PageProps) {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [isDeploymentInProgress]);
+
+  async function openSettings() {
+    if (editorItem) {
+      //TODO: this needs to be updated to use the Item instead of Itemv2
+      const item = await callGetItem(workloadClient, editorItem.id);
+      await callOpenSettings(workloadClient, item, 'About');
+    }
+  }
 
   async function saveItemWithSuccessDialog(definition?: PackageInstallerItemDefinition) {
     const successResult = await SaveItem(definition);
@@ -183,24 +191,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
   /**
    * Add a new configuration to the list
    */
-  function addSolution() {
+  function addInstallation() {
     setSelectedTab("empty");
-  }
-
-  async function connectLakehouse(){
-    const lakehouse = await callDatahubOpen(workloadClient,
-        ["Lakehouse"],
-        "Select a lakehouse",
-        false,
-        true);
-    if( lakehouse) {
-      const newItemDefinition: PackageInstallerItemDefinition = {
-        ...editorItem?.definition,
-        lakehouseId: lakehouse.id,
-      };
-      updateItemDefinition(newItemDefinition);
-      SaveItem(newItemDefinition);
-    }
   }
 
   /**
@@ -591,21 +583,20 @@ async function addDeployment(packageId: string) {
   if (isLoadingData) {
     //making sure we show a loding indicator while the itme is loading
     return (<ItemEditorLoadingProgressBar 
-      message={`Loading Solution Sample item ...`} />);
+      message={`Loading Installer item ...`} />);
   }
   else {
     return (
       <Stack className="editor" data-testid="item-editor-inner">
         <PackageInstallerItemEditorRibbon
             {...props}      
-            isLakehouseConnectEnabled={!editorItem?.definition?.lakehouseId}
-            connectLakehouseCallback={connectLakehouse}  
-            addSolutionCallback={addSolution}
+            saveItemCallback={saveItemWithSuccessDialog}
+            openSettingsCallback={openSettings}
+            addInstallationCallback={addInstallation}
             refreshDeploymentsCallback={handleRefreshDeployments}
             uploadPackageCallback={uploadPackageJson}
             isSaveButtonEnabled={isUnsaved}
-            isDeploymentInProgress={isDeploymentInProgress}
-            saveItemCallback={saveItemWithSuccessDialog}
+            isDeploymentInProgress={isDeploymentInProgress}      
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
         />
@@ -632,8 +623,6 @@ async function addDeployment(packageId: string) {
             <span>
               <PackageInstallerItemEditorEmpty
                 context={context}
-                item={editorItem}
-                itemDefinition={editorItem?.definition}
                 onPackageSelected={addDeployment}
               />
             </span>
@@ -785,12 +774,6 @@ async function startDeployment(context: PackageInstallerContext,
       throw new Error(`Package with typeId ${newDeployment.packageId} not found`);
     }
 
-
-    // Check if lakehouseId is required for SparkLivy deployment
-    if (pack.deploymentConfig.type === DeploymentType.SparkLivy && 
-        !item.definition?.lakehouseId) {
-      throw new Error("Lakehouse ID is required for SparkLivy deployment but not provided in item definition.");
-    }
     //updating the deployment to InProgress
     newDeployment.status = DeploymentStatus.InProgress
     if (onDeploymentUpdate) {

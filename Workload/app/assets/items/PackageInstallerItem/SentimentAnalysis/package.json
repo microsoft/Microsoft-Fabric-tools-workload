@@ -16,8 +16,8 @@
                 "files": [
                     {
                         "payloadType": "AssetLink",
-                        "path": "Files/Data.csv",
-                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/data/SentimentAnalysis_LH/Data.csv"
+                        "path": "Files/SentimentDataCSV/Data.csv",
+                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/data/SentimentAnalysis_LH/SentimentDataCSV/Data.csv"
                     }
                 ]
             },
@@ -25,12 +25,12 @@
                 {
                     "configuration": {
                         "path": "Tables/SentimentData",
-                        "name": "SentimentDataFromCSV",
+                        "name": "SentimentDataCSV",
                         "target": {
                             "oneLake": {
                                 "workspaceId": "{{WORKSPACE_ID}}",
                                 "itemId": "{{SentimentAnalysis_LH}}",
-                                "path": "Files/Data.csv"
+                                "path": "Files/SentimentDataCSV"
                             }
                         },
                         "transform": {

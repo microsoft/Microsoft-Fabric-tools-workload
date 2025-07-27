@@ -1,5 +1,5 @@
 import { ItemPartInterceptorDefinition, ItemPartInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig} from "../PackageInstallerItemModel";
-import { DeploymentContext } from "../deployment/DeploymentStrategy";
+import { DeploymentContext } from "../deployment/DeploymentContext";
 
 export abstract class Interceptor<T extends ItemPartInterceptorDefinitionConfig> {
 
@@ -20,21 +20,30 @@ export abstract class Interceptor<T extends ItemPartInterceptorDefinitionConfig>
      * @returns The modified content of the item part.
      */
 
-    async interceptContent(content: string): Promise<string> {
+    async interceptBase64(content: string): Promise<string> {
         if (!content) {
             throw new Error("Content to intercept cannot be empty");
         }
         // Decode the base64 content
         const decodedContent = atob(content);
-        // copy all global variables
-        const variables: Record<string, string> = {...this.depContext.variableMap};
         // Perform the interception logic
-        const modifiedContent = await this.interceptContentInt(decodedContent, variables);
+        const modifiedContent = await this.interceptText(decodedContent);
         // Return the modified content encoded in base64
         return btoa(modifiedContent);
     }
 
-    abstract interceptContentInt(content: string, systemVariables: Record<string, string>): Promise<string>;
+    async interceptText(content: string): Promise<string> {
+        if (!content) {
+            throw new Error("Content to intercept cannot be empty");
+        }
+        // copy all global variables
+        const variables: Record<string, string> = {...this.depContext.variableMap};
+        // Perform the interception logic
+        const modifiedContent = await this.interceptContentInt(content, variables);
+        return modifiedContent;
+    }
+
+    protected abstract interceptContentInt(content: string, systemVariables: Record<string, string>): Promise<string>;
 }
 
 export class StringReplaceInterceptor extends Interceptor<StringReplacementInterceptorDefinitionConfig> {

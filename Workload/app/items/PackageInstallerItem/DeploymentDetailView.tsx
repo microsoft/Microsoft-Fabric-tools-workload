@@ -2,7 +2,6 @@ import React from "react";
 import { 
   Card,
   CardHeader,
-  CardFooter,
   Text,
   Button,
   Badge,
@@ -84,6 +83,25 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
           >
             {DeploymentStatus[deployment.status]}
           </Badge>
+        }
+        action={
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Button 
+              appearance="secondary"
+              onClick={() => onBackToHome()}
+            >
+              {t("Back to Home")}
+            </Button>
+            {(deployment.status === DeploymentStatus.Pending  || 
+              deployment.status === DeploymentStatus.Failed ) && (
+              <Button 
+                appearance="primary"
+                onClick={() => onStartDeployment()}
+              >
+                {t("Start Deployment")}
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -230,27 +248,62 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
             )}
           </div>
         )}
+        
+        {/* Show package-level data files if any exist */}
+        {pack?.data && pack.data.length > 0 && (
+          <>
+            <Divider style={{ margin: "12px 0" }} />
+            <div className="package-data">
+              <h2>{t("Package Data")}:</h2>
+              <Caption1>{t("Shows data files that are part of the package deployment.")}</Caption1>
+              {pack.data.map((dataItem, dataIndex) => (
+                <div key={dataIndex} style={{ marginTop: "8px" }}>
+                  {dataItem.files && dataItem.files.length > 0 && (
+                    <div style={{ marginLeft: "8px" }}>
+                      <Caption1><strong>{t("Data Files")} ({dataItem.files.length}):</strong></Caption1>
+                      <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
+                        {dataItem.files.map((dataFile, fileIndex) => (
+                          <li key={fileIndex} style={{ marginBottom: "2px" }}>
+                            <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
+                              {dataFile.path}
+                            </Caption1>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        
+        {/* Show onFinishJobs if any exist */}
+        {pack?.deploymentConfig?.onFinishJobs && pack.deploymentConfig.onFinishJobs.length > 0 && (
+          <>
+            <Divider style={{ margin: "12px 0" }} />
+            <div className="on-finish-jobs">
+              <h2>{t("On Finish Jobs")}:</h2>
+              <Caption1>{t("Shows jobs that will be executed after the deployment completes.")}</Caption1>
+              <ul className="jobs-list" style={{ margin: "8px 0", paddingLeft: "20px" }}>
+                {pack.deploymentConfig.onFinishJobs.map((job, jobIndex) => (
+                  <li key={jobIndex} style={{ display: "flex", alignItems: "flex-start", marginBottom: "8px" }}>
+                    <div style={{ flex: 1 }}>
+                      <Body1>{job.jobType || "Job"}</Body1>
+                      <div style={{ marginLeft: "0px" }}>
+                        <Caption1>Workspace ID: {job.workspaceId}</Caption1>
+                      </div>
+                      <div style={{ marginLeft: "0px" }}>
+                        <Caption1>Item ID: {job.itemId}</Caption1>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
       </div>
-        <CardFooter>
-          <Button 
-            appearance="secondary"
-            onClick={() => onBackToHome()}
-            style={{ marginRight: "8px" }}
-          >
-            {t("Back to Home")}
-          </Button>
-          {(deployment.status === DeploymentStatus.Pending  || 
-            deployment.status === DeploymentStatus.Failed ) && (
-            <Button 
-              appearance="primary"
-              onClick={() => onStartDeployment()}
-              style={{ marginLeft: "8px" }}
-            >
-              {t("Start Deployment")}
-            </Button>
-          )}
-
-        </CardFooter>
 
     </Card>
   );

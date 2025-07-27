@@ -2,22 +2,16 @@ import React from "react";
 import { Stack } from "@fluentui/react";
 import { Text } from "@fluentui/react-components";
 import "./../../styles.scss";
-import { PackageInstallerItemDefinition} from "./PackageInstallerItemModel";
 import { PackageSelectionView } from "./PackageSelectionView";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { ItemWithDefinition } from "src/controller/ItemCRUDController";
 
 interface PackageInstallerItemEmptyStateProps {
   context: PackageInstallerContext,
-  item: ItemWithDefinition<PackageInstallerItemDefinition>,
-  itemDefinition: PackageInstallerItemDefinition,
   onPackageSelected: (packageId: string) => void;
 }
 
 export const PackageInstallerItemEditorEmpty: React.FC<PackageInstallerItemEmptyStateProps> = ({
   context,
-  item,
-  itemDefinition: definition,
   onPackageSelected: onPackageSelected
 }) => {
 
