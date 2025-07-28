@@ -24,11 +24,7 @@ export const PackageInstallerItemEditorEmpty: React.FC<PackageInstallerItemEmpty
   return (
     <Stack className="empty-item-container" horizontalAlign="center" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
-        <img
-          src="/assets/items/PackageInstallerItem/EditorEmpty.png"
-          alt="Empty item illustration"
-          className="empty-item-image"
-        />
+    
       </Stack.Item>
       <Stack.Item>
         <Text as="h2" size={800} weight="semibold">

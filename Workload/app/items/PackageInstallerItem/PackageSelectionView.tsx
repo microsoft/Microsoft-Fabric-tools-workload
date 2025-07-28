@@ -31,11 +31,20 @@ export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> 
             onClick={() => onPackageSelected(pack.id)}
           >
             <CardPreview>
-              <img
-                src={pack.icon}
-                alt={pack.displayName}
-                style={{ width: "100%", height: "160px", objectFit: "cover" }}
-              />
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "center", 
+                alignItems: "center", 
+                height: "100px",
+                width: "100%",
+                padding: "10px"
+              }}>
+                <img
+                  src={pack.icon}
+                  alt={pack.displayName}
+                  style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "4px" }}
+                />
+              </div>
             </CardPreview>
             <CardHeader
               header={

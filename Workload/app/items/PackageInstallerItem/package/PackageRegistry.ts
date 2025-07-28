@@ -157,12 +157,12 @@ export class PackageRegistry {
       const configModules: (() => Promise<any>)[] = [
         // Add your config file imports here
         () => import('../../../assets/items/PackageInstallerItem/NewWorkspace/package.json'),
-        () => import('../../../assets/items/PackageInstallerItem/SentimentAnalysis/package.json'),
-        () => import('../../../assets/items/PackageInstallerItem/SemanticLinkLabs/package.json'),
+        //() => import('../../../assets/items/PackageInstallerItem/SentimentAnalysis/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/UnifiedAdminMonitoring/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/SemanticModelAudit/package.json'),
+        () => import('../../../assets/items/PackageInstallerItem/SemanticLinkLabs/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/DAXPerformanceTesting/package.json'),
-        () => import('../../../assets/items/PackageInstallerItem/MDSF/package.json'),
+        //() => import('../../../assets/items/PackageInstallerItem/MDSF/package.json'),
       ];
 
       // Load all config files
