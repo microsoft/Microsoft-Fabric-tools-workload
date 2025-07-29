@@ -618,17 +618,15 @@ async function addDeployment(packageId: string) {
           </Stack>
         )}
         
-        <Stack className="main">
-          {["empty"].includes(selectedTab as string) && (
-            <span>
+        <Stack className="main" style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+          <span style={{ height: "100%", overflow: "auto", padding: "16px" }}>
+            {["empty"].includes(selectedTab as string) && (
               <PackageInstallerItemEditorEmpty
                 context={context}
                 onPackageSelected={addDeployment}
               />
-            </span>
-          )}
-          {["deployment"].includes(selectedTab as string) && (
-            <span>
+            )}
+            {["deployment"].includes(selectedTab as string) && (
               <DeploymentDetailView
                 context={context}
                 deployment={selectedSolution}
@@ -636,102 +634,102 @@ async function addDeployment(packageId: string) {
                 onBackToHome={() => setSelectedTab("home")}
                 onStartDeployment={() => handleStartDeployment(selectedSolution, undefined)}
               />
-            </span>
-          )}
+            )}
 
-          {["home"].includes(selectedTab as string) && (
-          <span>
-              <h2>{t('Deployed packages')}</h2>
-              {editorItem?.definition?.deployments?.length > 0 ? (
-                <div className="deployment-container">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHeaderCell>{t('Deployment Id')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Package Type')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Deployment Status')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Deployment Triggerd')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Workspace Name')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Folder Name')}</TableHeaderCell>
-                        <TableHeaderCell>{t('Actions')}</TableHeaderCell>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {editorItem.definition.deployments.map((deployment: PackageDeployment) => {
-                        return (
-                          <TableRow key={deployment.id} onClick={() => {
-                            if (!isDeploymentInProgress) {
-                              setSelectedDeployment(deployment);
-                              setSelectedTab("deployment");
-                            }
-                          }} style={{ 
-                            cursor: isDeploymentInProgress ? 'not-allowed' : 'pointer',
-                            opacity: isDeploymentInProgress && deploymentProgress?.deploymentId !== deployment.id ? 0.6 : 1
-                          }}>
-                            <TableCell>{deployment.id}</TableCell>
-                            <TableCell>
-                              <PackageDisplayNameCell
-                                context={context}
-                                packageId={deployment.packageId}
-                                showIcon={true} />
-                            </TableCell>
-                            <TableCell>{DeploymentStatus[deployment.status]}</TableCell>
-                            <TableCell>
-                              {deployment.triggeredTime 
-                                ? new Date(deployment.triggeredTime).toLocaleString() 
-                                : t('Not started yet')}
-                            </TableCell>
-                            <TableCell>
-                              <WorkspaceDisplayNameCell
-                                context={context}
-                                workspaceId={deployment.workspace?.id} />
-                            </TableCell>
-                            <TableCell>
-                              <FolderDisplayNameCell
+            {["home"].includes(selectedTab as string) && (
+            <span>
+                <h2>{t('Deployed packages')}</h2>
+                {editorItem?.definition?.deployments?.length > 0 ? (
+                  <div className="deployment-container">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHeaderCell>{t('Deployment Id')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Package Type')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Deployment Status')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Deployment Triggerd')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Workspace Name')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Folder Name')}</TableHeaderCell>
+                          <TableHeaderCell>{t('Actions')}</TableHeaderCell>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {editorItem.definition.deployments.map((deployment: PackageDeployment) => {
+                          return (
+                            <TableRow key={deployment.id} onClick={() => {
+                              if (!isDeploymentInProgress) {
+                                setSelectedDeployment(deployment);
+                                setSelectedTab("deployment");
+                              }
+                            }} style={{ 
+                              cursor: isDeploymentInProgress ? 'not-allowed' : 'pointer',
+                              opacity: isDeploymentInProgress && deploymentProgress?.deploymentId !== deployment.id ? 0.6 : 1
+                            }}>
+                              <TableCell>{deployment.id}</TableCell>
+                              <TableCell>
+                                <PackageDisplayNameCell
                                   context={context}
-                                  workspaceId={deployment.workspace?.id} 
-                                  folderId={deployment.workspace?.folder?.id} />
-                            </TableCell>
-                            <TableCell>
-                              <div style={{ display: "flex", gap: "4px" }}>
-                                {deployment.status === DeploymentStatus.Pending && (
+                                  packageId={deployment.packageId}
+                                  showIcon={true} />
+                              </TableCell>
+                              <TableCell>{DeploymentStatus[deployment.status]}</TableCell>
+                              <TableCell>
+                                {deployment.triggeredTime 
+                                  ? new Date(deployment.triggeredTime).toLocaleString() 
+                                  : t('Not started yet')}
+                              </TableCell>
+                              <TableCell>
+                                <WorkspaceDisplayNameCell
+                                  context={context}
+                                  workspaceId={deployment.workspace?.id} />
+                              </TableCell>
+                              <TableCell>
+                                <FolderDisplayNameCell
+                                    context={context}
+                                    workspaceId={deployment.workspace?.id} 
+                                    folderId={deployment.workspace?.folder?.id} />
+                              </TableCell>
+                              <TableCell>
+                                <div style={{ display: "flex", gap: "4px" }}>
+                                  {deployment.status === DeploymentStatus.Pending && (
+                                    <Button
+                                      icon={<PlayRegular />}
+                                      appearance="subtle"
+                                      disabled={isDeploymentInProgress && deploymentProgress?.deploymentId === deployment.id}
+                                      onClick={(e: React.MouseEvent) => handleStartDeployment(deployment, e)}
+                                      aria-label={t('Start deployment')}
+                                      title={t('Start deployment')}
+                                    />
+                                  )}
                                   <Button
-                                    icon={<PlayRegular />}
+                                    icon={<DeleteRegular />}
                                     appearance="subtle"
-                                    disabled={isDeploymentInProgress && deploymentProgress?.deploymentId === deployment.id}
-                                    onClick={(e: React.MouseEvent) => handleStartDeployment(deployment, e)}
-                                    aria-label={t('Start deployment')}
-                                    title={t('Start deployment')}
+                                    disabled={isDeploymentInProgress || (deployment.status !== DeploymentStatus.Pending 
+                                      && deployment.status !== DeploymentStatus.Failed)}                                   
+                                    onClick={(e: any) => {
+                                      e.stopPropagation(); // Prevent row click from triggering
+                                      handleRemoveDeployment(deployment.id);
+                                    }}
+                                    aria-label={t('Remove deployment')}
                                   />
-                                )}
-                                <Button
-                                  icon={<DeleteRegular />}
-                                  appearance="subtle"
-                                  disabled={isDeploymentInProgress || (deployment.status !== DeploymentStatus.Pending 
-                                    && deployment.status !== DeploymentStatus.Failed)}                                   
-                                  onClick={(e: any) => {
-                                    e.stopPropagation(); // Prevent row click from triggering
-                                    handleRemoveDeployment(deployment.id);
-                                  }}
-                                  aria-label={t('Remove deployment')}
-                                />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="no-deployments">
-                  <Text size={300} italic>
-                    {t('No Packages have been deployed yet')}
-                  </Text>
-                </div>
-              )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="no-deployments">
+                    <Text size={300} italic>
+                      {t('No Packages have been deployed yet')}
+                    </Text>
+                  </div>
+                )}
+            </span>
+            )}
           </span>
-          )}
         </Stack>
       </Stack>
     );

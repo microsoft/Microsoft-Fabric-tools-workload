@@ -43,7 +43,7 @@ export abstract class DeploymentStrategy {
     const logFilePath = getOneLakePath(
       this.item.workspaceId,
       this.item.id,
-      `Files/${depContext.deployment.id}_DeploymentLog.txt`);
+      `Files/DeploymentLogs/DeploymentLog_${depContext.deployment.id}.txt`);
     await writeToOneLakeFileAsText(this.context.workloadClientAPI, logFilePath, log);
   }
 
