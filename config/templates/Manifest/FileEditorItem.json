@@ -1,0 +1,29 @@
+{
+    "name": "FileEditor",
+    "version": "1.100",
+    "displayName": "FileEditorItem_DisplayName",
+    "displayNamePlural": "FileEditorItem_DisplayName_Plural",
+    "editor": {
+      "path": "/FileEditorItem-editor"
+    },
+    "icon": {
+      "name": "assets/images/FileEditorItem-icon.png"
+    },
+    "activeIcon": {
+      "name": "assets/images/FileEditorItem-icon.png"
+    },
+    "supportedInMonitoringHub": true,
+    "supportedInDatahubL1": true,
+    "editorTab": {
+      "onDeactivate": "item.tab.onDeactivate",
+      "canDeactivate": "item.tab.canDeactivate",
+      "canDestroy": "item.tab.canDestroy",
+      "onDestroy": "item.tab.onDestroy",
+      "onDelete": "item.tab.onDelete"
+    },
+    "createItemDialogConfig": {
+      "onCreationFailure": { "action": "item.onCreationFailure" },
+      "onCreationSuccess": { "action": "item.onCreationSuccess" }
+    }
+  }
+

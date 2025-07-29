@@ -9,5 +9,8 @@
   "Workload_Hub_Workload_Description": "Las herramientas de Fabric permiten a los desarrolladores crear y gestionar espacios de trabajo de Fabric con facilidad. Admite varias tareas como instalación de paquetes, gestión de espacios de trabajo y más.",
   "PackageInstallerItem_DisplayName": "Instalador de Paquetes",
   "PackageInstallerItem_DisplayName_Plural": "Instaladores de Paquetes",
-  "PackageInstallerItem_Description": "Un elemento que puede instalar diferentes configuraciones de paquetes en espacios de trabajo de Fabric."
+  "PackageInstallerItem_Description": "Un elemento que puede instalar diferentes configuraciones de paquetes en espacios de trabajo de Fabric.",
+  "FileEditorItem_DisplayName": "Elemento de Editor de Archivos",
+  "FileEditorItem_DisplayName_Plural": "Elementos de Editor de Archivos",
+  "FileEditorItem_Description": "Un elemento que proporciona una experiencia de edición similar a un editor de archivos."
 }

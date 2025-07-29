@@ -1,3 +1,6 @@
+import { Item } from "../../clients/FabricPlatformTypes";
+import { ItemReference } from "../../controller/ItemCRUDController";
+
 export interface FileEditorItemDefinition {
   /** Current file content being edited */
   fileContent?: string;
@@ -15,14 +18,8 @@ export interface FileEditorItemDefinition {
     lineNumber: number;
     column: number;
   };
-  /** Open files/tabs */
-  openFiles?: {
-    onelakeLink: string,
-    fileName: string;
-    content: string;
-    language: string;
-    isDirty: boolean;
-  }[];
+  /** Open files/tabs - Only OneLake files are allowed */
+  openFiles?: OneLakeFileReference[];
   /** Current active file index */
   activeFileIndex?: number;
 
@@ -33,4 +30,21 @@ export interface FileEditorItemDefinition {
     minimap: boolean;
     lineNumbers: boolean;
   };
+
+  /** Reference to the selected OneLake item in the explorer */
+  itemReference?: Item;
+}
+
+/** Represents a file reference that must be stored in OneLake */
+export interface OneLakeFileReference extends ItemReference {
+  /** OneLake path - required for all files */
+  onelakeLink: string;
+  /** Display name of the file */
+  fileName: string;
+  /** File content cached locally */
+  content: string;
+  /** Programming language for syntax highlighting */
+  language: string;
+  /** Whether the file has unsaved changes */
+  isDirty: boolean;
 }

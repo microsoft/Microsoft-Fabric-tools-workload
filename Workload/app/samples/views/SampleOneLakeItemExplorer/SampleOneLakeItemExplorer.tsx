@@ -19,19 +19,31 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { readOneLakeFileAsText, getOneLakeFilePath } from "../../../clients/OneLakeClient";
+import {  getOneLakeFilePath } from "../../../clients/OneLakeClient";
 import { callDatahubOpen } from "../../../controller/DataHubController";
 
-export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
+export interface OneLakeItemExplorerComponentProps extends PageProps {
+  onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
+  onTableSelected(tableName: string, oneLakeLink: string): Promise<void>;
+  onItemChanged(item: Item): Promise<void>
+  initialItem?: Item;
+}
+
+export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponentProps) {
   const [selectedItem, setSelectedItem] = useState<Item>(null);
+
   const [tablesInItem, setTablesInItem] = useState<TableMetadata[]>(null);
-  const [tableSelected, setTableSelected] = useState<TableMetadata>(null);
   const [filesInItem, setFilesInItem] = useState<FileMetadata[]>(null);
-  const [fileSelected, setFileSelected] = useState<TableMetadata>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>("idle");
   const [isExplorerVisible, setIsExplorerVisible] = useState<boolean>(true);
   const [hasSchema, setHasSchema] = useState<boolean>(false);
-  const [selectedFileContent, setSelectedFileContent] = useState<string>(null);
+
+  // Initialize selectedItem from props.initialItem
+  useEffect(() => {
+    if (props.initialItem) {
+      updateExplorerItem(props.initialItem);
+    }
+  }, [props.initialItem]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,8 +63,8 @@ export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
 
 
   async function setTablesAndFiles(additionalScopesToConsent: string): Promise<boolean> {
-    let tables = await getTables(workloadClient, selectedItem.workspaceId, selectedItem.id);
-    let files = await getFiles(workloadClient, selectedItem.workspaceId, selectedItem.id);
+    let tables = await getTables(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
+    let files = await getFiles(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
 
     if (tables && files) {
       setTablesInItem(tables);
@@ -65,9 +77,9 @@ export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
 
   async function onDatahubClicked() {
     const result = await callDatahubOpen(
-      workloadClient,
-      ["Lakehouse",  
-        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME, 
+      props.workloadClient,
+      ["Lakehouse",
+        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
         process.env.WORKLOAD_NAME + ".CalculatorSample"],
       "Select an item to use for Frontend Sample Workload",
       false
@@ -76,9 +88,15 @@ export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
     if (!result) {
       return;
     }
-    setSelectedItem(result);
-    setTableSelected(null);
-    setFileSelected(null);
+    updateExplorerItem(result);
+  }
+
+  function updateExplorerItem(item: Item){
+    setSelectedItem(item);
+    // Call the callback to notify parent of item change
+    if (props.onItemChanged) {
+      props.onItemChanged(item);
+    }
   }
 
   function toggleExplorer() {
@@ -86,24 +104,30 @@ export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
   }
 
   function tableSelectedCallback(tableSelected: TableMetadata) {
-    setTableSelected(tableSelected);
+    const tableFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, tableSelected.path);
     // setTablesInItem to rerender the tree
     const updatedTables = tablesInItem.map((table: TableMetadata) => {
       return { ...table, isSelected: table.path === tableSelected.path };
     });
     setTablesInItem(updatedTables);
+    if (props.onTableSelected && tableSelected.name) {
+      props.onTableSelected(tableSelected.name, tableFilePath);
+    }
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
     const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
-    const fileContent = await readOneLakeFileAsText(workloadClient, fullFilePath);
-    setFileSelected(fileSelected);
-    setSelectedFileContent(fileContent);
+    //const fileContent = await readOneLakeFileAsText(workloadClient, fullFilePath);
+    //setFileSelected(fileSelected);
+    //setSelectedFileContent(fileContent);
     // setFilesInItem to rerender the tree
     const updatedFiles = filesInItem.map((file: FileMetadata) => {
       return { ...file, isSelected: file.path === fileSelected.path };
     });
     setFilesInItem(updatedFiles);
+    if (props.onFileSelected && fileSelected.name) {
+      await props.onFileSelected(fileSelected.name, fullFilePath);
+    }
   }
 
   return (
@@ -182,9 +206,6 @@ export function OneLakeItemExplorerComponent({ workloadClient }: PageProps) {
           <p>Do you have permission to view this Item?</p>
         </div>}
       </Stack>
-      <Subtitle2>Table Selected: {tableSelected?.name}</Subtitle2>
-      <Subtitle2>File Selected: {fileSelected?.name}</Subtitle2>
-      <Subtitle2>Selected File Content: {selectedFileContent}</Subtitle2>
     </>
   );
 }

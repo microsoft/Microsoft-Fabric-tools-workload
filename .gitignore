@@ -413,3 +413,4 @@ Workload/node_modules/*
 Workload/package-lock.json
 Workload/.env*
 Workload/dist/*
+Workload/app/assets/items/PackageInstallerItem/MDSF/*
