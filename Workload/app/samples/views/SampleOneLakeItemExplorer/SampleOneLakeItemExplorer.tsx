@@ -25,8 +25,12 @@ import { callDatahubOpen } from "../../../controller/DataHubController";
 export interface OneLakeItemExplorerComponentProps extends PageProps {
   onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
   onTableSelected(tableName: string, oneLakeLink: string): Promise<void>;
-  onItemChanged(item: Item): Promise<void>
-  initialItem?: Item;
+  onItemChanged(item: Item): Promise<void>,
+  config: {
+    // Configuration options for the component
+    initialItem?: Item;
+    allowedItemTypes?: string[]
+  };
 }
 
 export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponentProps) {
@@ -40,22 +44,36 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
   // Initialize selectedItem from props.initialItem
   useEffect(() => {
-    if (props.initialItem) {
-      updateExplorerItem(props.initialItem);
+    if (props.config.initialItem && 
+        props.config.initialItem.id && 
+        props.config.initialItem.workspaceId) {
+        setSelectedItem(props.config.initialItem);
+    } else {
+      // No initial item provided, show empty state
+      setLoadingStatus("idle");
     }
-  }, [props.initialItem]);
+  }, [props.config.initialItem]);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (selectedItem) {
+      if (selectedItem && selectedItem.id && selectedItem.workspaceId) {
         setLoadingStatus("loading");
         let success = false;
         try {
           success = await setTablesAndFiles(null);
         } catch (exception) {
-          success = await setTablesAndFiles(".default");
+          try {
+            success = await setTablesAndFiles(".default");
+          } catch (secondException) {
+            console.error("SampleOneLakeItemExplorer: Failed to load data for item:", selectedItem, secondException);
+            success = false;
+          }
         }
         setLoadingStatus(success ? "idle" : "error");
+      } else if (selectedItem) {
+        // selectedItem exists but is missing required properties
+        console.error("SampleOneLakeItemExplorer: selectedItem is missing required properties:", selectedItem);
+        setLoadingStatus("error");
       }
     };
     fetchData();
@@ -63,14 +81,23 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
 
   async function setTablesAndFiles(additionalScopesToConsent: string): Promise<boolean> {
-    let tables = await getTables(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
-    let files = await getFiles(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
+    try {
+      if (!selectedItem || !selectedItem.workspaceId || !selectedItem.id) {
+        console.error("SampleOneLakeItemExplorer: Cannot fetch data - selectedItem is invalid:", selectedItem);
+        return false;
+      }
 
-    if (tables && files) {
-      setTablesInItem(tables);
-      setFilesInItem(files);
-      setHasSchema(tables[0]?.schema != null);
-      return true;
+      let tables = await getTables(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
+      let files = await getFiles(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
+
+      if (tables && files) {
+        setTablesInItem(tables);
+        setFilesInItem(files);
+        setHasSchema(tables[0]?.schema != null);
+        return true;
+      }
+    } catch (error) {
+      console.error("SampleOneLakeItemExplorer: Error fetching tables and files:", error);
     }
     return false;
   }
@@ -78,9 +105,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   async function onDatahubClicked() {
     const result = await callDatahubOpen(
       props.workloadClient,
-      ["Lakehouse",
-        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
-        process.env.WORKLOAD_NAME + ".CalculatorSample"],
+      [ ...props.config.allowedItemTypes || ["Lakehouse"] ],
       "Select an item to use for Frontend Sample Workload",
       false
     );
@@ -92,10 +117,16 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   function updateExplorerItem(item: Item){
-    setSelectedItem(item);
-    // Call the callback to notify parent of item change
-    if (props.onItemChanged) {
-      props.onItemChanged(item);
+    // Validate the item has required properties
+    if (item && item.id && item.workspaceId) {
+      setSelectedItem(item);
+      // Call the callback to notify parent of item change
+      if (props.onItemChanged) {
+        props.onItemChanged(item);
+      }
+    } else {
+      console.error("SampleOneLakeItemExplorer: Cannot update explorer with invalid item:", item);
+      setLoadingStatus("error");
     }
   }
 
@@ -117,10 +148,6 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
     const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
-    //const fileContent = await readOneLakeFileAsText(workloadClient, fullFilePath);
-    //setFileSelected(fileSelected);
-    //setSelectedFileContent(fileContent);
-    // setFilesInItem to rerender the tree
     const updatedFiles = filesInItem.map((file: FileMetadata) => {
       return { ...file, isSelected: file.path === fileSelected.path };
     });
@@ -132,18 +159,18 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
   return (
     <>
-      <Stack className={`explorer ${isExplorerVisible ? "" : "hidden-explorer"}`}>
+      <Stack className={`explorer ${isExplorerVisible ? "" : "hidden-explorer"}`} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <div className={`top ${isExplorerVisible ? "" : "vertical-text"}`}>
           {!isExplorerVisible && (
             <Button onClick={toggleExplorer} appearance="subtle" icon={<ChevronDoubleRight20Regular />}></Button>
           )}
-          <h1>OneLake Explorer</h1>
+          <h1>OneLake Item Explorer</h1>
           {isExplorerVisible && (
             <Button onClick={toggleExplorer} appearance="subtle" icon={<ChevronDoubleLeft20Regular />}></Button>
           )}
         </div>
         {selectedItem == null && isExplorerVisible && (
-          <Stack className="main-body" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }}>
+          <Stack className="main-body" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
             <Image src="/assets/samples/views/SampleOneLakeItemExplorer/EmptyIcon.svg" />
             <span className="add">Add an item</span>
             <Tooltip content={"Open Datahub Explorer"} relationship="label">
@@ -153,13 +180,14 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
             </Tooltip>
           </Stack>
         )}
-        {loadingStatus === "loading" && <Spinner className="main-body" label="Loading Data" />}
+        {loadingStatus === "loading" && <Spinner className="main-body" label="Loading Data" style={{ flex: 1 }} />}
         {selectedItem && loadingStatus == "idle" && isExplorerVisible && (
           <Tree
             aria-label="Tables in Item"
             className="selector-body"
             size="medium"
             defaultOpenItems={["Lakehouse", "Tables", "Files", "Schemas"]}
+            style={{ flex: 1, overflow: "auto" }}
           >
             <div className="tree-container">
               <TreeItem className="selector-tree-item" itemType="branch" value="Lakehouse">
@@ -201,7 +229,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
             </div>
           </Tree>
         )}
-        {loadingStatus === "error" && isExplorerVisible && <div className="main-body">
+        {loadingStatus === "error" && isExplorerVisible && <div className="main-body" style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
           <Subtitle2>Error loading data</Subtitle2>
           <p>Do you have permission to view this Item?</p>
         </div>}
