@@ -131,6 +131,17 @@ export async function deleteOneLakeFile(workloadClient: WorkloadClientAPI, fileP
 }
 
 /**
+ * Create a folder in OneLake by creating a placeholder file
+ * @param workloadClient The workload client
+ * @param folderPath The path to the folder
+ */
+export async function createOneLakeFolder(workloadClient: WorkloadClientAPI, folderPath: string): Promise<void> {
+    // OneLake doesn't have explicit folder creation, so we create a placeholder file
+    const placeholderPath = `${folderPath}/.folder_placeholder`;
+    await writeToOneLakeFileAsText(workloadClient, placeholderPath, "");
+}
+
+/**
  * Get the OneLake file path for a specific file in the Files folder within OneLake
  * @param workspaceId The ID of the workspace
  * @param itemId The ID of the item

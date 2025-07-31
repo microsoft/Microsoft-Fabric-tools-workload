@@ -19,8 +19,14 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import {  getOneLakeFilePath } from "../../../clients/OneLakeClient";
+import { getOneLakeFilePath, deleteOneLakeFile, createOneLakeFolder } from "../../../clients/OneLakeClient";
 import { callDatahubOpen } from "../../../controller/DataHubController";
+import { ItemReference } from "../../../controller/ItemCRUDController";
+
+export interface OneLakeItemExplorerItem extends ItemReference {
+  displayName: string;
+}
+
 
 export interface OneLakeItemExplorerComponentProps extends PageProps {
   onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
@@ -28,13 +34,15 @@ export interface OneLakeItemExplorerComponentProps extends PageProps {
   onItemChanged(item: Item): Promise<void>,
   config: {
     // Configuration options for the component
-    initialItem?: Item;
-    allowedItemTypes?: string[]
+    initialItem?: OneLakeItemExplorerItem;
+    allowedItemTypes?: string[];
+    allowItemSelection: boolean;
+    refreshTrigger?: number; // Timestamp to trigger refresh
   };
 }
 
 export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponentProps) {
-  const [selectedItem, setSelectedItem] = useState<Item>(null);
+  const [selectedItem, setSelectedItem] = useState<OneLakeItemExplorerItem>(null);
 
   const [tablesInItem, setTablesInItem] = useState<TableMetadata[]>(null);
   const [filesInItem, setFilesInItem] = useState<FileMetadata[]>(null);
@@ -78,6 +86,28 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     };
     fetchData();
   }, [selectedItem]);
+
+  // Watch for refresh trigger changes to re-fetch data
+  useEffect(() => {
+    if (props.config.refreshTrigger && selectedItem && selectedItem.id && selectedItem.workspaceId) {
+      const fetchData = async () => {
+        setLoadingStatus("loading");
+        let success = false;
+        try {
+          success = await setTablesAndFiles(null);
+        } catch (exception) {
+          try {
+            success = await setTablesAndFiles(".default");
+          } catch (secondException) {
+            console.error("SampleOneLakeItemExplorer: Failed to refresh data for item:", selectedItem, secondException);
+            success = false;
+          }
+        }
+        setLoadingStatus(success ? "idle" : "error");
+      };
+      fetchData();
+    }
+  }, [props.config.refreshTrigger, selectedItem]);
 
 
   async function setTablesAndFiles(additionalScopesToConsent: string): Promise<boolean> {
@@ -157,6 +187,33 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
   }
 
+  async function deleteFileCallback(filePath: string) {
+    try {
+      const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, filePath);
+      await deleteOneLakeFile(props.workloadClient, fullFilePath);
+      
+      // Refresh the file list after deletion
+      await setTablesAndFiles(null);
+    } catch (error) {
+      console.error("Failed to delete file:", error);
+      alert("Failed to delete file. Please try again.");
+    }
+  }
+
+  async function createFolderCallback(parentPath: string, folderName: string) {
+    try {
+      const folderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
+      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      await createOneLakeFolder(props.workloadClient, fullFolderPath);
+      
+      // Refresh the file list after folder creation
+      await setTablesAndFiles(null);
+    } catch (error) {
+      console.error("Failed to create folder:", error);
+      alert("Failed to create folder. Please try again.");
+    }
+  }
+
   return (
     <>
       <Stack className={`explorer ${isExplorerVisible ? "" : "hidden-explorer"}`} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -173,11 +230,13 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
           <Stack className="main-body" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
             <Image src="/assets/samples/views/SampleOneLakeItemExplorer/EmptyIcon.svg" />
             <span className="add">Add an item</span>
+            {props.config?.allowItemSelection && (
             <Tooltip content={"Open Datahub Explorer"} relationship="label">
               <Button className="add-button" size="small" onClick={() => onDatahubClicked()} appearance="primary">
                 Add
               </Button>
             </Tooltip>
+            )}
           </Stack>
         )}
         {loadingStatus === "loading" && <Spinner className="main-body" label="Loading Data" style={{ flex: 1 }} />}
@@ -221,7 +280,9 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                     <Tree className="tree" selectionMode="single">
                       <FileTree
                         allFilesInItem={filesInItem}
-                        onSelectFileCallback={fileSelectedCallback} />
+                        onSelectFileCallback={fileSelectedCallback}
+                        onDeleteFileCallback={deleteFileCallback}
+                        onCreateFolderCallback={createFolderCallback} />
                     </Tree>
                   </TreeItem>
                 </Tree>

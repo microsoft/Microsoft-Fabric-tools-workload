@@ -26,6 +26,8 @@ export interface OneLakeItemExplorerTablesTreeProps {
 export interface OneLakeItemExplorerFilesTreeProps {
     allFilesInItem: FileMetadata[];
     onSelectFileCallback: (selectedFile: FileMetadata) => void;
+    onDeleteFileCallback?: (filePath: string) => Promise<void>;
+    onCreateFolderCallback?: (parentPath: string, folderName: string) => Promise<void>;
 }
 
 export interface OneLakePath {

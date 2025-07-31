@@ -1,6 +1,6 @@
 import React from "react";
-import { Document20Regular, FolderRegular } from "@fluentui/react-icons";
-import { Tree, TreeItem, TreeItemLayout, Tooltip } from "@fluentui/react-components";
+import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular } from "@fluentui/react-icons";
+import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./SampleOneLakeItemExplorerModel";
 
 interface TreeNode {
@@ -11,7 +11,7 @@ interface TreeNode {
 type FolderMap = Map<string, TreeNode>;
 
 export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
-    const {allFilesInItem: allFilesInOneLake, onSelectFileCallback} = props;
+    const {allFilesInItem: allFilesInOneLake, onSelectFileCallback, onDeleteFileCallback, onCreateFolderCallback} = props;
 
     const buildFileTree = (files: FileMetadata[]) => {
         const root: TreeNode[] = [];
@@ -75,17 +75,46 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
         return root;
     };
 
+    const handleCreateFolder = async (parentPath: string) => {
+        const folderName = prompt("Enter folder name:");
+        if (folderName && folderName.trim() && onCreateFolderCallback) {
+            await onCreateFolderCallback(parentPath, folderName.trim());
+        }
+    };
+
+    const handleDeleteFile = async (filePath: string) => {
+        if (window.confirm("Are you sure you want to delete this file?") && onDeleteFileCallback) {
+            await onDeleteFileCallback(filePath);
+        }
+    };
+
     const renderTreeNode = (node: TreeNode): JSX.Element => {
         const { metadata, children } = node;
 
         if (metadata.isDirectory) {
             return (
                 <TreeItem key={metadata.path} itemType="branch">
-                    <Tooltip relationship="label" content={metadata.name}>
-                        <TreeItemLayout iconBefore={<FolderRegular />}>
-                            {metadata.name}
-                        </TreeItemLayout>
-                    </Tooltip>
+                    <Menu>
+                        <MenuTrigger disableButtonEnhancement>
+                            <Tooltip relationship="label" content={metadata.name}>
+                                <TreeItemLayout iconBefore={<FolderRegular />}>
+                                    {metadata.name}
+                                </TreeItemLayout>
+                            </Tooltip>
+                        </MenuTrigger>
+                        <MenuPopover>
+                            <MenuList>
+                                {onCreateFolderCallback && (
+                                    <MenuItem 
+                                        icon={<FolderAdd20Regular />}
+                                        onClick={() => handleCreateFolder(metadata.path)}
+                                    >
+                                        Create Folder
+                                    </MenuItem>
+                                )}
+                            </MenuList>
+                        </MenuPopover>
+                    </Menu>
                     <Tree>
                         {children.map(child => renderTreeNode(child))}
                     </Tree>
@@ -98,14 +127,30 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                     itemType="leaf"
                     onClick={() => onSelectFileCallback(metadata)}
                 >
-                    <Tooltip relationship="label" content={metadata.name}>
-                        <TreeItemLayout
-                            className={metadata.isSelected ? "selected" : ""}
-                            iconBefore={<Document20Regular />}
-                        >
-                            {metadata.name}
-                        </TreeItemLayout>
-                    </Tooltip>
+                    <Menu>
+                        <MenuTrigger disableButtonEnhancement>
+                            <Tooltip relationship="label" content={metadata.name}>
+                                <TreeItemLayout
+                                    className={metadata.isSelected ? "selected" : ""}
+                                    iconBefore={<Document20Regular />}
+                                >
+                                    {metadata.name}
+                                </TreeItemLayout>
+                            </Tooltip>
+                        </MenuTrigger>
+                        <MenuPopover>
+                            <MenuList>
+                                {onDeleteFileCallback && (
+                                    <MenuItem 
+                                        icon={<Delete20Regular />}
+                                        onClick={() => handleDeleteFile(metadata.path)}
+                                    >
+                                        Delete File
+                                    </MenuItem>
+                                )}
+                            </MenuList>
+                        </MenuPopover>
+                    </Menu>
                 </TreeItem>
             );
         }

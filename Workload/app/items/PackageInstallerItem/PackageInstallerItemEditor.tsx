@@ -36,6 +36,7 @@ import { NotificationType } from "@ms-fabric/workload-client";
 import { t } from "i18next";
 import { writeToOneLakeFileAsText, getOneLakeFilePath, readOneLakeFileAsText} from "../../clients/OneLakeClient";
 import { callOpenSettings } from "../../controller/SettingsController";
+import { PackageStrategyFactory, PackageStrategyType } from "./package/PackageStrategyFactory";
 
 // Component to fetch and display folder name
 
@@ -329,6 +330,124 @@ export function PackageInstallerItemEditor(props: PageProps) {
       );
     }
   }
+
+  /**
+   * Handle creating a new package using the PackageInstallerPackagingDialog
+   */
+  async function createPackage() {
+    try {
+      const dialogResult = await callDialogOpen(
+        workloadClient,
+        process.env.WORKLOAD_NAME,
+        `/PackageInstallerItem-packaging-dialog/${editorItem.id}`,
+        800, 600,
+        true
+      );
+
+      if (dialogResult && dialogResult.value) {
+        const result = dialogResult.value as { 
+          state: 'package' | 'cancel'; 
+          selectedItems?: any[]; 
+          workspaceId?: string;
+          packageDisplayName?: string;
+          packageDescription?: string;
+          deploymentLocation?: any;
+        };
+        
+        if (result.state === 'package' && result.selectedItems && result.selectedItems.length > 0) {
+          const selectedItems = result.selectedItems;
+          
+          try {
+            // Create the package strategy
+            const packageStrategy = PackageStrategyFactory.createStrategy(
+              PackageStrategyType.Standard,
+              context, 
+              editorItem
+            );
+            
+            // Use the provided display name and description from the wizard
+            const packageDisplayName = result.packageDisplayName || `Custom Package ${new Date().toLocaleDateString()}`;
+            const packageDescription = result.packageDescription || `Package created from ${selectedItems.length} selected items`;
+            
+            // Create the package
+            const createdPackageItem = await packageStrategy.createPackageFromItems(
+              selectedItems,
+              packageDisplayName,
+              packageDescription,
+              result.deploymentLocation
+            );
+            
+            // Generate package path based on the created package
+            const sanitizedName = packageDisplayName.replace(/[^a-zA-Z0-9]/g, '_');
+            const packageJsonPath = `packages/${sanitizedName}/Package.json`;
+            
+            // Add the package to the additional packages list
+            const currentAdditionalPackages = editorItem?.definition?.additionalPackages || [];
+            const newItemDefinition: PackageInstallerItemDefinition = {
+              ...editorItem?.definition,
+              additionalPackages: [...currentAdditionalPackages, packageJsonPath]
+            };
+            
+            // Update item definition and save
+            updateItemDefinition(newItemDefinition);
+            await SaveItem(newItemDefinition);
+            
+            // Add the created package to the package registry using the actual package data
+            if (createdPackageItem.creationPayload) {
+              context.packageRegistry.addPackage(createdPackageItem.creationPayload);
+            }
+            
+            callNotificationOpen(
+              workloadClient,
+              "Package Created Successfully",
+              `Package "${packageDisplayName}" has been created with ${selectedItems.length} item(s) and added to the registry.`,
+              NotificationType.Success,
+              undefined
+            );
+            
+            console.log('Package created successfully:', packageJsonPath);
+            console.log('Selected items:', selectedItems);
+            console.log('From workspace:', result.workspaceId);
+            console.log('Package display name:', packageDisplayName);
+            console.log('Package description:', packageDescription);
+            console.log('Deployment location:', result.deploymentLocation);
+            
+          } catch (error) {
+            console.error('Error during package creation:', error);
+            callNotificationOpen(
+              workloadClient,
+              "Package Creation Failed",
+              `Failed to create package: ${error.message || error}`,
+              NotificationType.Error,
+              undefined
+            );
+          }
+          
+        } else if (result.state === 'cancel') {
+          console.log("Package creation dialog was cancelled");
+        } else {
+          callNotificationOpen(
+            workloadClient,
+            "No Items Selected",
+            "Please select at least one item to create a package.",
+            NotificationType.Warning,
+            undefined
+          );
+        }
+      } else {
+        console.log("Package creation dialog was cancelled or failed");
+      }
+    } catch (error) {
+      console.error('Error creating package:', error);
+      callNotificationOpen(
+        workloadClient,
+        "Package Creation Error",
+        `Failed to create package: ${error.message || error}`,
+        NotificationType.Error,
+        undefined
+      );
+    }
+  }
   
 
   /**
@@ -595,6 +714,7 @@ async function addDeployment(packageId: string) {
             addInstallationCallback={addInstallation}
             refreshDeploymentsCallback={handleRefreshDeployments}
             uploadPackageCallback={uploadPackageJson}
+            createPackageCallback={createPackage}
             isSaveButtonEnabled={isUnsaved}
             isDeploymentInProgress={isDeploymentInProgress}      
             selectedTab={selectedTab}

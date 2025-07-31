@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { Text, TabValue } from "@fluentui/react-components";
+import { Text, TabValue, Tab, TabList } from "@fluentui/react-components";
+import { Editor } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 import { ContextProps, PageProps } from "../../App";
 import { FileEditorItemEditorRibbon } from "./FileEditorItemEditorRibbon";
@@ -13,8 +14,12 @@ import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingPr
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDatahubOpen } from "../../controller/DataHubController";
 import { readOneLakeFileAsText, writeToOneLakeFileAsText } from "../../clients/OneLakeClient";
-import { FileExplorer } from "./FileExplorer";
+import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
 import { Stack } from "@fluentui/react";
+
+
+const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
+
 
 export function FileEditorItemEditor(props: PageProps) {
   const pageContext = useParams<ContextProps>();
@@ -23,15 +28,15 @@ export function FileEditorItemEditor(props: PageProps) {
   const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
   const [editorItem, setEditorItem] = useState<ItemWithDefinition<FileEditorItemDefinition>>(undefined);
-  const [selectedTab, setSelectedTab] = useState<TabValue>("empty");
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
   const ALLOWED_ITEM_TYPES = ["Lakehouse",
                                 process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
-                                process.env.WORKLOAD_NAME + ".CalculatorSample"]
+                                process.env.WORKLOAD_NAME + ".FileEditor"]
 
   // Default editor settings
-  const defaultSettings = {
+  const defaultEditorSettings = {
     fontSize: 14,
     wordWrap: true,
     minimap: true,
@@ -68,6 +73,7 @@ export function FileEditorItemEditor(props: PageProps) {
       'js': 'javascript',
       'jsx': 'javascript',
       'ts': 'typescript',
+      'ipynb': 'jupyter',
       'tsx': 'typescript',
       'py': 'python',
       'html': 'html',
@@ -139,6 +145,8 @@ export function FileEditorItemEditor(props: PageProps) {
             undefined,
             undefined
           );
+          // Refresh the explorer to show updated files
+          refreshItemExplorer();
         }
       }
     }
@@ -183,7 +191,7 @@ export function FileEditorItemEditor(props: PageProps) {
               openFiles: [],
               activeFileIndex: 0,
               theme: currentTheme,
-              editorSettings: defaultSettings,
+              editorSettings: defaultEditorSettings,
               itemReference: {
                 id: item.id,
                 workspaceId: item.workspaceId,
@@ -209,33 +217,34 @@ export function FileEditorItemEditor(props: PageProps) {
         setEditorItem(undefined);
       }
     }
-    
-    // Set initial tab based on whether we have files
-    if (item?.definition?.openFiles && item.definition.openFiles.length > 0) {
-      setSelectedTab("home");
-    } else {
-      setSelectedTab("empty");
-    }
-    
+   
     setIsLoadingData(false);
   }
 
-  // File operations
-  const handleCreateNewFile = useCallback(async () => {
-    const fileName = `untitled-${Date.now()}.txt`;
+  // Function to refresh the OneLake item explorer
+  const refreshItemExplorer = useCallback(() => {
+    // Update timestamp to trigger a re-fetch of files
+    setLastRefreshTime(Date.now());
+  }, []);
+
+  // Function to write a file to the OneLake folder and add it to the editor
+  const writeToItemOneLakeFolder = useCallback(async (fileName: string, content: string) => {
+    const language = detectLanguage(fileName);
     let oneLakeLink = "";
     
     // If we have workspace and item info, create OneLake path
     if (editorItem?.workspaceId && editorItem?.id) {
       oneLakeLink = `${editorItem.workspaceId}/${editorItem.id}/Files/${fileName}`;
     }
-    
+
+    await writeToOneLakeFileAsText(workloadClient, oneLakeLink, content);
+
     const newFile: OneLakeFileReference = {
-      ...editorItem,
+      ...editorItem || definition?.itemReference,
       onelakeLink: oneLakeLink,
-      fileName,
-      content: "// Welcome to File Editor\n// Start typing your code here...\n",
-      language: "plaintext",
+      fileName: fileName,
+      content,
+      language,
       isDirty: true, // Mark as dirty so it will be saved to OneLake
     };
 
@@ -244,8 +253,14 @@ export function FileEditorItemEditor(props: PageProps) {
       openFiles: updatedFiles,
       activeFileIndex: updatedFiles.length - 1
     });
-    setSelectedTab("home");
-  }, [openFiles, updateItemDefinition, editorItem]);
+    refreshItemExplorer();
+  }, [editorItem, definition?.itemReference, openFiles, updateItemDefinition, workloadClient, detectLanguage, refreshItemExplorer]);
+
+  // File operations
+  const handleCreateNewFile = useCallback(async () => {
+    const fileName = `untitled-${Date.now()}.txt`;
+    writeToItemOneLakeFolder(fileName, "// Welcome to File Editor\n// Start typing your code here...\n");
+  }, [writeToItemOneLakeFolder]);
 
   const handleOpenItem = useCallback(async () => {
     try {
@@ -286,7 +301,7 @@ export function FileEditorItemEditor(props: PageProps) {
   const handleUploadFile = useCallback(async () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.sh,.ps1';
+    input.accept = FILETYPES_ACCEPT;
     
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
@@ -294,37 +309,14 @@ export function FileEditorItemEditor(props: PageProps) {
         const reader = new FileReader();
         reader.onload = (e) => {
           const content = e.target?.result as string;
-          const language = detectLanguage(file.name);
-          
-          let oneLakeLink = "";
-          
-          // If we have workspace and item info, create OneLake path
-          if (editorItem?.workspaceId && editorItem?.id) {
-            oneLakeLink = `${editorItem.workspaceId}/${editorItem.id}/Files/${file.name}`;
-          }
-          
-          const newFile: OneLakeFileReference = {
-            ...editorItem || definition?.itemReference,
-            onelakeLink: oneLakeLink,
-            fileName: file.name,
-            content,
-            language,
-            isDirty: true, // Mark as dirty so it will be saved to OneLake
-          };
-
-          const updatedFiles = [...openFiles, newFile];
-          updateItemDefinition({
-            openFiles: updatedFiles,
-            activeFileIndex: updatedFiles.length - 1
-          });
-          setSelectedTab("home");
+          writeToItemOneLakeFolder(file.name, content);
         };
         reader.readAsText(file);
       }
     };
     
     input.click();
-  }, [openFiles, updateItemDefinition, editorItem]);
+  }, [writeToItemOneLakeFolder]);
 
 
   const handleEditorChange = useCallback((value: string | undefined) => {
@@ -343,16 +335,9 @@ export function FileEditorItemEditor(props: PageProps) {
   }, [currentFile, openFiles, activeFileIndex, updateItemDefinition]);
 
   const handleTabChange = useCallback((event: any, data: { value: TabValue }) => {
-    if (data.value === "empty") {
-      setSelectedTab("empty");
-    } else if (data.value === "home") {
-      setSelectedTab("home");
-    } else {
-      const fileIndex = parseInt(data.value as string);
-      if (!isNaN(fileIndex) && fileIndex >= 0 && fileIndex < openFiles.length) {
-        updateItemDefinition({ activeFileIndex: fileIndex });
-        setSelectedTab("home");
-      }
+    const fileIndex = parseInt(data.value as string);
+    if (!isNaN(fileIndex) && fileIndex >= 0 && fileIndex < openFiles.length) {
+      updateItemDefinition({ activeFileIndex: fileIndex });
     }
   }, [openFiles.length, updateItemDefinition]);
 
@@ -370,10 +355,7 @@ export function FileEditorItemEditor(props: PageProps) {
       openFiles: updatedFiles,
       activeFileIndex: updatedFiles.length > 0 ? newActiveIndex : 0
     });
-    
-    if (updatedFiles.length === 0) {
-      setSelectedTab("empty");
-    }
+
   }, [openFiles, activeFileIndex, updateItemDefinition]);
 
   const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
@@ -381,9 +363,9 @@ export function FileEditorItemEditor(props: PageProps) {
     
     // Configure editor options
     editor.updateOptions({
-      fontSize: definition?.editorSettings?.fontSize || defaultSettings.fontSize,
+      fontSize: definition?.editorSettings?.fontSize || defaultEditorSettings.fontSize,
       wordWrap: definition?.editorSettings?.wordWrap ? 'on' : 'off',
-      minimap: { enabled: definition?.editorSettings?.minimap ?? defaultSettings.minimap },
+      minimap: { enabled: definition?.editorSettings?.minimap ?? defaultEditorSettings.minimap },
       lineNumbers: definition?.editorSettings?.lineNumbers ? 'on' : 'off',
       automaticLayout: true,
       scrollBeyondLastLine: false,
@@ -401,7 +383,6 @@ export function FileEditorItemEditor(props: PageProps) {
       if (existingFileIndex !== -1) {
         // File is already open, just switch to it
         updateItemDefinition({ activeFileIndex: existingFileIndex });
-        setSelectedTab("home");
         return;
       }
 
@@ -423,7 +404,6 @@ export function FileEditorItemEditor(props: PageProps) {
         openFiles: updatedFiles,
         activeFileIndex: updatedFiles.length - 1
       });
-      setSelectedTab("home");
     } catch (error) {
       callNotificationOpen(
         workloadClient,
@@ -466,8 +446,6 @@ export function FileEditorItemEditor(props: PageProps) {
     );
   }
 
-  const showEmpty = selectedTab === "empty" || openFiles.length === 0;
-
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <FileEditorItemEditorRibbon
@@ -477,48 +455,107 @@ export function FileEditorItemEditor(props: PageProps) {
         onUploadFile={handleUploadFile}
         saveItemCallback={SaveItem}
         isSaveButtonEnabled={isUnsaved || isSavingFiles}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
+        selectedTab={() => {}}
+        onTabChange={() => {}}
       />
 
       <Stack className="main" style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
         <span style={{ height: "100%", overflow: "auto", padding: "16px" }}>
-          {showEmpty ? (
-            <FileEditorItemEditorEmpty
-              onCreateNewFile={handleCreateNewFile}
-              onUploadFile={handleUploadFile}
-              onOpenItem={handleOpenItem}
-            />
-          ) : (
-            <FileExplorer
-              workloadClient={workloadClient}
-              onFileSelected={handleFileExplorerSelection}
-              onTableSelected={handleTableExplorerSelection}
-              onItemChanged={handleItemChanged}
-              config={{
-                allowedItemTypes: ALLOWED_ITEM_TYPES,
-                initialItem: definition?.itemReference || {
-                  id: editorItem.id,
-                  workspaceId: editorItem.workspaceId,
-                  displayName: editorItem.displayName || "Local",
-                  type: editorItem.type,
-                  description: editorItem.description
-                }
-              }}
-              // Pass editor-related props
-              openFiles={openFiles}
-              activeFileIndex={activeFileIndex}
-              currentFile={currentFile}
-              currentTheme={currentTheme}
-              selectedFile={selectedTab}
-              onFileChanged={handleTabChange}
-              onCloseFile={handleCloseFile}
-              onEditorChange={handleEditorChange}
-              onEditorDidMount={handleEditorDidMount}
-            />
-          )}
+          <div style={{ height: "100%", display: "flex", flex: 1 }}>
+            {/* Left panel - File Explorer */}
+            <div className="explorer" style={{
+              height: "100%",
+              margin: 0,
+              borderRadius: 0,
+              borderRight: "1px solid #e1dfdd",
+              boxShadow: "none"
+            }}>
+              <div style={{ height: "calc(100% - 60px)", overflow: "hidden" }}>
+                <OneLakeItemExplorerComponent
+                  workloadClient={workloadClient}
+                  onFileSelected={handleFileExplorerSelection}
+                  onTableSelected={handleTableExplorerSelection}
+                  onItemChanged={handleItemChanged}
+                  config={{
+                    allowedItemTypes: ALLOWED_ITEM_TYPES,
+                    allowItemSelection: true,
+                    refreshTrigger: lastRefreshTime,
+                    initialItem: definition?.itemReference || {
+                       ...editorItem
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Right panel - Editor */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+              {openFiles.length > 0 && (
+                <div style={{ borderBottom: "1px solid #e1dfdd" }}>
+                  {/* Tab list for open files */}
+                  <TabList onTabSelect={handleTabChange} >
+                    {openFiles.map((file: OneLakeFileReference, index: number) => (
+                      <Tab 
+                        key={index} 
+                        value={index.toString()}
+                        style={{ position: 'relative' }}
+                      >
+                        {file.fileName}
+                        {file.isDirty ? ' •' : ''}                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCloseFile(index);
+                          }}
+                          style={{
+                            marginLeft: '8px',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            color: '#666'
+                          }}
+                        >
+                          ×
+                        </button>
+                      </Tab>
+                    ))}
+                  </TabList>
+                </div>
+              )}
+              {editorItem.definition?.openFiles?.length > 0 ? (
+                <div style={{ flex: 1, overflow: "hidden" }}>
+                  <Editor
+                    height="100%"
+                    language={currentFile?.language || "plaintext"}
+                    value={currentFile?.content || ""}
+                    theme={currentTheme}
+                    onChange={handleEditorChange}
+                    onMount={handleEditorDidMount}
+                    options={{
+                      automaticLayout: true,
+                      scrollBeyondLastLine: false,
+                      renderWhitespace: 'selection',
+                      tabSize: 2,
+                      insertSpaces: true,
+                      wordWrap: 'on',
+                      minimap: { enabled: true },
+                      lineNumbers: 'on'
+                    }}
+                  />
+                </div>
+                ) : (
+                  <FileEditorItemEditorEmpty
+                    onCreateNewFile={handleCreateNewFile}
+                    onUploadFile={handleUploadFile}
+                    onOpenItem={handleOpenItem}
+                  />                
+                )}
+              </div>
+          </div>
         </span>
       </Stack>
     </div>
   );
 }
+

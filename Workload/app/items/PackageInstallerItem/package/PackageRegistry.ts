@@ -162,7 +162,6 @@ export class PackageRegistry {
         () => import('../../../assets/items/PackageInstallerItem/SemanticModelAudit/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/SemanticLinkLabs/package.json'),
         () => import('../../../assets/items/PackageInstallerItem/DAXPerformanceTesting/package.json'),
-        //() => import('../../../assets/items/PackageInstallerItem/MDSF/package.json'),
       ];
 
       // Load all config files

@@ -11,6 +11,7 @@ import {
   ArrowSync24Regular,
   DocumentAdd24Regular,
   Settings24Regular,
+  BoxMultiple24Regular,
 } from "@fluentui/react-icons";
 import { PageProps } from 'src/App';
 import './../../styles.scss';
@@ -44,6 +45,12 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
   async function onUploadPackageClicked() {
     if (props.uploadPackageCallback) {
       props.uploadPackageCallback();
+    }
+  }
+
+  async function onCreatePackageClicked() {
+    if (props.createPackageCallback) {
+      props.createPackageCallback();
     }
   }
 
@@ -101,6 +108,17 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           icon={<DocumentAdd24Regular />}
           onClick={ onUploadPackageClicked } />
       </Tooltip>
+
+      <Tooltip
+        content="Create Package"
+        relationship="label">
+        <ToolbarButton
+          disabled={props.isDeploymentInProgress}
+          aria-label="Create Package"
+          data-testid="item-editor-create-package-btn"
+          icon={<BoxMultiple24Regular />}
+          onClick={ onCreatePackageClicked } />
+      </Tooltip>
     </Toolbar>
   );
 };
@@ -112,6 +130,7 @@ export interface PackageInstallerItemEditorRibbonProps extends PageProps {
   addInstallationCallback: () => void;
   refreshDeploymentsCallback: () => Promise<void>;
   uploadPackageCallback: () => Promise<void>;
+  createPackageCallback: () => Promise<void>;
   isSaveButtonEnabled?: boolean;
   isDeploymentInProgress?: boolean;
   selectedTab: TabValue;

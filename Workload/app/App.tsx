@@ -5,6 +5,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEditor";
 import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
+import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
 import { FileEditorItemEditor } from "./items/FileEditorItem/FileEditorItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
@@ -65,11 +66,15 @@ export function App({ history, workloadClient }: AppProps) {
                 <PackageInstallerDeployDialogWrapper
                     workloadClient={workloadClient} />
             </Route>
-            <Route path="/PackageInstallerItem-about-page/:itemObjectId">
+            <Route path="/PackageInstallerItem-packaging-dialog/:itemObjectId">
+                <PackageInstallerPackagingDialogWrapper
+                    workloadClient={workloadClient} />
+            </Route>
+            <Route path="/PackageInstallerItem-about-page/">
                 <PackageInstallerItemEditorAboutPage
                     workloadClient={workloadClient} />
             </Route>
-            <Route path="/PackageInstallerItem-settings-page/:itemObjectId">
+            <Route path="/PackageInstallerItem-settings-page/">
                 <PackageInstallerItemEditorSettingsPage
                     workloadClient={workloadClient} />
             </Route>
