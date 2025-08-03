@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, Link20Regular } from "@fluentui/react-icons";
+import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, Link20Regular, FolderLink20Regular } from "@fluentui/react-icons";
 import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./SampleOneLakeItemExplorerModel";
 
@@ -11,7 +11,7 @@ interface TreeNode {
 type FolderMap = Map<string, TreeNode>;
 
 export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
-    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onCreateFolderCallback, onCreateShortcutCallback} = props;
+    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback, onCreateFolderCallback, onCreateShortcutCallback} = props;
     const [openMenu, setOpenMenu] = useState<string | null>(null);
 
     const buildFileTree = (files: FileMetadata[]) => {
@@ -78,13 +78,17 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
 
     const handleCreateFolder = async (parentPath: string) => {
         if (onCreateFolderCallback) {
-            await onCreateFolderCallback(parentPath);
+            // Ensure the path includes the Files prefix since FileTree is within the Files directory
+            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
+            await onCreateFolderCallback(fullPath);
         }
     };
 
     const handleCreateShortcut = async (parentPath: string) => {
         if (onCreateShortcutCallback) {
-            await onCreateShortcutCallback(parentPath);
+            // Ensure the path includes the Files prefix since FileTree is within the Files directory
+            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
+            await onCreateShortcutCallback(fullPath);
         }
     };
 
@@ -94,10 +98,21 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
         }
     };
 
+    const handleDeleteFolder = async (folderPath: string) => {
+        if (onDeleteFolderCallback) {
+            // Ensure the path includes the Files prefix since FileTree is within the Files directory
+            const fullPath = folderPath ? `Files/${folderPath}` : "Files";
+            await onDeleteFolderCallback(fullPath);
+        }
+    };
+
     const renderTreeNode = (node: TreeNode): JSX.Element => {
         const { metadata, children } = node;
 
         if (metadata.isDirectory) {
+            // Use different icon for shortcut folders vs regular folders
+            const folderIcon = metadata.isShortcut ? <FolderLink20Regular /> : <FolderRegular />;
+            
             return (
                 <TreeItem key={metadata.path} itemType="branch">
                     <Menu 
@@ -107,7 +122,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                         <MenuTrigger disableButtonEnhancement>
                             <Tooltip relationship="label" content={metadata.name}>
                                 <TreeItemLayout 
-                                    iconBefore={<FolderRegular />}
+                                    iconBefore={folderIcon}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         setOpenMenu(metadata.path);
@@ -119,7 +134,8 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                         </MenuTrigger>
                         <MenuPopover>
                             <MenuList>
-                                {onCreateFolderCallback && (
+                                {/* Only show create options for regular folders (not shortcuts) */}
+                                {onCreateFolderCallback && !metadata.isShortcut && (
                                     <MenuItem 
                                         icon={<FolderAdd20Regular />}
                                         onClick={() => {
@@ -130,7 +146,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                         Create Folder
                                     </MenuItem>
                                 )}
-                                {onCreateShortcutCallback && (
+                                {onCreateShortcutCallback && !metadata.isShortcut && (
                                     <MenuItem 
                                         icon={<Link20Regular />}
                                         onClick={() => {
@@ -139,6 +155,18 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                         }}
                                     >
                                         Create Shortcut
+                                    </MenuItem>
+                                )}
+                                {/* Only show delete option for shortcut folders */}
+                                {onDeleteFolderCallback && metadata.isShortcut && (
+                                    <MenuItem 
+                                        icon={<Delete20Regular />}
+                                        onClick={() => {
+                                            handleDeleteFolder(metadata.path);
+                                            setOpenMenu(null);
+                                        }}
+                                    >
+                                        Delete Shortcut
                                     </MenuItem>
                                 )}
                             </MenuList>

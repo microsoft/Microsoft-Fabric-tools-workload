@@ -25,9 +25,12 @@ import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
 import { getOneLakeFilePath, deleteOneLakeFile, createOneLakeFolder } from "../../../clients/OneLakeClient";
-import { callDatahubOpen } from "../../../controller/DataHubController";
+import { callDatahubOpen, callDatahubWizardOpen } from "../../../controller/DataHubController";
 import { callDialogOpenMsgBox } from "../../../controller/DialogController";
+import { callNotificationOpen } from "../../../controller/NotificationController";
 import { ItemReference } from "../../../controller/ItemCRUDController";
+import { OneLakeShortcutClient } from "../../../clients/OneLakeShortcutClient";
+import { NotificationType } from "@ms-fabric/workload-client";
 
 export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;
@@ -127,10 +130,12 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
         return false;
       }
 
+      console.log(`Fetching tables and files for item: ${selectedItem.id} in workspace: ${selectedItem.workspaceId}`);
       let tables = await getTables(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
       let files = await getFiles(props.workloadClient, selectedItem.workspaceId, selectedItem.id);
 
       if (tables && files) {
+        console.log(`Loaded ${tables.length} tables and ${files.length} files`);
         setTablesInItem(tables);
         setFilesInItem(files);
         setHasSchema(tables[0]?.schema != null);
@@ -178,9 +183,11 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   function tableSelectedCallback(tableSelected: TableMetadata) {
-    const tableFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, tableSelected.path);
+    // Add Tables prefix to match the directory structure, similar to how FileTree handles Files
+    const tablePathWithPrefix = `Tables/${tableSelected.path}`;
+    const tableFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
     // Update selection state without modifying the tables array
-    setSelectedTablePath(tableSelected.path);
+    setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
     if (props.onTableSelected && tableSelected.name) {
       props.onTableSelected(tableSelected.name, tableFilePath);
@@ -219,7 +226,43 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
       await setTablesAndFiles(null);
     } catch (error) {
       console.error("Failed to delete file:", error);
-      alert("Failed to delete file. Please try again.");
+      await callNotificationOpen(
+        props.workloadClient,
+        "Delete Failed",
+        "Failed to delete file. Please try again.",
+        NotificationType.Error
+      );
+    }
+  }
+
+  async function deleteFolderCallback(folderPath: string) {
+    // Show confirmation dialog for folder deletion
+    const folderName = folderPath.split('/').pop() || folderPath; // Get just the folder name
+    const clickedButton = await callDialogOpenMsgBox(
+      props.workloadClient,
+      "Delete Shortcut Folder",
+      `Are you sure you want to delete the shortcut folder "${folderName}"?\n\nThis will remove the shortcut but not the original data.\nThis action cannot be undone.`,
+      ["Yes", "No"]
+    );
+    
+    if (clickedButton !== "Yes") {
+      return; // User cancelled, don't delete
+    }
+
+    try {
+      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      await deleteOneLakeFile(props.workloadClient, fullFolderPath);
+      
+      // Refresh the file list after deletion
+      await setTablesAndFiles(null);
+    } catch (error) {
+      console.error("Failed to delete folder:", error);
+      await callNotificationOpen(
+        props.workloadClient,
+        "Delete Failed",
+        "Failed to delete folder. Please try again.",
+        NotificationType.Error
+      );
     }
   }
 
@@ -234,48 +277,105 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     try {
       const folderPath = parentPath ? `${parentPath}/${folderName.trim()}` : folderName.trim();
       const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      console.log(`Creating folder at path: ${fullFolderPath}`);
+      
       await createOneLakeFolder(props.workloadClient, fullFolderPath);
+      console.log(`Folder created successfully, refreshing tree...`);
+      
+      // Show success notification
+      await callNotificationOpen(
+        props.workloadClient,
+        "Folder Created",
+        `Folder "${folderName.trim()}" created successfully.`,
+        NotificationType.Success
+      );
       
       // Refresh the file list after folder creation
       await setTablesAndFiles(null);
+      console.log(`Tree refresh completed`);
     } catch (error) {
       console.error("Failed to create folder:", error);
-      alert("Failed to create folder. Please try again.");
+      await callNotificationOpen(
+        props.workloadClient,
+        "Create Folder Failed",
+        "Failed to create folder. Please try again.",
+        NotificationType.Error
+      );
     }
   }
 
   async function createShortcutCallback(parentPath: string) {
     try {
-      // This is a placeholder - implement shortcut creation logic here
-      const shortcutName = prompt("Enter shortcut name:");
-      if (shortcutName && shortcutName.trim()) {
-        console.log(`Creating shortcut "${shortcutName}" in path: ${parentPath}`);
-        // Add your shortcut creation logic here
-        
-        // Refresh the file list after shortcut creation
-        await setTablesAndFiles(null);
+      // Open data hub wizard to select target item and path for the shortcut
+      const targetItemAndPath = await callDatahubWizardOpen(
+        props.workloadClient,
+        props.config.allowedItemTypes || ["Lakehouse"],
+        "Create Shortcut",
+        "Select a target location to create a shortcut to",
+        false, // Single selection
+        true,  // Show files folder
+        true   // Workspace navigation enabled
+      );
+
+      if (!targetItemAndPath) {
+        return; // User cancelled
       }
+
+      // Create shortcut name based on the last element of the selected path
+      const shortcutName = targetItemAndPath.selectedPath 
+        ? targetItemAndPath.selectedPath.split('/').pop() || targetItemAndPath.displayName
+        : targetItemAndPath.displayName;
+
+      // Create the OneLake shortcut using the client
+      const shortcutClient = new OneLakeShortcutClient(props.workloadClient);
+      await shortcutClient.createOneLakeShortcut(
+        selectedItem.workspaceId,
+        selectedItem.id,
+        shortcutName,
+        parentPath,
+        targetItemAndPath.workspaceId,
+        targetItemAndPath.id,
+        targetItemAndPath.selectedPath
+      );
+
+      console.log(`Created shortcut "${shortcutName}" to item: ${targetItemAndPath.displayName}, path: ${targetItemAndPath.selectedPath}`);
+      
+      // Show success notification
+      await callNotificationOpen(
+        props.workloadClient,
+        "Shortcut Created",
+        `Shortcut "${shortcutName}" created successfully.`,
+        NotificationType.Success
+      );
+      
+      // Refresh the file list after shortcut creation
+      await setTablesAndFiles(null);
     } catch (error) {
       console.error("Failed to create shortcut:", error);
-      alert("Failed to create shortcut. Please try again.");
+      await callNotificationOpen(
+        props.workloadClient,
+        "Create Shortcut Failed",
+        "Failed to create shortcut. Please try again.",
+        NotificationType.Error
+      );
     }
   }
 
   // Handler for creating folder from Files node
   const handleCreateFolderFromFilesNode = async () => {
-    await createFolderCallback("");
+    await createFolderCallback("Files");
     setOpenFilesMenu(false);
   };
 
   // Handler for creating shortcut from Files node
   const handleCreateShortcutFromFilesNode = async () => {
-    await createShortcutCallback("");
+    await createShortcutCallback("Files");
     setOpenFilesMenu(false);
   };
 
   // Handler for creating shortcut from Tables node
   const handleCreateShortcutFromTablesNode = async () => {
-    await createShortcutCallback("");
+    await createShortcutCallback("Tables");
     setOpenTablesMenu(false);
   };
 
@@ -326,7 +426,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                   }}
                 >
                   <MenuTrigger disableButtonEnhancement>
-                    <TreeItemLayout
+                    <div
                       onClick={() => {
                         // When Tables folder is clicked, select the first table if available
                         if (tablesInItem && tablesInItem.length > 0) {
@@ -338,9 +438,12 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                         e.stopPropagation();
                         setOpenTablesMenu(true);
                       }}
+                      style={{ cursor: 'pointer' }}
                     >
-                      Tables
-                    </TreeItemLayout>
+                      <TreeItemLayout>
+                        Tables
+                      </TreeItemLayout>
+                    </div>
                   </MenuTrigger>
                   <MenuPopover>
                     <MenuList>
@@ -380,7 +483,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                   }}
                 >
                   <MenuTrigger disableButtonEnhancement>
-                    <TreeItemLayout
+                    <div
                       onClick={() => {
                         // When Files folder is clicked, select the first file if available
                         if (filesInItem && filesInItem.length > 0) {
@@ -392,9 +495,12 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                         e.stopPropagation();
                         setOpenFilesMenu(true);
                       }}
+                      style={{ cursor: 'pointer' }}
                     >
-                      Files
-                    </TreeItemLayout>
+                      <TreeItemLayout>
+                        Files
+                      </TreeItemLayout>
+                    </div>
                   </MenuTrigger>
                   <MenuPopover>
                     <MenuList>
@@ -419,6 +525,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                     selectedFilePath={selectedFilePath}
                     onSelectFileCallback={fileSelectedCallback}
                     onDeleteFileCallback={deleteFileCallback}
+                    onDeleteFolderCallback={deleteFolderCallback}
                     onCreateFolderCallback={createFolderCallback}
                     onCreateShortcutCallback={createShortcutCallback} />
                 </Tree>

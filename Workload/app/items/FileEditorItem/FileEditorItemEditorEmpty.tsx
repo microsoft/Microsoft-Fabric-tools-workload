@@ -52,7 +52,7 @@ export function FileEditorItemEditorEmpty({ onCreateNewFile, onUploadFile, onOpe
             icon={<FolderOpen24Regular />}
             onClick={onOpenItem}
           >
-            Open another OneLake item
+            Open another data item
           </Button>
           
           <Button

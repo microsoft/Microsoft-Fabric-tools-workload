@@ -14,6 +14,7 @@ export interface FileMetadata {
     name: string;
     path: string;
     isDirectory: boolean;
+    isShortcut?: boolean;
 }
 
 export interface OneLakeItemExplorerTablesTreeProps {
@@ -27,6 +28,7 @@ export interface OneLakeItemExplorerFilesTreeProps {
     selectedFilePath?: string;
     onSelectFileCallback: (selectedFile: FileMetadata) => void;
     onDeleteFileCallback?: (filePath: string) => Promise<void>;
+    onDeleteFolderCallback?: (folderPath: string) => Promise<void>;
     onCreateFolderCallback?: (parentPath: string) => Promise<void>;
     onCreateShortcutCallback?: (parentPath: string) => Promise<void>;
 }
