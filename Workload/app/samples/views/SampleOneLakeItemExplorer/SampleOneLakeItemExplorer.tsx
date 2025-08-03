@@ -19,14 +19,13 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { getOneLakeFilePath, deleteOneLakeFile, createOneLakeFolder } from "../../../clients/OneLakeClient";
+import { getOneLakeFilePath } from "../../../clients/OneLakeClient";
 import { callDatahubOpen } from "../../../controller/DataHubController";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 
 export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;
 }
-
 
 export interface OneLakeItemExplorerComponentProps extends PageProps {
   onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
@@ -184,33 +183,6 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     setFilesInItem(updatedFiles);
     if (props.onFileSelected && fileSelected.name) {
       await props.onFileSelected(fileSelected.name, fullFilePath);
-    }
-  }
-
-  async function deleteFileCallback(filePath: string) {
-    try {
-      const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, filePath);
-      await deleteOneLakeFile(props.workloadClient, fullFilePath);
-      
-      // Refresh the file list after deletion
-      await setTablesAndFiles(null);
-    } catch (error) {
-      console.error("Failed to delete file:", error);
-      alert("Failed to delete file. Please try again.");
-    }
-  }
-
-  async function createFolderCallback(parentPath: string, folderName: string) {
-    try {
-      const folderPath = parentPath ? `${parentPath}/${folderName}` : folderName;
-      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
-      await createOneLakeFolder(props.workloadClient, fullFolderPath);
-      
-      // Refresh the file list after folder creation
-      await setTablesAndFiles(null);
-    } catch (error) {
-      console.error("Failed to create folder:", error);
-      alert("Failed to create folder. Please try again.");
     }
   }
 

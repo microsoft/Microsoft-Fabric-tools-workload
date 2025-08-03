@@ -48,7 +48,7 @@ export function App({ history, workloadClient }: AppProps) {
             </div>
         </Route>    
         <Switch>
-            {/* Routing to the Empty Item Editor */}
+            {/* Routings for the Hello World Item Editor */}
             <Route path="/HelloWorldItem-editor/:itemObjectId">
                 <HelloWorldItemEditor
                     workloadClient={workloadClient} data-testid="HelloWorldItem-editor" />

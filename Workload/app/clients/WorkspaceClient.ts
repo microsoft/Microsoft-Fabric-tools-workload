@@ -1,5 +1,6 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { FabricPlatformClient } from "./FabricPlatformClient";
+import { SCOPE_PAIRS } from "./FabricPlatformScopes";
 import {
   Workspace,
   WorkspaceInfo,
@@ -13,16 +14,29 @@ import {
   WorkspaceRole,
   WorkspaceIdentity
 } from "./FabricPlatformTypes";
+<<<<<<< HEAD
 import { SCOPES } from "./FabricPlatformScopes";
+=======
+>>>>>>> wdkbase/dev/preview/wdkv2
 
 /**
  * API wrapper for Fabric Platform Workspace operations
  * Provides methods for managing workspaces, roles, and capacity assignments
+ * 
+ * Uses method-based scope selection:
+ * - GET operations use read-only scopes
+ * - POST/PUT/PATCH/DELETE operations use read-write scopes
  */
 export class WorkspaceClient extends FabricPlatformClient {
   
   constructor(workloadClient: WorkloadClientAPI) {
+<<<<<<< HEAD
     super(workloadClient, SCOPES.WORKSPACE);
+=======
+    // Use scope pairs for method-based scope selection
+    // GET operations will use WORKSPACE_READ scopes, other operations will use WORKSPACE scopes
+    super(workloadClient, SCOPE_PAIRS.WORKSPACE);
+>>>>>>> wdkbase/dev/preview/wdkv2
   }
 
   // ============================

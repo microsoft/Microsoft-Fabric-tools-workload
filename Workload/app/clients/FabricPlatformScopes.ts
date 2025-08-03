@@ -35,6 +35,10 @@ export const FABRIC_BASE_SCOPES = {
   CODE_ACCESS_DATA_LAKE: "https://api.fabric.microsoft.com/Code.AccessAzureDataLake.All",
   CODE_ACCESS_FABRIC: "https://api.fabric.microsoft.com/Code.AccessFabric.All",
 
+  // Connection operations
+  CONNECTION_READ: "https://api.fabric.microsoft.com/Connection.Read.All",
+  CONNECTION_READWRITE: "https://api.fabric.microsoft.com/Connection.ReadWrite.All",
+
 };
 
 // Predefined scope combinations for different clients
@@ -44,12 +48,19 @@ export const SCOPES = {
     FABRIC_BASE_SCOPES.ITEM_READWRITE,
     FABRIC_BASE_SCOPES.WORKSPACE_READWRITE,
     FABRIC_BASE_SCOPES.CAPACITY_READWRITE,
-    FABRIC_BASE_SCOPES.ONELAKE_READWRITE
+    FABRIC_BASE_SCOPES.ONELAKE_READWRITE,
+    FABRIC_BASE_SCOPES.CONNECTION_READWRITE
   ].join(" "),
   
   // Item Client - focused on item management
   ITEM: [
     FABRIC_BASE_SCOPES.ITEM_READWRITE,
+    FABRIC_BASE_SCOPES.WORKSPACE_READ
+  ].join(" "),
+  
+  // Item Client - read-only operations
+  ITEM_READ: [
+    FABRIC_BASE_SCOPES.ITEM_READ,
     FABRIC_BASE_SCOPES.WORKSPACE_READ
   ].join(" "),
   
@@ -59,9 +70,21 @@ export const SCOPES = {
     FABRIC_BASE_SCOPES.CAPACITY_READ
   ].join(" "),
   
+  // Workspace Client - read-only operations
+  WORKSPACE_READ: [
+    FABRIC_BASE_SCOPES.WORKSPACE_READ,
+    FABRIC_BASE_SCOPES.CAPACITY_READ
+  ].join(" "),
+  
   // Folder Client - focused on folder management within workspaces
   FOLDER: [
     FABRIC_BASE_SCOPES.WORKSPACE_READWRITE,
+    FABRIC_BASE_SCOPES.ITEM_READ
+  ].join(" "),
+  
+  // Folder Client - read-only operations
+  FOLDER_READ: [
+    FABRIC_BASE_SCOPES.WORKSPACE_READ,
     FABRIC_BASE_SCOPES.ITEM_READ
   ].join(" "),
   
@@ -71,9 +94,21 @@ export const SCOPES = {
     FABRIC_BASE_SCOPES.WORKSPACE_READ
   ].join(" "),
   
+  // Capacity Client - read-only operations
+  CAPACITY_READ: [
+    FABRIC_BASE_SCOPES.CAPACITY_READ,
+    FABRIC_BASE_SCOPES.WORKSPACE_READ
+  ].join(" "),
+  
   // OneLake Shortcut Client - focused on OneLake operations
   ONELAKE: [
     FABRIC_BASE_SCOPES.ONELAKE_READWRITE,
+    FABRIC_BASE_SCOPES.ITEM_READ
+  ].join(" "),
+  
+  // OneLake Shortcut Client - read-only operations
+  ONELAKE_READ: [
+    FABRIC_BASE_SCOPES.ONELAKE_READ,
     FABRIC_BASE_SCOPES.ITEM_READ
   ].join(" "),
   
@@ -83,10 +118,27 @@ export const SCOPES = {
     FABRIC_BASE_SCOPES.ITEM_READ
   ].join(" "),
   
+  // Job Scheduler Client - read-only operations
+  JOB_SCHEDULER_READ: [
+    FABRIC_BASE_SCOPES.ITEM_READ,
+    FABRIC_BASE_SCOPES.WORKSPACE_READ
+  ].join(" "),
+  
   // Long Running Operations Client - focused on operation monitoring
   OPERATIONS: [
     FABRIC_BASE_SCOPES.ITEM_READ,
     FABRIC_BASE_SCOPES.WORKSPACE_READ
+  ].join(" "),
+  
+  // Connection Client - focused on connection management
+  CONNECTION: [
+    FABRIC_BASE_SCOPES.CONNECTION_READ,
+    FABRIC_BASE_SCOPES.CONNECTION_READWRITE
+  ].join(" "),
+  
+  // Connection Client - read-only operations
+  CONNECTION_READ: [
+    FABRIC_BASE_SCOPES.CONNECTION_READ
   ].join(" "),
   
   // Spark Livy Client - focused on Spark batch jobs and interactive sessions
@@ -103,14 +155,87 @@ export const SCOPES = {
     FABRIC_BASE_SCOPES.CODE_ACCESS_FABRIC
   ].join(" "),
   
+  // Spark Livy Client - read-only operations
+  SPARK_LIVY_READ: [
+    FABRIC_BASE_SCOPES.ITEM_READ,
+    FABRIC_BASE_SCOPES.WORKSPACE_READ,
+    FABRIC_BASE_SCOPES.LAKEHOUSE_READ
+  ].join(" "),
+  
   // Read-only scopes for monitoring/reporting
   READ_ONLY: [
     FABRIC_BASE_SCOPES.ITEM_READ,
     FABRIC_BASE_SCOPES.WORKSPACE_READ,
     FABRIC_BASE_SCOPES.CAPACITY_READ,
-    FABRIC_BASE_SCOPES.ONELAKE_READ
+    FABRIC_BASE_SCOPES.ONELAKE_READ,
+    FABRIC_BASE_SCOPES.CONNECTION_READ
   ].join(" "),
 };
+
+/**
+ * Interface for defining separate read and write scopes for a client
+ */
+export interface ScopePair {
+  read: string;
+  write: string;
+}
+
+/**
+ * Scope pairs for clients that support method-based scope selection
+ * GET operations will use 'read' scopes, POST/DELETE/etc will use 'write' scopes
+ */
+export const SCOPE_PAIRS: Record<string, ScopePair> = {
+  ITEM: {
+    read: SCOPES.ITEM_READ,
+    write: SCOPES.ITEM
+  },
+  WORKSPACE: {
+    read: SCOPES.WORKSPACE_READ, 
+    write: SCOPES.WORKSPACE
+  },
+  FOLDER: {
+    read: SCOPES.FOLDER_READ,
+    write: SCOPES.FOLDER
+  },
+  CAPACITY: {
+    read: SCOPES.CAPACITY_READ,
+    write: SCOPES.CAPACITY
+  },
+  ONELAKE: {
+    read: SCOPES.ONELAKE_READ,
+    write: SCOPES.ONELAKE
+  },
+  JOB_SCHEDULER: {
+    read: SCOPES.JOB_SCHEDULER_READ,
+    write: SCOPES.JOB_SCHEDULER
+  },
+  CONNECTION: {
+    read: SCOPES.CONNECTION_READ,
+    write: SCOPES.CONNECTION
+  },
+  SPARK_LIVY: {
+    read: SCOPES.SPARK_LIVY_READ,
+    write: SCOPES.SPARK_LIVY
+  }
+};
+
+/**
+ * Helper function to get the appropriate scope based on HTTP method
+ * @param scopePair The scope pair containing read and write scopes
+ * @param method The HTTP method
+ * @returns The appropriate scope string
+ */
+export function getScopeForMethod(scopePair: ScopePair, method: string): string {
+  const upperMethod = method.toUpperCase();
+  
+  // GET and HEAD operations use read scopes
+  if (upperMethod === 'GET' || upperMethod === 'HEAD') {
+    return scopePair.read;
+  }
+  
+  // All other operations (POST, PUT, PATCH, DELETE) use write scopes
+  return scopePair.write;
+}
 
 /**
  * Helper function to combine multiple scope sets

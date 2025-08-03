@@ -35,24 +35,15 @@ export function OneLakeShortcutCreator({ workloadClient }: PageProps) {
 
   // Select source item using datahub
   const selectSourceItem = async () => {
-    const result = await callDatahubOpen( //) callDatahubWizardOpen(
+    const result = await callDatahubOpen(
       workloadClient,
       ["Lakehouse", 
-        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
-        process.env.WORKLOAD_NAME + ".CalculatorSample"],
+        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME],
       "Select source item for shortcut",
       false
     );
     
     if (result) {
-      /*const sourceItem = await getItem(result.id, workloadClient)
-      const sourceGenericItem = {
-        workspaceId: result.workspaceId,
-        id: result.id,
-        displayName: "Unknown Item",
-        description: "",
-        type: undefined
-      } as GenericItem;*/
       setTargetItem(result);
       //setSourceShortcutPath(result.selectedPath || "Files");
       setResultMessage("");
@@ -61,24 +52,15 @@ export function OneLakeShortcutCreator({ workloadClient }: PageProps) {
 
   // Select target item using datahub
   const selectTargetItem = async () => {
-    const result = await callDatahubOpen( //callDatahubWizardOpen(
+    const result = await callDatahubOpen(
       workloadClient,
       ["Lakehouse", 
-        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
-        process.env.WORKLOAD_NAME + ".CalculatorSample"],
+        process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME],
       "Select target item for shortcut",
       false
     );
     
     if (result) {
-      /*const targetItem: undefined //= await getItem(result.id, workloadClient)
-      const targetGenericItem = {
-        workspaceId: result.workspaceId,
-        id: result.id,
-        displayName: "Unknown Item",
-        description: "",
-        type: undefined
-      } as GenericItem;*/
       setTargetItem(result);
       //setTargetShortcutPath(result.selectedPath || "Files");
       setResultMessage("");

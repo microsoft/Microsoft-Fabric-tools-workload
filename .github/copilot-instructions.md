@@ -1,5 +1,30 @@
 # AI Tool Guidance for Microsoft Fabric Workload Development Kit
 
+## 🤖 Fabric AI Agent
+
+This repository includes a specialized **Fabric AI Agent** configured for comprehensive Microsoft Fabric development assistance. The agent combines public platform knowledge with project-specific patterns.
+
+### Agent Activation
+Use `@fabric` or these keywords to activate specialized assistance:
+- `fabric workload` - WDK-specific development help
+- `fabric item` - Item creation and management  
+- `fabric auth` - Authentication and security patterns
+- `fabric api` - API integration guidance
+- `fabric deploy` - Deployment and operations
+
+### Knowledge Integration
+The agent leverages:
+- **Public Knowledge**: Complete Microsoft Fabric platform understanding
+- **Project Context**: `.ai/context/` files and current implementation patterns
+- **WDK Expertise**: Workload Development Kit patterns and best practices
+
+### Specialized Capabilities
+- 🏗️ **Architecture & Design**: Workload patterns and platform integration
+- 🔧 **Development Support**: TypeScript/React component generation with Fluent UI
+- 📊 **Data Integration**: OneLake, Power BI, and cross-workload patterns
+- 🔐 **Security Implementation**: OAuth, Entra ID, and compliance patterns
+- 🚀 **Operations**: CI/CD, deployment, and troubleshooting guidance
+
 ## 🎯 Repository Overview
 
 This repository contains the Microsoft Fabric Workload Development Kit (WDK v2) - a comprehensive sample and framework for building custom workloads that integrate with the Microsoft Fabric platform. This guide provides AI tools with essential context, conventions, and procedures for effectively working with this codebase.
@@ -20,12 +45,11 @@ Microsoft-Fabric-workload-development-sample/
 │       └── typescript.md         # TypeScript conventions
 ├── Workload/                     # Frontend React/TypeScript application
 │   ├── app/                      # Main application source code
-│   │   ├── clients/              # Clients for APIs can go here. By default Fabric API is implemented
-│   │   │── controller/           # Dedicated controller wrappers for the UX 
-│   │   │── controls/             # Common ux controls that should be shared between items
-│   │   │── items/                # Every item in a seperate subfolder with all it's components and dependencies
-│   │   ├── playground/           # Demo/learning examples (deletable)
-│   │   └── samples/              # Reference implementations  (deletable)
+│   │   ├── clients/              # API client implementation area
+│   │   └── controller/           # Business logic controllers
+│   │   ├── items/                # Workload item implementations
+│   │   ├── playground/           # Demo/learning examples (deletable) 
+│   │   └── samples/              # Reference implementations (deletable) 
 │   ├── devServer/                # Development server configuration
 │   ├── package.json              # Node.js dependencies and scripts
 │   └── .env.*                    # Environment configurations
@@ -125,7 +149,7 @@ Every workload item must have exactly these four components in `Workload/app/ite
 - **Identify Task Type**: Item creation, workload management, or configuration update
 - **Check Dependencies**: Ensure setup is complete and environment is configured
 - **Verify Context**: Read relevant `.ai/context/` files for domain knowledge
-- **Review Examples**: Use `clients/`, `controller/`,`items/`, `playground/` and `samples/` as reference patterns
+- **Review Examples**: Use `items/`, `clients/`, `controller/` `playground/` and `samples/` as reference patterns
 
 ### Task Categories and Approaches
 

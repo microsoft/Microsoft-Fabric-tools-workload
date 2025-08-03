@@ -3,8 +3,9 @@ import { EnvironmentConstants } from "../../../constants";
 import { callAcquireFrontendAccessToken } from "../../../controller/AuthenticationController";
 import { AccessToken, WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { FileMetadata, OneLakePathContainer, TableMetadata } from "./SampleOneLakeItemExplorerModel";
+import { FABRIC_BASE_SCOPES } from "../../../clients/FabricPlatformScopes";
+import { FabricPlatformAPIClient } from "../../../clients";
 
-export const oneLakeScope = "https://storage.azure.com/user_impersonation";
 
 /**
  * Retrieves a list of tables from the specified Fabric Item.
@@ -20,9 +21,11 @@ export async function getTables(
     const tables = (oneLakeContainer.paths || [])
         .filter(path =>
             path.name.endsWith(deltaLogDirectory) ||
-            (path.isShortcut === true && path.accountType === "ADLS")
+            (path.isShortcut && 
+                (path.accountType === "ADLS" || path.accountType === "ExternalADLS"))
         )
         .map(path => {
+
             let pathName = path.name;
             let parts = pathName.split('/');
             let tableName: string;
@@ -54,22 +57,13 @@ export async function getTables(
  * Retrieves a Fabric item.
  */
 export async function getItem(
+    workloadClient: WorkloadClientAPI,
     token: string,
     workspaceId: string,
     itemId: string
 ): Promise<Item | null> {
-    const url = `${EnvironmentConstants.FabricApiBaseUrl}/v1/workspaces/${workspaceId}/items/${itemId}`;
-    try {
-        const response = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const item: Item = await response.json();
-        return item;
-    } catch (ex: any) {
-        console.error(`Failed to retrieve Fabric item for id: ${itemId} in workspace: ${workspaceId}. Error: ${ex.message}`);
-        return null;
-    }
+    const client = FabricPlatformAPIClient.create(workloadClient);
+    return client.items.getItem(workspaceId, itemId)
 }
 
 export async function getFiles(
@@ -109,7 +103,7 @@ export async function getPathList(
     recursive = false
 ): Promise<OneLakePathContainer> {
     const url = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${workspaceId}/?recursive=${recursive}&resource=filesystem&directory=${encodeURIComponent(directory)}&getShortcutMetadata=true`;
-    const accessToken: AccessToken = await callAcquireFrontendAccessToken(workloadClient, oneLakeScope);
+    const accessToken: AccessToken = await callAcquireFrontendAccessToken(workloadClient, FABRIC_BASE_SCOPES.ONELAKE_STORAGE);
     try {
         const response = await fetch(url, {
             headers: { Authorization: `Bearer ${accessToken.token}` }
