@@ -1,7 +1,20 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, PackageItem } from "../PackageInstallerItemModel";
-import { Item } from "../../../clients/FabricPlatformTypes";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart } from "../PackageInstallerItemModel";
+import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
+import { PackageContext } from "./PackageContext";
+import { OneLakeClient } from "../../../clients/OneLakeClient";
+
+export interface PackageCreationResult {
+    package: Package
+    oneLakeLocation: string
+}
+
+export interface CreatePackageConfig {
+    displayName: string, 
+    description: string, 
+    deploymentLocation: DeploymentLocation
+}
 
 /**
  * Base strategy for creating packages from Fabric items.
@@ -10,14 +23,45 @@ import { Item } from "../../../clients/FabricPlatformTypes";
  */
 export class BasePackageStrategy {
     private context: PackageInstallerContext;
-    private packageInstallerItem: ItemWithDefinition<PackageInstallerItemDefinition>;
+    private item: ItemWithDefinition<PackageInstallerItemDefinition>;
 
     constructor(
         context: PackageInstallerContext,
-        packageInstallerItem: ItemWithDefinition<PackageInstallerItemDefinition>
+        item: ItemWithDefinition<PackageInstallerItemDefinition>
     ) {
         this.context = context;
-        this.packageInstallerItem = packageInstallerItem;
+        this.item = item;
+    }
+
+
+    /**
+     * Uses the content as the Package Json converts it an checks the correctness.
+     * After that stores it in the onelake item folder
+     * @param config 
+     * @param content 
+     * @returns 
+     */
+    async createPackageFromJson(
+        config: CreatePackageConfig,
+        content: string): Promise<PackageCreationResult> {
+        
+        //load  Package form Json content string
+        const packageJson = JSON.parse(content) as Package;
+
+        const packContext = new PackageContext(packageJson.displayName,
+            this.context.fabricPlatformAPIClient.oneLake.createItemWrapper(this.item)
+        )
+        packContext.pack = packageJson;
+
+
+        packContext.oneLakeClient.writeFileAsText(packContext.OneLakePackageJsonPathInItem, 
+            content);
+
+        return {
+            package: packageJson,
+            oneLakeLocation: packContext.OneLakePackageJsonPathInItem
+        }
+
     }
 
     /**
@@ -31,184 +75,116 @@ export class BasePackageStrategy {
      * @returns Promise that resolves to a PackageItem representing the created package
      */
     async createPackageFromItems(
-        items: Item[],
-        packageDisplayName: string,
-        packageDescription?: string,
-        deploymentLocation?: DeploymentLocation
-    ): Promise<PackageItem> {
+        config: CreatePackageConfig,
+        items: Item[]
+    ): Promise<PackageCreationResult> {
+        if (!config.displayName || config.displayName.trim().length === 0) {
+            throw new Error("Cannot create package: Package display name is required");
+        }
+        const packContext = new PackageContext(config.displayName,
+            this.context.fabricPlatformAPIClient.oneLake.createItemWrapper(this.item)
+        );
         try {
-            console.log(`Creating package "${packageDisplayName}" with ${items.length} items`);
-            console.log('Deployment location:', deploymentLocation);
-            console.log('Package installer item:', this.packageInstallerItem.displayName);
 
-            // Validate inputs
-            if (!items || items.length === 0) {
-                throw new Error("Cannot create package: No items provided");
+            packContext.log(`Sanitized package name: ${packContext.pack.id}`);
+            packContext.pack.description = config.description;
+            packContext.pack.deploymentConfig = {
+                type: DeploymentType.UX,
+                location: config.deploymentLocation,
             }
 
-            if (!packageDisplayName || packageDisplayName.trim().length === 0) {
-                throw new Error("Cannot create package: Package display name is required");
-            }
+            packContext.log(`Creating package "${config.displayName}" with ${items.length} items`);
+            packContext.log('Deployment location:', packContext.OneLakePackageFolderPathInItem);
+            
+            // Process every item asynchronously 
+            const processedItems = await Promise.all(items?.map(item => this.processItem(packContext, item)));
+            packContext.pack.items = processedItems.filter(item => item !== undefined) as PackageItem[];
 
-            // Sanitize package name for folder creation
-            const sanitizedPackageName = this.sanitizeFileName(packageDisplayName);
-            console.log(`Sanitized package name: ${sanitizedPackageName}`);
-
-            // Create the package folder structure in OneLake
-            const packageFolderPath = `packages/${sanitizedPackageName}`;
-
-            // Download item definitions
-            const itemDefinitions = await this.downloadItemDefinitions(items);
-            console.log(`Downloaded ${itemDefinitions.length} item definitions`);
-
-            // Create Package.json content
-            const packageJsonContent = this.createPackageJson(
-                items,
-                itemDefinitions,
-                packageDisplayName,
-                packageDescription,
-                deploymentLocation
+            await packContext.oneLakeClient.writeFileAsText(
+                packContext.OneLakePackageJsonPathInItem,
+                JSON.stringify(packContext.pack, null, 2)
             );
 
-            // Store Package.json in OneLake
-            const packageJsonPath = `${packageFolderPath}/Package.json`;
-            await this.saveFileToOneLake(packageJsonPath, JSON.stringify(packageJsonContent, null, 2));
+            packContext.log(`Package.json saved to: ${packContext.OneLakePackageJsonPathInItem}`);
+            packContext.log(`Package creation completed with ${packContext.pack.items.length} items`);
 
-            // Store individual item definitions in the package folder
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const definition = itemDefinitions[i];
-                
-                if (definition) {
-                    const itemFileName = `${this.sanitizeFileName(item.displayName)}_${item.id}.json`;
-                    const itemFilePath = `${packageFolderPath}/items/${itemFileName}`;
-                    await this.saveFileToOneLake(itemFilePath, JSON.stringify(definition, null, 2));
-                }
-            }
-
-            console.log(`Package "${packageDisplayName}" created successfully at: ${packageFolderPath}`);
-
-            // Create and return the PackageItem
-            const packageItem: PackageItem = {
-                type: "Package",
-                displayName: packageDisplayName,
-                description: packageDescription || `Package containing ${items.length} Fabric items`,
-                creationPayload: packageJsonContent
+            return {
+                package: packContext.pack,
+                oneLakeLocation: packContext.OneLakePackageJsonPathInItem
             };
 
-            return packageItem;
-
         } catch (error) {
-            console.error("Failed to create package:", error);
+            packContext.logError("Failed to create package:", error);
             throw new Error(`Package creation failed: ${error.message}`);
+        } finally {
+            this.writeLogsToOneLake(packContext)
         }
     }
 
-    /**
-     * Downloads the item definitions for all provided items
-     */
-    private async downloadItemDefinitions(items: Item[]): Promise<any[]> {
-        const definitions: any[] = [];
+    private async processItem(packContext: PackageContext, item: Item): Promise<PackageItem> {
+        try {
+            packContext.log(`Processing item: ${item.displayName} (${item.id})`);
+            
+            // Download the item definition
+            const response = await this.context.fabricPlatformAPIClient.items.getItemDefinition(
+                item.workspaceId,
+                item.id
+            );
 
-        for (const item of items) {
-            try {
-                console.log(`Downloading definition for item: ${item.displayName} (${item.id})`);
-                
-                // Use the Fabric Platform API to get the item definition
-                const definition = await this.context.fabricPlatformAPIClient.items.getItemDefinition(
-                    item.workspaceId,
-                    item.id
+            packContext.log(`Successfully downloaded definition for: ${item.displayName}`);
+            
+            var parts: PackageItemPart[] = [];
+            // Store  definition parts if available
+            if (response?.definition?.parts) {
+                parts = await Promise.all(
+                    response.definition.parts.map(part => this.storeItemDefinitionPart(packContext, item, part))
                 );
-
-                if (definition) {
-                    definitions.push(definition);
-                    console.log(`Successfully downloaded definition for: ${item.displayName}`);
-                } else {
-                    console.warn(`No definition found for item: ${item.displayName}`);
-                    definitions.push(null);
-                }
-            } catch (error) {
-                console.error(`Failed to download definition for item ${item.displayName}:`, error);
-                definitions.push(null);
             }
-        }
-
-        return definitions;
-    }
-
-    /**
-     * Creates the Package.json content structure
-     */
-    private createPackageJson(
-        items: Item[],
-        itemDefinitions: any[],
-        packageDisplayName: string,
-        packageDescription?: string,
-        deploymentLocation?: DeploymentLocation
-    ): any {
-        const packageContent = {
-            packageMetadata: {
-                displayName: packageDisplayName,
-                description: packageDescription || `Package containing ${items.length} Fabric items`,
-                createdDate: new Date().toISOString(),
-                createdBy: "Fabric User", // TODO: Get user info from workload client
-                deploymentLocation: deploymentLocation || DeploymentLocation.Default,
-                itemCount: items.length
-            },
-            items: items.map((item, index) => ({
-                id: item.id,
+            const packageItem: PackageItem = {
                 displayName: item.displayName,
                 description: item.description,
                 type: item.type,
-                workspaceId: item.workspaceId,
-                hasDefinition: itemDefinitions[index] != null,
-                definitionFileName: itemDefinitions[index] ? 
-                    `${this.sanitizeFileName(item.displayName)}_${item.id}.json` : null
-            })),
-            packageConfiguration: {
-                includeDefinitions: true,
-                packageFormat: "standard",
-                compression: false
+                definition: {
+                    format: response?.definition?.format,
+                    parts: parts
+                },
+                //TODO add interceptors and other stuff if needed
             }
-        };
-
-        return packageContent;
-    }
-
-    /**
-     * Sanitizes a filename by removing/replacing invalid characters
-     */
-    private sanitizeFileName(fileName: string): string {
-        return fileName
-            .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid characters with underscore
-            .replace(/\s+/g, '_') // Replace spaces with underscores
-            .replace(/_{2,}/g, '_') // Replace multiple underscores with single
-            .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
-            .slice(0, 100); // Limit length to 100 characters
-    }
-
-    /**
-     * Saves a file to the package structure (for now, logs the content)
-     * TODO: Implement actual file saving to OneLake when APIs are available
-     */
-    private async saveFileToOneLake(filePath: string, content: string): Promise<void> {
-        try {
-            console.log(`Saving file: ${filePath}`);
-            console.log(`Content length: ${content.length} characters`);
+            return packageItem;
             
-            // TODO: Implement actual file saving to OneLake
-            // For now, we'll log the package creation details
-            
-            if (filePath.endsWith('Package.json')) {
-                console.log('Package.json content:', content);
-            } else {
-                console.log(`Item definition file: ${filePath}`);
-            }
-            
-            console.log(`File saved successfully: ${filePath}`);
         } catch (error) {
-            console.error(`Failed to save file: ${filePath}`, error);
+            packContext.logError(`Failed to process item ${item.displayName}:`, error);
             throw error;
         }
     }
+
+    private async storeItemDefinitionPart(packContext: PackageContext, item: Item, part: ItemDefinitionPart): Promise<PackageItemPart> {
+        const partFileName = packContext.getOneLakeDefinionPartPathInItem(item, part);
+        const partPath = OneLakeClient.getPath(
+            this.item.workspaceId,
+            this.item.id,
+            partFileName
+        );
+        
+        await this.context.fabricPlatformAPIClient.oneLake.writeFileAsBase64(
+            partFileName,
+            part.payload
+        );        
+
+        packContext.log(`Saved ${part.path} for item ${item.displayName} to: ${partPath}`);
+        return {
+            path: part.path,
+            payload: partFileName,
+            payloadType: PackageItemPayloadType.OneLake
+        };
+    }
+
+
+    private async writeLogsToOneLake(packContext: PackageContext): Promise<void> {
+        const log = await packContext.getLogText();
+        const oneLakeClient = this.context.getOneLakeClientItemWrapper(this.item);
+        await oneLakeClient.writeFileAsText(`Files/PackagingLogs/PackagingLog_${packContext.pack.id}.txt`, log);
+    }
+    
 }
+

@@ -13,7 +13,7 @@ import {
   Settings24Regular,
   BoxMultiple24Regular,
 } from "@fluentui/react-icons";
-import { PageProps } from 'src/App';
+import { PageProps } from '../../App';
 import './../../styles.scss';
 import { t } from "i18next";
 
@@ -80,13 +80,12 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Create Installation"
         relationship="label">
         <ToolbarButton
-          disabled={props.isDeploymentInProgress}
+          disabled={true ||props.isDeploymentInProgress}
           aria-label="Add Package"
           data-testid="item-editor-add-package-btn"
           icon={<Add24Regular />}
           onClick={ onCreateInstallationClicked } />
       </Tooltip>
-
       <Tooltip
         content="Refresh Deployment Status"
         relationship="label">

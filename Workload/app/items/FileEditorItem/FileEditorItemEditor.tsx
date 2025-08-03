@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Text, TabValue, Tab, TabList } from "@fluentui/react-components";
 import { Editor } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
@@ -50,6 +50,22 @@ export function FileEditorItemEditor(props: PageProps) {
   const currentFile = openFiles[activeFileIndex];
   const currentTheme = definition?.theme || "vs";
 
+  // Memoize the initial item for the explorer to prevent unnecessary re-renders
+  const explorerInitialItem = useMemo(() => {
+    if (definition?.itemReference) {
+      return {
+        id: definition.itemReference.id,
+        workspaceId: definition.itemReference.workspaceId,
+        displayName: definition.itemReference.displayName || definition.itemReference.type
+      };
+    } else if (editorItem) {
+      return {
+        ...editorItem
+      };
+    }
+    return undefined;
+  }, [definition?.itemReference?.id, definition?.itemReference?.workspaceId, definition?.itemReference?.displayName, definition?.itemReference?.type, editorItem?.id, editorItem?.workspaceId, editorItem?.displayName]);
+
   // Helper function to update item definition immutably
   const updateItemDefinition = useCallback((updates: Partial<FileEditorItemDefinition>) => {
     setEditorItem(prevItem => {
@@ -64,6 +80,21 @@ export function FileEditorItemEditor(props: PageProps) {
       };
     });
     setIsUnsaved(true);
+  }, []);
+
+  // Helper function to update item definition without marking as unsaved (for file selection)
+  const updateItemDefinitionSilently = useCallback((updates: Partial<FileEditorItemDefinition>) => {
+    setEditorItem(prevItem => {
+      if (!prevItem) return prevItem;
+      
+      return {
+        ...prevItem,
+        definition: {
+          ...prevItem.definition,
+          ...updates
+        }
+      };
+    });
   }, []);
 
   // Helper function to detect language from file extension
@@ -232,15 +263,18 @@ export function FileEditorItemEditor(props: PageProps) {
     const language = detectLanguage(fileName);
     let oneLakeLink = "";
     
+    // Use itemReference if available, otherwise fall back to editorItem
+    const targetItem = definition?.itemReference || editorItem;
+    
     // If we have workspace and item info, create OneLake path
-    if (editorItem?.workspaceId && editorItem?.id) {
-      oneLakeLink = `${editorItem.workspaceId}/${editorItem.id}/Files/${fileName}`;
+    if (targetItem?.workspaceId && targetItem?.id) {
+      oneLakeLink = `${targetItem.workspaceId}/${targetItem.id}/Files/${fileName}`;
     }
 
     await writeToOneLakeFileAsText(workloadClient, oneLakeLink, content);
 
     const newFile: OneLakeFileReference = {
-      ...editorItem || definition?.itemReference,
+      ...targetItem,
       onelakeLink: oneLakeLink,
       fileName: fileName,
       content,
@@ -254,13 +288,32 @@ export function FileEditorItemEditor(props: PageProps) {
       activeFileIndex: updatedFiles.length - 1
     });
     refreshItemExplorer();
-  }, [editorItem, definition?.itemReference, openFiles, updateItemDefinition, workloadClient, detectLanguage, refreshItemExplorer]);
+  }, [definition?.itemReference, editorItem, openFiles, updateItemDefinition, workloadClient, detectLanguage, refreshItemExplorer]);
 
   // File operations
   const handleCreateNewFile = useCallback(async () => {
     const fileName = `untitled-${Date.now()}.txt`;
     writeToItemOneLakeFolder(fileName, "// Welcome to File Editor\n// Start typing your code here...\n");
   }, [writeToItemOneLakeFolder]);
+
+  const handleItemChanged = useCallback(async (item: any) => {
+    // Handle when the user changes the selected item in the explorer
+    if (item) {
+      // Store the selected item reference and clear open files since we're switching to a new item
+      updateItemDefinition({
+        itemReference: {
+          ...item,
+        },
+        openFiles: [],
+        activeFileIndex: 0
+      });
+      
+      // Refresh the explorer to load files from the new item
+      refreshItemExplorer();
+      
+      console.log("Item changed and stored:", item);
+    }
+  }, [updateItemDefinition, refreshItemExplorer]);
 
   const handleOpenItem = useCallback(async () => {
     try {
@@ -273,15 +326,14 @@ export function FileEditorItemEditor(props: PageProps) {
       );
 
       if (selectedItem) {
-
         try {
-          // set the selected item as the active item in the item editor
-          //setEditorItem(selectedItem);
+          // Use handleItemChanged to properly set the selected item
+          await handleItemChanged(selectedItem);
         } catch (error) {
           callNotificationOpen(
             workloadClient,
             "Error Opening Item",
-            `Failed to read item from OneLake: ${error.message || error}`,
+            `Failed to open item: ${error.message || error}`,
             undefined,
             undefined
           );
@@ -291,12 +343,12 @@ export function FileEditorItemEditor(props: PageProps) {
       callNotificationOpen(
         workloadClient,
         "Error",
-        `Failed to open OneLake file selector: ${error.message || error}`,
+        `Failed to open item selector: ${error.message || error}`,
         undefined,
         undefined
       );
     }
-  }, [workloadClient, openFiles, updateItemDefinition]);
+  }, [workloadClient, handleItemChanged]);
 
   const handleUploadFile = useCallback(async () => {
     const input = document.createElement('input');
@@ -337,9 +389,9 @@ export function FileEditorItemEditor(props: PageProps) {
   const handleTabChange = useCallback((event: any, data: { value: TabValue }) => {
     const fileIndex = parseInt(data.value as string);
     if (!isNaN(fileIndex) && fileIndex >= 0 && fileIndex < openFiles.length) {
-      updateItemDefinition({ activeFileIndex: fileIndex });
+      updateItemDefinitionSilently({ activeFileIndex: fileIndex });
     }
-  }, [openFiles.length, updateItemDefinition]);
+  }, [openFiles.length, updateItemDefinitionSilently]);
 
   const handleCloseFile = useCallback((fileIndex: number) => {
     const updatedFiles = openFiles.filter((_, index: number) => index !== fileIndex);
@@ -377,12 +429,21 @@ export function FileEditorItemEditor(props: PageProps) {
 
   const handleFileExplorerSelection = useCallback(async (fileName: string, oneLakeLink: string) => {
     try {
+      // Check if file type is supported
+      const fileExtension = '.' + fileName.split('.').pop()?.toLowerCase();
+      const acceptedTypes = FILETYPES_ACCEPT.split(',');
+      
+      if (!acceptedTypes.includes(fileExtension)) {
+        console.log(`File type not supported: ${fileName} (extension: ${fileExtension}). Supported types: ${FILETYPES_ACCEPT}`);
+        return;
+      }
+
       // Check if file is already open
       const existingFileIndex = openFiles.findIndex(file => file.onelakeLink === oneLakeLink);
       
       if (existingFileIndex !== -1) {
-        // File is already open, just switch to it
-        updateItemDefinition({ activeFileIndex: existingFileIndex });
+        // File is already open, just switch to it (no need to mark as unsaved)
+        updateItemDefinitionSilently({ activeFileIndex: existingFileIndex });
         return;
       }
 
@@ -400,7 +461,8 @@ export function FileEditorItemEditor(props: PageProps) {
       };
 
       const updatedFiles = [...openFiles, newFile];
-      updateItemDefinition({
+      // Opening a clean file from OneLake shouldn't mark the item as unsaved
+      updateItemDefinitionSilently({
         openFiles: updatedFiles,
         activeFileIndex: updatedFiles.length - 1
       });
@@ -413,26 +475,12 @@ export function FileEditorItemEditor(props: PageProps) {
         undefined
       );
     }
-  }, [openFiles, updateItemDefinition, workloadClient, detectLanguage]);
+  }, [openFiles, updateItemDefinitionSilently, workloadClient, detectLanguage]);
 
   const handleTableExplorerSelection = useCallback(async (tableName: string, oneLakeLink: string) => {
     // We don't handle table selection in the file editor, so this is a no-op
     console.log("Table selected:", tableName, oneLakeLink);
   }, []);
-
-  const handleItemChanged = useCallback(async (item: any) => {
-    // Handle when the user changes the selected item in the explorer
-    if (item) {
-      // Store the selected item reference in the model
-      updateItemDefinition({
-        itemReference: {
-          ...item,
-        }
-      });
-      
-      console.log("Item changed and stored:", item);
-    }
-  }, [updateItemDefinition]);
 
   if (isLoadingData) {
     return <ItemEditorLoadingProgressBar message="Loading File Editor..." />;
@@ -451,7 +499,7 @@ export function FileEditorItemEditor(props: PageProps) {
       <FileEditorItemEditorRibbon
         {...props}
         onNewFile={handleCreateNewFile}
-        onOpenFile={handleOpenItem}
+        onOpenItem={handleOpenItem}
         onUploadFile={handleUploadFile}
         saveItemCallback={SaveItem}
         isSaveButtonEnabled={isUnsaved || isSavingFiles}
@@ -480,9 +528,7 @@ export function FileEditorItemEditor(props: PageProps) {
                     allowedItemTypes: ALLOWED_ITEM_TYPES,
                     allowItemSelection: true,
                     refreshTrigger: lastRefreshTime,
-                    initialItem: definition?.itemReference || {
-                       ...editorItem
-                    }
+                    initialItem: explorerInitialItem
                   }}
                 />
               </div>

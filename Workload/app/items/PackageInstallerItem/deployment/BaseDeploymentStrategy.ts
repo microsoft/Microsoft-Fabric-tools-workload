@@ -4,7 +4,6 @@ import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
 import { ItemDefinition } from "@ms-fabric/workload-client";
 import { CreateScheduleRequest, CreateShortcutRequest, Item } from "../../../clients/FabricPlatformTypes";
-import { getOneLakePath, writeToOneLakeFileAsBase64, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
 import { Interceptor, InterceptorFactory } from "../package/InterceptorFactory";
 import { DeploymentContext } from "./DeploymentContext";
 import { ContentHelper } from "./ContentHelper";
@@ -39,12 +38,8 @@ export abstract class DeploymentStrategy {
 
   private async writeLogsToOneLake(depContext: DeploymentContext): Promise<void> {
     const log = await depContext.getLogText();
-    // Implement the logic to write the log to OneLake
-    const logFilePath = getOneLakePath(
-      this.item.workspaceId,
-      this.item.id,
-      `Files/DeploymentLogs/DeploymentLog_${depContext.deployment.id}.txt`);
-    await writeToOneLakeFileAsText(this.context.workloadClientAPI, logFilePath, log);
+    const oneLakeClient = this.context.getOneLakeClientItemWrapper(this.item);
+    await oneLakeClient.writeFileAsText(`Files/DeploymentLogs/DeploymentLog_${depContext.deployment.id}.txt`, log);
   }
 
   /**
@@ -312,14 +307,12 @@ export abstract class DeploymentStrategy {
 
         depContext.updateProgress(`Deploying file: ${file.path} for item: ${depContext.getCurrentItem().displayName}`);
 
-        // Construct OneLake file path (files go to the Files folder)
-        const oneLakeFilePath = getOneLakePath(workspaceId, fileId, filePath);
-
         // Get the file content based on payload type
         const fileContent = await this.getPackageItemPartContent(depContext, file, packageItemData.interceptor);
 
         // Write file to OneLake
-        await writeToOneLakeFileAsBase64(this.context.workloadClientAPI, oneLakeFilePath, fileContent);
+        const oneLakeClient = this.context.getOneLakeClientItemWrapper(this.item);
+        oneLakeClient.writeFileAsBase64(filePath, fileContent);
 
         depContext.log(`Successfully copied file ${file.path} to OneLake for item: ${depContext.getCurrentItem().displayName}`);
       } catch (error) {
@@ -419,6 +412,9 @@ export abstract class DeploymentStrategy {
         break;
       case PackageItemPayloadType.Link:
         retVal = await ContentHelper.getLinkContentAsBase64(depContext, defPart.payload);
+        break;
+      case PackageItemPayloadType.OneLake:
+        retVal = await this.context.fabricPlatformAPIClient.oneLake.readFileAsBase64(defPart.payload);
         break;
       case PackageItemPayloadType.InlineBase64:
         // Use base64 payload directly

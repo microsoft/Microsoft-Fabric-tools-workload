@@ -211,39 +211,6 @@ export class PackageRegistry {
       throw error;
     }
   }
-
-  // Download and add package from URL
-  async addPackageFromUrl(url: string): Promise<void> {
-    try {
-      console.log(`Downloading package config from: ${url}`);
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Response is not JSON format');
-      }
-      
-      const packageConfig = await response.json();
-      
-      // Validate that the downloaded content has required fields
-      if (!packageConfig.id || !packageConfig.displayName) {
-        throw new Error('Invalid package config: missing required fields (id, displayName)');
-      }
-      
-      // Add the package to the registry
-      this.addPackage(packageConfig);
-      console.log(`Successfully added package from URL: ${packageConfig.name} (${packageConfig.id})`);
-      
-    } catch (error) {
-      console.error(`Failed to add package from URL ${url}:`, error);
-      throw error;
-    }
-  }
-
   // Remove a package
   removePackage(id: string): boolean {
     if (this.packages[id]) {
@@ -298,24 +265,4 @@ export async function loadPackagesFromDirectory(packageConfigs: any[]): Promise<
       console.error('Failed to load package config:', error);
     }
   });
-}
-
-// Utility function to load packages from multiple URLs
-export async function loadPackagesFromUrls(urls: string[]): Promise<void> {
-  const results = await Promise.allSettled(
-    urls.map(url => packageRegistry.addPackageFromUrl(url))
-  );
-  
-  const successful = results.filter(result => result.status === 'fulfilled').length;
-  const failed = results.filter(result => result.status === 'rejected').length;
-  
-  console.log(`Package loading complete: ${successful} successful, ${failed} failed`);
-  
-  if (failed > 0) {
-    console.warn('Some packages failed to load:', 
-      results
-        .filter(result => result.status === 'rejected')
-        .map((result, index) => ({ url: urls[index], error: result.reason }))
-    );
-  }
 }

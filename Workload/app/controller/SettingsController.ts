@@ -54,11 +54,7 @@ export async function callSettingsOnChange(
  */
 export async function callOpenSettings(
     workloadClient: WorkloadClientAPI,
-<<<<<<< HEAD
-    item: ItemLikeV2,    
-=======
     item: ItemLikeV2,
->>>>>>> wdkbase/dev/preview/wdkv2
     selectedSettingId?: string): Promise<OpenUIResult> {
 
     const config: OpenItemSettingsConfig = {

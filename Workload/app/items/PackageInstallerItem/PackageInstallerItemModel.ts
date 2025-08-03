@@ -25,15 +25,16 @@ export class DeploymentVariables {
   static readonly ITEM_ID: string = "{{ITEM_ID}}";
 }
 
+
 /**
  * Defines the structure for a Package Installer Item that can contain multiple deployments.
  * This is the root interface for package installation definitions.
  */
-export interface PackageInstallerItemDefinition  {
+export interface PackageInstallerItemDefinition {
   /** Optional array of package deployments that can be executed */
   deployments?: PackageDeployment[];
-  /** Additional packages that can be installed alongside this item */
-  additionalPackages?: string[];
+  /** Additional packages that can be installed with this item */
+  oneLakePackages?: string[];
 }
 
 /**
@@ -165,7 +166,7 @@ export enum DeploymentStatus {
   /** Deployment was cancelled by user or system */
   Cancelled = "Cancelled",
 }
- 
+
 /**
  * Represents a complete package that can be deployed to Microsoft Fabric.
  * Contains all items, data, and configuration needed for deployment.
@@ -383,7 +384,9 @@ export enum PackageItemPayloadType {
   /** Reference to an external URL or resource */
   Link = "Link",
   /** Content embedded directly as base64-encoded data */
-  InlineBase64 = "InlineBase64"
+  InlineBase64 = "InlineBase64",
+  /** Reference to a OneLake resource */
+  OneLake = "OneLake"
 }
 
 /**
@@ -397,7 +400,9 @@ export interface PackageItemDefinition {
   parts?: PackageItemPart[];
   /** Optional content processing interceptor */
   interceptor?: ItemPartInterceptorDefinition<any>;
-  /** How the item should be created or updated in Fabric */
+  /** How the item should be created or updated in Fabric.
+   * this is needed as some items have difficulties to be created with definition. 
+   * Default we use createandupdateDefinition as createwithdefinition will not return the id of the item immediately which we need for interceptors*/
   creationMode?: "WithoutDefinition" | "WithDefinition" | "CreateAndUpdateDefinition";
 }
 

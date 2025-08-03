@@ -14,10 +14,6 @@ import {
   WorkspaceRole,
   WorkspaceIdentity
 } from "./FabricPlatformTypes";
-<<<<<<< HEAD
-import { SCOPES } from "./FabricPlatformScopes";
-=======
->>>>>>> wdkbase/dev/preview/wdkv2
 
 /**
  * API wrapper for Fabric Platform Workspace operations
@@ -30,13 +26,9 @@ import { SCOPES } from "./FabricPlatformScopes";
 export class WorkspaceClient extends FabricPlatformClient {
   
   constructor(workloadClient: WorkloadClientAPI) {
-<<<<<<< HEAD
-    super(workloadClient, SCOPES.WORKSPACE);
-=======
     // Use scope pairs for method-based scope selection
     // GET operations will use WORKSPACE_READ scopes, other operations will use WORKSPACE scopes
     super(workloadClient, SCOPE_PAIRS.WORKSPACE);
->>>>>>> wdkbase/dev/preview/wdkv2
   }
 
   // ============================

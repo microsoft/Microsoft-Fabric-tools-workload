@@ -131,6 +131,10 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
             definitionPart.payload = itemDefinitionReference.payload;
             definitionPart.payloadType = SparkDeploymentReferenceType.InlineBase64;
             break;
+          case PackageItemPayloadType.OneLake:
+            definitionPart.payload = itemDefinitionReference.payload;
+            definitionPart.payloadType = SparkDeploymentReferenceType.OneLake;
+            break;
           default:
             throw new Error(`Unsupported item definition reference type: ${itemDefinitionReference.payloadType}`);  
         }

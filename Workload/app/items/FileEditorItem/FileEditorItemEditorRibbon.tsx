@@ -2,11 +2,11 @@ import React from "react";
 import { Toolbar, ToolbarButton, SelectTabData, SelectTabEvent, Tab, TabList, TabValue, Tooltip } from "@fluentui/react-components";
 import { 
   DocumentAdd24Regular,
+  FolderOpen24Regular,
   Save24Regular,
-  Search24Regular,
 } from "@fluentui/react-icons";
 import { t } from "i18next";
-import { PageProps } from "src/App";
+import { PageProps } from "../../App";
 
 
 const FileEditorItemEditorRibbonHomeTabToolbar = (props: FileEditorItemEditorRibbonProps) => {
@@ -30,13 +30,13 @@ async function onSaveAsClicked() {
           onClick={onSaveAsClicked} />
       </Tooltip>
       <Tooltip
-        content={t("Open File")}
+        content={t("Open Item")}
         relationship="label">
         <ToolbarButton
-          aria-label={t("Open File")}
+          aria-label={t("Open Item")}
           data-testid="item-editor-open-btn"
-          icon={<Search24Regular />}
-          onClick={props.onOpenFile} />
+          icon={<FolderOpen24Regular />}
+          onClick={props.onOpenItem} />
       </Tooltip>
       <Tooltip
         content={t("Upload File")}
@@ -56,7 +56,7 @@ export interface FileEditorItemEditorRibbonProps extends PageProps {
   isSaveButtonEnabled?: boolean;
   onTabChange: (tabValue: TabValue) => void;
   selectedTab: TabValue;
-  onOpenFile: () => Promise<void>;
+  onOpenItem: () => Promise<void>;
   onUploadFile: () => Promise<void>;
   onNewFile: () => Promise<void>;
 }

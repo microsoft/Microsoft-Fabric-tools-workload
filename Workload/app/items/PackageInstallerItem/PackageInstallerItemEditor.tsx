@@ -13,7 +13,7 @@ import {
 } from "@fluentui/react-components";
 import { DeleteRegular, PlayRegular } from "@fluentui/react-icons";
 import React, { useEffect, useState, useCallback } from "react";
-import { ContextProps, PageProps } from "src/App";
+import { ContextProps, PageProps } from "../../App";
 import { PackageInstallerItemEditorRibbon } from "./PackageInstallerItemEditorRibbon";
 import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
@@ -34,9 +34,9 @@ import { PackageInstallerDeployResult } from "./components/PackageInstallerDeplo
 import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { t } from "i18next";
-import { writeToOneLakeFileAsText, getOneLakeFilePath, readOneLakeFileAsText} from "../../clients/OneLakeClient";
+import { readOneLakeFileAsText} from "../../clients/OneLakeClient";
 import { callOpenSettings } from "../../controller/SettingsController";
-import { PackageStrategyFactory, PackageStrategyType } from "./package/PackageStrategyFactory";
+import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
 
 // Component to fetch and display folder name
 
@@ -162,8 +162,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
         }
         const context = new PackageInstallerContext(workloadClient);
         await context.packageRegistry.loadFromAssets();
-        if(item.definition?.additionalPackages) {
-          item.definition.additionalPackages.forEach(async oneLakePath => {
+        if(item.definition?.oneLakePackages) {
+          item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
               const pack = await readOneLakeFileAsText(workloadClient, oneLakePath);
               context.packageRegistry.addPackage(pack);
@@ -231,58 +231,23 @@ export function PackageInstallerItemEditor(props: PageProps) {
           // Read file content
           const fileContent = await file.text();
           
-          // Validate JSON
-          let packageConfig;
-          try {
-            packageConfig = JSON.parse(fileContent);
-          } catch (jsonError) {
-            callNotificationOpen(
-              workloadClient,
-              "Invalid JSON",
-              "The selected file contains invalid JSON.",
-              NotificationType.Error,
-              undefined
-            );
-            return;
-          }
-          
-          // Validate package structure
-          if (!packageConfig.id || !packageConfig.displayName) {
-            callNotificationOpen(
-              workloadClient,
-              "Invalid Package",
-              "Package JSON must contain 'id' and 'displayName' fields.",
-              NotificationType.Error,
-              undefined
-            );
-            return;
-          }
 
-          if(packageConfig.id in context.packageRegistry.getAllPackages()) {
-            callNotificationOpen(
-              workloadClient,
-              "Package Already Exists",
-              `Package with ID "${packageConfig.id}" already exists in the registry.`,
-              NotificationType.Warning,
-              undefined
-            );
-            return;
-          }
+          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(PackageCreationStrategyType.Standard,
+            context, editorItem);
+          const packageResult = await packageCreationStrategy.createPackageFromJson(
+            {
+              displayName: undefined,
+              description: undefined, 
+              deploymentLocation: undefined
+            },
+            fileContent);
 
-          // Generate unique filename with timestamp
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const fileName = `packages/uploaded-package-${packageConfig.id}-${timestamp}.json`;
-          
-          // Upload to OneLake
-          const oneLakeFilePath = getOneLakeFilePath(editorItem.workspaceId, editorItem.id, fileName);
-          await writeToOneLakeFileAsText(workloadClient, oneLakeFilePath, fileContent);
-          
-          
+
           // Add to additional packages list
-          const currentAdditionalPackages = editorItem?.definition?.additionalPackages || [];
+          const currentAdditionalPackages = editorItem?.definition?.oneLakePackages || [];
           const newItemDefinition: PackageInstallerItemDefinition = {
             ...editorItem?.definition,
-            additionalPackages: [...currentAdditionalPackages, oneLakeFilePath]
+            oneLakePackages: [...currentAdditionalPackages, packageResult.oneLakeLocation]
           };
           
           // Update item definition
@@ -290,12 +255,12 @@ export function PackageInstallerItemEditor(props: PageProps) {
           await SaveItem(newItemDefinition);
           
           // Add to package registry
-          context.packageRegistry.addPackage(packageConfig);
+          context.packageRegistry.addPackage(packageResult.package);
           
           callNotificationOpen(
             workloadClient,
             "Package Uploaded",
-            `Package "${packageConfig.displayName}" has been uploaded and added to the registry.`,
+            `Package "${packageResult.package.displayName}" has been uploaded and added to the registry.`,
             NotificationType.Success,
             undefined
           );
@@ -359,8 +324,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
           
           try {
             // Create the package strategy
-            const packageStrategy = PackageStrategyFactory.createStrategy(
-              PackageStrategyType.Standard,
+            const packageStrategy = PackageCreationStrategyFactory.createStrategy(
+              PackageCreationStrategyType.Standard,
               context, 
               editorItem
             );
@@ -370,22 +335,21 @@ export function PackageInstallerItemEditor(props: PageProps) {
             const packageDescription = result.packageDescription || `Package created from ${selectedItems.length} selected items`;
             
             // Create the package
-            const createdPackageItem = await packageStrategy.createPackageFromItems(
-              selectedItems,
-              packageDisplayName,
-              packageDescription,
-              result.deploymentLocation
+            const createdPackageItem = await packageStrategy.createPackageFromItems(           
+              {
+                displayName: packageDisplayName,
+                description: packageDescription,
+                deploymentLocation: result.deploymentLocation
+              },
+              selectedItems
             );
             
-            // Generate package path based on the created package
-            const sanitizedName = packageDisplayName.replace(/[^a-zA-Z0-9]/g, '_');
-            const packageJsonPath = `packages/${sanitizedName}/Package.json`;
-            
-            // Add the package to the additional packages list
-            const currentAdditionalPackages = editorItem?.definition?.additionalPackages || [];
+
+            // Add the package to the itemOneLake packages list
+            const currentItemOneLakePackages = editorItem?.definition?.oneLakePackages || [];
             const newItemDefinition: PackageInstallerItemDefinition = {
               ...editorItem?.definition,
-              additionalPackages: [...currentAdditionalPackages, packageJsonPath]
+              oneLakePackages: [...currentItemOneLakePackages, createdPackageItem.oneLakeLocation]
             };
             
             // Update item definition and save
@@ -393,10 +357,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
             await SaveItem(newItemDefinition);
             
             // Add the created package to the package registry using the actual package data
-            if (createdPackageItem.creationPayload) {
-              context.packageRegistry.addPackage(createdPackageItem.creationPayload);
-            }
-            
+            context.packageRegistry.addPackage(createdPackageItem);
+
             callNotificationOpen(
               workloadClient,
               "Package Created Successfully",
@@ -404,13 +366,6 @@ export function PackageInstallerItemEditor(props: PageProps) {
               NotificationType.Success,
               undefined
             );
-            
-            console.log('Package created successfully:', packageJsonPath);
-            console.log('Selected items:', selectedItems);
-            console.log('From workspace:', result.workspaceId);
-            console.log('Package display name:', packageDisplayName);
-            console.log('Package description:', packageDescription);
-            console.log('Deployment location:', result.deploymentLocation);
             
           } catch (error) {
             console.error('Error during package creation:', error);

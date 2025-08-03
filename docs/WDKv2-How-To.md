@@ -16,11 +16,7 @@ There are two important methods in there that will showcase the new functionalit
 
 ## Storing Item Definition in Fabric
 
-<<<<<<< HEAD
-You can find the code for storing item definition in the `saveItemDefinition` method within the [SampleWorkloadEditor.tsx](./../Workload/app/tems/HelloWorldItem/HelloWorldItemEditor.tsx) file. Here is the method content for reference:
-=======
 You can find the code for storing item definition in the `saveItemDefinition` method within the [SampleWorkloadEditor.tsx](./../Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx) file. Here is the method content for reference:
->>>>>>> wdkbase/dev/preview/wdkv2
 
 ```typescript
   async function SaveItem(definition?: HelloWorldItemDefinition) {

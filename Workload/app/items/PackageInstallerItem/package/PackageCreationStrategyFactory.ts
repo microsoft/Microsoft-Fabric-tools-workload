@@ -7,7 +7,7 @@ import { PackageInstallerItemDefinition } from "../PackageInstallerItemModel";
  * Factory for creating package strategy instances.
  * Allows for different packaging strategies based on requirements.
  */
-export class PackageStrategyFactory {
+export class PackageCreationStrategyFactory {
     /**
      * Creates a package strategy instance
      * @param strategyType The type of packaging strategy to create
@@ -16,12 +16,13 @@ export class PackageStrategyFactory {
      * @returns BasePackageStrategy instance
      */
     static createStrategy(
-        strategyType: PackageStrategyType,
+        
+        strategyType: PackageCreationStrategyType,
         context: PackageInstallerContext,
         packageInstallerItem: ItemWithDefinition<PackageInstallerItemDefinition>
     ): BasePackageStrategy {
         switch (strategyType) {
-            case PackageStrategyType.Standard:
+            case PackageCreationStrategyType.Standard:
             default:
                 return new BasePackageStrategy(context, packageInstallerItem);
             // Future strategy types can be added here:
@@ -36,7 +37,7 @@ export class PackageStrategyFactory {
 /**
  * Enumeration of available packaging strategy types
  */
-export enum PackageStrategyType {
+export enum PackageCreationStrategyType {
     /** Standard packaging strategy that includes all definition parts except defaults */
     Standard = "Standard",
     // Future strategy types:

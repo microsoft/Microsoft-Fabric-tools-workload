@@ -1,10 +1,6 @@
 import { WorkloadClientAPI, AccessToken } from "@ms-fabric/workload-client";
 import { EnvironmentConstants } from "../constants";
-<<<<<<< HEAD
-import { SCOPES } from "./FabricPlatformScopes";
-=======
 import { SCOPES, ScopePair, getScopeForMethod } from "./FabricPlatformScopes";
->>>>>>> wdkbase/dev/preview/wdkv2
 import { FabricAuthenticationService } from "./FabricAuthenticationService";
 import { AuthenticationConfig, ErrorResponse } from "./FabricPlatformTypes";
 

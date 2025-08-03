@@ -4,7 +4,7 @@ import { UXDeploymentStrategy } from "./UXDeploymentStrategy";
 import { SparkNotebookDeploymentStrategy } from "./SparkNotebookDeploymentStrategy";
 import { PackageDeployment, Package, DeploymentType, PackageInstallerItemDefinition } from "../PackageInstallerItemModel";
 import { PackageInstallerContext } from "../package/PackageInstallerContext";
-import { ItemWithDefinition } from "src/controller/ItemCRUDController";
+import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
 
 // Deployment Factory
 export class DeploymentStrategyFactory {

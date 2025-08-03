@@ -7,7 +7,6 @@ export interface ItemMetadata {
 export interface TableMetadata {
     name: string;
     path: string;
-    isSelected: boolean;
     schema?: string;
 }
 
@@ -15,19 +14,21 @@ export interface FileMetadata {
     name: string;
     path: string;
     isDirectory: boolean;
-    isSelected: boolean;
 }
 
 export interface OneLakeItemExplorerTablesTreeProps {
     allTablesInItem: TableMetadata[];
+    selectedTablePath?: string;
     onSelectTableCallback: (selectedTable: TableMetadata) => void;
 }
 
 export interface OneLakeItemExplorerFilesTreeProps {
     allFilesInItem: FileMetadata[];
+    selectedFilePath?: string;
     onSelectFileCallback: (selectedFile: FileMetadata) => void;
     onDeleteFileCallback?: (filePath: string) => Promise<void>;
-    onCreateFolderCallback?: (parentPath: string, folderName: string) => Promise<void>;
+    onCreateFolderCallback?: (parentPath: string) => Promise<void>;
+    onCreateShortcutCallback?: (parentPath: string) => Promise<void>;
 }
 
 export interface OneLakePath {
