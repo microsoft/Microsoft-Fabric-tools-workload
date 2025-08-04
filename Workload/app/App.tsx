@@ -6,7 +6,7 @@ import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEdito
 import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
-import { FileEditorItemEditor } from "./items/FileEditorItem/FileEditorItemEditor";
+import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
 
@@ -79,9 +79,9 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} />
             </Route>
 
-            <Route path="/FileEditorItem-editor/:itemObjectId">
-                <FileEditorItemEditor
-                    workloadClient={workloadClient} data-testid="FileEditorItem-editor" />
+            <Route path="/OneLakeExplorerItem-editor/:itemObjectId">
+                <OneLakeExplorerItemEditor
+                    workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
         </Switch>

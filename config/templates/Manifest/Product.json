@@ -50,13 +50,13 @@
             }
           },
           {
-            "title": "FileEditorItem_DisplayName",
-            "description": "FileEditorItem_Description",
+            "title": "OneLakeExplorerItem_DisplayName",
+            "description": "OneLakeExplorerItem_Description",
             "icon": {
-              "name": "assets/images/FileEditorItem-icon.png"
+              "name": "assets/images/OneLakeExplorerItem-icon.png"
             },
             "icon_small": {
-              "name": "assets/images/FileEditorItem-icon.png"
+              "name": "assets/images/OneLakeExplorerItem-icon.png"
             },
             "availableIn": [
               "home",
@@ -64,7 +64,7 @@
               "workspace-plus-new",
               "workspace-plus-new-teams"
             ],
-            "itemType": "FileEditor",
+            "itemType": "OneLakeExplorer",
             "createItemDialogConfig": {
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }

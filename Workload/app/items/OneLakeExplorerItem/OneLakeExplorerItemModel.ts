@@ -1,7 +1,7 @@
 import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemReference } from "../../controller/ItemCRUDController";
 
-export interface FileEditorItemDefinition {
+export interface OneLakeExplorerItemDefinition {
   /** Current file content being edited */
   fileContent?: string;
   /** Current file language/type */

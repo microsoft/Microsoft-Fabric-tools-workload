@@ -3,37 +3,37 @@ import { Text, TabValue, Tab, TabList } from "@fluentui/react-components";
 import { Editor } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 import { ContextProps, PageProps } from "../../App";
-import { FileEditorItemEditorRibbon } from "./FileEditorItemEditorRibbon";
 import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
-import { FileEditorItemDefinition, OneLakeFileReference } from "./FileEditorItemModel";
-import { FileEditorItemEditorEmpty } from "./FileEditorItemEditorEmpty";
+import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDatahubOpen } from "../../controller/DataHubController";
 import { readOneLakeFileAsText, writeToOneLakeFileAsText } from "../../clients/OneLakeClient";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
 import { Stack } from "@fluentui/react";
+import { OneLakeExplorerItemEditorRibbon } from "./OneLakeExplorerItemEditorRibbon";
+import { OneLakeExplorerItemEditorEmpty } from "./OneLakeExplorerItemEditorEmpty";
 
 
 const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
 
 
-export function FileEditorItemEditor(props: PageProps) {
+export function OneLakeExplorerItemEditor(props: PageProps) {
   const pageContext = useParams<ContextProps>();
   const { pathname } = useLocation();
   const { workloadClient } = props;
   const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-  const [editorItem, setEditorItem] = useState<ItemWithDefinition<FileEditorItemDefinition>>(undefined);
+  const [editorItem, setEditorItem] = useState<ItemWithDefinition<OneLakeExplorerItemDefinition>>(undefined);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
   const ALLOWED_ITEM_TYPES = ["Lakehouse",
                                 process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
-                                process.env.WORKLOAD_NAME + ".FileEditor"]
+                                process.env.WORKLOAD_NAME + ".OneLakeExplorer"]
 
   // Default editor settings
   const defaultEditorSettings = {
@@ -67,7 +67,7 @@ export function FileEditorItemEditor(props: PageProps) {
   }, [definition?.itemReference?.id, definition?.itemReference?.workspaceId, definition?.itemReference?.displayName, definition?.itemReference?.type, editorItem?.id, editorItem?.workspaceId, editorItem?.displayName]);
 
   // Helper function to update item definition immutably
-  const updateItemDefinition = useCallback((updates: Partial<FileEditorItemDefinition>) => {
+  const updateItemDefinition = useCallback((updates: Partial<OneLakeExplorerItemDefinition>) => {
     setEditorItem(prevItem => {
       if (!prevItem) return prevItem;
       
@@ -83,7 +83,7 @@ export function FileEditorItemEditor(props: PageProps) {
   }, []);
 
   // Helper function to update item definition without marking as unsaved (for file selection)
-  const updateItemDefinitionSilently = useCallback((updates: Partial<FileEditorItemDefinition>) => {
+  const updateItemDefinitionSilently = useCallback((updates: Partial<OneLakeExplorerItemDefinition>) => {
     setEditorItem(prevItem => {
       if (!prevItem) return prevItem;
       
@@ -183,7 +183,7 @@ export function FileEditorItemEditor(props: PageProps) {
     }
 
     // Then save the item definition
-    const successResult = await saveItemDefinition<FileEditorItemDefinition>(
+    const successResult = await saveItemDefinition<OneLakeExplorerItemDefinition>(
       workloadClient,
       editorItem.id,
       editorItem.definition
@@ -193,7 +193,7 @@ export function FileEditorItemEditor(props: PageProps) {
     if (successResult) {
       callNotificationOpen(
         workloadClient,
-        "File Editor Saved",
+        "OneLake Explorer Saved",
         `Your files have been saved successfully.`,
         undefined,
         undefined
@@ -205,11 +205,11 @@ export function FileEditorItemEditor(props: PageProps) {
 
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
     setIsLoadingData(true);
-    let item: ItemWithDefinition<FileEditorItemDefinition> = undefined;
+    let item: ItemWithDefinition<OneLakeExplorerItemDefinition> = undefined;
     
     if (pageContext.itemObjectId) {
       try {
-        item = await getWorkloadItem<FileEditorItemDefinition>(
+        item = await getWorkloadItem<OneLakeExplorerItemDefinition>(
           workloadClient,
           pageContext.itemObjectId
         );
@@ -293,7 +293,7 @@ export function FileEditorItemEditor(props: PageProps) {
   // File operations
   const handleCreateNewFile = useCallback(async () => {
     const fileName = `untitled-${Date.now()}.txt`;
-    writeToItemOneLakeFolder(fileName, "// Welcome to File Editor\n// Start typing your code here...\n");
+    writeToItemOneLakeFolder(fileName, "// Welcome to OneLake Explorer\n// Start typing your code here...\n");
   }, [writeToItemOneLakeFolder]);
 
   const handleItemChanged = useCallback(async (item: any) => {
@@ -483,27 +483,27 @@ export function FileEditorItemEditor(props: PageProps) {
   }, []);
 
   if (isLoadingData) {
-    return <ItemEditorLoadingProgressBar message="Loading File Editor..." />;
+    return <ItemEditorLoadingProgressBar message="Loading OneLake Explorer..." />;
   }
 
   if (!editorItem) {
     return (
       <div style={{ padding: "20px" }}>
-        <Text size={400}>Failed to load File Editor item.</Text>
+        <Text size={400}>Failed to load OneLake Explorer item.</Text>
       </div>
     );
   }
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <FileEditorItemEditorRibbon
+      <OneLakeExplorerItemEditorRibbon
         {...props}
         onNewFile={handleCreateNewFile}
         onOpenItem={handleOpenItem}
         onUploadFile={handleUploadFile}
         saveItemCallback={SaveItem}
         isSaveButtonEnabled={isUnsaved || isSavingFiles}
-        selectedTab={() => {}}
+        selectedTab="home"
         onTabChange={() => {}}
       />
 
@@ -591,7 +591,7 @@ export function FileEditorItemEditor(props: PageProps) {
                   />
                 </div>
                 ) : (
-                  <FileEditorItemEditorEmpty
+                  <OneLakeExplorerItemEditorEmpty
                     onCreateNewFile={handleCreateNewFile}
                     onUploadFile={handleUploadFile}
                     onOpenItem={handleOpenItem}
@@ -604,4 +604,3 @@ export function FileEditorItemEditor(props: PageProps) {
     </div>
   );
 }
-

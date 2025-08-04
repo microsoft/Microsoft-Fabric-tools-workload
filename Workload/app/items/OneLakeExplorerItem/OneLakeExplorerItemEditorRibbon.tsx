@@ -9,7 +9,7 @@ import { t } from "i18next";
 import { PageProps } from "../../App";
 
 
-const FileEditorItemEditorRibbonHomeTabToolbar = (props: FileEditorItemEditorRibbonProps) => {
+const OneLakeExplorerItemEditorRibbonHomeTabToolbar = (props: OneLakeExplorerItemEditorRibbonProps) => {
 
 async function onSaveAsClicked() {
     // your code to save as here
@@ -51,7 +51,7 @@ async function onSaveAsClicked() {
   );
 };
 
-export interface FileEditorItemEditorRibbonProps extends PageProps {
+export interface OneLakeExplorerItemEditorRibbonProps extends PageProps {
   saveItemCallback: () => Promise<void>;
   isSaveButtonEnabled?: boolean;
   onTabChange: (tabValue: TabValue) => void;
@@ -62,7 +62,7 @@ export interface FileEditorItemEditorRibbonProps extends PageProps {
 }
 
 
-export function FileEditorItemEditorRibbon(props: FileEditorItemEditorRibbonProps) {
+export function OneLakeExplorerItemEditorRibbon(props: OneLakeExplorerItemEditorRibbonProps) {
   const { onTabChange, selectedTab } = props;
   const onTabSelect = (_: SelectTabEvent, data: SelectTabData) => {
     onTabChange(data.value);
@@ -78,8 +78,8 @@ export function FileEditorItemEditorRibbon(props: FileEditorItemEditorRibbonProp
           {t("ItemEditor_Ribbon_Home_Label")}</Tab>
       </TabList>
       <div className="toolbarContainer">
-        <FileEditorItemEditorRibbonHomeTabToolbar {...props} />
+        <OneLakeExplorerItemEditorRibbonHomeTabToolbar {...props} />
       </div>
     </div>
   );
-};
+}

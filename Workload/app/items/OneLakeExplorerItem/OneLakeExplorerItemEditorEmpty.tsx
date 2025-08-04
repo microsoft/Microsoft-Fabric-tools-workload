@@ -4,13 +4,13 @@ import { Button } from "@fluentui/react-components";
 import { DocumentAdd24Regular, Code24Regular, FolderOpen24Regular } from "@fluentui/react-icons";
 import "../../styles.scss";
 
-interface FileEditorItemEmptyProps {
+interface OneLakeExplorerItemEmptyProps {
   onCreateNewFile: () => Promise<void>;
   onUploadFile: () => Promise<void>;
   onOpenItem: () => Promise<void>;
 }
 
-export function FileEditorItemEditorEmpty({ onCreateNewFile, onUploadFile, onOpenItem }: FileEditorItemEmptyProps) {
+export function OneLakeExplorerItemEditorEmpty({ onCreateNewFile, onUploadFile, onOpenItem }: OneLakeExplorerItemEmptyProps) {
   return (
     <div className="itemEditorEmpty">
       <Stack 
@@ -25,14 +25,14 @@ export function FileEditorItemEditorEmpty({ onCreateNewFile, onUploadFile, onOpe
           variant="xxLarge" 
           styles={{ root: { fontWeight: "600", marginBottom: "8px" } }}
         >
-          Welcome to File Editor
+          Welcome to OneLake Explorer
         </Text>
         
         <Text 
           variant="large" 
           styles={{ root: { color: "#605e5c", textAlign: "center", maxWidth: "400px" } }}
         >
-          Start editing files in OneLake by selecting an Data Item with files, creating a new file, or uploading an existing one to the current item. 
+          Start exploring and editing files in OneLake by selecting a Data Item with files, creating a new file, or uploading an existing one to the current item. 
           Experience editing with syntax highlighting, IntelliSense, and more.
         </Text>
 

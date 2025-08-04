@@ -10,7 +10,7 @@
   "PackageInstallerItem_DisplayName": "Instalador de Paquetes",
   "PackageInstallerItem_DisplayName_Plural": "Instaladores de Paquetes",
   "PackageInstallerItem_Description": "Un elemento que puede instalar diferentes configuraciones de paquetes en espacios de trabajo de Fabric.",
-  "FileEditorItem_DisplayName": "Elemento de Editor de Archivos",
-  "FileEditorItem_DisplayName_Plural": "Elementos de Editor de Archivos",
-  "FileEditorItem_Description": "Un elemento que proporciona una experiencia de edición similar a un editor de archivos."
+  "OneLakeExplorerItem_DisplayName": "Explorador de OneLake",
+  "OneLakeExplorerItem_DisplayName_Plural": "Exploradores de OneLake",
+  "OneLakeExplorerItem_Description": "Un elemento que proporciona capacidades de exploración y edición de archivos OneLake."
 }

@@ -1,16 +1,16 @@
 {
-    "name": "FileEditor",
+    "name": "OneLakeExplorer",
     "version": "1.100",
-    "displayName": "FileEditorItem_DisplayName",
-    "displayNamePlural": "FileEditorItem_DisplayName_Plural",
+    "displayName": "OneLakeExplorerItem_DisplayName",
+    "displayNamePlural": "OneLakeExplorerItem_DisplayName_Plural",
     "editor": {
-      "path": "/FileEditorItem-editor"
+      "path": "/OneLakeExplorerItem-editor"
     },
     "icon": {
-      "name": "assets/images/FileEditorItem-icon.png"
+      "name": "assets/images/OneLakeExplorerItem-icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/FileEditorItem-icon.png"
+      "name": "assets/images/OneLakeExplorerItem-icon.png"
     },
     "contextMenuItems": [
     ],
