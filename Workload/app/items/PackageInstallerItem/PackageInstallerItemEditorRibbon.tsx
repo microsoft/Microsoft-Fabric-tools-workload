@@ -80,7 +80,7 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
         content="Create Installation"
         relationship="label">
         <ToolbarButton
-          disabled={true ||props.isDeploymentInProgress}
+          disabled={props.isDeploymentInProgress}
           aria-label="Add Package"
           data-testid="item-editor-add-package-btn"
           icon={<Add24Regular />}
