@@ -214,6 +214,8 @@ export interface DeploymentConfiguration {
   suffixItemNames?: boolean;
   /** Key-value parameters for deployment customization */
   parameters?: Record<string, DeploymentParameter>;
+  /** Global interceptors */
+  globalInterceptors?: Record<string, ItemPartInterceptorDefinition<any>>;
   /** Jobs to execute after successful deployment */
   onFinishJobs?: OnFinishJob[];
 }
@@ -423,6 +425,8 @@ export interface ItemPartInterceptorDefinition<T extends ItemPartInterceptorDefi
  * Enumeration of available interceptor types for content processing.
  */
 export enum ItemPartInterceptorType {
+  /** Global reference interceptor */
+  Reference = "Reference",
   /** Performs find-and-replace operations on content */
   StringReplacement = "StringReplacement",
 }
@@ -432,6 +436,11 @@ export enum ItemPartInterceptorType {
  * Specific interceptor types extend this interface with their own configuration properties.
  */
 export interface ItemPartInterceptorDefinitionConfig {
+}
+
+export interface ReferenceInterceptorDefinitionConfig extends ItemPartInterceptorDefinitionConfig {
+  /** Id of the global defined interceptor */
+  globalInterceptorId: string
 }
 
 /**

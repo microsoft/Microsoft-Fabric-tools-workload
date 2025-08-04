@@ -1,4 +1,4 @@
-import { ItemPartInterceptorDefinition, ItemPartInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig} from "../PackageInstallerItemModel";
+import { ItemPartInterceptorDefinition, ItemPartInterceptorDefinitionConfig, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig} from "../PackageInstallerItemModel";
 import { DeploymentContext } from "../deployment/DeploymentContext";
 
 export abstract class Interceptor<T extends ItemPartInterceptorDefinitionConfig> {
@@ -46,6 +46,40 @@ export abstract class Interceptor<T extends ItemPartInterceptorDefinitionConfig>
     protected abstract interceptContentInt(content: string, systemVariables: Record<string, string>): Promise<string>;
 }
 
+export class ReferenceInterceptor extends Interceptor<ReferenceInterceptorDefinitionConfig> {
+    constructor(definition: ItemPartInterceptorDefinition<ReferenceInterceptorDefinitionConfig>, depContext: DeploymentContext) {
+        super(definition, depContext);
+    }
+
+    protected async interceptContentInt(content: string, systemVariables: Record<string, string>): Promise<string> {
+        let modifiedContent = content;
+        
+        const globalInterceptors = this.depContext.pack.deploymentConfig?.globalInterceptors;
+        const globalInterceptorId = this.definition.config.globalInterceptorId;
+
+        if (globalInterceptors) {
+            // Look for the interceptor with matching ID
+            const foundInterceptor: ItemPartInterceptorDefinition<any> | undefined = globalInterceptors[globalInterceptorId];
+            
+            if (foundInterceptor) {
+                // Create and apply the referenced interceptor
+                try {
+                    const referencedInterceptor = InterceptorFactory.createInterceptor(foundInterceptor, this.depContext);
+                    modifiedContent = await referencedInterceptor.interceptText(modifiedContent);
+                } catch (error) {
+                    console.error(`Failed to apply referenced interceptor '${globalInterceptorId}':`, error);
+                    throw new Error(`Failed to apply referenced interceptor '${globalInterceptorId}': ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+            } else {
+                throw new Error(`Global interceptor with ID '${globalInterceptorId}' not found`);
+            }
+        } else {
+            throw new Error(`No global interceptors defined, cannot find interceptor '${globalInterceptorId}'`);
+        }       
+        return modifiedContent;
+    }
+}
+
 export class StringReplaceInterceptor extends Interceptor<StringReplacementInterceptorDefinitionConfig> {
 
     constructor(definition: ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig>, 
@@ -91,6 +125,8 @@ export class InterceptorFactory {
             throw new Error("Interceptor definition is required");
         }
         switch (interceptorDef.type) {
+            case "Reference":
+                return new ReferenceInterceptor(interceptorDef as ItemPartInterceptorDefinition<ReferenceInterceptorDefinitionConfig>, depContext);
             case "StringReplacement":
                 return new StringReplaceInterceptor(interceptorDef as ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig>, depContext);
             default:
@@ -115,7 +151,7 @@ export class InterceptorFactory {
      * @returns Array of supported interceptor type names
      */
     static getSupportedTypes(): string[] {
-        return ["StringReplacement"];
+        return ["Reference", "StringReplacement"];
     }
 
     /**

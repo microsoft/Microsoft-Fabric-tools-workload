@@ -5,7 +5,15 @@
     "icon": "/assets/items/PackageInstallerItem/NewWorkspace/icon.png",
     "deploymentConfig": {
         "type": "UX",
-        "location": "NewWorkspace"
+        "location": "NewWorkspace",
+        "globalInterceptors" :{
+            "default" : {
+                "type": "StringReplacement",
+                "config" :{
+                    "WORKSPACE_ID": "{{WORKSPACE_ID}}"
+                }
+            }
+        }
     },
     "items": [
         {
