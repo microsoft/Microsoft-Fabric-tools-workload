@@ -1,11 +1,11 @@
-import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig } from '../PackageInstallerItemModel';
+import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig, ReferenceInterceptorDefinitionConfig, DeploymentConfiguration } from '../PackageInstallerItemModel';
 
 export type ConfiguredPackages = {
   [key: string]: Package;
 };
 
 // Helper function to convert interceptor config and create interceptor instance
-export function convertInterceptor(definition: any): ItemPartInterceptorDefinition<any> | undefined {
+export function convertInterceptor(definition: any, deploymentConfig: DeploymentConfiguration): ItemPartInterceptorDefinition<any> | undefined {
   if (!definition) return undefined;
   
   // Validate interceptor structure
@@ -19,6 +19,19 @@ export function convertInterceptor(definition: any): ItemPartInterceptorDefiniti
   
   if (typeof definition.type === 'string') {
     switch (definition.type) {
+      case "Reference":
+        interceptorType = ItemPartInterceptorType.Reference;
+        
+        if (!definition.config.id) {
+          throw new Error('Reference interceptor requires an id that is referenced');
+        }
+        if (!deploymentConfig.globalInterceptors || !deploymentConfig.globalInterceptors[definition.config.id]) {
+          throw new Error(`Global interceptor with ID '${definition.config.id}' not found`);
+        }
+        config = {
+          id: definition.config.id
+        } as ReferenceInterceptorDefinitionConfig;
+        break;
       case "StringReplacement":
         interceptorType = ItemPartInterceptorType.StringReplacement;
         
@@ -118,12 +131,12 @@ export function convertConfigToPackage(pack: any): Package {
       
       // Process definition interceptor if present
       if (processedItem.definition?.interceptor) {
-        processedItem.definition.interceptor = convertInterceptor(processedItem.definition.interceptor);
+        processedItem.definition.interceptor = convertInterceptor(processedItem.definition.interceptor, deploymentConfig);
       }
       
       // Process data interceptor if present
       if (processedItem.data?.interceptor) {
-        processedItem.data.interceptor = convertInterceptor(processedItem.data.interceptor);
+        processedItem.data.interceptor = convertInterceptor(processedItem.data.interceptor, deploymentConfig);
       }
       
       return processedItem;

@@ -55,7 +55,7 @@ export class ReferenceInterceptor extends Interceptor<ReferenceInterceptorDefini
         let modifiedContent = content;
         
         const globalInterceptors = this.depContext.pack.deploymentConfig?.globalInterceptors;
-        const globalInterceptorId = this.definition.config.globalInterceptorId;
+        const globalInterceptorId = this.definition.config.id;
 
         if (globalInterceptors) {
             // Look for the interceptor with matching ID

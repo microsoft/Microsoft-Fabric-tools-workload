@@ -311,7 +311,7 @@ export abstract class DeploymentStrategy {
         const fileContent = await this.getPackageItemPartContent(depContext, file, packageItemData.interceptor);
 
         // Write file to OneLake
-        const oneLakeClient = this.context.getOneLakeClientItemWrapper(this.item);
+        const oneLakeClient = this.context.getOneLakeClientItemWrapper(depContext.getCurrentItem());
         oneLakeClient.writeFileAsBase64(filePath, fileContent);
 
         depContext.log(`Successfully copied file ${file.path} to OneLake for item: ${depContext.getCurrentItem().displayName}`);

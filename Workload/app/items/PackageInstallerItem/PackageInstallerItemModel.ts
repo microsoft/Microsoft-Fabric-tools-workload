@@ -440,7 +440,7 @@ export interface ItemPartInterceptorDefinitionConfig {
 
 export interface ReferenceInterceptorDefinitionConfig extends ItemPartInterceptorDefinitionConfig {
   /** Id of the global defined interceptor */
-  globalInterceptorId: string
+  id: string
 }
 
 /**

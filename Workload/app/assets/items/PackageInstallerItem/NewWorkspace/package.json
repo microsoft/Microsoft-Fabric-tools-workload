@@ -10,7 +10,10 @@
             "default" : {
                 "type": "StringReplacement",
                 "config" :{
-                    "WORKSPACE_ID": "{{WORKSPACE_ID}}"
+                    "replacements": {
+                        "WORKSPACE_ID": "{{WORKSPACE_ID}}",
+                        "ITEM_ID": "{{ITEM_ID}}"
+                    }
                 }
             }
         }
@@ -19,7 +22,21 @@
         {
             "type": "Lakehouse",
             "displayName": "MyLakehouse",
-            "description": "A lakehouse that contains data."
+            "description": "A lakehouse that contains data.",
+            "data": {
+                "files": [
+                {
+                    "path": "Files/info.txt",
+                    "payloadType": "AssetLink",
+                    "payload": "/assets/items/PackageInstallerItem/NewWorkspace/data/MyLakehouse/info.txt"
+                }],
+                "interceptor" : {
+                    "type": "Reference",
+                    "config": {
+                        "id": "default"
+                    }
+                }
+            }
         }
     ]
 }
