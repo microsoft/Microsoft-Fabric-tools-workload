@@ -9,6 +9,8 @@ import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstaller
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
+import { IcebergCatalogItemEditor } from "./items/IcebergCatalogItem/IcebergCatalogItemEditor";
+import { IcebergCatalogItemEditorSettingsPageWrapper } from "./items/IcebergCatalogItem/IcebergCatalogItemEditorSettingsPage";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -58,6 +60,7 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} data-testid="HelloWorldItem-editor" />
             </Route>
             
+            {/* Routing to the Package Installer Item Editor */}
             <Route path="/PackageInstallerItem-editor/:itemObjectId">
                 <PackageInstallerItemEditor
                     workloadClient={workloadClient} data-testid="PackageInstallerItem-editor" />
@@ -79,9 +82,21 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} />
             </Route>
 
+            {/* Routing to the OneLake Explorer Item Editor */}
             <Route path="/OneLakeExplorerItem-editor/:itemObjectId">
                 <OneLakeExplorerItemEditor
                     workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
+            </Route>
+
+            {/* Routing to the Iceberg Catalog Item Editor */}
+            <Route path="/IcebergCatalogItem-editor/:itemObjectId">
+                <IcebergCatalogItemEditor
+                    workloadClient={workloadClient} data-testid="IcebergCatalogItem-editor" />
+            </Route>
+            <Route path="/IcebergCatalogItem-settings-page">
+                <IcebergCatalogItemEditorSettingsPageWrapper
+                    workloadClient={workloadClient}
+                    data-testid="IcebergCatalogItem-settings-page" />
             </Route>
 
         </Switch>

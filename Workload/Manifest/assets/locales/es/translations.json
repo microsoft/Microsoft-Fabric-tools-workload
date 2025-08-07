@@ -12,5 +12,8 @@
   "PackageInstallerItem_Description": "Un elemento que puede instalar diferentes configuraciones de paquetes en espacios de trabajo de Fabric.",
   "OneLakeExplorerItem_DisplayName": "Explorador de OneLake",
   "OneLakeExplorerItem_DisplayName_Plural": "Exploradores de OneLake",
-  "OneLakeExplorerItem_Description": "Un elemento que proporciona capacidades de exploración y edición de archivos OneLake."
+  "OneLakeExplorerItem_Description": "Un elemento que proporciona capacidades de exploración y edición de archivos OneLake.",
+  "IcebergCatalogItem_DisplayName": "Catálogo de Iceberg",
+  "IcebergCatalogItem_DisplayName_Plural": "Catálogos de Iceberg",
+  "IcebergCatalogItem_Description": "Un elemento de Catálogo de Iceberg que crea accesos directos a tablas de Iceberg en OneLake"
 }
