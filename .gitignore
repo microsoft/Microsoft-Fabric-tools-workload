@@ -417,10 +417,4 @@ scripts/Setup/My*
 # Fabric Workload files
 Workload/node_modules/*
 Workload/package-lock.json
-<<<<<<< HEAD
-Workload/.env*
 Workload/dist/*
-Workload/app/assets/items/PackageInstallerItem/MDSF/*
-=======
-Workload/dist/*
->>>>>>> wdkbase/dev/preview/wdkv2
