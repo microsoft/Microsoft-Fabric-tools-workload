@@ -12,5 +12,8 @@
   "PackageInstallerItem_Description": "Un elemento que puede instalar diferentes configuraciones de paquetes en espacios de trabajo de Fabric.",
   "OneLakeExplorerItem_DisplayName": "Explorador de OneLake",
   "OneLakeExplorerItem_DisplayName_Plural": "Exploradores de OneLake",
-  "OneLakeExplorerItem_Description": "Un elemento que proporciona capacidades de exploración y edición de archivos OneLake."
+  "OneLakeExplorerItem_Description": "Un elemento que proporciona capacidades de exploración y edición de archivos OneLake.",
+  "DataSharingItem_DisplayName": "Compartición de Datos",
+  "DataSharingItem_DisplayName_Plural": "Comparticiones de Datos",
+  "DataSharingItem_Description": "Un elemento que proporciona capacidades de compartición de datos."
 }

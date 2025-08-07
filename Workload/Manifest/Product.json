@@ -69,6 +69,27 @@
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
             }        
+          },
+          {
+            "title": "DataSharingItem_DisplayName",
+            "description": "DataSharingItem_Description",
+            "icon": {
+              "name": "assets/images/DataSharingItem-icon.png"
+            },
+            "icon_small": {
+              "name": "assets/images/DataSharingItem-icon.png"
+            },
+            "availableIn": [
+              "home",
+              "create-hub",
+              "workspace-plus-new",
+              "workspace-plus-new-teams"
+            ],
+            "itemType": "DataSharing",
+            "createItemDialogConfig": {
+              "onCreationFailure": { "action": "item.onCreationFailure" },
+              "onCreationSuccess": { "action": "item.onCreationSuccess" }
+            }        
           }
         ]
     },
