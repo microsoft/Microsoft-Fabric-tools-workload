@@ -25,8 +25,7 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
 import { useTranslation } from "react-i18next";
-import { IcebergCatalogItemDefinition, ShortcutInfo, ICEBERG_PROXY_URL } from "./IcebergCatalogItemModel";
-import { TableInfo, IcebergCatalogProxyClient } from "../../../api/IcebergCatalog/client";
+import { IcebergCatalogItemDefinition, ShortcutInfo } from "./IcebergCatalogItemModel";
 import { IcebergCatalogItemEmpty } from "./IcebergCatalogItemEditorEmpty";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
@@ -34,6 +33,7 @@ import { callOpenSettings } from "../../controller/SettingsController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { Delete24Regular, CheckmarkCircle24Regular, ErrorCircle24Regular, Clock24Regular } from "@fluentui/react-icons";
 import { IcebergShortcutController } from "./IcebergShortcutController";
+import { TableInfo } from "./IcebergRestApiController";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
 
 export function IcebergCatalogItemEditor(props: PageProps) {
@@ -114,23 +114,28 @@ export function IcebergCatalogItemEditor(props: PageProps) {
 
         setIsSyncing(true);
         try {
-            // Create API client
-            const apiClient = new IcebergCatalogProxyClient(config.icebergConfig, ICEBERG_PROXY_URL);
+            // Get all namespaces from the Iceberg catalog
+            const namespaces = await shortcutController.getAllNamespaces();
+            const allTables: TableInfo[] = [];
 
-            // Fetch Iceberg Catalog tables using real API
-            const icebergTables = await apiClient.getAllTables(config.icebergConfig.namespaces);
+            // Fetch tables from all namespaces
+            for (const namespace of namespaces) {
+                const tablesInNamespace = await shortcutController.getTablesInNamespace(namespace);
+                allTables.push(...tablesInNamespace);
+            }
+
             const existingShortcuts = editorItem.definition.shortcuts || [];
             var newShortcuts: ShortcutInfo[] = [];
 
-            if (icebergTables) {
+            if (allTables.length > 0) {
                 // Create all new shortcuts
                 newShortcuts = await Promise.all(
-                    icebergTables.map(table => checkIcebergTable(config, table))
+                    allTables.map((table: TableInfo) => checkIcebergTable(config, table))
                 );
                 
                 // Delete missing shortcuts
-                const missingShortcuts = existingShortcuts.filter(s => !icebergTables.find(t =>
-                    t.namespace === s.icebergCatalog.namespace &&
+                const missingShortcuts = existingShortcuts.filter(s => !allTables.find((t: TableInfo) =>
+                    t.namespace.join('.') === s.icebergCatalog.namespace &&
                     t.name === s.icebergCatalog.tableName));
                 await Promise.all(missingShortcuts.map(s => shortcutController.deleteShortcut(s)));
             }

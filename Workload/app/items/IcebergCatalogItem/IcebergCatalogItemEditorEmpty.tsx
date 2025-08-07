@@ -3,8 +3,8 @@ import { Stack } from "@fluentui/react";
 import { Text, Button, Input, Field, Dropdown, Option, Checkbox, Spinner } from "@fluentui/react-components";
 import "../../styles.scss";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { IcebergCatalogItemDefinition, IcebergCatalogConfig, DEFAULT_SHORTCUT_PREFIX, ICEBERG_PROXY_URL} from "./IcebergCatalogItemModel";
-import { IcebergCatalogProxyClient } from "../../../api/IcebergCatalog/client";
+import { IcebergCatalogItemDefinition, IcebergCatalogConfig, DEFAULT_SHORTCUT_PREFIX } from "./IcebergCatalogItemModel";
+import { IcebergRestApiController } from "./IcebergRestApiController";
 import { FabricPlatformAPIClient } from "../../clients/FabricPlatformAPIClient";
 import { Connection } from "../../clients/FabricPlatformTypes";
 
@@ -49,7 +49,7 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
     loadConnections();
   }, []);
 
-  function getIcebergCatalogAPIClient(): IcebergCatalogProxyClient {
+  function getIcebergCatalogAPIClient(): IcebergRestApiController {
     const tempConfig: IcebergCatalogConfig = {
       catalogUri,
       catalogType,
@@ -60,7 +60,7 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
       namespaces: [],
       connectionId: ""
     };
-    return new IcebergCatalogProxyClient(tempConfig, ICEBERG_PROXY_URL);
+    return new IcebergRestApiController(tempConfig);
   }
 
   const loadConnections = async () => {
@@ -90,7 +90,7 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
       setIsLoadingNamespaces(true);
       const namespacesResponse = await apiClient.listNamespaces();
       
-      const availableNamespaces = namespacesResponse.namespaces.map(ns => ns.join('.'));
+      const availableNamespaces = namespacesResponse.namespaces.map((ns: string[]) => ns.join('.'));
       setAvailableNamespaces(availableNamespaces);
       setIsLoggedIn(true);
       setIsLoadingNamespaces(false);
@@ -139,7 +139,7 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
     <Stack className="empty-item-container" style={{ minHeight: 1200, height: '100%', maxHeight: '100%' }} horizontalAlign="start" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
-          src="/assets/items/IcebergCatalogItem/EditorEmpty.png"
+          src="/assets/items/IcebergCatalog/EditorEmpty.png"
           alt="Empty Iceberg Catalog item illustration"
           className="empty-item-image"
         />
