@@ -85,16 +85,16 @@ export function convertConfigToPackage(pack: any): Package {
   if (typeof deploymentConfig.type === 'string') {
     switch (deploymentConfig.type) {
       case "UX":
-        deploymentConfig.deploymentType = DeploymentType.UX;
+        deploymentConfig.type = DeploymentType.UX;
         break;
       case "SparkNotebook":
-        deploymentConfig.deploymentType = DeploymentType.SparkNotebook;
+        deploymentConfig.type = DeploymentType.SparkNotebook;
         break;
       default:
         throw new Error(`Unsupported deployment type: ${deploymentConfig.type}`);
     }
   } else {
-    deploymentConfig.deploymentType = DeploymentType.UX; // Default to UX if not specified
+    deploymentConfig.type = DeploymentType.UX; // Default to UX if not specified
   }
 
   // Convert string location type to enum  

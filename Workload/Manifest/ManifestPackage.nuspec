@@ -2,8 +2,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <!-- Package information -->
-    <id>ManifestPackage</id>
-    <version>1.0.0</version>
+    <id>{{WORKLOAD_NAME}}</id>
+    <version>{{WORKLOAD_VERSION}}</version>
     <authors>author</authors>
     <owners>owner</owners>
     <description>A NuGet package that holds the manifests for the {{WORKLOAD_NAME}} workload.</description>
@@ -11,8 +11,10 @@
   </metadata>
   <files>
     <!-- Include the XML and FE files -->
-    <file src="<ManifestFolder>*.xml" target="BE" />
-    <file src="<ManifestFolder>*.json" target="FE" />
-    <file src="<ManifestFolder>assets\**" target="FE\assets" />
+    <file src="{{MANIFEST_FOLDER}}\*.xml" target="BE" />
+    <file src="{{MANIFEST_FOLDER}}\*.json" target="FE" />
+    <file src="{{MANIFEST_FOLDER}}\assets\**" target="FE\assets" />
+    <!-- TODO will be added once schemas are allowed -->
+    <!-- file src="{{MANIFEST_FOLDER}}\items\**" target="items" / -->
   </files>
 </package>
