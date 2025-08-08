@@ -2,9 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Stack } from "@fluentui/react";
 import {
     Text,
-    Spinner,
-    Card,
-    Button
+    TabValue
 } from "@fluentui/react-components";
 import { ContextProps, PageProps } from "../../App";
 import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
@@ -16,8 +14,10 @@ import { DataSharingItemDefinition } from "./DataSharingItemModel";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callOpenSettings } from "../../controller/SettingsController";
-import { NotificationType } from "@ms-fabric/workload-client";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
+import { DataSharingItemEditorRibbon } from "./DataSharingItemEditorRibbon";
+import { CreatedSharesComponent } from "./components/CreatedSharesComponent";
+import { ReceivedSharesComponent } from "./components/ReceivedSharesComponent";
 
 export function DataSharingItemEditor(props: PageProps) {
     const pageContext = useParams<ContextProps>();
@@ -26,8 +26,8 @@ export function DataSharingItemEditor(props: PageProps) {
     const { workloadClient } = props;
     const [isUnsaved, setIsUnsaved] = useState<boolean>(true);
     const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-    const [isSyncing, setIsSyncing] = useState<boolean>(false);
     const [editorItem, setEditorItem] = useState<ItemWithDefinition<DataSharingItemDefinition>>(undefined);
+    const [selectedView, setSelectedView] = useState<TabValue>("home");
     const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
 
     // Helper function to update item definition immutably
@@ -77,43 +77,6 @@ export function DataSharingItemEditor(props: PageProps) {
         }
     }
 
-    async function syncShares(definition?: DataSharingItemDefinition) {
-        setIsSyncing(true);
-        try {
-            // Simulate syncing shares - in real implementation, this would:
-            // 1. Check status of created shares
-            // 2. Look for new received shares
-            // 3. Update share statuses
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Update last sync date
-            updateItemDefinition({
-                lastSyncDate: new Date()
-            });
-            SaveItem();
-
-            callNotificationOpen(
-                workloadClient,
-                "Sync Complete",
-                "Successfully synchronized data shares.",
-                NotificationType.Success,
-                undefined
-            );
-
-        } catch (error) {
-            callNotificationOpen(
-                workloadClient,
-                "Sync Failed",
-                "Failed to synchronize data shares. Please try again.",
-                NotificationType.Error,
-                undefined
-            );
-        } finally {
-            refreshOneLakeExplorer();
-            setIsSyncing(false);
-        }
-    }
-
     async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
         setIsLoadingData(true);
         let item: ItemWithDefinition<DataSharingItemDefinition> = undefined;
@@ -150,6 +113,7 @@ export function DataSharingItemEditor(props: PageProps) {
         } else {
             console.log(`non-editor context. Current Path: ${pathname}`);
         }
+        setSelectedView("home")
         setIsUnsaved(false);
         setIsLoadingData(false);
     }
@@ -173,123 +137,80 @@ export function DataSharingItemEditor(props: PageProps) {
     const receivedShares = editorItem.definition.receivedShares || [];
 
     return (
-        <div className="item-editor-container">
-            {/* Simple ribbon */}
-            <div className="ribbon-container">
-                <Stack horizontal tokens={{ childrenGap: 16 }} verticalAlign="center" style={{ padding: '8px 16px', borderBottom: '1px solid #ccc' }}>
-                    <Button
-                        appearance="primary"
-                        disabled={!isUnsaved}
-                        onClick={() => SaveItem()}
-                    >
-                        Save
-                    </Button>
-                    <Button
-                        appearance="secondary"
-                        disabled={isSyncing}
-                        onClick={() => syncShares()}
-                    >
-                        {isSyncing ? "Syncing..." : "Sync Shares"}
-                    </Button>
-                    <Button
-                        appearance="subtle"
-                        onClick={openSettings}
-                    >
-                        Settings
-                    </Button>
-                    <Text size={400} weight="semibold" style={{ marginLeft: '16px' }}>
-                        Data Sharing Management
-                    </Text>
-                    {isSyncing && <Spinner size="small" />}
-                </Stack>
-            </div>
-            
-            <div className="item-editor-content">
-                <Stack horizontal tokens={{ childrenGap: 20 }} style={{ padding: '20px', height: 'calc(100vh - 200px)', overflow: 'hidden' }}>
-                    {/* Left side - OneLake Item Explorer */}
-                    <Stack.Item style={{ width: '300px', minWidth: '200px', maxWidth: '300px', height: '100%', overflow: 'hidden' }}>
-                        <Stack tokens={{ childrenGap: 16 }} style={{ height: '100%' }}>
-                            <Text size={500} weight="semibold">OneLake Explorer</Text>
+        <Stack style={{ height: "100vh" }}>
+            <DataSharingItemEditorRibbon
+                workloadClient={workloadClient}
+                isRibbonDisabled={false}
+                isSaveButtonEnabled={isUnsaved}
+                saveItemCallback={SaveItem}
+                openSettingsCallback={openSettings}
+            />
+            {["home"].includes(selectedView as string) && (
+                <span style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
+                    {/* Data Sharing Management Section */}
+                    <Stack horizontal tokens={{ childrenGap: 32 }} style={{ padding: '20px', height: 'calc(100vh - 120px)' }}>
+                        {/* Left side - OneLake Item Explorer */}
+                        <Stack.Item style={{ maxWidth: '300px', height: '100%', overflow: "hidden" }}>
                             <OneLakeItemExplorerComponent
                                 workloadClient={workloadClient}
                                 onFileSelected={async () => { }}
                                 onTableSelected={async () => { }}
                                 onItemChanged={async () => { }}
                                 config={{
-                                    initialItem: {
-                                        ...editorItem
-                                    },
-                                    allowedItemTypes: [], // Allow all item types
-                                    allowItemSelection: false, // Don't allow changing the selected item
+                                    initialItem: { ...editorItem },
+                                    allowedItemTypes: [],
+                                    allowItemSelection: false,
                                     refreshTrigger: refreshTrigger
                                 }}
                             />
-                        </Stack>
-                    </Stack.Item>
+                        </Stack.Item>
 
-                    {/* Right side - Data Shares Overview */}
-                    <Stack.Item grow style={{ minWidth: '800px', height: '100%', overflow: 'hidden' }}>
-                        <Stack tokens={{ childrenGap: 20 }} style={{ height: '100%' }}>
-                            <Stack horizontal horizontalAlign="space-between" verticalAlign="center" style={{ flexShrink: 0 }}>
-                                <Stack>
-                                    <Text size={600} weight="semibold">Data Sharing Management</Text>
-                                    <Text size={300}>
-                                        Manage external data shares and accept shared data from other organizations.
-                                        Last sync: {editorItem.definition.lastSyncDate ?
-                                            new Date(editorItem.definition.lastSyncDate).toLocaleString() : 'Never'}
-                                    </Text>
-                                </Stack>
-                            </Stack>
-
-                            {/* Created and Received Shares in simple cards */}
-                            <Stack.Item grow style={{ overflow: 'auto', minHeight: 0 }}>
+                        {/* Right side - Data Shares Overview */}
+                        <Stack.Item grow style={{ minWidth: '300px', height: '100%' }}>
                                 <Stack tokens={{ childrenGap: 20 }} style={{ height: '100%' }}>
-                                    {/* Created Shares Section */}
-                                    <Stack.Item style={{ flex: '1 1 50%', minHeight: '300px' }}>
-                                        <Card style={{ height: '100%', padding: '16px' }}>
-                                            <Stack tokens={{ childrenGap: 16 }} style={{ height: '100%' }}>
-                                                <Text size={500} weight="semibold">Created Shares ({createdShares.length})</Text>
-                                                {createdShares.length === 0 ? (
-                                                    <Stack style={{ padding: '40px', textAlign: 'center' }}>
-                                                        <Text size={500} weight="semibold">No shares created yet</Text>
-                                                        <Text size={300} style={{ marginTop: '8px' }}>
-                                                            Click "Create Share" to share data with external organizations.
-                                                        </Text>
-                                                        <Button appearance="primary" style={{ marginTop: '16px' }}>
-                                                            Create Share
-                                                        </Button>
-                                                    </Stack>
-                                                ) : (
-                                                    <Text>Created shares will appear here</Text>
-                                                )}
-                                            </Stack>
-                                        </Card>
-                                    </Stack.Item>
+                                    <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
+                                        <Stack>
+                                            <Text size={600} weight="semibold">Data Sharing Management</Text>
+                                            <Text size={300}>
+                                                Manage external data shares and accept shared data from other organizations.
+                                                Last sync: {editorItem.definition.lastSyncDate ?
+                                                    new Date(editorItem.definition.lastSyncDate).toLocaleString() : 'Never'}
+                                            </Text>
+                                        </Stack>
+                                    </Stack>
 
-                                    {/* Received Shares Section */}
-                                    <Stack.Item style={{ flex: '1 1 50%', minHeight: '300px' }}>
-                                        <Card style={{ height: '100%', padding: '16px' }}>
-                                            <Stack tokens={{ childrenGap: 16 }} style={{ height: '100%' }}>
-                                                <Text size={500} weight="semibold">Received Shares ({receivedShares.length})</Text>
-                                                {receivedShares.length === 0 ? (
-                                                    <Stack style={{ padding: '40px', textAlign: 'center' }}>
-                                                        <Text size={500} weight="semibold">No received shares</Text>
-                                                        <Text size={300} style={{ marginTop: '8px' }}>
-                                                            Shares from external organizations will appear here.
-                                                        </Text>
-                                                    </Stack>
-                                                ) : (
-                                                    <Text>Received shares will appear here</Text>
-                                                )}
-                                            </Stack>
-                                        </Card>
+                                    {/* Created and Received Shares */}
+                                    <Stack.Item grow style={{ overflow: 'auto', minHeight: 0 }}>
+                                        <Stack tokens={{ childrenGap: 20 }} style={{ height: '100%' }}>
+                                            {/* Created Shares Section */}
+                                            <Stack.Item style={{ flex: '1 1 50%', minHeight: '250px' }}>
+                                                <CreatedSharesComponent
+                                                    createdShares={createdShares}
+                                                    editorItem={editorItem}
+                                                    updateItemDefinition={updateItemDefinition}
+                                                    workloadClient={workloadClient}
+                                                    refreshOneLakeExplorer={refreshOneLakeExplorer}
+                                                />
+                                            </Stack.Item>
+
+                                            {/* Received Shares Section */}
+                                            <Stack.Item style={{ flex: '1 1 50%', minHeight: '250px' }}>
+                                                <ReceivedSharesComponent
+                                                    receivedShares={receivedShares}
+                                                    editorItem={editorItem}
+                                                    updateItemDefinition={updateItemDefinition}
+                                                    workloadClient={workloadClient}
+                                                    refreshOneLakeExplorer={refreshOneLakeExplorer}
+                                                    workspaceId={pageContext.workspaceObjectId}
+                                                />
+                                            </Stack.Item>
+                                        </Stack>
                                     </Stack.Item>
-                                </Stack>
-                            </Stack.Item>
-                        </Stack>
-                    </Stack.Item>
                 </Stack>
-            </div>
-        </div>
+                        </Stack.Item>
+                    </Stack>
+                </span>
+            )}
+        </Stack>
     );
 }

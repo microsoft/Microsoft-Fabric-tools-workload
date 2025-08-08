@@ -31,13 +31,17 @@ import {
     Clock24Regular,
     CloudSync24Regular,
     Dismiss24Regular,
-    ArrowDownload24Regular
+    ArrowDownload24Regular,
+    Add24Regular
 } from "@fluentui/react-icons";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { DataSharingItemDefinition, ReceivedShare, ReceivedShareStatus } from "../DataSharingItemModel";
+import { DataSharingItemDefinition, ReceivedShare, ReceivedShareStatus, getReceivedShareDisplayName, getReceivedShareSenderInfo } from "../DataSharingItemModel";
 import { callNotificationOpen } from "../../../controller/NotificationController";
+import { callDialogOpen } from "../../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
+import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
+import { DataSharingItemImportShareResult } from "../DataSharingItemImportShareDialog";
 
 interface ReceivedSharesComponentProps {
     receivedShares: ReceivedShare[];
@@ -45,6 +49,7 @@ interface ReceivedSharesComponentProps {
     updateItemDefinition: (updates: Partial<DataSharingItemDefinition>) => void;
     workloadClient: WorkloadClientAPI;
     refreshOneLakeExplorer: () => void;
+    workspaceId: string; // Add workspace ID for API calls
 }
 
 export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = ({
@@ -52,7 +57,8 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
     editorItem,
     updateItemDefinition,
     workloadClient,
-    refreshOneLakeExplorer
+    refreshOneLakeExplorer,
+    workspaceId
 }) => {
     const [selectedShares, setSelectedShares] = useState<Set<string>>(new Set());
     const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false);
@@ -60,76 +66,240 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
     const [acceptLocation, setAcceptLocation] = useState("");
     const [acceptName, setAcceptName] = useState("");
 
+    const handleImportShare = async () => {
+        try {
+            const dialogResult = await callDialogOpen(
+                workloadClient,
+                process.env.WORKLOAD_NAME,
+                `/DataSharingItem-import-share-dialog/${editorItem.id}`,
+                500, 500,
+                true
+            );
+
+            if (dialogResult && dialogResult.value) {
+                const result = dialogResult.value as DataSharingItemImportShareResult;
+                
+                if (result.state === 'import' && result.shareData) {
+                    try {
+                        const apiClient = new FabricPlatformAPIClient(workloadClient);
+                        
+                        // Parse the share link to extract invitation details
+                        const url = new URL(result.shareData.shareLink);
+                        const invitationId = url.searchParams.get('invitationId') || url.searchParams.get('invitation');
+                        const providerTenantId = url.searchParams.get('providerTenantId') || url.searchParams.get('tenantId');
+                        
+                        if (!invitationId || !providerTenantId) {
+                            throw new Error('Invalid share link: missing invitation ID or provider tenant ID');
+                        }
+
+                        // Get detailed share information from the API
+                        const shareDetails = await apiClient.externalDataSharesRecipient.getInvitationDetails(
+                            invitationId,
+                            providerTenantId
+                        );
+
+                        // Create a new received share based on the API response
+                        const newReceivedShare: ReceivedShare = {
+                            ...shareDetails,
+                            id: invitationId, // Use invitation ID as the share ID
+                            displayName: result.shareData.displayName,
+                            description: result.shareData.description,
+                            receivedDate: new Date(),
+                            status: 'pending' as ReceivedShareStatus
+                        };
+
+                        // Add to the item definition
+                        const updatedShares = [...receivedShares, newReceivedShare];
+                        updateItemDefinition({ receivedShares: updatedShares });
+
+                        callNotificationOpen(
+                            workloadClient,
+                            "Share Imported",
+                            `Successfully imported share "${result.shareData.displayName}".`,
+                            NotificationType.Success,
+                            undefined
+                        );
+                    } catch (error) {
+                        console.error('Failed to import share:', error);
+                        callNotificationOpen(
+                            workloadClient,
+                            "Import Failed",
+                            `Failed to import share: ${(error as Error).message}`,
+                            NotificationType.Error,
+                            undefined
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Dialog error:', error);
+            callNotificationOpen(
+                workloadClient,
+                "Dialog Error",
+                "Failed to open import dialog.",
+                NotificationType.Error,
+                undefined
+            );
+        }
+    };
+
     const handleAcceptShare = async (share: ReceivedShare) => {
         setSelectedShareForAccept(share);
-        setAcceptName(share.name);
-        setAcceptLocation(`/Items/${editorItem.displayName}/AcceptedShares/${share.name}`);
+        setAcceptName(getReceivedShareDisplayName(share));
+        setAcceptLocation(`/Items/${editorItem.displayName}/AcceptedShares/${getReceivedShareDisplayName(share)}`);
         setIsAcceptDialogOpen(true);
     };
 
     const confirmAcceptShare = async () => {
         if (!selectedShareForAccept || !acceptLocation) return;
 
-        const updatedShares = receivedShares.map(share => 
-            share.id === selectedShareForAccept.id 
-                ? { 
-                    ...share, 
-                    status: 'accepted' as ReceivedShareStatus,
-                    acceptedDate: new Date(),
-                    dataLocation: acceptLocation
-                  }
-                : share
-        );
+        try {
+            const apiClient = new FabricPlatformAPIClient(workloadClient);
 
-        updateItemDefinition({ receivedShares: updatedShares });
-        setIsAcceptDialogOpen(false);
-        setSelectedShareForAccept(null);
+            // If this is an external data share invitation, accept it via API
+            if (selectedShareForAccept.id && selectedShareForAccept.providerTenantDetails?.tenantId) {
+                try {
+                    // Use the invitation details that are already part of the received share
+                    const createShortcutRequests = selectedShareForAccept.pathsDetails.map(path => ({
+                        pathId: path.pathId,
+                        shortcutName: path.name
+                    }));
 
-        callNotificationOpen(
-            workloadClient,
-            "Share Accepted",
-            `Successfully accepted share "${selectedShareForAccept.name}".`,
-            NotificationType.Success,
-            undefined
-        );
+                    // Prepare the accept request
+                    const acceptRequest = {
+                        workspaceId: workspaceId,
+                        itemId: editorItem.id,
+                        providerTenantId: selectedShareForAccept.providerTenantDetails.tenantId,
+                        payload: {
+                            payloadType: 'ShortcutCreation' as const,
+                            path: acceptLocation || 'Files', // Use user-specified location or default
+                            createShortcutRequests: createShortcutRequests
+                        }
+                    };
 
-        refreshOneLakeExplorer();
+                    const acceptResponse = await apiClient.externalDataSharesRecipient.acceptInvitation(
+                        selectedShareForAccept.id, // Using id which contains the invitationId
+                        acceptRequest
+                    );
+
+                    callNotificationOpen(
+                        workloadClient,
+                        "Share Accepted",
+                        `Successfully accepted external data share "${getReceivedShareDisplayName(selectedShareForAccept)}" and created ${acceptResponse.value?.length || 0} shortcuts.`,
+                        NotificationType.Success,
+                        undefined
+                    );
+                } catch (apiError) {
+                    // Log the API error but continue with local update for demo purposes
+                    console.warn("Failed to accept share via API, updating locally:", apiError);
+                    
+                    callNotificationOpen(
+                        workloadClient,
+                        "Partial Success",
+                        `Share updated locally but API acceptance failed: ${(apiError as Error).message}`,
+                        NotificationType.Warning,
+                        undefined
+                    );
+                }
+            }
+
+            // Update the local state regardless of API success
+            const updatedShares = receivedShares.map(share => 
+                share.id === selectedShareForAccept.id 
+                    ? { 
+                        ...share, 
+                        status: 'accepted' as ReceivedShareStatus,
+                        acceptedDate: new Date()
+                      }
+                    : share
+            );
+
+            updateItemDefinition({ receivedShares: updatedShares });
+
+            // Show success notification if not already shown (for non-API shares)
+            if (!selectedShareForAccept.id) {
+                callNotificationOpen(
+                    workloadClient,
+                    "Share Accepted",
+                    `Successfully accepted share "${getReceivedShareDisplayName(selectedShareForAccept)}".`,
+                    NotificationType.Success,
+                    undefined
+                );
+            }
+
+        } catch (error) {
+            callNotificationOpen(
+                workloadClient,
+                "Accept Failed",
+                "Failed to accept share. Please try again.",
+                NotificationType.Error,
+                undefined
+            );
+        } finally {
+            setIsAcceptDialogOpen(false);
+            setSelectedShareForAccept(null);
+            refreshOneLakeExplorer();
+        }
     };
 
     const handleDeclineShare = async (share: ReceivedShare) => {
-        const updatedShares = receivedShares.map(s => 
-            s.id === share.id 
-                ? { ...s, status: 'declined' as ReceivedShareStatus }
-                : s
-        );
+        try {
+            // Update the local state
+            const updatedShares = receivedShares.map(s => 
+                s.id === share.id 
+                    ? { ...s, status: 'declined' as ReceivedShareStatus }
+                    : s
+            );
 
-        updateItemDefinition({ receivedShares: updatedShares });
+            updateItemDefinition({ receivedShares: updatedShares });
 
-        callNotificationOpen(
-            workloadClient,
-            "Share Declined",
-            `Declined share "${share.name}".`,
-            NotificationType.Warning,
-            undefined
-        );
+            callNotificationOpen(
+                workloadClient,
+                "Share Declined",
+                `Declined share "${getReceivedShareDisplayName(share)}".`,
+                NotificationType.Warning,
+                undefined
+            );
+
+            refreshOneLakeExplorer();
+        } catch (error) {
+            callNotificationOpen(
+                workloadClient,
+                "Decline Failed",
+                "Failed to decline share. Please try again.",
+                NotificationType.Error,
+                undefined
+            );
+        }
     };
 
     const handleDeleteSelectedShares = async () => {
         if (selectedShares.size === 0) return;
 
-        const remainingShares = receivedShares.filter(share => !selectedShares.has(share.id));
-        updateItemDefinition({ receivedShares: remainingShares });
-        setSelectedShares(new Set());
+        try {
+            // Remove from local definition
+            const remainingShares = receivedShares.filter(share => !selectedShares.has(share.id));
+            updateItemDefinition({ receivedShares: remainingShares });
+            setSelectedShares(new Set());
 
-        callNotificationOpen(
-            workloadClient,
-            "Shares Removed",
-            `Removed ${selectedShares.size} shares.`,
-            NotificationType.Success,
-            undefined
-        );
+            callNotificationOpen(
+                workloadClient,
+                "Shares Removed",
+                `Removed ${selectedShares.size} share(s) from local list.`,
+                NotificationType.Success,
+                undefined
+            );
 
-        refreshOneLakeExplorer();
+            refreshOneLakeExplorer();
+        } catch (error) {
+            callNotificationOpen(
+                workloadClient,
+                "Remove Failed",
+                "Failed to remove some shares. Please try again.",
+                NotificationType.Error,
+                undefined
+            );
+        }
     };
 
     const getStatusIcon = (status: ReceivedShareStatus) => {
@@ -198,25 +368,36 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
             renderHeaderCell: () => "Share Name",
             renderCell: (item) => (
                 <TableCellLayout>
-                    <Text weight="semibold">{item.name}</Text>
+                    <Text weight="semibold">{getReceivedShareDisplayName(item)}</Text>
                 </TableCellLayout>
             ),
         }),
         createTableColumn<ReceivedShare>({
-            columnId: "type",
-            renderHeaderCell: () => "Type",
+            columnId: "provider",
+            renderHeaderCell: () => "Provider",
             renderCell: (item) => (
                 <TableCellLayout>
-                    <Badge appearance="outline">{item.shareType}</Badge>
+                    <Stack>
+                        <Text weight="semibold">{getReceivedShareSenderInfo(item)}</Text>
+                        <Text size={200} style={{ color: '#666' }}>
+                            {item.providerTenantDetails?.verifiedDomainName || "Unknown domain"}
+                        </Text>
+                    </Stack>
                 </TableCellLayout>
             ),
         }),
         createTableColumn<ReceivedShare>({
-            columnId: "sender",
-            renderHeaderCell: () => "Sender",
+            columnId: "paths",
+            renderHeaderCell: () => "Shared Paths",
             renderCell: (item) => (
                 <TableCellLayout>
-                    {item.senderEmail || "Unknown"}
+                    <Stack tokens={{ childrenGap: 2 }}>
+                        {item.pathsDetails?.map((path, index) => (
+                            <Text key={index} size={300}>
+                                <Badge appearance="outline" size="small">{path.type}</Badge> {path.name}
+                            </Text>
+                        )) || <Text size={300}>No paths</Text>}
+                    </Stack>
                 </TableCellLayout>
             ),
         }),
@@ -291,6 +472,13 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
                 <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
                     <Text size={500} weight="semibold">Received Shares ({receivedShares.length})</Text>
                     <Stack horizontal tokens={{ childrenGap: 10 }}>
+                        <Button
+                            appearance="primary"
+                            icon={<Add24Regular />}
+                            onClick={handleImportShare}
+                        >
+                            Import Share
+                        </Button>
                         {selectedShares.size > 0 && (
                             <Button
                                 appearance="subtle"
@@ -349,7 +537,7 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
                         <DialogBody>
                             <Stack tokens={{ childrenGap: 12 }}>
                                 <Text>
-                                    Accept "{selectedShareForAccept?.name}" from {selectedShareForAccept?.senderEmail}?
+                                    Accept "{selectedShareForAccept ? getReceivedShareDisplayName(selectedShareForAccept) : ''}"
                                 </Text>
                                 <Field label="Target Location" required>
                                     <Input

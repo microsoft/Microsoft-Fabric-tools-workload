@@ -8,6 +8,8 @@ import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerIte
 import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
 import { DataSharingItemEditor } from "./items/DataSharingItem/DataSharingItemEditor";
+import { DataSharingItemCreateShareDialogWrapper } from "./items/DataSharingItem/DataSharingItemCreateShareDialog";
+import DataSharingItemImportShareDialog from "./items/DataSharingItem/DataSharingItemImportShareDialog";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
 
@@ -88,6 +90,14 @@ export function App({ history, workloadClient }: AppProps) {
             <Route path="/DataSharingItem-editor/:itemObjectId">
                 <DataSharingItemEditor
                     workloadClient={workloadClient} data-testid="DataSharingItem-editor" />
+            </Route>
+            <Route path="/DataSharingItem-create-share-dialog/:itemObjectId">
+                <DataSharingItemCreateShareDialogWrapper
+                    workloadClient={workloadClient} />
+            </Route>
+            <Route path="/DataSharingItem-import-share-dialog/:itemObjectId">
+                <DataSharingItemImportShareDialog
+                    workloadClient={workloadClient} />
             </Route>
 
         </Switch>

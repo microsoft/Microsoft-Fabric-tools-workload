@@ -14,27 +14,18 @@ import {
     Badge,
     Text,
     Card,
-    Checkbox,
-    Dialog,
-    DialogTrigger,
-    DialogSurface,
-    DialogTitle,
-    DialogContent,
-    DialogBody,
-    DialogActions,
-    Field,
-    Input,
-    Textarea,
-    Dropdown,
-    Option
+    Checkbox
 } from "@fluentui/react-components";
 import { Add24Regular, Delete24Regular, Share24Regular, CheckmarkCircle24Regular, ErrorCircle24Regular, Clock24Regular } from "@fluentui/react-icons";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { DataSharingItemDefinition, CreatedShare, ShareType, DEFAULT_PERMISSIONS } from "../DataSharingItemModel";
+import { DataSharingItemDefinition, CreatedShare } from "../DataSharingItemModel";
 import { callNotificationOpen } from "../../../controller/NotificationController";
+import { callDialogOpen, callDialogOpenMsgBox } from "../../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
-import { v4 as uuidv4 } from 'uuid';
+import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
+import { DataSharingItemCreateShareResult } from "../DataSharingItemCreateShareDialog";
+import { CreateExternalDataShareRequest } from "../../../clients/FabricPlatformTypes";
 
 interface CreatedSharesComponentProps {
     createdShares: CreatedShare[];
@@ -49,90 +40,185 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
     editorItem,
     updateItemDefinition,
     workloadClient,
-    refreshOneLakeExplorer
+    refreshOneLakeExplorer,
 }) => {
     const [selectedShares, setSelectedShares] = useState<Set<string>>(new Set());
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [newShareName, setNewShareName] = useState("");
-    const [newShareDescription, setNewShareDescription] = useState("");
-    const [newShareType, setNewShareType] = useState<ShareType>("folder");
-    const [newShareRecipient, setNewShareRecipient] = useState("");
-    const [newShareDataLocation, setNewShareDataLocation] = useState("");
 
     const handleCreateShare = async () => {
-        if (!newShareName || !newShareRecipient || !newShareDataLocation) return;
+        try {
+            const dialogResult = await callDialogOpen(
+                workloadClient,
+                process.env.WORKLOAD_NAME,
+                `/DataSharingItem-create-share-dialog/${editorItem.id}`,
+                650, 500,
+                true
+            );
 
-        const newShare: CreatedShare = {
-            id: uuidv4(),
-            name: newShareName,
-            description: newShareDescription,
-            status: 'creating',
-            shareType: newShareType,
-            createdDate: new Date(),
-            recipientEmail: newShareRecipient,
-            dataLocation: newShareDataLocation,
-            permissions: { ...DEFAULT_PERMISSIONS }
-        };
+            if (dialogResult && dialogResult.value) {
+                const result = dialogResult.value as DataSharingItemCreateShareResult;
+                
+                if (result.state === 'create' && result.shareData) {
+                    const { basicInfo, selectedItems, recipientInfo } = result.shareData;
+                    
+                    try {
+                        const apiClient = new FabricPlatformAPIClient(workloadClient);
+                        
+                        // Prepare the external data share request
+                        const createRequest = {
+                            paths: selectedItems.map(item => item.path),
+                            recipient: {
+                                tenantId: recipientInfo.tenantId,
+                                userPrincipalName: recipientInfo.email,
+                            }
+                        } as CreateExternalDataShareRequest;
 
-        const updatedShares = [...createdShares, newShare];
-        updateItemDefinition({ createdShares: updatedShares });
+                        // Create the external data share using the API
+                        const externalShare = await apiClient.externalDataShares.createExternalDataShare(
+                            editorItem.workspaceId,
+                            editorItem.id,
+                            createRequest
+                        );
 
-        // Reset form
-        setNewShareName("");
-        setNewShareDescription("");
-        setNewShareRecipient("");
-        setNewShareDataLocation("");
-        setIsCreateDialogOpen(false);
+                        // Create our internal share representation
+                        const newShare: CreatedShare = {
+                            ...externalShare,
+                            // CreatedShare additional properties
+                            displayName: basicInfo.displayName,
+                            description: basicInfo.description || '',
+                            creationDate: new Date()
+                        };
 
-        callNotificationOpen(
-            workloadClient,
-            "Share Created",
-            `Successfully created share "${newShare.name}".`,
-            NotificationType.Success,
-            undefined
-        );
+                        // Update the editor state
+                        const updatedShares = [...createdShares, newShare];
+                        updateItemDefinition({ createdShares: updatedShares });
 
-        refreshOneLakeExplorer();
+                        callNotificationOpen(
+                            workloadClient,
+                            "Share Created",
+                            `Successfully created share "${newShare.displayName}".`,
+                            NotificationType.Success,
+                            undefined
+                        );
+
+                        refreshOneLakeExplorer();
+                    } catch (apiError) {
+                        callNotificationOpen(
+                            workloadClient,
+                            "Share Creation Failed",
+                            "Failed to create external data share: " + (apiError as Error).message,
+                            NotificationType.Error,
+                            undefined
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            callNotificationOpen(
+                workloadClient,
+                "Create Share Failed",
+                "Failed to open create share dialog. Please try again.",
+                NotificationType.Error,
+                undefined
+            );
+        }
     };
 
-    const handleDeleteSelectedShares = async () => {
+    const handleRevokeSelectedShares = async () => {
         if (selectedShares.size === 0) return;
 
-        const remainingShares = createdShares.filter(share => !selectedShares.has(share.id));
-        updateItemDefinition({ createdShares: remainingShares });
-        setSelectedShares(new Set());
-
-        callNotificationOpen(
-            workloadClient,
-            "Shares Deleted",
-            `Deleted ${selectedShares.size} shares.`,
-            NotificationType.Success,
-            undefined
+        const sharesToRevoke = createdShares.filter(share => 
+            selectedShares.has(share.id) && share.status !== 'Revoked'
         );
 
-        refreshOneLakeExplorer();
+        if (sharesToRevoke.length === 0) return;
+
+        try {
+            // Show confirmation dialog first
+            const confirmResult = await callDialogOpenMsgBox(
+                workloadClient,
+                "Confirm Revoke Shares",
+                `Are you sure you want to revoke ${sharesToRevoke.length} share(s)? This action will immediately remove external access to the shared data and cannot be undone.`,
+                ["Revoke", "Cancel"]
+            );
+
+            // Check if user confirmed the action
+            if (confirmResult !== "Revoke") {
+                return; // User cancelled
+            }
+
+            const apiClient = new FabricPlatformAPIClient(workloadClient);
+            
+            // Revoke shares from API
+            for (const share of sharesToRevoke) {
+                if (share.workspaceId && share.itemId) {
+                    try {
+                        await apiClient.externalDataShares.revokeExternalDataShare(
+                            share.workspaceId,
+                            share.itemId,
+                            share.id
+                        );
+                    } catch (apiError) {
+                        console.warn(`Failed to revoke external share ${share.id} via API:`, apiError);
+                    }
+                }
+            }
+
+            // Update share status to 'Revoked' instead of removing from definition
+            const updatedShares = createdShares.map(share => 
+                selectedShares.has(share.id) && share.status !== 'Revoked'
+                    ? { ...share, status: 'Revoked' as const }
+                    : share
+            );
+            updateItemDefinition({ createdShares: updatedShares });
+            setSelectedShares(new Set());
+
+            callNotificationOpen(
+                workloadClient,
+                "Shares Revoked",
+                `Successfully revoked ${sharesToRevoke.length} share(s) and removed external access.`,
+                NotificationType.Success,
+                undefined
+            );
+
+            refreshOneLakeExplorer();
+        } catch (error) {
+            callNotificationOpen(
+                workloadClient,
+                "Revoke Failed",
+                "Failed to revoke some shares. Please try again.",
+                NotificationType.Error,
+                undefined
+            );
+        }
     };
 
     // Define columns for the created shares table
     const columns: TableColumnDefinition<CreatedShare>[] = [
         createTableColumn<CreatedShare>({
             columnId: "select",
-            renderHeaderCell: () => (
-                <Checkbox
-                    checked={selectedShares.size === createdShares.length && createdShares.length > 0}
-                    onChange={(_, data) => {
-                        if (data.checked) {
-                            setSelectedShares(new Set(createdShares.map(s => s.id)));
-                        } else {
-                            setSelectedShares(new Set());
-                        }
-                    }}
-                />
-            ),
+            renderHeaderCell: () => {
+                const activeShares = createdShares.filter(s => s.status !== 'Revoked');
+                const selectedActiveShares = activeShares.filter(s => selectedShares.has(s.id));
+                return (
+                    <Checkbox
+                        checked={selectedActiveShares.length === activeShares.length && activeShares.length > 0}
+                        onChange={(_, data) => {
+                            if (data.checked) {
+                                setSelectedShares(new Set(activeShares.map(s => s.id)));
+                            } else {
+                                setSelectedShares(new Set());
+                            }
+                        }}
+                    />
+                );
+            },
             renderCell: (item) => (
                 <Checkbox
                     checked={selectedShares.has(item.id)}
+                    disabled={item.status === 'Revoked'}
                     onChange={(_, data) => {
+                        if (item.status === 'Revoked') return;
+                        
                         const newSelected = new Set(selectedShares);
                         if (data.checked) {
                             newSelected.add(item.id);
@@ -149,25 +235,54 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
             renderHeaderCell: () => "Share Name",
             renderCell: (item) => (
                 <TableCellLayout>
-                    <Text weight="semibold">{item.name}</Text>
+                    <Text weight="semibold">{item.displayName}</Text>
                 </TableCellLayout>
             ),
         }),
         createTableColumn<CreatedShare>({
-            columnId: "type",
-            renderHeaderCell: () => "Type",
+            columnId: "description",
+            renderHeaderCell: () => "Description",
             renderCell: (item) => (
                 <TableCellLayout>
-                    <Badge appearance="outline">{item.shareType}</Badge>
+                    <Text size={300}>{item.description || "No description"}</Text>
                 </TableCellLayout>
             ),
         }),
         createTableColumn<CreatedShare>({
-            columnId: "recipient",
-            renderHeaderCell: () => "Recipient",
+            columnId: "creationDate",
+            renderHeaderCell: () => "Creation Date",
             renderCell: (item) => (
                 <TableCellLayout>
-                    {item.recipientEmail || "Unknown"}
+                    <Text>{new Date(item.creationDate).toLocaleDateString()}</Text>
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<CreatedShare>({
+            columnId: "paths",
+            renderHeaderCell: () => "Shared Paths",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <Text size={300}>
+                        {item.paths?.length > 0 ? `${item.paths.length} path(s)` : "No paths"}
+                    </Text>
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<CreatedShare>({
+            columnId: "recipientTenantId",
+            renderHeaderCell: () => "Recipient TenantId",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <Text>{item.recipient?.tenantId || "Unknown"}</Text>
+                </TableCellLayout>
+            ),
+        }),
+        createTableColumn<CreatedShare>({
+            columnId: "recipientPrincipalName",
+            renderHeaderCell: () => "Recipient Principal Name",
+            renderCell: (item) => (
+                <TableCellLayout>
+                    <Text>{item.recipient?.userPrincipalName || "Unknown"}</Text>
                 </TableCellLayout>
             ),
         }),
@@ -177,37 +292,20 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
             renderCell: (item) => (
                 <TableCellLayout>
                     <Badge
-                        appearance={item.status === 'active' ? 'filled' : item.status === 'failed' ? 'ghost' : 'outline'}
-                        color={item.status === 'active' ? 'brand' : item.status === 'failed' ? 'danger' : 'warning'}
+                        appearance={item.status === 'Active' ? 'filled' : item.status === 'Revoked' ? 'ghost' : 'outline'}
+                        color={item.status === 'Active' ? 'brand' : item.status === 'Revoked' ? 'danger' : 'warning'}
                         icon={
-                            item.status === 'active' ? <CheckmarkCircle24Regular /> :
-                                item.status === 'failed' ? <ErrorCircle24Regular /> :
+                            item.status === 'Active' ? <CheckmarkCircle24Regular /> :
+                                item.status === 'Revoked' ? <ErrorCircle24Regular /> :
                                     <Clock24Regular />
                         }
                     >
-                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                        {item.status}
                     </Badge>
                 </TableCellLayout>
             ),
         }),
-        createTableColumn<CreatedShare>({
-            columnId: "created",
-            renderHeaderCell: () => "Created",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {new Date(item.createdDate).toLocaleDateString()}
-                </TableCellLayout>
-            ),
-        }),
-        createTableColumn<CreatedShare>({
-            columnId: "downloads",
-            renderHeaderCell: () => "Downloads",
-            renderCell: (item) => (
-                <TableCellLayout>
-                    {item.downloadCount || 0}
-                </TableCellLayout>
-            ),
-        }),
+        
     ];
 
     return (
@@ -220,81 +318,20 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
                             <Button
                                 appearance="subtle"
                                 icon={<Delete24Regular />}
-                                onClick={handleDeleteSelectedShares}
+                                onClick={handleRevokeSelectedShares}
                             >
-                                Delete ({selectedShares.size})
+                                Revoke ({Array.from(selectedShares).filter(id => 
+                                    createdShares.find(s => s.id === id)?.status !== 'Revoked'
+                                ).length})
                             </Button>
                         )}
-                        <Dialog open={isCreateDialogOpen} onOpenChange={(_, data) => setIsCreateDialogOpen(data.open)}>
-                            <DialogTrigger>
-                                <Button appearance="primary" icon={<Add24Regular />}>
-                                    Create Share
-                                </Button>
-                            </DialogTrigger>
-                            <DialogSurface style={{ maxWidth: '500px' }}>
-                                <DialogTitle>Create New Data Share</DialogTitle>
-                                <DialogContent>
-                                    <DialogBody>
-                                        <Stack tokens={{ childrenGap: 12 }}>
-                                            <Field label="Share Name" required>
-                                                <Input
-                                                    value={newShareName}
-                                                    onChange={(e, data) => setNewShareName(data.value)}
-                                                    placeholder="Enter share name"
-                                                />
-                                            </Field>
-                                            <Field label="Description">
-                                                <Textarea
-                                                    value={newShareDescription}
-                                                    onChange={(e, data) => setNewShareDescription(data.value)}
-                                                    placeholder="Describe what you're sharing"
-                                                    rows={2}
-                                                />
-                                            </Field>
-                                            <Field label="Share Type">
-                                                <Dropdown
-                                                    value={newShareType}
-                                                    onOptionSelect={(e, data) => setNewShareType(data.optionValue as ShareType)}
-                                                >
-                                                    <Option value="folder">Folder</Option>
-                                                    <Option value="file">File</Option>
-                                                    <Option value="table">Table</Option>
-                                                    <Option value="dataset">Dataset</Option>
-                                                    <Option value="lakehouse">Lakehouse</Option>
-                                                    <Option value="warehouse">Warehouse</Option>
-                                                </Dropdown>
-                                            </Field>
-                                            <Field label="Data Location" required>
-                                                <Input
-                                                    value={newShareDataLocation}
-                                                    onChange={(e, data) => setNewShareDataLocation(data.value)}
-                                                    placeholder="OneLake path or external location"
-                                                />
-                                            </Field>
-                                            <Field label="Recipient Email" required>
-                                                <Input
-                                                    value={newShareRecipient}
-                                                    onChange={(e, data) => setNewShareRecipient(data.value)}
-                                                    placeholder="recipient@organization.com"
-                                                />
-                                            </Field>
-                                        </Stack>
-                                    </DialogBody>
-                                </DialogContent>
-                                <DialogActions>
-                                    <Button appearance="secondary" onClick={() => setIsCreateDialogOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button 
-                                        appearance="primary" 
-                                        onClick={handleCreateShare}
-                                        disabled={!newShareName || !newShareRecipient || !newShareDataLocation}
-                                    >
-                                        Create Share
-                                    </Button>
-                                </DialogActions>
-                            </DialogSurface>
-                        </Dialog>
+                        <Button
+                            appearance="primary"
+                            icon={<Add24Regular />}
+                            onClick={handleCreateShare}
+                        >
+                            Create Share
+                        </Button>
                     </Stack>
                 </Stack>
 

@@ -19,6 +19,7 @@
     "HelloWorldItemEditor_Definition_Message_Label": "Item Definition",
     "HelloWorldItemEditor_LoadingProgressBar_Text": "Loading Hello World item ...",
     "HelloWorldItemEditorEmpty_Message": "Let's say hello to {{itemName}}!",
-    "HelloWorldItemEditorEmpty_Button": "Save item"
+    "HelloWorldItemEditorEmpty_Button": "Save item",
+    "DataSharingItemEditor_Title": "Data Sharing Item Editor"
 }
   

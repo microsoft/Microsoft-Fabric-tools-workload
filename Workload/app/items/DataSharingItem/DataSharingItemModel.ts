@@ -3,6 +3,8 @@
  * Handles external data shares creation and acceptance
  */
 
+import { ExternalDataShareInvitationDetails, ExternalDataShare } from "../../clients/FabricPlatformTypes";
+
 export interface DataSharingItemDefinition {
     title?: string;
     description?: string;
@@ -20,49 +22,38 @@ export interface DataSharingConfiguration {
     sharePrefixNaming?: string;
 }
 
-export interface CreatedShare {
-    id: string;
-    name: string;
-    description?: string;
-    status: ShareStatus;
-    shareType: ShareType;
-    createdDate: Date;
-    lastModifiedDate?: Date;
-    expirationDate?: Date;
-    recipientEmail?: string;
-    recipientDomain?: string;
-    dataLocation: string; // OneLake path or external path
-    permissions: SharePermissions;
-    accessUrl?: string;
-    downloadCount?: number;
-    lastAccessDate?: Date;
+export interface CreatedShare extends ExternalDataShare {
+    displayName: string,
+    description?: string,
+    creationDate: Date;
 }
 
-export interface ReceivedShare {
-    id: string;
-    name: string;
-    description?: string;
+export interface ReceivedShare extends ExternalDataShareInvitationDetails {
+    // Management properties
+    id: string; // Uses invitationId as the primary identifier
     status: ReceivedShareStatus;
-    shareType: ShareType;
     receivedDate: Date;
     acceptedDate?: Date;
-    senderEmail?: string;
-    senderDomain?: string;
-    dataLocation?: string; // Where it's stored in OneLake after acceptance
-    originalLocation?: string; // Original external location
-    permissions: SharePermissions;
+    // Optional overrides and additional data
+    displayName?: string; // Human-readable name for the share
+    description?: string; // Optional description for the share
     estimatedSize?: string;
-    fileCount?: number;
     lastSyncDate?: Date;
 }
 
-export type ShareStatus = 
-    | 'creating' 
-    | 'active' 
-    | 'pending' 
-    | 'expired' 
-    | 'revoked' 
-    | 'failed';
+// Helper functions for ReceivedShare
+export const getReceivedShareDisplayName = (share: ReceivedShare): string => {
+    return share.displayName || 
+           share.pathsDetails?.[0]?.name || 
+           `Share ${share.id.substring(0, 8)}`;
+};
+
+export const getReceivedShareSenderInfo = (share: ReceivedShare): string => {
+    return share.providerTenantDetails?.displayName || 
+           share.providerTenantDetails?.verifiedDomainName || 
+           'Unknown sender';
+};
+
 
 export type ReceivedShareStatus = 
     | 'pending' 
@@ -73,41 +64,12 @@ export type ReceivedShareStatus =
     | 'synced' 
     | 'failed';
 
-export type ShareType = 
-    | 'folder' 
-    | 'file' 
-    | 'table' 
-    | 'dataset' 
-    | 'lakehouse' 
-    | 'warehouse';
-
-export interface SharePermissions {
-    canRead: boolean;
-    canWrite: boolean;
-    canDownload: boolean;
-    canShare: boolean;
-    expirationDate?: Date;
-}
-
-export interface ShareInvitation {
-    recipientEmail: string;
-    message?: string;
-    permissions: SharePermissions;
-    expirationDate?: Date;
-}
-
 export interface AcceptShareRequest {
     shareId: string;
-    targetLocation: string; // Where to store in OneLake
+    targetPath: string; // Where to store in OneLake
     acceptedName?: string; // Custom name for the accepted share
 }
 
 // Default values
 export const DEFAULT_SHARE_PREFIX = "DataShare_";
 export const DEFAULT_EXPIRATION_DAYS = 30;
-export const DEFAULT_PERMISSIONS: SharePermissions = {
-    canRead: true,
-    canWrite: false,
-    canDownload: true,
-    canShare: false
-};
