@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
     "id": "SentimentAnalysis",
     "displayName": "Sentiment Analysis",
     "description": "Set up everything that is needed to do sentiment analysis.",
@@ -17,7 +18,7 @@
                     {
                         "payloadType": "AssetLink",
                         "path": "Files/SentimentDataCSV/Data.csv",
-                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/data/SentimentAnalysis_LH/SentimentDataCSV/Data.csv"
+                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/SentimentAnalysis_LH/data/SentimentDataCSV/Data.csv"
                     }
                 ]
             },
@@ -56,7 +57,7 @@
                     {
                         "payloadType": "AssetLink",
                         "path": "notebook-content.ipynb",
-                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/definitions/SentimentAnalysis_NB/notebook-content.ipynb"
+                        "payload": "/assets/items/PackageInstallerItem/SentimentAnalysis/SentimentAnalysis_NB/notebook-content.ipynb"
                     }
                 ],
                 "interceptor": {

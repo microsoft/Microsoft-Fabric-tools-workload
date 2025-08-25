@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
     "id": "NewWorkspace",
     "displayName": "Workspace with a Lakehouse",
     "description": "Set up a workspace that will configure every component that is to get started.",
@@ -28,7 +29,7 @@
                 {
                     "path": "Files/info.txt",
                     "payloadType": "AssetLink",
-                    "payload": "/assets/items/PackageInstallerItem/NewWorkspace/data/MyLakehouse/info.txt"
+                    "payload": "/assets/items/PackageInstallerItem/NewWorkspace/MyLakehouse/data/info.txt"
                 }],
                 "interceptor" : {
                     "type": "Reference",

@@ -1,34 +1,52 @@
 # Package Creation Strategy
 
-This document describes the BasePackageStrategy class and the package creation process.
+This document provides technical details about the BasePackageStrategy class and the automated package creation process. For general information about the PackageInstallerItem, see the [main README](../README.md).
 
-## Overview
+## Technical Overview
 
 The `BasePackageStrategy` class handles the creation of package JSON files from selected Fabric items. It downloads all definition parts (except default/empty ones) and stores them in a structured folder hierarchy in OneLake.
 
+## Supported Item Types
+
+The PackageInstallerItem supports all standard Fabric platform items. See the [full list of Fabric platform items supported and definition parts](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item?tabs=HTTP).
+
+**Important Note**: 3rd party items are also supported but require enablement in the tenant or workspace where the items are created.
+
+Common Fabric item types you can include:
+- `notebook`: Jupyter notebooks  
+- `report`: Power BI reports
+- `semanticmodel`: Semantic models/datasets
+- `lakehouse`: Lakehouse items
+- `warehouse`: Data warehouse items
+- `kqldatabase`: KQL databases
+- `datapipeline`: Data pipelines
+- `dataflow`: Dataflow Gen2
+- `mlmodel`: Machine learning models
+- `environment`: Spark environments
+
 ## Package Structure
 
-When a package is created, the following folder structure is generated in OneLake:
+When a package is created, the following folder structure is generated in OneLake. The package folder should have a folder for every item with definition files in the root folder of the item and the data has a subfolder:
 
-```
-packages/
-└── {packageId}/
-    ├── package.json                 # Main package configuration
-    └── definitions/
-        ├── {item1-name}/
-        │   ├── definition-part-0.json
-        │   ├── notebook-content.ipynb
-        │   └── ...
-        ├── {item2-name}/
-        │   ├── dataset-definition.json
-        │   └── ...
-        └── {item3-name}/
-            └── ...
+```text
+Assets/
+└── packages/
+    └── {packageId}/
+        ├── package.json                 # Main package configuration
+        ├── package-icon.png             # Optional package icon
+        └── {item-name}/                 # Folder per item
+            ├── definition-part-0.json   # Definition parts in root of item folder
+            ├── content.ipynb
+            ├── ...other-definition-files
+            └── data/                    # OneLake data files subfolder
+                ├── sample-data.csv
+                ├── lookup-tables/
+                └── ...other-data-files
 ```
 
 ## Package JSON Structure
 
-The generated package.json follows this structure:
+The generated package.json follows this structure and is validated against the [JSON Schema](./package.schema.json):
 
 ```json
 {
@@ -56,6 +74,34 @@ The generated package.json follows this structure:
   "deploymentConfig": {
     "suffixItemNames": true
   }
+}
+```
+
+### JSON Schema Validation
+
+The package.json files can be validated against the comprehensive [JSON Schema](./package.schema.json) which defines:
+
+- **Required and optional properties** for all package components
+- **Data types and constraints** for each field
+- **Enumerated values** for deployment types, payload types, and other options
+- **Nested object structures** for complex configurations
+- **Pattern validation** for IDs and other formatted fields
+
+#### Using the Schema
+
+You can use the schema for:
+- **IDE Integration**: Many editors support JSON Schema for auto-completion and validation
+- **Build-time Validation**: Integrate schema validation into your build process
+- **Documentation**: The schema serves as authoritative documentation for package structure
+
+#### Schema Reference
+
+To reference the schema in your package.json files, add:
+```json
+{
+  "$schema": "./package.schema.json",
+  "id": "your-package-id",
+  ...
 }
 ```
 

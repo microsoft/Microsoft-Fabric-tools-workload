@@ -1,0 +1,401 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
+  "title": "Fabric Package Definition",
+  "description": "JSON schema for defining Fabric packages in the PackageInstallerItem",
+  "type": "object",
+  "required": ["id", "displayName"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for validation"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the package",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable name for the package",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description of the package contents and purpose"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Optional icon or image URL for the package",
+      "format": "uri-reference"
+    },
+    "deploymentConfig": {
+      "$ref": "#/definitions/DeploymentConfiguration"
+    },
+    "items": {
+      "type": "array",
+      "description": "Array of Fabric items included in this package",
+      "items": {
+        "$ref": "#/definitions/PackageItem"
+      }
+    },
+    "data": {
+      "type": "array",
+      "description": "Data files and assets to be uploaded to OneLake",
+      "items": {
+        "$ref": "#/definitions/PackageData"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "DeploymentConfiguration": {
+      "type": "object",
+      "description": "Configuration settings that control how a package is deployed",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Deployment strategy to use",
+          "enum": ["UX", "SparkNotebook"],
+          "default": "UX"
+        },
+        "location": {
+          "type": "string",
+          "description": "Target location for deployment",
+          "enum": ["Default", "NewWorkspace"],
+          "default": "NewWorkspace"
+        },
+        "deploymentFile": {
+          "$ref": "#/definitions/DeploymentFile"
+        },
+        "suffixItemNames": {
+          "type": "boolean",
+          "description": "Whether to add deployment ID suffix to item names",
+          "default": false
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Key-value parameters for deployment customization",
+          "additionalProperties": {
+            "$ref": "#/definitions/DeploymentParameter"
+          }
+        },
+        "globalInterceptors": {
+          "type": "object",
+          "description": "Global interceptors for content processing",
+          "additionalProperties": {
+            "$ref": "#/definitions/ItemPartInterceptorDefinition"
+          }
+        },
+        "onFinishJobs": {
+          "type": "array",
+          "description": "Jobs to execute after successful deployment",
+          "items": {
+            "$ref": "#/definitions/OnFinishJob"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "DeploymentParameter": {
+      "type": "object",
+      "description": "Defines a configurable parameter for deployment customization",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Data type of the parameter"
+        },
+        "value": {
+          "type": "string",
+          "description": "Current or default value of the parameter"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User-friendly name shown in deployment UI"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description explaining the parameter's purpose"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DeploymentFile": {
+      "type": "object",
+      "description": "Reference to an external file used during deployment",
+      "required": ["payloadType", "payload"],
+      "properties": {
+        "payloadType": {
+          "$ref": "#/definitions/PackageItemPayloadType"
+        },
+        "payload": {
+          "type": "string",
+          "description": "The actual file content or reference"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OnFinishJob": {
+      "type": "object",
+      "description": "Definition of a job to be executed after package deployment completes",
+      "required": ["itemId", "jobType", "deploymentPolicy"],
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "description": "Workspace ID where the job item is located"
+        },
+        "itemId": {
+          "type": "string",
+          "description": "ID of the Fabric item that will execute the job"
+        },
+        "jobType": {
+          "type": "string",
+          "description": "Type of job to execute (e.g., 'SparkJob', 'DataflowJob')"
+        },
+        "deploymentPolicy": {
+          "type": "string",
+          "description": "How to handle job failures during deployment",
+          "enum": ["FailOnError", "IgnoreErrors"]
+        },
+        "executionData": {
+          "description": "Optional data to pass to the job execution"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageItem": {
+      "type": "object",
+      "description": "Represents an individual item within a package that will be deployed to Fabric",
+      "required": ["type", "displayName", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of Fabric item (e.g., 'Notebook', 'Dataset', 'Report')"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable name for the item",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the item's purpose and functionality"
+        },
+        "installType": {
+          "type": "string",
+          "description": "When this item should be installed during deployment",
+          "enum": ["Default", "OnFinishJob"],
+          "default": "Default"
+        },
+        "definition": {
+          "$ref": "#/definitions/PackageItemDefinition"
+        },
+        "data": {
+          "$ref": "#/definitions/PackageItemData"
+        },
+        "creationPayload": {
+          "description": "Fabric API payload for item creation"
+        },
+        "schedules": {
+          "type": "array",
+          "description": "Automated schedules for item execution",
+          "items": {
+            "$ref": "#/definitions/ItemSchedule"
+          }
+        },
+        "shortcuts": {
+          "type": "array",
+          "description": "OneLake shortcuts to be created for this item",
+          "items": {
+            "$ref": "#/definitions/OneLakeShortcutDefinition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageItemDefinition": {
+      "type": "object",
+      "description": "Defines the structure and content of a package item",
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "File format of the item (e.g., 'ipynb' for Jupyter Notebooks)"
+        },
+        "parts": {
+          "type": "array",
+          "description": "Individual parts/files that make up the item definition",
+          "items": {
+            "$ref": "#/definitions/PackageItemPart"
+          }
+        },
+        "interceptor": {
+          "$ref": "#/definitions/ItemPartInterceptorDefinition"
+        },
+        "creationMode": {
+          "type": "string",
+          "description": "How the item should be created or updated in Fabric",
+          "enum": ["WithoutDefinition", "WithDefinition", "CreateAndUpdateDefinition"],
+          "default": "CreateAndUpdateDefinition"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageItemData": {
+      "type": "object",
+      "description": "Base interface for data associated with package items",
+      "properties": {
+        "files": {
+          "type": "array",
+          "description": "Array of files to be uploaded or processed",
+          "items": {
+            "$ref": "#/definitions/PackageItemPart"
+          }
+        },
+        "interceptor": {
+          "$ref": "#/definitions/ItemPartInterceptorDefinition"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageData": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageItemData"
+        },
+        {
+          "type": "object",
+          "description": "Extended package data that includes workspace and item references",
+          "properties": {
+            "workspaceId": {
+              "type": "string",
+              "description": "Target workspace ID for data storage"
+            },
+            "itemId": {
+              "type": "string",
+              "description": "Target item ID for data association"
+            },
+            "shortcuts": {
+              "type": "array",
+              "description": "OneLake shortcuts to create for data access",
+              "items": {
+                "$ref": "#/definitions/OneLakeShortcutDefinition"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PackageItemPart": {
+      "type": "object",
+      "description": "Represents a single file or content part within a package item",
+      "required": ["payloadType", "payload", "path"],
+      "properties": {
+        "payloadType": {
+          "$ref": "#/definitions/PackageItemPayloadType"
+        },
+        "payload": {
+          "type": "string",
+          "description": "The actual content or reference to content"
+        },
+        "path": {
+          "type": "string",
+          "description": "Target path where this content should be placed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageItemPayloadType": {
+      "type": "string",
+      "description": "Enumeration of supported payload types for package item content",
+      "enum": ["AssetLink", "Link", "InlineBase64", "OneLake"]
+    },
+    "ItemSchedule": {
+      "type": "object",
+      "description": "Defines an automated schedule for executing a package item",
+      "required": ["enabled", "jobType", "configuration"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this schedule is currently active"
+        },
+        "jobType": {
+          "type": "string",
+          "description": "Type of job to execute (e.g., 'SparkJob', 'DataflowJob')"
+        },
+        "configuration": {
+          "description": "Detailed schedule configuration (timing, recurrence, etc.)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OneLakeShortcutDefinition": {
+      "type": "object",
+      "description": "Defines a OneLake shortcut that provides access to external data sources",
+      "required": ["configuration"],
+      "properties": {
+        "conflictPolicy": {
+          "type": "string",
+          "description": "How to handle conflicts if shortcut already exists"
+        },
+        "configuration": {
+          "description": "Shortcut configuration matching Fabric API requirements"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ItemPartInterceptorDefinition": {
+      "type": "object",
+      "description": "Defines content processing that occurs before item deployment",
+      "required": ["type", "config"],
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/ItemPartInterceptorType"
+        },
+        "config": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ReferenceInterceptorDefinitionConfig"
+            },
+            {
+              "$ref": "#/definitions/StringReplacementInterceptorDefinitionConfig"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ItemPartInterceptorType": {
+      "type": "string",
+      "description": "Enumeration of available interceptor types for content processing",
+      "enum": ["Reference", "StringReplacement"]
+    },
+    "ReferenceInterceptorDefinitionConfig": {
+      "type": "object",
+      "description": "Configuration for reference interceptor",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id of the global defined interceptor"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StringReplacementInterceptorDefinitionConfig": {
+      "type": "object",
+      "description": "Configuration for string replacement interceptor",
+      "required": ["replacements"],
+      "properties": {
+        "replacements": {
+          "type": "object",
+          "description": "Map of search strings to replacement values",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

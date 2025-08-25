@@ -63,15 +63,15 @@ You can also learn more about the new [Fabric workload architecture](./docs/WDKv
 
 To run the development enviroment locally you need the follwoing components:
 
-* [Node.js](https://nodejs.org/en/download/)
-* [Powershell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
-* [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version 
-* [VSCode](https://code.visualstudio.com/download) or simmilar development enviroment
-* [Fabric Tenant](https://app.fabric.microsoft.com/) that you use for development and publishing the Workload later on
-* [Fabric Workspace](https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces) that you can use to build your workload
-* [Fabric Capacity](https://learn.microsoft.com/en-us/fabric/enterprise/licenses) that is assigned to the workspace you are planning to use
-* [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation)
-* [Entra App](https://entra.microsoft.com/) You either need an existing Entra App you can use that is [configured](./docs/WDKv2-How-To.md) corectly or you need permission to create a new Entra App.
+- [Node.js](https://nodejs.org/en/download/)
+- [Powershell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
+- [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version
+- [VSCode](https://code.visualstudio.com/download) or simmilar development enviroment
+- [Fabric Tenant](https://app.fabric.microsoft.com/) that you use for development and publishing the Workload later on
+- [Fabric Workspace](https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces) that you can use to build your workload
+- [Fabric Capacity](https://learn.microsoft.com/en-us/fabric/enterprise/licenses) that is assigned to the workspace you are planning to use
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation)
+- [Entra App](https://entra.microsoft.com/) You either need an existing Entra App you can use that is [configured](./docs/WDKv2-How-To.md) corectly or you need permission to create a new Entra App.
 
 If you don't want to install all dependencies you can also create a devcontainer with the configuration provided in this repository, or create a [Codespace](https://github.com/features/codespaces) in GitHub directly. If you use a codespace please make sure that you select at least an 8 core machine and open the Codspace in VSCode locally. This way everything will work out of the box if you follow the [Setup Guide](./docs/WDKv2-Setup.md).
 
@@ -93,8 +93,8 @@ After developing your Fabric Workload according to the [certification requiremen
 
 Here are all the resources included and referenced. These documents provide additional information and can serve as a reference:
 
-* [Quickstart Guide](/docs/WDKv2-Setup.md)
-* [OneLake](https://learn.microsoft.com/en-us/fabric/onelake/onelake-overview)
-* [One Lake APIs](https://learn.microsoft.com/en-us/fabric/onelake/onelake-access-api)
-* [Monitoring Hub Configuration Guide](https://learn.microsoft.com/en-us/fabric/workload-development-kit/monitoring-hub)
-* [Publish a workload to the Workload Hub](https://learn.microsoft.com/en-us/fabric/workload-development-kit/publish-workload-flow)
+- [Quickstart Guide](/docs/WDKv2-Setup.md)
+- [OneLake](https://learn.microsoft.com/en-us/fabric/onelake/onelake-overview)
+- [One Lake APIs](https://learn.microsoft.com/en-us/fabric/onelake/onelake-access-api)
+- [Monitoring Hub Configuration Guide](https://learn.microsoft.com/en-us/fabric/workload-development-kit/monitoring-hub)
+- [Publish a workload to the Workload Hub](https://learn.microsoft.com/en-us/fabric/workload-development-kit/publish-workload-flow)
