@@ -4,13 +4,15 @@ import { SCOPE_PAIRS } from "./FabricPlatformScopes";
 import {
   Shortcut,
   CreateShortcutRequest,
-  PaginatedResponse,
-  ShortcutConflictPolicy
+  PaginatedResponse
 } from "./FabricPlatformTypes";
 
 /**
  * API wrapper for OneLake Shortcuts operations
  * Provides methods for managing shortcuts to external data sources
+ * 
+ * Based on the official Fabric REST API:
+ * https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-shortcuts
  * 
  * Uses method-based scope selection:
  * - GET operations use read-only scopes
@@ -95,13 +97,9 @@ export class OneLakeShortcutClient extends FabricPlatformClient {
   async getShortcut(
     workspaceId: string,
     itemId: string,
-    shortcutPath: string,
-    shortcutConflictPolicy?: ShortcutConflictPolicy
+    shortcutPath: string
   ): Promise<Shortcut> {
-    var encodedPath = encodeURIComponent(shortcutPath);
-    if (shortcutConflictPolicy) {
-     encodedPath += `?shortcutConflictPolicy=${shortcutConflictPolicy}`;
-    } 
+    const encodedPath = encodeURIComponent(shortcutPath);
     return this.get<Shortcut>(
       `/workspaces/${workspaceId}/items/${itemId}/shortcuts/${encodedPath}`
     );

@@ -36,7 +36,6 @@ export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;
 }
 
-
 export interface OneLakeItemExplorerComponentProps extends PageProps {
   onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
   onTableSelected(tableName: string, oneLakeLink: string): Promise<void>;

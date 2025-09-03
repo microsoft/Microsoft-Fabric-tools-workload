@@ -2,7 +2,7 @@
   "name": "fabric-developer-sample",
   "version": "2.0.0",
   "description": "Microsoft Fabric - Developer Sample App",
-  "scripts": {
+  "scripts": {    
     "start": "npm run start:devServer",
     "start:devServer": "env-cmd -f .env.dev webpack serve --open --config ./devServer/webpack.config.js",
     "start:devGateway": "node ./devServer/start-devGateway.js",
@@ -17,7 +17,7 @@
     "@fluentui/react-components": "^9.7.2",
     "@fluentui/react-icons": "2.0.226",
     "@monaco-editor/react": "^4.7.0",
-    "@ms-fabric/workload-client": "^2.3.0",
+    "@ms-fabric/workload-client": "^3.0.0",
     "@reduxjs/toolkit": "^2.6.0",
     "history": "^4.9.0",
     "i18next": "^23.12.3",
@@ -48,7 +48,6 @@
     "sass-loader": "^16.0.2",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.6",
-    "typescript": "^5.0.4",
     "webpack": "^5.90.3",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.7.0"
