@@ -2,10 +2,10 @@ import { DeploymentContext } from "./DeploymentContext";
 import { DeploymentStrategy } from "./BaseDeploymentStrategy";
 import { PackageDeployment, DeploymentStatus, PackageItemPayloadType } from "../PackageInstallerItemModel";
 import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
-import { getOneLakeFilePath, writeToOneLakeFileAsText } from "../../../clients/OneLakeClient";
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
 import { EnvironmentConstants } from "../../../constants";
 import { ContentHelper } from "./ContentHelper";
+import { OneLakeClient } from "src/clients/OneLakeClient";
 
 const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/jobs/DefaultPackageInstaller.py";
 
@@ -172,8 +172,8 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
   private async copyAssetToOneLake(depContext: DeploymentContext, path: string): Promise<string> {
     const assetContent = await ContentHelper.getAssetContent(depContext, path);
     const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
-    const destinationPath = getOneLakeFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
-    await writeToOneLakeFileAsText(this.context.workloadClientAPI, destinationPath, assetContent);
+    const destinationPath = OneLakeClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
+    await this.context.fabricPlatformAPIClient.oneLake.writeFileAsText(destinationPath, assetContent);
     return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
   }
 
@@ -181,8 +181,8 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     const response = await fetch(path);
     if (response.ok) {
       const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
-      const destinationPath = getOneLakeFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
-      await writeToOneLakeFileAsText(this.context.workloadClientAPI, destinationPath, response.body.toString());
+      const destinationPath = OneLakeClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
+      await this.context.fabricPlatformAPIClient.oneLake.writeFileAsText(destinationPath, response.body.toString());
       return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
     } else {
       depContext.logError('Error fetching content:', path);

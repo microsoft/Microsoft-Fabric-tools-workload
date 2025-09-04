@@ -94,7 +94,8 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
 
     const handleDeleteFile = async (filePath: string) => {
         if (onDeleteFileCallback) {
-            await onDeleteFileCallback(filePath);
+            const fullPath = filePath ? `Files/${filePath}` : "Files";
+            await onDeleteFileCallback(fullPath);
         }
     };
 

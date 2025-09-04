@@ -24,7 +24,7 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { getOneLakeFilePath, deleteOneLakeFile, createOneLakeFolder } from "../../../clients/OneLakeClient";
+import { OneLakeClient } from "../../../clients/OneLakeClient";
 import { callDatahubOpen, callDatahubWizardOpen } from "../../../controller/DataHubController";
 import { callDialogOpenMsgBox } from "../../../controller/DialogController";
 import { callNotificationOpen } from "../../../controller/NotificationController";
@@ -192,7 +192,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   function tableSelectedCallback(tableSelected: TableMetadata) {
     // Add Tables prefix to match the directory structure, similar to how FileTree handles Files
     const tablePathWithPrefix = `Tables/${tableSelected.path}`;
-    const tableFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
+    const tableFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
     // Update selection state without modifying the tables array
     setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
@@ -202,7 +202,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
-    const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
+    const fullFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
     // Update selection state without modifying the files array
     setSelectedFilePath(fileSelected.path);
     setSelectedTablePath(null); // Clear table selection when file is selected
@@ -226,9 +226,10 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, filePath);
-      await deleteOneLakeFile(props.workloadClient, fullFilePath);
-      
+      const fullFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, filePath);
+      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      await oneLakeClient.deleteFile(fullFilePath);
+
       // Refresh the file list after deletion
       await setTablesAndFiles(null);
     } catch (error) {
@@ -257,8 +258,9 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
-      await deleteOneLakeFile(props.workloadClient, fullFolderPath);
+      const fullFolderPath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      await oneLakeClient.deleteFile(fullFolderPath);
       
       // Refresh the file list after deletion
       await setTablesAndFiles(null);
@@ -283,10 +285,11 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
     try {
       const folderPath = parentPath ? `${parentPath}/${folderName.trim()}` : folderName.trim();
-      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const fullFolderPath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
       console.log(`Creating folder at path: ${fullFolderPath}`);
       
-      await createOneLakeFolder(props.workloadClient, fullFolderPath);
+      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      await oneLakeClient.createFolder(fullFolderPath);
       console.log(`Folder created successfully, refreshing tree...`);
       
       // Show success notification

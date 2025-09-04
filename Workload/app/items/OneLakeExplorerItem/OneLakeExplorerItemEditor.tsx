@@ -11,11 +11,11 @@ import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeEx
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDatahubOpen } from "../../controller/DataHubController";
-import { readOneLakeFileAsText, writeToOneLakeFileAsText } from "../../clients/OneLakeClient";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
 import { Stack } from "@fluentui/react";
 import { OneLakeExplorerItemEditorRibbon } from "./OneLakeExplorerItemEditorRibbon";
 import { OneLakeExplorerItemEditorEmpty } from "./OneLakeExplorerItemEditorEmpty";
+import { OneLakeClient } from "src/clients/OneLakeClient";
 
 
 const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
@@ -146,8 +146,8 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         .map(async (file) => {
           try {
             let oneLakeLink = file.onelakeLink;
-            
-              await writeToOneLakeFileAsText(workloadClient, oneLakeLink, file.content);
+            const oneLakeClient = new OneLakeClient(workloadClient)
+            await oneLakeClient.writeFileAsText(oneLakeLink, file.content);
               // Mark file as clean
               file.isDirty = false;
               return { success: true, fileName: file.fileName };
@@ -270,8 +270,8 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     if (targetItem?.workspaceId && targetItem?.id) {
       oneLakeLink = `${targetItem.workspaceId}/${targetItem.id}/Files/${fileName}`;
     }
-
-    await writeToOneLakeFileAsText(workloadClient, oneLakeLink, content);
+    const oneLakeClient = new OneLakeClient(workloadClient);
+    await oneLakeClient.writeFileAsText(oneLakeLink, content);
 
     const newFile: OneLakeFileReference = {
       ...targetItem,
@@ -448,7 +448,8 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       }
 
       // Load the file content from OneLake
-      const content = await readOneLakeFileAsText(workloadClient, oneLakeLink);
+      const oneLakeClient = new OneLakeClient(workloadClient);
+      const content = await oneLakeClient.readFileAsText(oneLakeLink);
       const language = detectLanguage(fileName);
 
       const newFile: OneLakeFileReference = {
