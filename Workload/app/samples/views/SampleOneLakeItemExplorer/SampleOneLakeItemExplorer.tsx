@@ -16,7 +16,7 @@ import {
   MenuItem,
 } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular, FolderAdd20Regular, Link20Regular } from "@fluentui/react-icons";
-import { TableMetadata, FileMetadata } from "./SampleOneLakeItemExplorerModel";
+import { TableMetadata, FileMetadata, OneLakeObjectMetadata } from "./SampleOneLakeItemExplorerModel";
 import "../../../styles.scss";
 import { getTables, getFiles } from "./SampleOneLakeItemExplorerController";
 import { PageProps } from "../../../App";
@@ -189,10 +189,12 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     setIsExplorerVisible(!isExplorerVisible);
   }
 
+  function getFullObjectPath(oneLakeObject: OneLakeObjectMetadata): string {
+    return `${oneLakeObject.prefix}/${oneLakeObject.path}`;
+  }
+
   function tableSelectedCallback(tableSelected: TableMetadata) {
-    // Add Tables prefix to match the directory structure, similar to how FileTree handles Files
-    const tablePathWithPrefix = `Tables/${tableSelected.path}`;
-    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
+    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(tableSelected));
     // Update selection state without modifying the tables array
     setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
@@ -202,7 +204,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
-    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
+    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(fileSelected));
     // Update selection state without modifying the files array
     setSelectedFilePath(fileSelected.path);
     setSelectedTablePath(null); // Clear table selection when file is selected

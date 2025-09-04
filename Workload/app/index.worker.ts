@@ -6,7 +6,6 @@ import {
     NotificationToastDuration,
     NotificationType
 } from '@ms-fabric/workload-client';
-
 import { callPageOpen } from './controller/PageController';
 import { callNotificationOpen } from './controller/NotificationController';
 import { t } from 'i18next';
@@ -100,6 +99,8 @@ export async function initialize(params: InitParams) {
                         workloadIframeHeight: '1000px'
                     }
                 ];
+
+
             }
             case 'open.ClientSDKPlaygroundPage':
                 return workloadClient.page.open({
