@@ -24,11 +24,13 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { callDatahubOpen } from "../../../controller/DataHubController";
+import { callDatahubOpen, callDatahubWizardOpen } from "../../../controller/DataHubController";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 import { OneLakeShortcutClient } from "../../../clients/OneLakeShortcutClient";
 import { NotificationType } from "@ms-fabric/workload-client";
-import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
+import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
+import { callNotificationOpen } from "../../../controller/NotificationController";
+import { callDialogOpenMsgBox } from "../../../controller/DialogController";
 
 export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;

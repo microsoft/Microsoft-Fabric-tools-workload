@@ -36,7 +36,7 @@ import { NotificationType } from "@ms-fabric/workload-client";
 import { t } from "i18next";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
-import { OneLakeClient } from "src/clients/OneLakeClient";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
 // Component to fetch and display folder name
 
@@ -114,7 +114,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
     if (editorItem) {
       //TODO: this needs to be updated to use the Item instead of Itemv2
       const item = await callGetItem(workloadClient, editorItem.id);
-      await callOpenSettings(workloadClient, item, 'About');
+      await callOpenSettings(workloadClient, item.item, 'About');
     }
   }
 
@@ -165,7 +165,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         if(item.definition?.oneLakePackages) {
           item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
-              const oneLakeClient = new OneLakeClient(workloadClient)
+              const oneLakeClient = new OneLakeStorageClient(workloadClient)
               const pack = await oneLakeClient.readFileAsText(oneLakePath);
               context.packageRegistry.addPackage(pack);
             } catch (error) {

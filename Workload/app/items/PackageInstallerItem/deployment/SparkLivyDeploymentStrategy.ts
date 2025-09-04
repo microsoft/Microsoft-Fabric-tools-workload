@@ -5,7 +5,7 @@ import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, Sp
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
 import { EnvironmentConstants } from "../../../constants";
 import { ContentHelper } from "./ContentHelper";
-import { OneLakeClient } from "src/clients/OneLakeClient";
+import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
 
 const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/jobs/DefaultPackageInstaller.py";
 
@@ -172,8 +172,8 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
   private async copyAssetToOneLake(depContext: DeploymentContext, path: string): Promise<string> {
     const assetContent = await ContentHelper.getAssetContent(depContext, path);
     const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
-    const destinationPath = OneLakeClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
-    await this.context.fabricPlatformAPIClient.oneLake.writeFileAsText(destinationPath, assetContent);
+    const destinationPath = OneLakeStorageClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
+    await this.context.fabricPlatformAPIClient.oneLakeStorage.writeFileAsText(destinationPath, assetContent);
     return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
   }
 
@@ -181,8 +181,8 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     const response = await fetch(path);
     if (response.ok) {
       const destinationSubPath = `Packages/${this.getContentSubPath(path)}`;
-      const destinationPath = OneLakeClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
-      await this.context.fabricPlatformAPIClient.oneLake.writeFileAsText(destinationPath, response.body.toString());
+      const destinationPath = OneLakeStorageClient.getFilePath(this.item.workspaceId, this.item.id, destinationSubPath);
+      await this.context.fabricPlatformAPIClient.oneLakeStorage.writeFileAsText(destinationPath, response.body.toString());
       return EnvironmentConstants.OneLakeDFSBaseUrl + "/" + destinationPath;
     } else {
       depContext.logError('Error fetching content:', path);

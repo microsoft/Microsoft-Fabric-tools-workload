@@ -1,16 +1,16 @@
 import { Item, ItemDefinitionPart } from "src/clients/FabricPlatformTypes";
 import { Package } from "../PackageInstallerItemModel";
 import { BaseContext } from "./BaseContext";
-import { OneLakeClientItemWrapper } from "src/clients/OneLakeClientItemWrapper";
+import { OneLakeStorageClientItemWrapper } from "../../../clients/OneLakeStorageClientItemWrapper";
 
 
 
 export class PackageContext extends BaseContext {
 
     pack: Package
-    oneLakeClient: OneLakeClientItemWrapper
+    oneLakeClient: OneLakeStorageClientItemWrapper
 
-    constructor(displayName: string, oneLakeClient: OneLakeClientItemWrapper){
+    constructor(displayName: string, oneLakeClient: OneLakeStorageClientItemWrapper){
         super()
         this.oneLakeClient = oneLakeClient;
         this.pack = {
