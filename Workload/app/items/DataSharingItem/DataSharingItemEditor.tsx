@@ -73,7 +73,7 @@ export function DataSharingItemEditor(props: PageProps) {
     async function openSettings() {
         if (editorItem) {
             const item = await callGetItem(workloadClient, editorItem.id);
-            await callOpenSettings(workloadClient, item, 'About');
+            await callOpenSettings(workloadClient, item.item, 'About');
         }
     }
 
@@ -158,7 +158,7 @@ export function DataSharingItemEditor(props: PageProps) {
                                 onItemChanged={async () => { }}
                                 config={{
                                     initialItem: { ...editorItem },
-                                    allowedItemTypes: [],
+                                    allowedItemTypes: ["Lakehouse"],
                                     allowItemSelection: false,
                                     refreshTrigger: refreshTrigger
                                 }}

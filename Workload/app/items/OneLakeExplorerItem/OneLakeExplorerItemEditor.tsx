@@ -33,7 +33,8 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
   const ALLOWED_ITEM_TYPES = ["Lakehouse",
                                 process.env.WORKLOAD_NAME + ".PackageInstaller",
-                                process.env.WORKLOAD_NAME + ".OneLakeExplorer"]
+                                process.env.WORKLOAD_NAME + ".OneLakeExplorer",
+                                process.env.WORKLOAD_NAME + ".DataSharing"]
 
   // Default editor settings
   const defaultEditorSettings = {

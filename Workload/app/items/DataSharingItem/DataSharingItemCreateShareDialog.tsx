@@ -561,14 +561,10 @@ export function DataSharingItemCreateShareDialogWrapper({ workloadClient }: Page
             if (!itemObjectId) {
                 return;
             }            
-            const fetchedItem = await workloadClient.itemCrud.getItem({ objectId: itemObjectId });
+            const fetchedItem = await workloadClient.itemCrud.getItem({ itemId: itemObjectId });
             // Convert GetItemResult to our Item type
             const convertedItem: Item = {
-                id: fetchedItem.objectId,
-                workspaceId: fetchedItem.folderObjectId,
-                type: fetchedItem.itemType,
-                displayName: fetchedItem.displayName,
-                description: fetchedItem.description
+                ...fetchedItem.item
             };
             setItem(convertedItem);            
         };
