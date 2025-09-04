@@ -32,7 +32,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
   const ALLOWED_ITEM_TYPES = ["Lakehouse",
-                                process.env.WORKLOAD_NAME + "." + process.env.DEFAULT_ITEM_NAME,
+                                process.env.WORKLOAD_NAME + ".PackageInstaller",
                                 process.env.WORKLOAD_NAME + ".OneLakeExplorer"]
 
   // Default editor settings
