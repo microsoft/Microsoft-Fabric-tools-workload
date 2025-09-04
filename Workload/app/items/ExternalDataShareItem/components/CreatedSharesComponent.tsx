@@ -19,18 +19,18 @@ import {
 import { Add24Regular, Delete24Regular, Share24Regular, CheckmarkCircle24Regular, ErrorCircle24Regular, Clock24Regular } from "@fluentui/react-icons";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { DataSharingItemDefinition, CreatedShare } from "../DataSharingItemModel";
+import { ExternalDataShareItemDefinition, CreatedShare } from "../ExternalDataShareItemModel";
 import { callNotificationOpen } from "../../../controller/NotificationController";
 import { callDialogOpen, callDialogOpenMsgBox } from "../../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
-import { DataSharingItemCreateShareResult } from "../DataSharingItemCreateShareDialog";
+import { ExternalDataShareItemCreateShareResult } from "../ExternalDataShareItemCreateShareDialog";
 import { CreateExternalDataShareRequest } from "../../../clients/FabricPlatformTypes";
 
 interface CreatedSharesComponentProps {
     createdShares: CreatedShare[];
-    editorItem: ItemWithDefinition<DataSharingItemDefinition>;
-    updateItemDefinition: (updates: Partial<DataSharingItemDefinition>) => void;
+    editorItem: ItemWithDefinition<ExternalDataShareItemDefinition>;
+    updateItemDefinition: (updates: Partial<ExternalDataShareItemDefinition>) => void;
     workloadClient: WorkloadClientAPI;
     refreshOneLakeExplorer: () => void;
 }
@@ -46,18 +46,16 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
 
     const handleCreateShare = async () => {
         try {
-            const dialogResult = await callDialogOpen(
-                workloadClient,
-                process.env.WORKLOAD_NAME,
-                `/DataSharingItem-create-share-dialog/${editorItem.id}`,
-                650, 500,
-                true
-            );
+        const dialogResult = await callDialogOpen(
+            workloadClient,
+            process.env.WORKLOAD_NAME,
+            `/ExternalDataShareItem-create-share-dialog/${editorItem.id}`,
+            650, 500,
+            true
+        );
 
-            if (dialogResult && dialogResult.value) {
-                const result = dialogResult.value as DataSharingItemCreateShareResult;
-                
-                if (result.state === 'create' && result.shareData) {
+        if (dialogResult && dialogResult.value) {
+            const result = dialogResult.value as ExternalDataShareItemCreateShareResult;                if (result.state === 'create' && result.shareData) {
                     const { basicInfo, selectedItems, recipientInfo } = result.shareData;
                     
                     try {
@@ -65,7 +63,7 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
                         
                         // Prepare the external data share request
                         const createRequest = {
-                            paths: selectedItems.map(item => { 
+                            paths: selectedItems.map((item: any) => { 
                                 // Add appropriate prefix based on item type
                                 let fullPath = item.path;
                                 if (item.type === "Table" && !fullPath.startsWith('Tables/')) {

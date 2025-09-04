@@ -27,7 +27,7 @@ interface ImportShareResult {
     };
 }
 
-const DataSharingItemImportShareDialog: React.FC<ImportShareDialogProps> = ({ workloadClient }) => {
+const ExternalDataShareItemImportShareDialog: React.FC<ImportShareDialogProps> = ({ workloadClient }) => {
     const { itemObjectId } = useParams<{ itemObjectId: string }>();
     const [shareLink, setShareLink] = useState('');
     const [displayName, setDisplayName] = useState('');
@@ -236,5 +236,5 @@ const DataSharingItemImportShareDialog: React.FC<ImportShareDialogProps> = ({ wo
     );
 };
 
-export { ImportShareResult as DataSharingItemImportShareResult };
-export default DataSharingItemImportShareDialog;
+export { ImportShareResult as ExternalDataShareItemImportShareResult };
+export default ExternalDataShareItemImportShareDialog;

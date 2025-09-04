@@ -3,14 +3,14 @@ import { Stack } from "@fluentui/react";
 import { Text, Button, Input, Field, Textarea, Checkbox } from "@fluentui/react-components";
 import "../../styles.scss";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { DataSharingItemDefinition, DataSharingConfiguration, DEFAULT_SHARE_PREFIX } from "./DataSharingItemModel";
+import { ExternalDataShareItemDefinition, ExternalDataShareConfiguration, DEFAULT_SHARE_PREFIX } from "./ExternalDataShareItemModel";
 
-interface DataSharingItemEmptyStateProps {
+interface ExternalDataShareItemEmptyStateProps {
   workloadClient: WorkloadClientAPI;
-  onFinishEmpty: (config: DataSharingItemDefinition) => void;
+  onFinishEmpty: (config: ExternalDataShareItemDefinition) => void;
 }
 
-export const DataSharingItemEmpty: React.FC<DataSharingItemEmptyStateProps> = ({
+export const ExternalDataShareItemEmpty: React.FC<ExternalDataShareItemEmptyStateProps> = ({
   workloadClient,
   onFinishEmpty
 }) => {
@@ -25,7 +25,7 @@ export const DataSharingItemEmpty: React.FC<DataSharingItemEmptyStateProps> = ({
   const canConfigure = title.trim().length > 0;
 
   const saveItem = () => {
-    const configuration: DataSharingConfiguration = {
+    const configuration: ExternalDataShareConfiguration = {
       allowExternalSharing,
       autoAcceptShares,
       defaultShareExpiration,
@@ -33,7 +33,7 @@ export const DataSharingItemEmpty: React.FC<DataSharingItemEmptyStateProps> = ({
       sharePrefixNaming
     };
     
-    const definition: DataSharingItemDefinition = {
+    const definition: ExternalDataShareItemDefinition = {
       title: title.trim(),
       description: description.trim(),
       createdShares: [],
@@ -49,7 +49,7 @@ export const DataSharingItemEmpty: React.FC<DataSharingItemEmptyStateProps> = ({
     <Stack className="empty-item-container" style={{ minHeight: 1200, height: '100%', maxHeight: '100%' }} horizontalAlign="start" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
-          src="/assets/items/DataSharingItem/EditorEmpty.png"
+          src="/assets/items/ExternalDataShareItem/EditorEmpty.png"
           alt="Empty Data Sharing item illustration"
           className="empty-item-image"
         />

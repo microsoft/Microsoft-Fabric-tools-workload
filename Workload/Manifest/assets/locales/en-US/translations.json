@@ -13,9 +13,9 @@
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
     "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
-    "DataSharingItem_DisplayName": "Data Sharing",
-    "DataSharingItem_DisplayName_Plural": "Data Sharing",
-    "DataSharingItem_Description": "An item that provides data sharing capabilities."
+    "ExternalDataShareItem_DisplayName": "External Data Share",
+    "ExternalDataShareItem_DisplayName_Plural": "External Data Shares",
+    "ExternalDataShareItem_Description": "An item that provides external data sharing capabilities."
 }
 
 

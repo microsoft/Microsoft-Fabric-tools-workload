@@ -1,20 +1,20 @@
 /**
- * Model definitions for the Data Sharing Item
+ * Model definitions for the External Data Share Item
  * Handles external data shares creation and acceptance
  */
 
 import { ExternalDataShareInvitationDetails, ExternalDataShare } from "../../clients/FabricPlatformTypes";
 
-export interface DataSharingItemDefinition {
+export interface ExternalDataShareItemDefinition {
     title?: string;
     description?: string;
     createdShares?: CreatedShare[];
     receivedShares?: ReceivedShare[];
-    configuration?: DataSharingConfiguration;
+    configuration?: ExternalDataShareConfiguration;
     lastSyncDate?: Date;
 }
 
-export interface DataSharingConfiguration {
+export interface ExternalDataShareConfiguration {
     allowExternalSharing?: boolean;
     autoAcceptShares?: boolean;
     defaultShareExpiration?: number; // days

@@ -34,7 +34,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   const ALLOWED_ITEM_TYPES = ["Lakehouse",
                                 process.env.WORKLOAD_NAME + ".PackageInstaller",
                                 process.env.WORKLOAD_NAME + ".OneLakeExplorer",
-                                process.env.WORKLOAD_NAME + ".DataSharing"]
+                                process.env.WORKLOAD_NAME + ".ExternalDataShare"]
 
   // Default editor settings
   const defaultEditorSettings = {

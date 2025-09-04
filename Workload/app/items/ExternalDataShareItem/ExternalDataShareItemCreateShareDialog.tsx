@@ -29,11 +29,11 @@ import { callDialogClose } from "../../controller/DialogController";
 import { useParams } from "react-router-dom";
 import { PageProps } from "../../App";
 
-export interface DataSharingItemCreateShareDialogProps extends PageProps {
+export interface ExternalDataShareItemCreateShareDialogProps extends PageProps {
     item: Item;
 }
 
-export interface DataSharingItemCreateShareResult {
+export interface ExternalDataShareItemCreateShareResult {
     state: 'create' | 'cancel';
     shareData?: {
         basicInfo: BasicShareInfo;
@@ -60,7 +60,7 @@ interface RecipientInfo {
 
 type WizardStep = 'basic' | 'selection' | 'recipient';
 
-export function DataSharingItemCreateShareDialog(props: DataSharingItemCreateShareDialogProps) {
+export function ExternalDataShareItemCreateShareDialog(props: ExternalDataShareItemCreateShareDialogProps) {
     const { workloadClient, item } = props;
     const [currentStep, setCurrentStep] = useState<WizardStep>('basic');
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -436,7 +436,7 @@ export function DataSharingItemCreateShareDialog(props: DataSharingItemCreateSha
 
         try {
             // Return the form data to the editor for processing
-            const result: DataSharingItemCreateShareResult = {
+            const result: ExternalDataShareItemCreateShareResult = {
                 state: 'create',
                 shareData: {
                     basicInfo,
@@ -454,7 +454,7 @@ export function DataSharingItemCreateShareDialog(props: DataSharingItemCreateSha
 
     const handleCancel = () => {
         // Close dialog with cancel result
-        const result: DataSharingItemCreateShareResult = {
+        const result: ExternalDataShareItemCreateShareResult = {
             state: 'cancel'
         };
         callDialogClose(workloadClient, CloseMode.PopOne, result);
@@ -551,8 +551,8 @@ export function DataSharingItemCreateShareDialog(props: DataSharingItemCreateSha
     );
 }
 
-// Wrapper component to handle URL parameters for DataSharingItemCreateShareDialog
-export function DataSharingItemCreateShareDialogWrapper({ workloadClient }: PageProps) {
+// Wrapper component to handle URL parameters for ExternalDataShareItemCreateShareDialog
+export function ExternalDataShareItemCreateShareDialogWrapper({ workloadClient }: PageProps) {
     const { itemObjectId } = useParams<{ itemObjectId: string }>();
     const [item, setItem] = useState<Item | null>(null);
 
@@ -573,10 +573,10 @@ export function DataSharingItemCreateShareDialogWrapper({ workloadClient }: Page
     }, [itemObjectId, workloadClient]);
 
 
-    const props: DataSharingItemCreateShareDialogProps = {
+    const props: ExternalDataShareItemCreateShareDialogProps = {
         workloadClient,
         item,
     };
     
-    return <DataSharingItemCreateShareDialog {...props} />;
+    return <ExternalDataShareItemCreateShareDialog {...props} />;
 }

@@ -7,9 +7,9 @@ import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/Package
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
-import { DataSharingItemEditor } from "./items/DataSharingItem/DataSharingItemEditor";
-import { DataSharingItemCreateShareDialogWrapper } from "./items/DataSharingItem/DataSharingItemCreateShareDialog";
-import DataSharingItemImportShareDialog from "./items/DataSharingItem/DataSharingItemImportShareDialog";
+import { ExternalDataShareItemEditor } from "./items/ExternalDataShareItem/ExternalDataShareItemEditor";
+import { ExternalDataShareItemCreateShareDialogWrapper } from "./items/ExternalDataShareItem/ExternalDataShareItemCreateShareDialog";
+import ExternalDataShareItemImportShareDialog from "./items/ExternalDataShareItem/ExternalDataShareItemImportShareDialog";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
 
@@ -87,16 +87,16 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
-            <Route path="/DataSharingItem-editor/:itemObjectId">
-                <DataSharingItemEditor
-                    workloadClient={workloadClient} data-testid="DataSharingItem-editor" />
+            <Route path="/ExternalDataShareItem-editor/:itemObjectId">
+                <ExternalDataShareItemEditor
+                    workloadClient={workloadClient} data-testid="ExternalDataShareItem-editor" />
             </Route>
-            <Route path="/DataSharingItem-create-share-dialog/:itemObjectId">
-                <DataSharingItemCreateShareDialogWrapper
+            <Route path="/ExternalDataShareItem-create-share-dialog/:itemObjectId">
+                <ExternalDataShareItemCreateShareDialogWrapper
                     workloadClient={workloadClient} />
             </Route>
-            <Route path="/DataSharingItem-import-share-dialog/:itemObjectId">
-                <DataSharingItemImportShareDialog
+            <Route path="/ExternalDataShareItem-import-share-dialog/:itemObjectId">
+                <ExternalDataShareItemImportShareDialog
                     workloadClient={workloadClient} />
             </Route>
 

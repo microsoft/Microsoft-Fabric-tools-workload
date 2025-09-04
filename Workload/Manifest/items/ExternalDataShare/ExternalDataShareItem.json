@@ -1,16 +1,16 @@
 {
-    "name": "DataSharing",
+    "name": "ExternalDataShare",
     "version": "1.100",
-    "displayName": "DataSharingItem_DisplayName",
-    "displayNamePlural": "DataSharingItem_DisplayName_Plural",
+    "displayName": "ExternalDataShareItem_DisplayName",
+    "displayNamePlural": "ExternalDataShareItem_DisplayName_Plural",
     "editor": {
-      "path": "/DataSharingItem-editor"
+      "path": "/ExternalDataShareItem-editor"
     },
     "icon": {
-      "name": "assets/images/DataSharingItem-icon.png"
+      "name": "assets/images/ExternalDataShareItem-icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/DataSharingItem-icon.png"
+      "name": "assets/images/ExternalDataShareItem-icon.png"
     },
     "contextMenuItems": [
     ],

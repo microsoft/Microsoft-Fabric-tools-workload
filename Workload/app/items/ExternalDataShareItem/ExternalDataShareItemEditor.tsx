@@ -10,28 +10,28 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
 import { useTranslation } from "react-i18next";
-import { DataSharingItemDefinition } from "./DataSharingItemModel";
+import { ExternalDataShareItemDefinition } from "./ExternalDataShareItemModel";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
-import { DataSharingItemEditorRibbon } from "./DataSharingItemEditorRibbon";
+import { ExternalDataShareItemEditorRibbon } from "./ExternalDataShareItemEditorRibbon";
 import { CreatedSharesComponent } from "./components/CreatedSharesComponent";
 import { ReceivedSharesComponent } from "./components/ReceivedSharesComponent";
 
-export function DataSharingItemEditor(props: PageProps) {
+export function ExternalDataShareItemEditor(props: PageProps) {
     const pageContext = useParams<ContextProps>();
     const { pathname } = useLocation();
     const { t } = useTranslation();
     const { workloadClient } = props;
     const [isUnsaved, setIsUnsaved] = useState<boolean>(true);
     const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-    const [editorItem, setEditorItem] = useState<ItemWithDefinition<DataSharingItemDefinition>>(undefined);
+    const [editorItem, setEditorItem] = useState<ItemWithDefinition<ExternalDataShareItemDefinition>>(undefined);
     const [selectedView, setSelectedView] = useState<TabValue>("home");
     const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
 
     // Helper function to update item definition immutably
-    const updateItemDefinition = useCallback((updates: Partial<DataSharingItemDefinition>) => {
+    const updateItemDefinition = useCallback((updates: Partial<ExternalDataShareItemDefinition>) => {
         setEditorItem(prevItem => {
             if (!prevItem) return prevItem;
 
@@ -54,8 +54,8 @@ export function DataSharingItemEditor(props: PageProps) {
         setRefreshTrigger(Date.now());
     }, []);
 
-    async function SaveItem(definition?: DataSharingItemDefinition) {
-        const successResult = await saveItemDefinition<DataSharingItemDefinition>(
+    async function SaveItem(definition?: ExternalDataShareItemDefinition) {
+        const successResult = await saveItemDefinition<ExternalDataShareItemDefinition>(
             workloadClient,
             editorItem.id,
             definition || editorItem.definition
@@ -79,11 +79,11 @@ export function DataSharingItemEditor(props: PageProps) {
 
     async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
         setIsLoadingData(true);
-        let item: ItemWithDefinition<DataSharingItemDefinition> = undefined;
+        let item: ItemWithDefinition<ExternalDataShareItemDefinition> = undefined;
 
         if (pageContext.itemObjectId) {
             try {
-                item = await getWorkloadItem<DataSharingItemDefinition>(
+                item = await getWorkloadItem<ExternalDataShareItemDefinition>(
                     workloadClient,
                     pageContext.itemObjectId
                 );
@@ -138,7 +138,7 @@ export function DataSharingItemEditor(props: PageProps) {
 
     return (
         <Stack style={{ height: "100vh" }}>
-            <DataSharingItemEditorRibbon
+            <ExternalDataShareItemEditorRibbon
                 workloadClient={workloadClient}
                 isRibbonDisabled={false}
                 isSaveButtonEnabled={isUnsaved}

@@ -11,16 +11,16 @@ import {
 import { PageProps } from '../../App';
 import '../../styles.scss';
 import { t } from "i18next";
-import { DataSharingItemDefinition } from "./DataSharingItemModel";
+import { ExternalDataShareItemDefinition } from "./ExternalDataShareItemModel";
 
-interface DataSharingItemEditorRibbonProps extends PageProps {
+interface ExternalDataShareItemEditorRibbonProps extends PageProps {
     isRibbonDisabled?: boolean;
     isSaveButtonEnabled?: boolean;
-    saveItemCallback: (definition?: DataSharingItemDefinition) => Promise<void>;
+    saveItemCallback: (definition?: ExternalDataShareItemDefinition) => Promise<void>;
     openSettingsCallback: () => Promise<void>;   
 }
 
-const DataSharingItemEditorRibbonHomeTabToolbar = (props: DataSharingItemEditorRibbonProps) => {
+const ExternalDataShareItemEditorRibbonHomeTabToolbar = (props: ExternalDataShareItemEditorRibbonProps) => {
 
     async function onSaveClicked() {
         await props.saveItemCallback();
@@ -57,7 +57,7 @@ const DataSharingItemEditorRibbonHomeTabToolbar = (props: DataSharingItemEditorR
     );
 };
 
-export function DataSharingItemEditorRibbon(props: DataSharingItemEditorRibbonProps) {
+export function ExternalDataShareItemEditorRibbon(props: ExternalDataShareItemEditorRibbonProps) {
     const { isRibbonDisabled } = props;
     return (
         <div className="ribbon">
@@ -66,7 +66,7 @@ export function DataSharingItemEditorRibbon(props: DataSharingItemEditorRibbonPr
                     {t("ItemEditor_Ribbon_Home_Label")}</Tab>
             </TabList>
             <div className="toolbarContainer">
-                <DataSharingItemEditorRibbonHomeTabToolbar {...props} />
+                <ExternalDataShareItemEditorRibbonHomeTabToolbar {...props} />
             </div>
         </div>
     );

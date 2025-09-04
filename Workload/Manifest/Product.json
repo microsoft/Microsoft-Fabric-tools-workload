@@ -71,13 +71,13 @@
             }        
           },
           {
-            "title": "DataSharingItem_DisplayName",
-            "description": "DataSharingItem_Description",
+            "title": "ExternalDataShareItem_DisplayName",
+            "description": "ExternalDataShareItem_Description",
             "icon": {
-              "name": "assets/images/DataSharingItem-icon.png"
+              "name": "assets/images/ExternalDataShareItem-icon.png"
             },
             "icon_small": {
-              "name": "assets/images/DataSharingItem-icon.png"
+              "name": "assets/images/ExternalDataShareItem-icon.png"
             },
             "availableIn": [
               "home",
@@ -85,7 +85,7 @@
               "workspace-plus-new",
               "workspace-plus-new-teams"
             ],
-            "itemType": "DataSharing",
+            "itemType": "ExternalDataShare",
             "createItemDialogConfig": {
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }

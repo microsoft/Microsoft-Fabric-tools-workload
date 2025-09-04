@@ -36,17 +36,17 @@ import {
 } from "@fluentui/react-icons";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { DataSharingItemDefinition, ReceivedShare, ReceivedShareStatus, getReceivedShareDisplayName, getReceivedShareSenderInfo } from "../DataSharingItemModel";
+import { ExternalDataShareItemDefinition, ReceivedShare, ReceivedShareStatus, getReceivedShareDisplayName, getReceivedShareSenderInfo } from "../ExternalDataShareItemModel";
 import { callNotificationOpen } from "../../../controller/NotificationController";
 import { callDialogOpen } from "../../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
-import { DataSharingItemImportShareResult } from "../DataSharingItemImportShareDialog";
+import { ExternalDataShareItemImportShareResult } from "../ExternalDataShareItemImportShareDialog";
 
 interface ReceivedSharesComponentProps {
     receivedShares: ReceivedShare[];
-    editorItem: ItemWithDefinition<DataSharingItemDefinition>;
-    updateItemDefinition: (updates: Partial<DataSharingItemDefinition>) => void;
+    editorItem: ItemWithDefinition<ExternalDataShareItemDefinition>;
+    updateItemDefinition: (updates: Partial<ExternalDataShareItemDefinition>) => void;
     workloadClient: WorkloadClientAPI;
     refreshOneLakeExplorer: () => void;
     workspaceId: string; // Add workspace ID for API calls
@@ -71,13 +71,13 @@ export const ReceivedSharesComponent: React.FC<ReceivedSharesComponentProps> = (
             const dialogResult = await callDialogOpen(
                 workloadClient,
                 process.env.WORKLOAD_NAME,
-                `/DataSharingItem-import-share-dialog/${editorItem.id}`,
+                `/ExternalDataShareItem-import-share-dialog/${editorItem.id}`,
                 500, 500,
                 true
             );
 
             if (dialogResult && dialogResult.value) {
-                const result = dialogResult.value as DataSharingItemImportShareResult;
+                const result = dialogResult.value as ExternalDataShareItemImportShareResult;
                 
                 if (result.state === 'import' && result.shareData) {
                     try {
