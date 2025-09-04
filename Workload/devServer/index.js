@@ -6,6 +6,8 @@
 const manifestApi = require('./manifestApi');
 const schemaApi = require('./schemaApi')
 
+const unityCatalogApi = require('../api/UnityCatalog/routes');
+
 /**
  * Register all dev server APIs with an Express application
  * @param {object} app Express application
@@ -14,6 +16,12 @@ function registerDevServerApis(app) {
   console.log('*** Mounting Manifest API ***');
   app.use('/', manifestApi);
   app.use('/', schemaApi);
+
+    
+  console.log('*** Mounting Unity Catalog CORS Wrapper API ***');
+  console.log('    - Unity Catalog proxy routes available at /api/unity-catalog/*');
+  console.log('    - Endpoints: /test-connection, /catalogs, /schemas, /tables, /external-tables');
+  app.use('/api/unity-catalog', unityCatalogApi);
 }
 
 module.exports = {
