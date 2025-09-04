@@ -6,6 +6,14 @@ A comprehensive solution for deploying and managing packages of Fabric items acr
 
 The Package Installer Item provides a unified interface for package selection, deployment configuration, and deployment monitoring. It supports multiple deployment strategies and flexible content handling for both text and binary files.
 
+For technical details on package creation and structure, see the [Package Creation Strategy Documentation](./package/README.md).
+
+## Supported Item Types
+
+The PackageInstallerItem supports all standard Fabric platform items. See the [full list of Fabric platform items supported and definition parts](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item?tabs=HTTP).
+
+**Important Note**: 3rd party items are also supported but require enablement in the tenant or workspace where the items are created.
+
 ## Key Features
 
 - **Multi-Strategy Deployment**: UX, Spark Livy, and Spark Notebook deployment options
@@ -14,6 +22,7 @@ The Package Installer Item provides a unified interface for package selection, d
 - **Real-time Monitoring**: Track deployment progress and status
 - **Item Availability Checking**: Validate items before deployment
 - **Binary File Support**: Automatic handling of text and binary content
+- **Package Creation**: Automated package creation from selected Fabric items (see [Package Creation Strategy](./package/README.md))
 
 ## Architecture
 
@@ -54,150 +63,23 @@ Deployment through Spark notebook execution with custom logic.
 - Integration with Spark ecosystem
 - Best for: Complex scenarios, custom processing
 
-## Package Definition
+## Package Creation
 
-Packages are defined using JSON configuration files:
+For detailed information about creating packages, including JSON structure, supported item types, and asset organization, see the [Package Creation Strategy Documentation](./package/README.md).
 
-```json
-{
-  "id": "sample-package",
-  "displayName": "Sample Analytics Package",
-  "description": "A collection of analytics items",
-  "deploymentConfig": {
-    "type": "UX",
-    "location": "NewWorkspace",
-    "suffixItemNames": true
-  },
-  "items": [
-    {
-      "type": "notebook",
-      "displayName": "Data Analysis Notebook",
-      "description": "Comprehensive data analysis",
-      "definition": {
-        "format": "ipynb",
-        "parts": [
-          {
-            "payloadType": "Asset",
-            "payload": "/assets/notebooks/analysis.ipynb",
-            "path": "notebook-content.json"
-          }
-        ]
-      }
-    }
-  ]
-}
-```
+Quick overview:
 
-## Adding Packages to the Registry
-
-### Step 1: Create Package Definition File
-
-Create a new JSON file in the assets directory following the package structure:
-
-```json
-{
-  "id": "my-custom-package",
-  "displayName": "My Custom Package",
-  "description": "Description of your package",
-  "icon": "/assets/icons/my-package-icon.png",
-  "deploymentConfig": {
-    "type": "UX",
-    "location": "NewWorkspace",
-    "suffixItemNames": true,
-    "ignoreItemDefinitions": false
-  },
-  "items": [
-    {
-      "type": "notebook",
-      "displayName": "My Notebook",
-      "description": "Custom notebook description",
-      "definition": {
-        "format": "ipynb",
-        "parts": [
-          {
-            "payloadType": "Asset",
-            "payload": "/assets/notebooks/my-notebook.ipynb",
-            "path": "notebook-content.json"
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-### Step 2: Register Package in PackageRegistry
-
-Add your package import to `package/PackageRegistry.ts`:
-
-```typescript
-const configModules: (() => Promise<any>)[] = [
-  // Existing packages
-  () => import('../../../../assets/samples/items/PackageInstallerItem/Planning/package.json'),
-  () => import('../../../../assets/samples/items/PackageInstallerItem/Sales/package.json'),
-  // Add your new package
-  () => import('../../../../assets/samples/items/PackageInstallerItem/MyCustomPackage/package.json'),
-];
-```
-
-### Step 3: Asset Organization
-
-Organize your assets in the following structure:
-
-```text
-assets/samples/items/PackageInstallerItem/MyCustomPackage/
-├── package.json          # Package definition
-├── notebooks/
-│   └── my-notebook.ipynb
-├── reports/
-│   └── my-report.pbix
-└── icons/
-    └── my-package-icon.png
-```
-
-### Package Configuration Options
-
-#### Deployment Types
-- `"UX"`: Direct UI deployment (recommended for most cases)
-- `"SparkLivy"`: Background Spark job deployment
-- `"SparkNotebook"`: Custom Spark notebook deployment
-
-#### Deployment Locations
-- `"NewWorkspace"`: Create a new workspace for the package
-- `"ExistingWorkspace"`: Deploy to user-selected existing workspace
-- `"NewFolder"`: Create a new folder in existing workspace
-
-#### Optional Settings
-- `suffixItemNames: true`: Adds deployment ID to item names
-- `ignoreItemDefinitions: false`: Include item content definitions
-- `deploymentFile`: Reference to custom deployment script
-
-### Item Types Supported
-
-Common Fabric item types you can include:
-- `notebook`: Jupyter notebooks
-- `report`: Power BI reports
-- `semanticmodel`: Semantic models/datasets
-- `lakehouse`: Lakehouse items
-- `warehouse`: Data warehouse items
-- `kqldatabase`: KQL databases
-- `datapipeline`: Data pipelines
-- `dataflow`: Dataflow Gen2
-- `mlmodel`: Machine learning models
-- `environment`: Spark environments
-
-### Best Practices
-
-1. **Use descriptive IDs**: Make package IDs unique and descriptive
-2. **Organize assets**: Keep related files together in package folders
-3. **Test payloads**: Verify all asset paths are correct
-4. **Document items**: Provide clear descriptions for all items
-5. **Icon consistency**: Use consistent icon sizing and format
+- **Packages** are defined in JSON format with metadata and deployment configuration
+- **Items** include notebooks, reports, datasets, and more Fabric platform items
+- **Assets** are organized in structured folders with definition files and data subfolders
+- **Registration** is managed through the PackageRegistry system
 
 ## Payload Types
 
 ### Asset Payload
+
 Local files from the workload assets:
+
 ```typescript
 {
   payloadType: "Asset",
@@ -207,7 +89,9 @@ Local files from the workload assets:
 ```
 
 ### Link Payload
+
 External URLs with CORS handling:
+
 ```typescript
 {
   payloadType: "Link", 
@@ -217,7 +101,9 @@ External URLs with CORS handling:
 ```
 
 ### Inline Base64 Payload
+
 Direct embedded content:
+
 ```typescript
 {
   payloadType: "InlineBase64",
@@ -229,11 +115,13 @@ Direct embedded content:
 ## UI Components
 
 ### Main Editor
+
 - Package selection and configuration
 - Deployment history management
 - Real-time monitoring
 
 ### Component Library
+
 - `WorkspaceDropdown`: Workspace selection with F-SKU filtering
 - `CapacityDropdown`: Capacity selection for Fabric
 - `DeploymentDialog`: Deployment configuration interface
@@ -279,11 +167,13 @@ protected async getAssetContentAsBase64(path: string): Promise<string> {
 ## Integration
 
 ### Fabric Platform APIs
+
 - Workspace and folder management
 - Item creation and updates
 - Capacity assignment
 
 ### Spark Integration
+
 - Livy sessions for interactive processing
 - Batch jobs for background deployment
 - Notebook execution for custom logic
@@ -303,10 +193,13 @@ protected async getAssetContentAsBase64(path: string): Promise<string> {
 ## Extension Points
 
 ### Custom Deployment Strategies
+
 Implement the `DeploymentStrategy` abstract class for custom deployment logic.
 
 ### Custom UI Components
+
 Extend the component library for specialized use cases.
 
 ### Package Sources
+
 Extend `PackageRegistry` to support external repositories and version management.

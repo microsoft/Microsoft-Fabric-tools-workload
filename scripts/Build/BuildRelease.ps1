@@ -1,6 +1,6 @@
 param ( 
     # The name of the workload, used for the Entra App and the workload in the Fabric portal
-    [String]$WorkloadName = "Org.MyWorkloadSample",
+    [String]$WorkloadName = "Org.MyWorkload",
     # The Entra Application ID for the frontend
     # If not provided, the user will be prompted to enter it or create a new one.
     [String]$FrontendAppId = "00000000-0000-0000-0000-000000000000",
@@ -34,29 +34,23 @@ $realeaseDir = Resolve-Path $realeaseDir
 # Creating the release manifest
 # 
 ###############################################################################
-$manifestDir = Join-Path $PSScriptRoot "..\..\config\Manifest"
-$tempDir = Join-Path $realeaseDir "temp\"
-$tempManifestDir = Join-Path $tempDir "temp\Manifest"
-$realeaseManifestDir = Join-Path $realeaseDir ""
-
-#TODO: create a temp copy of the manifest directory
-#TODO: create the manifest with the Enviroment settings (dev,test,prod)
-#TODO: build the manifest package in the temp directory
-#TODO: change source location of the copy below
-
-if (!(Test-Path $manifestDir)) {
-    Write-Error "Manifest directory not found at $manifestDir"
-    exit 1
+# Run BuildManifestPackage.ps1 with absolute path
+$buildManifestPackageScript = Join-Path $PSScriptRoot "..\Build\BuildManifestPackage.ps1"
+if (Test-Path $buildManifestPackageScript) {
+    $buildManifestPackageScript = (Resolve-Path $buildManifestPackageScript).Path
+    & $buildManifestPackageScript -Environment "prod"
 } else {
-    Write-Output "Using manifest directory: $manifestDir"
-    Copy-Item -Path $manifestDir -Destination $tempManifestDir -Recurse -Force
+    Write-Host "BuildManifestPackage.ps1 not found at $buildManifestPackageScript"
+    exit 1
 }
 
-
 # Copy the nuget package to the release directory
-Move-Item -Path "$tempManifestDir\*.nupkg" -Destination $realeaseManifestDir -Force
+$buildManifestDir = Join-Path $PSScriptRoot "..\..\build\Manifest"
+$realeaseManifestDir = Join-Path $realeaseDir ""
 
-Remove-Item $tempDir -Recurse -Force
+Move-Item -Path "$buildManifestDir\*.nupkg" -Destination $realeaseManifestDir -Force
+
+Write-Host “✅ Moved the new ManifestPackage to $realeaseManifestDir." -ForegroundColor Blue
 
 
 ###############################################################################

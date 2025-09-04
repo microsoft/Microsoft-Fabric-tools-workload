@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
     "id": "SemanticLinkLabs",
     "displayName": "Semantic Link Labs",
     "icon": "/assets/items/PackageInstallerItem/SemanticLinkLabs/icon.png",

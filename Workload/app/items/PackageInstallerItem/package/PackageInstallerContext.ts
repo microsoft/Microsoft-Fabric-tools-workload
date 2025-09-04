@@ -3,7 +3,7 @@ import { PackageRegistry } from "./PackageRegistry";
 import { Package } from "../PackageInstallerItemModel";
 import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
 import { InterceptorFactory } from "./InterceptorFactory";
-import { OneLakeClientItemWrapper } from "../../../clients/OneLakeClientItemWrapper";
+import { OneLakeStorageClientItemWrapper } from "../../../clients/OneLakeStorageClientItemWrapper";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 
 
@@ -23,8 +23,8 @@ export class PackageInstallerContext {
         return this.packageRegistry.getPackage(typeId);
     }
 
-    getOneLakeClientItemWrapper(item: ItemReference): OneLakeClientItemWrapper {
-        return this.fabricPlatformAPIClient.oneLake.createItemWrapper(item)
+    getOneLakeClientItemWrapper(item: ItemReference): OneLakeStorageClientItemWrapper {
+        return this.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(item)
     }
 
 }

@@ -34,9 +34,9 @@ import { PackageInstallerDeployResult } from "./components/PackageInstallerDeplo
 import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { t } from "i18next";
-import { readOneLakeFileAsText} from "../../clients/OneLakeClient";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
 // Component to fetch and display folder name
 
@@ -114,7 +114,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
     if (editorItem) {
       //TODO: this needs to be updated to use the Item instead of Itemv2
       const item = await callGetItem(workloadClient, editorItem.id);
-      await callOpenSettings(workloadClient, item, 'About');
+      await callOpenSettings(workloadClient, item.item, 'About');
     }
   }
 
@@ -165,7 +165,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
         if(item.definition?.oneLakePackages) {
           item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
-              const pack = await readOneLakeFileAsText(workloadClient, oneLakePath);
+              const oneLakeClient = new OneLakeStorageClient(workloadClient)
+              const pack = await oneLakeClient.readFileAsText(oneLakePath);
               context.packageRegistry.addPackage(pack);
             } catch (error) {
               console.error(`Failed to add package from Onelake ${oneLakePath}:`, error);

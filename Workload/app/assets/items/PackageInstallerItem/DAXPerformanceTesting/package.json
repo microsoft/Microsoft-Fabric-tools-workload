@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
   "id": "DAXPerformanceTesting",
   "displayName": "DAX Performance Testing Admin Monitoring",
   "icon": "/assets/items/PackageInstallerItem/DAXPerformanceTesting/icon.png",
@@ -13,7 +14,7 @@
           {
             "path": "/Files/DAXQueries.xlsx",
             "payloadType": "AssetLink",
-            "payload": "/assets/items/PackageInstallerItem/DAXPerformanceTesting/data/DAX_Performance_Testing_LH/DAXQueries.xlsx"
+            "payload": "/assets/items/PackageInstallerItem/DAXPerformanceTesting/DAX_Performance_Testing_LH/data/DAXQueries.xlsx"
           }
         ]
       }

@@ -299,4 +299,5 @@ export class ExternalDataSharesProviderClient extends FabricPlatformClient {
     );
     await Promise.all(revokePromises);
   }
+
 }

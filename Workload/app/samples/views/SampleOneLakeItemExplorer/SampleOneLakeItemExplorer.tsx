@@ -16,7 +16,7 @@ import {
   MenuItem,
 } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular, FolderAdd20Regular, Link20Regular } from "@fluentui/react-icons";
-import { TableMetadata, FileMetadata } from "./SampleOneLakeItemExplorerModel";
+import { TableMetadata, FileMetadata, OneLakeObjectMetadata } from "./SampleOneLakeItemExplorerModel";
 import "../../../styles.scss";
 import { getTables, getFiles } from "./SampleOneLakeItemExplorerController";
 import { PageProps } from "../../../App";
@@ -24,18 +24,17 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { getOneLakeFilePath, deleteOneLakeFile, createOneLakeFolder } from "../../../clients/OneLakeClient";
 import { callDatahubOpen, callDatahubWizardOpen } from "../../../controller/DataHubController";
-import { callDialogOpenMsgBox } from "../../../controller/DialogController";
-import { callNotificationOpen } from "../../../controller/NotificationController";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 import { OneLakeShortcutClient } from "../../../clients/OneLakeShortcutClient";
 import { NotificationType } from "@ms-fabric/workload-client";
+import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
+import { callNotificationOpen } from "../../../controller/NotificationController";
+import { callDialogOpenMsgBox } from "../../../controller/DialogController";
 
 export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;
 }
-
 
 export interface OneLakeItemExplorerComponentProps extends PageProps {
   onFileSelected(fileName: string, oneLakeLink: string): Promise<void>;
@@ -190,10 +189,12 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     setIsExplorerVisible(!isExplorerVisible);
   }
 
+  function getFullObjectPath(oneLakeObject: OneLakeObjectMetadata): string {
+    return `${oneLakeObject.prefix}/${oneLakeObject.path}`;
+  }
+
   function tableSelectedCallback(tableSelected: TableMetadata) {
-    // Add Tables prefix to match the directory structure, similar to how FileTree handles Files
-    const tablePathWithPrefix = `Tables/${tableSelected.path}`;
-    const tableFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
+    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(tableSelected));
     // Update selection state without modifying the tables array
     setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
@@ -203,7 +204,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
-    const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
+    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(fileSelected));
     // Update selection state without modifying the files array
     setSelectedFilePath(fileSelected.path);
     setSelectedTablePath(null); // Clear table selection when file is selected
@@ -227,9 +228,10 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFilePath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, filePath);
-      await deleteOneLakeFile(props.workloadClient, fullFilePath);
-      
+      const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, filePath);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
+      await oneLakeClient.deleteFile(fullFilePath);
+
       // Refresh the file list after deletion
       await setTablesAndFiles(null);
     } catch (error) {
@@ -258,8 +260,9 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
-      await deleteOneLakeFile(props.workloadClient, fullFolderPath);
+      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
+      await oneLakeClient.deleteFile(fullFolderPath);
       
       // Refresh the file list after deletion
       await setTablesAndFiles(null);
@@ -284,10 +287,11 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
     try {
       const folderPath = parentPath ? `${parentPath}/${folderName.trim()}` : folderName.trim();
-      const fullFolderPath = getOneLakeFilePath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
       console.log(`Creating folder at path: ${fullFolderPath}`);
       
-      await createOneLakeFolder(props.workloadClient, fullFolderPath);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
+      await oneLakeClient.createFolder(fullFolderPath);
       console.log(`Folder created successfully, refreshing tree...`);
       
       // Show success notification
@@ -535,7 +539,10 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
                     onDeleteFileCallback={deleteFileCallback}
                     onDeleteFolderCallback={deleteFolderCallback}
                     onCreateFolderCallback={createFolderCallback}
-                    onCreateShortcutCallback={createShortcutCallback} />
+                    onCreateShortcutCallback={createShortcutCallback}
+                    workloadClient={props.workloadClient}
+                    workspaceId={selectedItem?.workspaceId}
+                    itemId={selectedItem?.id} />
                 </Tree>
               </TreeItem>
             </div>

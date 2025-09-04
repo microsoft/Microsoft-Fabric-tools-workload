@@ -3,7 +3,7 @@ import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
 import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
-import { OneLakeClient } from "../../../clients/OneLakeClient";
+import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
 
 export interface PackageCreationResult {
     package: Package
@@ -49,7 +49,7 @@ export class BasePackageStrategy {
         const packageJson = JSON.parse(content) as Package;
 
         const packContext = new PackageContext(packageJson.displayName,
-            this.context.fabricPlatformAPIClient.oneLake.createItemWrapper(this.item)
+            this.context.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(this.item)
         )
         packContext.pack = packageJson;
 
@@ -82,7 +82,7 @@ export class BasePackageStrategy {
             throw new Error("Cannot create package: Package display name is required");
         }
         const packContext = new PackageContext(config.displayName,
-            this.context.fabricPlatformAPIClient.oneLake.createItemWrapper(this.item)
+            this.context.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(this.item)
         );
         try {
 
@@ -160,13 +160,13 @@ export class BasePackageStrategy {
 
     private async storeItemDefinitionPart(packContext: PackageContext, item: Item, part: ItemDefinitionPart): Promise<PackageItemPart> {
         const partFileName = packContext.getOneLakeDefinionPartPathInItem(item, part);
-        const partPath = OneLakeClient.getPath(
+        const partPath = OneLakeStorageClient.getPath(
             this.item.workspaceId,
             this.item.id,
             partFileName
         );
-        
-        await this.context.fabricPlatformAPIClient.oneLake.writeFileAsBase64(
+
+        await this.context.fabricPlatformAPIClient.oneLakeStorage.writeFileAsBase64(
             partFileName,
             part.payload
         );        
