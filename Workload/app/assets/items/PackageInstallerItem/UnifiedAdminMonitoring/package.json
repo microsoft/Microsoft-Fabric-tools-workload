@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
   "id": "FUAM",
   "displayName": "Unified Admin Monitoring",
   "icon": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/icon.png",
@@ -8,7 +9,7 @@
       "location": "NewWorkspace",
       "deploymentFile": {
         "payloadType": "AssetLink",
-        "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"
+        "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/Deploy_FUAM.ipynb"
       }      
   },  
   "items": [

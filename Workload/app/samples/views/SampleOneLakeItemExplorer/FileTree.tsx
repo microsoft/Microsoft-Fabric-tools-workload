@@ -1,18 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, Link20Regular, FolderLink20Regular } from "@fluentui/react-icons";
 import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./SampleOneLakeItemExplorerModel";
+import { getShortcutContents } from "./SampleOneLakeItemExplorerController";
 
 interface TreeNode {
     metadata: FileMetadata;
     children: TreeNode[];
+    isLoading?: boolean;
+    isExpanded?: boolean;
 }
 
 type FolderMap = Map<string, TreeNode>;
 
 export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
-    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback, onCreateFolderCallback, onCreateShortcutCallback} = props;
+    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback, onCreateFolderCallback, onCreateShortcutCallback, workloadClient, workspaceId, itemId} = props;
     const [openMenu, setOpenMenu] = useState<string | null>(null);
+    const [expandedShortcuts, setExpandedShortcuts] = useState<Set<string>>(new Set());
+    const [shortcutContents, setShortcutContents] = useState<Map<string, FileMetadata[]>>(new Map());
+    const [loadingShortcuts, setLoadingShortcuts] = useState<Set<string>>(new Set());
+
+    const loadShortcutContents = async (shortcutPath: string) => {
+        if (!workloadClient || !workspaceId || !itemId) {
+            console.warn('Missing required props for loading shortcut contents');
+            return;
+        }
+
+        setLoadingShortcuts(prev => new Set(prev).add(shortcutPath));
+        
+        try {
+            console.log(`Loading contents for shortcut: ${shortcutPath}`);
+            const contents = await getShortcutContents(
+                workloadClient,
+                workspaceId,
+                itemId,
+                shortcutPath,
+                true // assuming Files folder for now
+            );
+            
+            setShortcutContents(prev => {
+                const newMap = new Map(prev);
+                newMap.set(shortcutPath, contents);
+                return newMap;
+            });
+            
+            setExpandedShortcuts(prev => new Set(prev).add(shortcutPath));
+        } catch (error) {
+            console.error(`Failed to load shortcut contents for ${shortcutPath}:`, error);
+        } finally {
+            setLoadingShortcuts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(shortcutPath);
+                return newSet;
+            });
+        }
+    };
 
     const buildFileTree = (files: FileMetadata[]) => {
         const root: TreeNode[] = [];
@@ -57,6 +99,27 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
             addNode(file);
         });
 
+        // Third pass: add shortcut contents if loaded
+        shortcutContents.forEach((contents, shortcutPath) => {
+            const shortcutNode = folders.get(shortcutPath);
+            if (shortcutNode && expandedShortcuts.has(shortcutPath)) {
+                // Clear existing children and add shortcut contents
+                shortcutNode.children = [];
+                contents.forEach(contentItem => {
+                    // Adjust the path to be relative to the shortcut
+                    const adjustedItem: FileMetadata = {
+                        ...contentItem,
+                        path: shortcutPath + '/' + contentItem.path
+                    };
+                    const childNode: TreeNode = {
+                        metadata: adjustedItem,
+                        children: []
+                    };
+                    shortcutNode.children.push(childNode);
+                });
+            }
+        });
+
         // Sort tree alphabetically and by type (folders first)
         const sortNodes = (nodes: TreeNode[]) => {
             nodes.sort((a, b) => {
@@ -76,32 +139,33 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
         return root;
     };
 
-    const handleCreateFolder = async (parentPath: string) => {
+    const handleCreateFolder = async (metadata: FileMetadata) => {
         if (onCreateFolderCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
+            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
             await onCreateFolderCallback(fullPath);
         }
     };
 
-    const handleCreateShortcut = async (parentPath: string) => {
+    const handleCreateShortcut = async (metadata: FileMetadata) => {
         if (onCreateShortcutCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
+            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
             await onCreateShortcutCallback(fullPath);
         }
     };
 
-    const handleDeleteFile = async (filePath: string) => {
+    const handleDeleteFile = async (metadata: FileMetadata) => {
         if (onDeleteFileCallback) {
-            await onDeleteFileCallback(filePath);
+            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
+            await onDeleteFileCallback(fullPath);
         }
     };
 
-    const handleDeleteFolder = async (folderPath: string) => {
+    const handleDeleteFolder = async (metadata: FileMetadata) => {
         if (onDeleteFolderCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = folderPath ? `Files/${folderPath}` : "Files";
+            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
             await onDeleteFolderCallback(fullPath);
         }
     };
@@ -123,12 +187,22 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                             <Tooltip relationship="label" content={metadata.name}>
                                 <TreeItemLayout 
                                     iconBefore={folderIcon}
+                                    onClick={async (e) => {
+                                        // Handle shortcut expansion on click
+                                        if (metadata.isShortcut && !expandedShortcuts.has(metadata.path)) {
+                                            e.stopPropagation();
+                                            await loadShortcutContents(metadata.path);
+                                        }
+                                    }}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         setOpenMenu(metadata.path);
                                     }}
                                 >
                                     {metadata.name}
+                                    {loadingShortcuts.has(metadata.path) && (
+                                        <span style={{ marginLeft: '8px', fontSize: '12px' }}>Loading...</span>
+                                    )}
                                 </TreeItemLayout>
                             </Tooltip>
                         </MenuTrigger>
@@ -139,7 +213,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<FolderAdd20Regular />}
                                         onClick={() => {
-                                            handleCreateFolder(metadata.path);
+                                            handleCreateFolder(metadata);
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -150,7 +224,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Link20Regular />}
                                         onClick={() => {
-                                            handleCreateShortcut(metadata.path);
+                                            handleCreateShortcut(metadata);
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -162,7 +236,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Delete20Regular />}
                                         onClick={() => {
-                                            handleDeleteFolder(metadata.path);
+                                            handleDeleteFolder(metadata);
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -220,7 +294,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Delete20Regular />}
                                         onClick={() => {
-                                            handleDeleteFile(metadata.path);
+                                            handleDeleteFile(metadata);
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -236,6 +310,11 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
     };
 
     const fileTree = buildFileTree(allFilesInOneLake || []);
+
+    // Rebuild tree when shortcut contents change
+    useEffect(() => {
+        // This will trigger a re-render when shortcut contents are loaded
+    }, [shortcutContents, expandedShortcuts]);
 
     // Close menu when clicking outside
     const handleGlobalClick = () => {
@@ -261,13 +340,13 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                         onContextMenu={(e) => {
                             e.preventDefault();
                             if (onCreateFolderCallback) {
-                                handleCreateFolder("");
+                                handleCreateFolder(undefined);
                             }
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
                             if (onCreateFolderCallback) {
-                                handleCreateFolder("");
+                                handleCreateFolder(undefined);
                             }
                         }}
                     >

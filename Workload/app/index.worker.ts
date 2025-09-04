@@ -6,7 +6,6 @@ import {
     NotificationToastDuration,
     NotificationType
 } from '@ms-fabric/workload-client';
-
 import { callPageOpen } from './controller/PageController';
 import { callNotificationOpen } from './controller/NotificationController';
 import { t } from 'i18next';
@@ -69,9 +68,14 @@ export async function initialize(params: InitParams) {
                     NotificationToastDuration.Medium);
 
             case 'getItemSettings': {
+
+                console.log("====================================================");
+                console.log(`Get item settings action received with data:`, data);
+                console.log("####################################################");
+
                 const { item: { objectId } } = data as ItemSettingContext;
                 const itemTypeName = createdItem.itemType.substring(createdItem.itemType.lastIndexOf('.') + 1);
-                path = `/${itemTypeName}Item-editor`;
+
                 return [
                     {
                         name: 'about',
@@ -95,6 +99,8 @@ export async function initialize(params: InitParams) {
                         workloadIframeHeight: '1000px'
                     }
                 ];
+
+
             }
             case 'open.ClientSDKPlaygroundPage':
                 return workloadClient.page.open({

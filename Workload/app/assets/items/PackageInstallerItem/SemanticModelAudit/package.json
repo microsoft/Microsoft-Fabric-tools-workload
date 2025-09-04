@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/Microsoft-Fabric-tools-workload/main/Workload/app/items/PackageInstallerItem/package/package.schema.json",
   "id": "SemanticModelAudit",
   "displayName": "Semantic Model Audit",
   "icon": "/assets/items/PackageInstallerItem/SemanticModelAudit/icon.png",

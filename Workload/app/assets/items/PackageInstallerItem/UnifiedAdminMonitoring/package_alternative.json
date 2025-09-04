@@ -30,7 +30,7 @@
           {
             "payloadType": "AssetLink",
             "path": "notebook-content.ipynb",
-            "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/definitions/Deploy_FUAM.ipynb"
+            "payload": "/assets/items/PackageInstallerItem/UnifiedAdminMonitoring/Deploy_FUAM.ipynb"
           }
         ]        
       }

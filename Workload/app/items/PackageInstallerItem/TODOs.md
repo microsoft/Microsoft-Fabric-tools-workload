@@ -7,6 +7,7 @@
 * schema for Json
 * create an install from a Workspace/CICD
 * Documentation
+* schma validation for packages before they are loaded
 
 * Spark Livy deployment
 

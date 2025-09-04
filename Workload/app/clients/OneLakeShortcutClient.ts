@@ -12,6 +12,9 @@ import {
  * API wrapper for OneLake Shortcuts operations
  * Provides methods for managing shortcuts to external data sources
  * 
+ * Based on the official Fabric REST API:
+ * https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-shortcuts
+ * 
  * Uses method-based scope selection:
  * - GET operations use read-only scopes
  * - POST/PUT/PATCH/DELETE operations use read-write scopes
@@ -77,11 +80,17 @@ export class OneLakeShortcutClient extends FabricPlatformClient {
   async createShortcut(
     workspaceId: string,
     itemId: string,
-    request: CreateShortcutRequest
+    request: CreateShortcutRequest,
+    conflictPolicy?: ShortcutConflictPolicy
   ): Promise<Shortcut> {
+    let url = `/workspaces/${workspaceId}/items/${itemId}/shortcuts`;
+    if (conflictPolicy) {
+      const params = new URLSearchParams({ conflictPolicy });
+      url += `?${params.toString()}`;
+    }
     return this.post<Shortcut>(
-      `/workspaces/${workspaceId}/items/${itemId}/shortcuts`,
-      request
+      url,
+      { ...request }
     );
   }
 
@@ -95,13 +104,9 @@ export class OneLakeShortcutClient extends FabricPlatformClient {
   async getShortcut(
     workspaceId: string,
     itemId: string,
-    shortcutPath: string,
-    shortcutConflictPolicy?: ShortcutConflictPolicy
+    shortcutPath: string
   ): Promise<Shortcut> {
-    var encodedPath = encodeURIComponent(shortcutPath);
-    if (shortcutConflictPolicy) {
-     encodedPath += `?shortcutConflictPolicy=${shortcutConflictPolicy}`;
-    } 
+    const encodedPath = encodeURIComponent(shortcutPath);
     return this.get<Shortcut>(
       `/workspaces/${workspaceId}/items/${itemId}/shortcuts/${encodedPath}`
     );
