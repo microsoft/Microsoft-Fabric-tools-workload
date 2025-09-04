@@ -69,9 +69,14 @@ export async function initialize(params: InitParams) {
                     NotificationToastDuration.Medium);
 
             case 'getItemSettings': {
+
+                console.log("====================================================");
+                console.log(`Get item settings action received with data:`, data);
+                console.log("####################################################");
+
                 const { item: { objectId } } = data as ItemSettingContext;
                 const itemTypeName = createdItem.itemType.substring(createdItem.itemType.lastIndexOf('.') + 1);
-                path = `/${itemTypeName}Item-editor`;
+
                 return [
                     {
                         name: 'about',

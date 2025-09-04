@@ -24,13 +24,11 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
-import { OneLakeClient } from "../../../clients/OneLakeClient";
-import { callDatahubOpen, callDatahubWizardOpen } from "../../../controller/DataHubController";
-import { callDialogOpenMsgBox } from "../../../controller/DialogController";
-import { callNotificationOpen } from "../../../controller/NotificationController";
+import { callDatahubOpen } from "../../../controller/DataHubController";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 import { OneLakeShortcutClient } from "../../../clients/OneLakeShortcutClient";
 import { NotificationType } from "@ms-fabric/workload-client";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
 export interface OneLakeItemExplorerItem extends ItemReference {
   displayName: string;
@@ -192,7 +190,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   function tableSelectedCallback(tableSelected: TableMetadata) {
     // Add Tables prefix to match the directory structure, similar to how FileTree handles Files
     const tablePathWithPrefix = `Tables/${tableSelected.path}`;
-    const tableFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
+    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, tablePathWithPrefix);
     // Update selection state without modifying the tables array
     setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
@@ -202,7 +200,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
-    const fullFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
+    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, fileSelected.path);
     // Update selection state without modifying the files array
     setSelectedFilePath(fileSelected.path);
     setSelectedTablePath(null); // Clear table selection when file is selected
@@ -226,8 +224,8 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFilePath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, filePath);
-      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, filePath);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
       await oneLakeClient.deleteFile(fullFilePath);
 
       // Refresh the file list after deletion
@@ -258,8 +256,8 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
     }
 
     try {
-      const fullFolderPath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
-      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
       await oneLakeClient.deleteFile(fullFolderPath);
       
       // Refresh the file list after deletion
@@ -285,10 +283,10 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
 
     try {
       const folderPath = parentPath ? `${parentPath}/${folderName.trim()}` : folderName.trim();
-      const fullFolderPath = OneLakeClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
       console.log(`Creating folder at path: ${fullFolderPath}`);
       
-      const oneLakeClient = new OneLakeClient(props.workloadClient);
+      const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
       await oneLakeClient.createFolder(fullFolderPath);
       console.log(`Folder created successfully, refreshing tree...`);
       
