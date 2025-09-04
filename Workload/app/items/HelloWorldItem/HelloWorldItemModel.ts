@@ -1,3 +1,3 @@
 export interface HelloWorldItemDefinition  {
-  state?: string;
+  message?: string;
 }

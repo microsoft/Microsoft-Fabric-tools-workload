@@ -79,25 +79,7 @@ export async function getFiles(
     const directory = `${itemId}/Files/`;
     const oneLakeContainer = await getPathList(workloadClient, workspaceId, directory, true);
     const files = (oneLakeContainer.paths || []).map(path => {
-<<<<<<< HEAD
-        const pathName = path.name;
-        const parts = pathName.split('/');
-
-        // Path structure: <itemId>/Files/...<Subdirectories>.../<fileName>
-        const fileName = parts[parts.length - 1];
-
-        // Remove the prefix (itemId/Files/) from the path
-        const relativePath = pathName.length > directory.length ? pathName.substring(directory.length) : "";
-
-        return {
-            name: fileName,
-            path: relativePath,
-            isDirectory: path.isDirectory,
-            isShortcut: path.isShortcut
-        } as FileMetadata;
-=======
         return convertToFileMetadata(path, directory);
->>>>>>> starterkit/dev/gesaur/fabcon
     });
 
     return files;

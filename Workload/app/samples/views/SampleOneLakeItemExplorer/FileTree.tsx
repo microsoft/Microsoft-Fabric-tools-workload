@@ -76,60 +76,33 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
         return root;
     };
 
-<<<<<<< HEAD
-    const handleCreateFolder = async (parentPath: string) => {
-        if (onCreateFolderCallback) {
-            // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
-=======
     const handleCreateFolder = async (metadata: FileMetadata) => {
         if (onCreateFolderCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
             const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
->>>>>>> starterkit/dev/gesaur/fabcon
             await onCreateFolderCallback(fullPath);
         }
     };
 
-<<<<<<< HEAD
-    const handleCreateShortcut = async (parentPath: string) => {
-        if (onCreateShortcutCallback) {
-            // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = parentPath ? `Files/${parentPath}` : "Files";
-=======
     const handleCreateShortcut = async (metadata: FileMetadata) => {
         if (onCreateShortcutCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
             const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
->>>>>>> starterkit/dev/gesaur/fabcon
             await onCreateShortcutCallback(fullPath);
         }
     };
 
-<<<<<<< HEAD
-    const handleDeleteFile = async (filePath: string) => {
-        if (onDeleteFileCallback) {
-            const fullPath = filePath ? `Files/${filePath}` : "Files";
-=======
     const handleDeleteFile = async (metadata: FileMetadata) => {
         if (onDeleteFileCallback) {
             const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
->>>>>>> starterkit/dev/gesaur/fabcon
             await onDeleteFileCallback(fullPath);
         }
     };
 
-<<<<<<< HEAD
-    const handleDeleteFolder = async (folderPath: string) => {
-        if (onDeleteFolderCallback) {
-            // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = folderPath ? `Files/${folderPath}` : "Files";
-=======
     const handleDeleteFolder = async (metadata: FileMetadata) => {
         if (onDeleteFolderCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
             const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
->>>>>>> starterkit/dev/gesaur/fabcon
             await onDeleteFolderCallback(fullPath);
         }
     };
@@ -167,11 +140,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<FolderAdd20Regular />}
                                         onClick={() => {
-<<<<<<< HEAD
-                                            handleCreateFolder(metadata.path);
-=======
                                             handleCreateFolder(metadata);
->>>>>>> starterkit/dev/gesaur/fabcon
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -182,11 +151,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Link20Regular />}
                                         onClick={() => {
-<<<<<<< HEAD
-                                            handleCreateShortcut(metadata.path);
-=======
                                             handleCreateShortcut(metadata);
->>>>>>> starterkit/dev/gesaur/fabcon
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -198,11 +163,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Delete20Regular />}
                                         onClick={() => {
-<<<<<<< HEAD
-                                            handleDeleteFolder(metadata.path);
-=======
                                             handleDeleteFolder(metadata);
->>>>>>> starterkit/dev/gesaur/fabcon
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -260,11 +221,7 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                                     <MenuItem 
                                         icon={<Delete20Regular />}
                                         onClick={() => {
-<<<<<<< HEAD
-                                            handleDeleteFile(metadata.path);
-=======
                                             handleDeleteFile(metadata);
->>>>>>> starterkit/dev/gesaur/fabcon
                                             setOpenMenu(null);
                                         }}
                                     >
@@ -305,21 +262,13 @@ export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
                         onContextMenu={(e) => {
                             e.preventDefault();
                             if (onCreateFolderCallback) {
-<<<<<<< HEAD
-                                handleCreateFolder("");
-=======
                                 handleCreateFolder(undefined);
->>>>>>> starterkit/dev/gesaur/fabcon
                             }
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
                             if (onCreateFolderCallback) {
-<<<<<<< HEAD
-                                handleCreateFolder("");
-=======
                                 handleCreateFolder(undefined);
->>>>>>> starterkit/dev/gesaur/fabcon
                             }
                         }}
                     >
