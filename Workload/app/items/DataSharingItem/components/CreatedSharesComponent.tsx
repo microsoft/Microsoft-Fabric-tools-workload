@@ -65,7 +65,16 @@ export const CreatedSharesComponent: React.FC<CreatedSharesComponentProps> = ({
                         
                         // Prepare the external data share request
                         const createRequest = {
-                            paths: selectedItems.map(item => item.path),
+                            paths: selectedItems.map(item => { 
+                                // Add appropriate prefix based on item type
+                                let fullPath = item.path;
+                                if (item.type === "Table" && !fullPath.startsWith('Tables/')) {
+                                    fullPath = `Tables/${fullPath}`;
+                                } else if ((item.type === "File" || item.type === "Folder") && !fullPath.startsWith('Files/')) {
+                                    fullPath = `Files/${fullPath}`;
+                                }
+                                return fullPath;
+                            }),
                             recipient: {
                                 tenantId: recipientInfo.tenantId,
                                 userPrincipalName: recipientInfo.email,
