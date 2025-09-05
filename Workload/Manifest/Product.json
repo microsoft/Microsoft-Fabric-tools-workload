@@ -69,6 +69,27 @@
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
             }        
+          },
+          {
+            "title": "SparkTerminalItem_DisplayName",
+            "description": "SparkTerminalItem_Description",
+            "icon": {
+              "name": "assets/images/SparkTerminalItem-icon.png"
+            },
+            "icon_small": {
+              "name": "assets/images/SparkTerminalItem-icon.png"
+            },
+            "availableIn": [
+              "home",
+              "create-hub",
+              "workspace-plus-new",
+              "workspace-plus-new-teams"
+            ],
+            "itemType": "SparkTerminal",
+            "createItemDialogConfig": {
+              "onCreationFailure": { "action": "item.onCreationFailure" },
+              "onCreationSuccess": { "action": "item.onCreationSuccess" }
+            }
           }
         ]
     },

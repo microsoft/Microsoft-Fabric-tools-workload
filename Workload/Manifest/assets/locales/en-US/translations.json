@@ -12,7 +12,10 @@
     "PackageInstallerItem_Description": "A item that can install different package configurations into Fabric workspaces.",
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
-    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities."
+    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
+    "SparkTerminalItem_DisplayName": "Spark Terminal",
+    "SparkTerminalItem_DisplayName_Plural": "Spark Terminals",
+    "SparkTerminalItem_Description": "Interactive Spark terminal for executing commands and SQL queries against lakehouse data."   
 }
 
 
