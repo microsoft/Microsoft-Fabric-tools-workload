@@ -9,6 +9,7 @@ import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstaller
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
+import { UnityCatalogItemEditor } from "./items/UnityCatalogItem/UnityCatalogItemEditor";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -82,6 +83,11 @@ export function App({ history, workloadClient }: AppProps) {
             <Route path="/OneLakeExplorerItem-editor/:itemObjectId">
                 <OneLakeExplorerItemEditor
                     workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
+            </Route>
+
+            <Route path="/UnityCatalogItem-editor/:itemObjectId">
+                <UnityCatalogItemEditor
+                    workloadClient={workloadClient} data-testid="UnityCatalogItem-editor" />
             </Route>
 
         </Switch>

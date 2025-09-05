@@ -383,6 +383,7 @@ export function UnityCatalogItemEditor(props: PageProps) {
                                 onTableSelected={async () => { }}
                                 onItemChanged={async () => { }}
                                 config={{
+                                    mode: "view",
                                     initialItem: {
                                         ...editorItem
                                     },
