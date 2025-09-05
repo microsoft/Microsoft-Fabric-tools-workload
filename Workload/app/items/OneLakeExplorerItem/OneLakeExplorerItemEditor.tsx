@@ -16,6 +16,7 @@ import { Stack } from "@fluentui/react";
 import { OneLakeExplorerItemEditorRibbon } from "./OneLakeExplorerItemEditorRibbon";
 import { OneLakeExplorerItemEditorEmpty } from "./OneLakeExplorerItemEditorEmpty";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
+import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
 
 
 const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
@@ -31,9 +32,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
-  const ALLOWED_ITEM_TYPES = ["Lakehouse",
-                                process.env.WORKLOAD_NAME + ".PackageInstaller",
-                                process.env.WORKLOAD_NAME + ".OneLakeExplorer"]
+  const ALLOWED_ITEM_TYPES = ["Lakehouse", ...getConfiguredWorkloadItemTypes()];
 
   // Default editor settings
   const defaultEditorSettings = {

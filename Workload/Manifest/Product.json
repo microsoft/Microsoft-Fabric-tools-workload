@@ -14,8 +14,8 @@
           "title": "FabricTools_Docs_Title",
           "introduction": "FabricTools_Docs_Introduction",
           "description": "FabricTools_Docs_Description",
-          "image": "assets/images/FabricTools_Docs.png",
-          "link": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/README.md"
+          "image": "assets/images/Workload-docs.png",
+          "link": "https://github.com/microsoft/Microsoft-Fabric-tools-workload"
         }
       ],
       "newSection": {
@@ -99,21 +99,25 @@
       "description": "Workload_Hub_Workload_Description",
       "image": {
         "mediaType": 0,
-        "source": "assets/images/WorkloadBanner.png"
+        "source": "assets/images/Workload-banner.png"
       },
       "slideMedia": [
         {
           "mediaType": 0,
-          "source": "assets/images/PackageInstaller_Slideware.png"
+          "source": "assets/images/PackageInstallerItem-slideware.png"
+        },
+        {
+          "mediaType": 0,
+          "source": "assets/images/OneLakeExplorerItem-slideware.png"
         }
       ],
         "supportLink": {
-          "documentation": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/README.md"},
+          "documentation": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/"},
           "certification": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/CERTIFICATION.md"},
-          "help": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/discussions"},
-          "privacy": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/PRIVACY.md"},
+          "help": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/SUPPORT.md"},
+          "privacy": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/CODE_OF_CONDUCT.md"},
           "terms": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/TERMS"},
-          "license": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/LICENSE"}
+          "license": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/LICENSE"}
       }
     },
     "itemJobTypes" :["storeData", "others"],
