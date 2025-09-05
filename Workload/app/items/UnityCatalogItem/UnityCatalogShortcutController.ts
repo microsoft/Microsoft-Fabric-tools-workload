@@ -1,7 +1,7 @@
 import { ItemReference } from "../../controller/ItemCRUDController";
 import { CreateShortcutRequest, CreateShortcutWithTransformRequest, FabricPlatformAPIClient, Shortcut, WorkloadClientAPI } from "../../clients";
 import { DEFAULT_SHORTCUT_PREFIX, ShortcutInfo, ShortcutInfoFabric, UnityCatalogItemDefinition } from "./UnityCatalogItemModel";
-import { TableInfo } from "../../../api/UnityCatalog/client";
+import { TableInfo } from "./UnityCatalogAPIClient";
 
 
 export class UnityCatalogShortcutController {

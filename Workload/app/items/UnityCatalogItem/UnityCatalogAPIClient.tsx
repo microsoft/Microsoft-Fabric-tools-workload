@@ -163,12 +163,14 @@ export class UnityCatalogAPIClient {
   private baseUrl: string;
   private token: string;
   private headers: Record<string, string>;
+  private proxyUrl?: string;
 
-  constructor(config: UnityCatalogConfig) {
+  constructor(config: UnityCatalogConfig, proxyUrl?: string) {
     // Extract the base URL from the workspace URL
     // Format: https://workspace.cloud.databricks.com -> https://workspace.cloud.databricks.com/api/2.1/unity-catalog
     this.baseUrl = `${config.databrickURL.replace(/\/$/, '')}/api/2.1/unity-catalog`;
     this.token = config.databricksToken;
+    this.proxyUrl = proxyUrl;
     this.headers = {
       'Authorization': `Bearer ${this.token}`,
       'Content-Type': 'application/json',
@@ -184,19 +186,32 @@ export class UnityCatalogAPIClient {
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
     body?: any
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const targetUrl = `${this.baseUrl}${endpoint}`;
+    let requestUrl = targetUrl;
     
     const requestOptions: RequestInit = {
       method,
-      headers: this.headers,
+      headers: { ...this.headers },
+      mode: 'cors',
+      credentials: 'omit'
     };
+
+    // If proxy is configured, use it and add the target URL as headers
+    if (this.proxyUrl) {
+      requestUrl = this.proxyUrl;
+      requestOptions.headers = {
+        ...requestOptions.headers,
+        'X-Target-URL': targetUrl,
+        'X-Target-Base-URL': this.baseUrl.replace('/api/2.1/unity-catalog', '') // Remove API path for base URL
+      };
+    }
 
     if (body && method !== 'GET') {
       requestOptions.body = JSON.stringify(body);
     }
 
     try {
-      const response = await fetch(url, requestOptions);
+      const response = await fetch(requestUrl, requestOptions);
       
       if (!response.ok) {
         const errorText = await response.text();

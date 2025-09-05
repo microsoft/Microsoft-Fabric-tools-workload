@@ -3,8 +3,8 @@ import { Stack } from "@fluentui/react";
 import { Text, Button, Input, Field, Dropdown, Option, Checkbox, Spinner } from "@fluentui/react-components";
 import "../../styles.scss";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { UnityCatalogItemDefinition, UnityCatalogConfig, DEFAULT_SHORTCUT_PREFIX, UNITY_PROXY_URL} from "./UnityCatalogItemModel";
-import { CatalogInfo, UnityCatalogProxyClient } from "../../../api/UnityCatalog/client";
+import { UnityCatalogItemDefinition, UnityCatalogConfig, DEFAULT_SHORTCUT_PREFIX} from "./UnityCatalogItemModel";
+import { UnityCatalogAPIClient, CatalogInfo } from "./UnityCatalogAPIClient";
 import { FabricPlatformAPIClient } from "../../clients/FabricPlatformAPIClient";
 import { Connection } from "../../clients/FabricPlatformTypes";
 
@@ -44,7 +44,7 @@ export const UnityCatalogItemEmpty: React.FC<UnityCatalogItemEmptyStateProps> = 
   }, []);
 
 
-  function getUnifyCatalogAPIClient() : UnityCatalogProxyClient {
+  function getUnityCatalogAPIClient() : UnityCatalogAPIClient {
     const tempConfig: UnityCatalogConfig = {
         databrickURL: databricksWorkspace,
         databricksToken,
@@ -53,8 +53,10 @@ export const UnityCatalogItemEmpty: React.FC<UnityCatalogItemEmptyStateProps> = 
         connectionId: "",
         considerTableChanges: true
       };
-      const apiClient = new UnityCatalogProxyClient(tempConfig, UNITY_PROXY_URL);
-      apiClient.testConnection();
+      
+      // Use generic proxy in development
+      const proxyUrl = process.env.NODE_ENV === 'development' ? '/api/proxy' : undefined;
+      const apiClient = new UnityCatalogAPIClient(tempConfig, proxyUrl);
       return apiClient;
   }
 
@@ -81,7 +83,7 @@ export const UnityCatalogItemEmpty: React.FC<UnityCatalogItemEmptyStateProps> = 
     
     try {
       
-      const apiClient = getUnifyCatalogAPIClient()
+      const apiClient = getUnityCatalogAPIClient()
       
       // Test connection and fetch catalogs
       setIsLoadingCatalogs(true);
@@ -110,9 +112,9 @@ export const UnityCatalogItemEmpty: React.FC<UnityCatalogItemEmptyStateProps> = 
     
     setIsLoadingSchemas(true);
     try {
-      const apiClient = getUnifyCatalogAPIClient();
+      const apiClient = getUnityCatalogAPIClient();
       const schemaList = await apiClient.listSchemas(catalogName);
-      const availableSchemas = schemaList.schemas?.map(s => s.name) || []
+      const availableSchemas = schemaList.schemas?.map((s: any) => s.name) || []
       setAvailableSchemas(availableSchemas);
     } catch (error) {
       console.error("Failed to fetch schemas:", error);

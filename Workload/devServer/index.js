@@ -7,8 +7,6 @@ const manifestApi = require('./manifestApi');
 const schemaApi = require('./schemaApi');
 const proxyApi = require('./proxyApi');
 
-const unityCatalogApi = require('../api/UnityCatalog/routes');
-
 /**
  * Register all dev server APIs with an Express application
  * @param {object} app Express application

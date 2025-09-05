@@ -25,16 +25,16 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
 import { useTranslation } from "react-i18next";
-import { UnityCatalogItemDefinition, ShortcutInfo, UNITY_PROXY_URL } from "./UnityCatalogItemModel";
-import { TableInfo, UnityCatalogProxyClient } from "../../../api/UnityCatalog/client";
+import { UnityCatalogItemDefinition, ShortcutInfo } from "./UnityCatalogItemModel";
+import { UnityCatalogAPIClient, TableInfo } from "./UnityCatalogAPIClient";
 import { UnityCatalogItemEmpty } from "./UnityCatalogItemEditorEmpty";
 import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { Delete24Regular, CheckmarkCircle24Regular, ErrorCircle24Regular, Clock24Regular } from "@fluentui/react-icons";
-import { UnityCatalogShortcutController } from "./UnityCatalogShortcutController";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
+import { UnityCatalogShortcutController } from "./UnityCatalogShortcutController";
 
 
 
@@ -118,8 +118,9 @@ export function UnityCatalogItemEditor(props: PageProps) {
         try {
             // Use Unity Catalog API to fetch and sync tables
 
-            // Create API client
-            const apiClient = new UnityCatalogProxyClient(config.unityConfig, UNITY_PROXY_URL);
+            // Create API client with generic proxy
+            const proxyUrl = process.env.NODE_ENV === 'development' ? '/api/proxy' : undefined;
+            const apiClient = new UnityCatalogAPIClient(config.unityConfig, proxyUrl);
 
             // Fetch Unity Catalog tables using real API
             const unityCatalogTables = await apiClient.getAllTables(config.unityConfig.catalog, config.unityConfig.schemas);
@@ -129,10 +130,10 @@ export function UnityCatalogItemEditor(props: PageProps) {
             if (unityCatalogTables) {
                 // Create all new shortcuts
                 newShortcuts = await Promise.all(
-                    unityCatalogTables.map(table => checkUnityTable(config, table))
+                    unityCatalogTables.map((table: TableInfo) => checkUnityTable(config, table))
                 );
                 //delete missing shortcuts
-                const missingShortcuts = existingShortcuts.filter(s => !unityCatalogTables.find(t =>
+                const missingShortcuts = existingShortcuts.filter(s => !unityCatalogTables.find((t: TableInfo) =>
                     t.catalog_name === s.unityCatalog.catalogName &&
                     t.schema_name === s.unityCatalog.schemaName &&
                     t.name === s.unityCatalog.tableName));
