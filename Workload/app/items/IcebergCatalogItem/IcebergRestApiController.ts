@@ -214,10 +214,15 @@ export interface TableInfo {
 export class IcebergRestApiController {
     private baseUrl: string;
     private catalogConfig?: IcebergCatalogConfig;
+    private proxyUrl?: string;
 
-    constructor(catalogConfig?: IcebergCatalogConfig) {
+    constructor(catalogConfig?: IcebergCatalogConfig, proxyUrl?: string) {
         this.catalogConfig = catalogConfig;
-        this.baseUrl = catalogConfig?.catalogUri || 'http://localhost:60006/api/iceberg-catalog';
+        this.baseUrl = catalogConfig?.catalogUri;
+        this.proxyUrl = proxyUrl;
+        if(!this.proxyUrl && process.env.NODE_ENV === 'development'){
+            this.proxyUrl = '/api/proxy';
+        }
     }
 
     // ========================================
@@ -234,16 +239,7 @@ export class IcebergRestApiController {
             url.searchParams.set('warehouse', warehouse);
         }
 
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
+        return await this.makeRequest<IcebergConfigResponse>(url.toString());
     }
 
     /**
@@ -262,16 +258,7 @@ export class IcebergRestApiController {
         if (pageToken) url.searchParams.set('pageToken', pageToken);
         if (pageSize) url.searchParams.set('pageSize', pageSize.toString());
 
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
+        return await this.makeRequest<ListNamespacesResponse>(url.toString());
     }
 
     /**
@@ -284,20 +271,13 @@ export class IcebergRestApiController {
     ): Promise<IcebergNamespace> {
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces`;
 
-        const response = await fetch(url, {
+        return await this.makeRequest<IcebergNamespace>(url, {
             method: 'POST',
             headers: {
-                ...this.getAuthHeaders(),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(request)
         });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
     }
 
     /**
@@ -311,16 +291,7 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F'); // Unit separator for multipart namespace
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
+        return await this.makeRequest<IcebergNamespace>(url);
     }
 
     /**
@@ -334,12 +305,12 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F');
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
 
-        const response = await fetch(url, {
-            method: 'HEAD',
-            headers: this.getAuthHeaders()
-        });
-
-        return response.status === 204;
+        try {
+            const status = await this.makeRequest<number>(url, { method: 'HEAD' });
+            return status === 204;
+        } catch (error) {
+            return false;
+        }
     }
 
     /**
@@ -353,14 +324,7 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F');
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
 
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
+        await this.makeRequest<void>(url, { method: 'DELETE' });
     }
 
     /**
@@ -375,20 +339,13 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F');
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/properties`;
 
-        const response = await fetch(url, {
+        return await this.makeRequest<{ updated: string[]; removed: string[]; missing?: string[] }>(url, {
             method: 'POST',
             headers: {
-                ...this.getAuthHeaders(),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(request)
         });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
     }
 
     /**
@@ -407,16 +364,7 @@ export class IcebergRestApiController {
         if (pageToken) url.searchParams.set('pageToken', pageToken);
         if (pageSize) url.searchParams.set('pageSize', pageSize.toString());
 
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
+        return await this.makeRequest<ListTablesResponse>(url.toString());
     }
 
     /**
@@ -433,7 +381,6 @@ export class IcebergRestApiController {
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables`;
 
         const headers: Record<string, string> = {
-            ...this.getAuthHeaders(),
             'Content-Type': 'application/json'
         };
 
@@ -441,17 +388,11 @@ export class IcebergRestApiController {
             headers['X-Iceberg-Access-Delegation'] = dataAccess;
         }
 
-        const response = await fetch(url, {
+        return await this.makeRequest<LoadTableResult>(url, {
             method: 'POST',
             headers,
             body: JSON.stringify(request)
         });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
     }
 
     /**
@@ -471,24 +412,18 @@ export class IcebergRestApiController {
         
         if (snapshots) url.searchParams.set('snapshots', snapshots);
 
-        const headers: Record<string, string> = { ...this.getAuthHeaders() };
+        const headers: Record<string, string> = {};
         if (dataAccess) headers['X-Iceberg-Access-Delegation'] = dataAccess;
         if (ifNoneMatch) headers['If-None-Match'] = ifNoneMatch;
 
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers
-        });
-
-        if (response.status === 304) {
-            throw new Error('Table metadata not modified');
+        try {
+            return await this.makeRequest<LoadTableResult>(url.toString(), { headers });
+        } catch (error) {
+            if (error instanceof Error && error.message.includes('304 Not Modified')) {
+                throw new Error('Table metadata not modified');
+            }
+            throw error;
         }
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
     }
 
     /**
@@ -504,20 +439,13 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F');
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`;
 
-        const response = await fetch(url, {
+        return await this.makeRequest<LoadTableResult>(url, {
             method: 'POST',
             headers: {
-                ...this.getAuthHeaders(),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(request)
         });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
-
-        return await response.json();
     }
 
     /**
@@ -537,14 +465,7 @@ export class IcebergRestApiController {
             url.searchParams.set('purgeRequested', purgeRequested.toString());
         }
 
-        const response = await fetch(url.toString(), {
-            method: 'DELETE',
-            headers: this.getAuthHeaders()
-        });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
+        await this.makeRequest<void>(url.toString(), { method: 'DELETE' });
     }
 
     /**
@@ -559,12 +480,12 @@ export class IcebergRestApiController {
         const namespacePath = namespace.join('\u001F');
         const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`;
 
-        const response = await fetch(url, {
-            method: 'HEAD',
-            headers: this.getAuthHeaders()
-        });
-
-        return response.status === 204;
+        try {
+            const status = await this.makeRequest<number>(url, { method: 'HEAD' });
+            return status === 204;
+        } catch (error) {
+            return false;
+        }
     }
 
     /**
@@ -577,18 +498,13 @@ export class IcebergRestApiController {
     ): Promise<void> {
         const url = `${this.baseUrl}/v1/${prefix || ''}/tables/rename`;
 
-        const response = await fetch(url, {
+        await this.makeRequest<void>(url, {
             method: 'POST',
             headers: {
-                ...this.getAuthHeaders(),
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(request)
         });
-
-        if (!response.ok) {
-            throw await this.handleErrorResponse(response);
-        }
     }
 
     // ========================================
@@ -641,6 +557,68 @@ export class IcebergRestApiController {
     // ========================================
     // Private Helper Methods
     // ========================================
+
+    /**
+     * Generic method for making HTTP requests to the Iceberg REST API
+     * Supports proxy routing when proxyUrl is configured
+     */
+    private async makeRequest<T>(
+        targetUrl: string,
+        options: {
+            method?: string;
+            headers?: Record<string, string>;
+            body?: string;
+        } = {}
+    ): Promise<T> {
+        const { method = 'GET', headers = {}, body } = options;
+        
+        let requestUrl = targetUrl;
+
+        const requestOptions: RequestInit = {
+            method,
+            headers: { ...this.getAuthHeaders(), ...headers },
+            mode: 'cors',
+            credentials: 'omit'
+        };
+
+        // If proxy is configured, use it and add the target URL as headers
+        if (this.proxyUrl) {
+            requestUrl = this.proxyUrl;
+            requestOptions.headers = {
+                ...requestOptions.headers,
+                'X-Target-URL': targetUrl,
+                'X-Target-Base-URL': this.baseUrl.replace('/api/2.1/unity-catalog/iceberg-rest', '') // Remove API path for base URL
+            };
+        }
+
+        if (body && method !== 'GET') {
+            requestOptions.body = JSON.stringify(body);
+        }
+
+         const response = await fetch(requestUrl, requestOptions);
+
+        // Special handling for 304 Not Modified
+        if (response.status === 304) {
+            throw new Error('HTTP Error: 304 Not Modified');
+        }
+
+        if (!response.ok) {
+            throw await this.handleErrorResponse(response);
+        }
+
+        // Handle HEAD requests that don't return JSON
+        if (method === 'HEAD') {
+            return response.status as T;
+        }
+
+        // Handle DELETE requests that might not return JSON
+        if (method === 'DELETE') {
+            const text = await response.text();
+            return (text ? JSON.parse(text) : undefined) as T;
+        }
+
+        return await response.json() as T;
+    }
 
     private getAuthHeaders(): Record<string, string> {
         const headers: Record<string, string> = {};

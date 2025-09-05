@@ -16,6 +16,7 @@ export class IcebergShortcutController {
 
     constructor(workloadClient: WorkloadClientAPI, catalogConfig?: IcebergCatalogConfig) {
         this.shortcutClient = new OneLakeShortcutClient(workloadClient);
+        
         this.icebergApi = new IcebergRestApiController(catalogConfig);
     }
 
