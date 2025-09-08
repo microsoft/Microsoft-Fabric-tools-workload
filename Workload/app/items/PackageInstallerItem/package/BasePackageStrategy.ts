@@ -1,6 +1,6 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart } from "../PackageInstallerItemModel";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
@@ -126,7 +126,7 @@ export class BasePackageStrategy {
             packContext.log(`Processing item: ${item.displayName} (${item.id})`);
             
             // Download the item definition
-            const response = await this.context.fabricPlatformAPIClient.items.getItemDefinition(
+            const response = await this.context.fabricPlatformAPIClient.items.getItemDefinitionWithPolling(
                 item.workspaceId,
                 item.id
             );
@@ -148,8 +148,10 @@ export class BasePackageStrategy {
                     format: response?.definition?.format,
                     parts: parts
                 },
-                //TODO add interceptors and other stuff if needed
+                //if context.globalInterceptorId is set then add a reference to it
+                ...(packContext.globalInterceptorId ? { id: packContext.globalInterceptorId } as ReferenceInterceptorDefinitionConfig : {}),
             }
+            packContext.originalItemInfo[item.id] = item.displayName;
             return packageItem;
             
         } catch (error) {
@@ -167,7 +169,7 @@ export class BasePackageStrategy {
         );
 
         await this.context.fabricPlatformAPIClient.oneLakeStorage.writeFileAsBase64(
-            partFileName,
+            partPath,
             part.payload
         );        
 

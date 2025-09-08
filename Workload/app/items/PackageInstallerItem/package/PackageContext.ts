@@ -8,6 +8,8 @@ import { OneLakeStorageClientItemWrapper } from "../../../clients/OneLakeStorage
 export class PackageContext extends BaseContext {
 
     pack: Package
+    originalItemInfo: Record<string, string>;
+    globalInterceptorId: String;
     oneLakeClient: OneLakeStorageClientItemWrapper
 
     constructor(displayName: string, oneLakeClient: OneLakeStorageClientItemWrapper){
@@ -25,16 +27,17 @@ export class PackageContext extends BaseContext {
         return`Files/packages/${this.pack.id}`;
     }
 
-    get OneLakeDefinitionsPathInItem() {
-        return `${this.OneLakePackageFolderPathInItem}/definitions`;
-    }
 
     get OneLakePackageJsonPathInItem() {
         return `${this.OneLakePackageFolderPathInItem}/Package.json`;
     }
 
     getOneLakeDefinitionPathInItem(item: Item): string{
-        return `Files/${this.OneLakeDefinitionsPathInItem}/${this.sanitizeString(item.displayName)}`;
+        return `${this.OneLakePackageFolderPathInItem}/${this.sanitizeString(item.displayName)}/definitions`;
+    }
+
+    getOneLakeDataPathInItem(item: Item): string{
+        return `${this.OneLakePackageFolderPathInItem}/${this.sanitizeString(item.displayName)}/data`;
     }
 
     getOneLakeDefinionPartPathInItem(item: Item, part: ItemDefinitionPart): string {
