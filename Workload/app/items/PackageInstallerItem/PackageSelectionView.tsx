@@ -40,7 +40,7 @@ export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> 
                 padding: "10px"
               }}>
                 <img
-                  src={pack.icon}
+                  src={pack.icon ? pack.icon : "/assets/items/PackageInstallerItem/PackageDefault-icon.png"}
                   alt={pack.displayName}
                   style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "4px" }}
                 />

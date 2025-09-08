@@ -15,8 +15,7 @@ export class PackageCreationStrategyFactory {
      * @param packageInstallerItem The package installer item
      * @returns BasePackageStrategy instance
      */
-    static createStrategy(
-        
+    static createStrategy(        
         strategyType: PackageCreationStrategyType,
         context: PackageInstallerContext,
         packageInstallerItem: ItemWithDefinition<PackageInstallerItemDefinition>

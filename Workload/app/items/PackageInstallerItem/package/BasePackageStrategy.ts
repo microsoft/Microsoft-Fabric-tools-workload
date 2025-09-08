@@ -1,6 +1,6 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig } from "../PackageInstallerItemModel";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
@@ -14,6 +14,7 @@ export interface CreatePackageConfig {
     displayName: string, 
     description: string, 
     deploymentLocation: DeploymentLocation
+    updateItemReferences?: boolean;
 }
 
 /**
@@ -66,7 +67,7 @@ export class BasePackageStrategy {
 
     /**
      * Creates a package from a list of Fabric items.
-     * Downloads item definitions, creates Package.json, and stores everything in OneLake.
+     * Downloads item definitions, creates package.json, and stores everything in OneLake.
      * 
      * @param items List of Fabric items to include in the package
      * @param packageDisplayName Display name for the package
@@ -83,14 +84,19 @@ export class BasePackageStrategy {
         }
         const packContext = new PackageContext(config.displayName,
             this.context.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(this.item)
-        );
+        );        
         try {
+
+            if(config.updateItemReferences) {
+                packContext.globalInterceptorId = "Default";
+            }
 
             packContext.log(`Sanitized package name: ${packContext.pack.id}`);
             packContext.pack.description = config.description;
             packContext.pack.deploymentConfig = {
                 type: DeploymentType.UX,
                 location: config.deploymentLocation,
+                globalInterceptors: {}
             }
 
             packContext.log(`Creating package "${config.displayName}" with ${items.length} items`);
@@ -105,8 +111,25 @@ export class BasePackageStrategy {
                 JSON.stringify(packContext.pack, null, 2)
             );
 
-            packContext.log(`Package.json saved to: ${packContext.OneLakePackageJsonPathInItem}`);
+            packContext.log(`package.json saved to: ${packContext.OneLakePackageJsonPathInItem}`);
             packContext.log(`Package creation completed with ${packContext.pack.items.length} items`);
+
+            if(config.updateItemReferences) {
+                // Convert the originalItemInfo Record to string replacements for future use
+                const replacements: Record<string, string> = {};
+                Object.entries(packContext.originalItemInfo).forEach(([itemId, itemName]) => {
+                    replacements[itemId] = `{{${itemName}}}`;
+                });
+
+                const defaultInterceptor: ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig> = {
+                    type: ItemPartInterceptorType.StringReplacement,
+                    config: {
+                        replacements: replacements
+                    }
+                };
+                packContext.pack.deploymentConfig.globalInterceptors[packContext.globalInterceptorId] = defaultInterceptor;
+            }
+
 
             return {
                 package: packContext.pack,

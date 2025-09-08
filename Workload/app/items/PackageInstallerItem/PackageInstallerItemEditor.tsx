@@ -165,7 +165,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         if(item.definition?.oneLakePackages) {
           item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
-              const oneLakeClient = new OneLakeStorageClient(workloadClient)
+              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
               const pack = await oneLakeClient.readFileAsText(oneLakePath);
               context.packageRegistry.addPackage(pack);
             } catch (error) {
@@ -318,6 +318,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           packageDisplayName?: string;
           packageDescription?: string;
           deploymentLocation?: any;
+          updateItemReferences?: boolean;
         };
         
         if (result.state === 'package' && result.selectedItems && result.selectedItems.length > 0) {
@@ -328,7 +329,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             const packageStrategy = PackageCreationStrategyFactory.createStrategy(
               PackageCreationStrategyType.Standard,
               context, 
-              editorItem
+              editorItem,
             );
             
             // Use the provided display name and description from the wizard
@@ -340,7 +341,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
               {
                 displayName: packageDisplayName,
                 description: packageDescription,
-                deploymentLocation: result.deploymentLocation
+                deploymentLocation: result.deploymentLocation,
+                updateItemReferences: result.updateItemReferences
               },
               selectedItems
             );

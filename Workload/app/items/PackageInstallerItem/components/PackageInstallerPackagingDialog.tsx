@@ -21,6 +21,7 @@ export interface PackageInstallerPackagingResult {
     packageDisplayName?: string;
     packageDescription?: string;
     deploymentLocation?: DeploymentLocation;
+    updateItemReferences?: boolean;
 }
 
 export function PackageInstallerPackagingDialog(props: PackageInstallerPackagingProps) {
@@ -42,6 +43,7 @@ export function PackageInstallerPackagingDialog(props: PackageInstallerPackaging
     const [isLoadingItems, setIsLoadingItems] = useState<boolean>(false);
     const [searchText, setSearchText] = useState<string>("");
     const [error, setError] = useState<string>("");
+    const [updateItemReferences, setUpdateItemReferences] = useState<boolean>(true);
 
     // Load items when moving to step 2
     const loadItems = async () => {
@@ -97,7 +99,8 @@ export function PackageInstallerPackagingDialog(props: PackageInstallerPackaging
             workspaceId: selectedWorkspaceId,
             packageDisplayName,
             packageDescription,
-            deploymentLocation
+            deploymentLocation,
+            updateItemReferences
         };
         callDialogClose(workloadClient, CloseMode.PopOne, result);
     };
@@ -237,6 +240,24 @@ export function PackageInstallerPackagingDialog(props: PackageInstallerPackaging
                                 {t('New Workspace - Create a new workspace for this package')}
                             </Option>
                         </Dropdown>
+                    </div>
+
+                    {/* Update Item References Option */}
+                    <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '4px', border: '1px solid #e1dfdd' }}>
+                        <Checkbox
+                            checked={updateItemReferences}
+                            onChange={(ev, data) => setUpdateItemReferences(data.checked === true)}
+                            label={
+                                <div>
+                                    <Text weight="semibold" style={{ display: 'block' }}>
+                                        {t('Update Item References')}
+                                    </Text>
+                                    <Text size={200} style={{ color: '#616161', display: 'block', marginTop: '2px' }}>
+                                        {t('Automatically update item references on deployment to the newly created items.')}
+                                    </Text>
+                                </div>
+                            }
+                        />
                     </div>
                 </div>
             )}

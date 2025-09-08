@@ -9,12 +9,13 @@ export class PackageContext extends BaseContext {
 
     pack: Package
     originalItemInfo: Record<string, string>;
-    globalInterceptorId: String;
+    globalInterceptorId: string;
     oneLakeClient: OneLakeStorageClientItemWrapper
 
     constructor(displayName: string, oneLakeClient: OneLakeStorageClientItemWrapper){
         super()
         this.oneLakeClient = oneLakeClient;
+        this.originalItemInfo = {};
         this.pack = {
             id: this.sanitizeString(displayName, 25),
             displayName: displayName,
@@ -29,7 +30,7 @@ export class PackageContext extends BaseContext {
 
 
     get OneLakePackageJsonPathInItem() {
-        return `${this.OneLakePackageFolderPathInItem}/Package.json`;
+        return `${this.OneLakePackageFolderPathInItem}/package.json`;
     }
 
     getOneLakeDefinitionPathInItem(item: Item): string{
