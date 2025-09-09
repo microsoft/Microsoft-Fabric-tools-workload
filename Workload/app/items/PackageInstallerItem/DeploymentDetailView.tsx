@@ -61,14 +61,12 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
   return (
     <Card className="package-detail-card">
       <CardHeader
-        image={
-          pack?.icon && (
-            <img 
-              src={pack?.icon ? pack.icon : "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
-              alt={pack?.displayName}
-              style={{ width: "32px", height: "32px", objectFit: "contain" }}
-            />
-          )
+        image={          
+          <img 
+            src={pack?.icon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
+            alt={pack?.displayName}
+            style={{ width: "32px", height: "32px", objectFit: "contain" }}
+          />          
         }
         header={
           <Text weight="semibold" size={500}>
