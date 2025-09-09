@@ -64,7 +64,7 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
         image={
           pack?.icon && (
             <img 
-              src={pack?.icon} 
+              src={pack?.icon ? pack.icon : "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
               alt={pack?.displayName}
               style={{ width: "32px", height: "32px", objectFit: "contain" }}
             />
