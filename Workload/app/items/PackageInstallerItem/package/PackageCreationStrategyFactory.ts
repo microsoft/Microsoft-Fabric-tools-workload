@@ -8,6 +8,7 @@ import { PackageInstallerItemDefinition } from "../PackageInstallerItemModel";
  * Allows for different packaging strategies based on requirements.
  */
 export class PackageCreationStrategyFactory {
+    
     /**
      * Creates a package strategy instance
      * @param strategyType The type of packaging strategy to create
@@ -22,13 +23,9 @@ export class PackageCreationStrategyFactory {
     ): BasePackageStrategy {
         switch (strategyType) {
             case PackageCreationStrategyType.Standard:
-            default:
                 return new BasePackageStrategy(context, packageInstallerItem);
-            // Future strategy types can be added here:
-            // case PackageStrategyType.Minimal:
-            //     return new MinimalPackageStrategy(context, packageInstallerItem);
-            // case PackageStrategyType.Advanced:
-            //     return new AdvancedPackageStrategy(context, packageInstallerItem);
+            default:
+                throw new Error(`Unsupported package creation strategy type: ${strategyType}`);
         }
     }
 }
@@ -39,9 +36,4 @@ export class PackageCreationStrategyFactory {
 export enum PackageCreationStrategyType {
     /** Standard packaging strategy that includes all definition parts except defaults */
     Standard = "Standard",
-    // Future strategy types:
-    // /** Minimal packaging strategy that includes only essential parts */
-    // Minimal = "Minimal",
-    // /** Advanced packaging strategy with additional processing and optimization */
-    // Advanced = "Advanced"
 }

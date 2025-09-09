@@ -1,13 +1,38 @@
 import { DeploymentContext } from "./DeploymentContext";
 import { DeploymentStrategy } from "./BaseDeploymentStrategy";
-import { PackageDeployment, DeploymentStatus, PackageItemPayloadType } from "../PackageInstallerItemModel";
-import { SparkDeployment, SparkDeploymentItem, SparkDeploymentItemDefinition, SparkDeploymentReferenceType } from "./DeploymentModel";
+import { PackageDeployment, DeploymentStatus, PackageItemPayloadType, WorkspaceConfig } from "../PackageInstallerItemModel";
 import { BatchRequest, BatchState } from "../../../clients/FabricPlatformTypes";
 import { EnvironmentConstants } from "../../../constants";
 import { ContentHelper } from "./ContentHelper";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
 
 const defaultDeploymentSparkFile = "/assets/samples/items/PackageInstallerItem/jobs/DefaultPackageInstaller.py";
+
+export interface SparkDeployment {
+  deploymentScript: string;
+  workspace: WorkspaceConfig; // location information where to deploy to
+  deploymentId?: string; // The deployment id
+  items: SparkDeploymentItem[]
+}
+
+export interface SparkDeploymentItem {
+  name: string;
+  description: string;
+  itemType: string;
+  definitionParts?: SparkDeploymentItemDefinition[]; // Optional parts of the item definition
+}
+
+export enum SparkDeploymentReferenceType {
+  OneLake = "OneLake", 
+  Link = "Link",
+  InlineBase64 = "InlineBase64"
+}
+
+export interface SparkDeploymentItemDefinition {
+  path: string; // The OneLake file path for the item definition
+  payload: string; // The file reference for the item definition
+  payloadType: SparkDeploymentReferenceType
+}
 
 // Spark Livy Deployment Strategy
 export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
@@ -68,7 +93,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
     if (!this.deployment.job || !this.deployment.job.id) {
       throw new Error("No job ID found for deployment status update");
     }
-    const newPackageDeployment = await this.checkDeployementState();
+    const newPackageDeployment = await this.checkDeploymentState();
 
     const fabricAPI = this.context.fabricPlatformAPIClient;
     const batch = await fabricAPI.sparkLivy.getBatch(

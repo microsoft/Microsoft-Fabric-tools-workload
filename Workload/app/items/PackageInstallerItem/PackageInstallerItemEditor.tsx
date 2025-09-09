@@ -38,8 +38,6 @@ import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
-// Component to fetch and display folder name
-
 
 export function PackageInstallerItemEditor(props: PageProps) {
   const pageContext = useParams<ContextProps>();
@@ -232,10 +230,12 @@ export function PackageInstallerItemEditor(props: PageProps) {
         try {
           // Read file content
           const fileContent = await file.text();
-          
 
-          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(PackageCreationStrategyType.Standard,
-            context, editorItem);
+          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(
+            PackageCreationStrategyType.Standard,
+            context,
+            editorItem
+          );
           const packageResult = await packageCreationStrategy.createPackageFromJson(
             {
               displayName: undefined,

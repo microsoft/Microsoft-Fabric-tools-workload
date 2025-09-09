@@ -8,8 +8,33 @@ import { Interceptor, InterceptorFactory } from "../package/InterceptorFactory";
 import { DeploymentContext } from "./DeploymentContext";
 import { ContentHelper } from "./ContentHelper";
 
-// Abstract base class for deployment strategies
+/**
+ * Abstract base class for package deployment strategies in the Package Installer Item.
+ * 
+ * This class provides the core framework for deploying packages to Fabric workspaces,
+ * including workspace creation, item deployment, content handling, and status tracking.
+ * 
+ * Deployment strategies extend this class to implement specific deployment approaches:
+ * - UXDeploymentStrategy: Direct API-based deployment
+ * - SparkNotebookDeploymentStrategy: Notebook-based deployment with Spark execution
+ * - SparkLivyDeploymentStrategy: Livy session-based deployment
+ * 
+ * Key responsibilities:
+ * - Workspace and folder management
+ * - Item creation and definition handling
+ * - Content payload processing (Asset, Link, InlineBase64)
+ * - Deployment progress tracking
+ * - Error handling and status management
+ */
 export abstract class DeploymentStrategy {
+  /**
+   * Creates a new deployment strategy instance.
+   * 
+   * @param context - The package installer context providing access to clients and services
+   * @param item - The package installer item with its definition
+   * @param pack - The package to be deployed
+   * @param deployment - The deployment configuration and state
+   */
   constructor(
     protected context: PackageInstallerContext,
     protected item: ItemWithDefinition<PackageInstallerItemDefinition>,
@@ -18,7 +43,18 @@ export abstract class DeploymentStrategy {
   ) {
   }
 
-
+  /**
+   * Main deployment orchestration method that coordinates the deployment process.
+   * 
+   * This method handles:
+   * 1. Workspace and folder creation
+   * 2. Deployment context initialization
+   * 3. Calls to strategy-specific deployment logic
+   * 4. Error handling and status management
+   * 
+   * @param updateDeploymentProgress - Callback function to update deployment progress
+   * @returns Promise<PackageDeployment> - The final deployment state
+   */
   async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
     const depContext: DeploymentContext = new DeploymentContext(this.pack, this.deployment, updateDeploymentProgress);
     try {
@@ -43,17 +79,43 @@ export abstract class DeploymentStrategy {
   }
 
   /**
-   * Abstract method that each strategy must implement
-   * @param depContext the object that holds the context on all operations
+   * Abstract method that each deployment strategy must implement to define its specific deployment logic.
+   * 
+   * This method contains the core deployment implementation that varies between strategies:
+   * - UX Strategy: Direct API calls for immediate deployment
+   * - Spark Notebook Strategy: Creates and executes deployment notebook
+   * - Spark Livy Strategy: Uses Livy sessions for batch processing
+   * 
+   * @param depContext - The deployment context containing all necessary information for deployment
+   * @returns Promise<PackageDeployment> - The deployment result with status and created items
    */
   abstract deployInternal(depContext: DeploymentContext): Promise<PackageDeployment>;
 
   /**
-   * Abstract method to update deployment status depending on the underlying strategy
+   * Abstract method to update deployment status based on the strategy's execution model.
+   * 
+   * Different strategies track deployment progress differently:
+   * - UX Strategy: Immediate status updates during execution
+   * - Background Strategies: Polling job status and updating accordingly
+   * 
+   * @returns Promise<PackageDeployment> - Updated deployment with current status
    */
   abstract updateDeploymentStatus(): Promise<PackageDeployment>;
 
-  // Common functionality that all strategies can use
+  /**
+   * Creates or configures the target workspace and folder structure for deployment.
+   * 
+   * This method handles:
+   * - Creating new workspaces when specified in configuration
+   * - Assigning capacity to workspaces
+   * - Creating folder structures within workspaces
+   * - Updating deployment context with workspace information
+   * 
+   * @param workspaceConfig - Configuration for the target workspace
+   * @param depContext - Deployment context for progress tracking and state management
+   * @returns Promise<WorkspaceConfig> - Updated workspace configuration with created IDs
+   * @throws Error if workspace creation or folder creation fails
+   */
   protected async createWorkspaceAndFolder(workspaceConfig: WorkspaceConfig, depContext: DeploymentContext): Promise<WorkspaceConfig> {
 
     depContext.updateProgress("Creating Workspace enviroment ....", 30);
@@ -140,9 +202,18 @@ export abstract class DeploymentStrategy {
   }
 
   /**
-   * Creates the items in the 
-   * @param pack The package containing the items to create
-   * @param depContext The deployment context
+   * Creates all items defined in the package within the target workspace.
+   * 
+   * This method orchestrates the creation of Fabric items including:
+   * - Processing item definitions and converting payloads
+   * - Creating items with their definitions in the workspace
+   * - Handling schedules and shortcuts associated with items
+   * - Creating additional data files in OneLake if specified
+   * - Tracking progress through the deployment process
+   * 
+   * @param pack - The package containing items to be created
+   * @param depContext - Deployment context for progress tracking and logging
+   * @throws Error if item creation fails or required dependencies are missing
    */
   protected async createItems(pack: Package, depContext: DeploymentContext): Promise<void> {
     var percIteration = 70 / this.pack.items?.length
@@ -180,13 +251,19 @@ export abstract class DeploymentStrategy {
   }
 
   /**
-   * Creates the item in the 
-   * @param item The item to create
-   * @param workspaceId The workspace ID where the item should be created 
-   * @param folderId
-   * @param itemNameSuffix Optional suffix to append to the item name
-   * @param direct If true, the item will be created directly in the create call if false two api calls for create and update definition will be used. In this case the returned item cann be null because the call is async
-   * @returns 
+   * Creates a single Fabric item from a package item definition.
+   * 
+   * This method handles the complete lifecycle of item creation:
+   * - Creates the item with its definition in the workspace
+   * - Processes and uploads additional data files to OneLake
+   * - Creates associated shortcuts to other Fabric items
+   * - Sets up schedules for automated execution
+   * - Handles different installation types (standard vs. on-finish jobs)
+   * 
+   * @param depContext - Deployment context for workspace and progress tracking
+   * @param packItem - Package item definition containing all item configuration
+   * @returns Promise<Item> - The created Fabric item, or undefined for script-based items
+   * @throws Error if item creation fails or required configuration is missing
    */
   protected async createItem(depContext: DeploymentContext, packItem: PackageItem): Promise<Item> {
     let newItem: Item | undefined;
@@ -203,6 +280,24 @@ export abstract class DeploymentStrategy {
     return newItem;
   }
 
+  /**
+   * Creates the core Fabric item with its definition and content.
+   * 
+   * This method handles two creation approaches:
+   * 1. Creation with payload: Items created with initial content in a single API call
+   * 2. Standard creation: Items created first, then definition updated separately
+   * 
+   * The method processes:
+   * - Item metadata (name, description, type)
+   * - Creation payload for immediate content setup
+   * - Item definition conversion and content processing
+   * - Variable replacement in content using deployment context
+   * 
+   * @param packItem - Package item definition with all configuration
+   * @param depContext - Deployment context for workspace and variable mapping
+   * @returns Promise<Item> - The created Fabric item with complete definition
+   * @throws Error if item creation or definition update fails
+   */
   protected async createItemDefinition(packItem: PackageItem, depContext: DeploymentContext): Promise<Item> {
 
     let newItem;
@@ -374,8 +469,21 @@ export abstract class DeploymentStrategy {
     }
   }
 
-
-
+  /**
+   * Converts a package item definition to a Fabric ItemDefinition format.
+   * 
+   * This method processes package item definition parts and converts them to
+   * the format required by Fabric Platform APIs:
+   * - Retrieves content for each definition part (Asset, Link, or InlineBase64)
+   * - Applies content interceptors for custom processing
+   * - Converts all payloads to InlineBase64 format for consistent handling
+   * - Performs variable replacement using deployment context
+   * 
+   * @param depContext - Deployment context for variable mapping and logging
+   * @param itemDefinition - Package item definition with parts and format specification
+   * @returns Promise<ItemDefinition | undefined> - Converted definition ready for Fabric API
+   * @throws Error if content retrieval or conversion fails
+   */
   protected async convertPackageItemDefinition(depContext: DeploymentContext, itemDefinition: PackageItemDefinition): Promise<ItemDefinition | undefined> {
     const definitionParts = [];
     if (itemDefinition?.parts?.length > 0) {
@@ -397,10 +505,24 @@ export abstract class DeploymentStrategy {
     }
   }
 
-
-  /** 
-   * Retrieves the content of the deployment file based on its payload type
-   * @returns Promise<string> Base64 encoded content of the deployment file
+  /**
+   * Retrieves and processes content for a package item definition part.
+   * 
+   * This method handles different payload types and applies processing:
+   * - AssetLink: Retrieves content from workload assets
+   * - Link: Fetches content from external URLs
+   * - InlineBase64: Uses content directly from the package definition
+   * - Applies interceptor processing for custom content transformation
+   * - Performs variable replacement using deployment context
+   * 
+   * All content is returned as base64-encoded strings for consistent handling
+   * by the Fabric Platform APIs.
+   * 
+   * @param depContext - Deployment context for variable mapping and logging
+   * @param defPart - Package item part definition with payload information
+   * @param interceptorDef - Optional interceptor for custom content processing
+   * @returns Promise<string> - Base64 encoded content ready for Fabric API
+   * @throws Error if content retrieval fails or interceptor processing errors occur
    */
   private async getPackageItemPartContent(depContext: DeploymentContext, defPart: PackageItemPart, interceptorDef?: ItemPartInterceptorDefinition<any>): Promise<string> {
 
@@ -431,8 +553,22 @@ export abstract class DeploymentStrategy {
     return retVal;
   }
 
-
-  protected async checkDeployementState(): Promise<PackageDeployment> {
+  /**
+   * Checks and updates the deployment state by verifying item availability.
+   * 
+   * This method validates the deployment by:
+   * - Checking if deployed items still exist in the workspace
+   * - Verifying item accessibility and metadata
+   * - Updating deployment status based on item availability
+   * - Handling cases where items may have been deleted or become inaccessible
+   * 
+   * Used by background deployment strategies to monitor long-running deployments
+   * and provide accurate status updates to users.
+   * 
+   * @returns Promise<PackageDeployment> - Updated deployment with current item status
+   * @throws Error if workspace access fails or critical validation errors occur
+   */
+  protected async checkDeploymentState(): Promise<PackageDeployment> {
     console.log(`Checking item availability for deployment: ${this.deployment.id}`);
 
     // Create a copy of the original deployment
@@ -503,6 +639,19 @@ export abstract class DeploymentStrategy {
     return deploymentCopy;
   }
 
+  /**
+   * Checks the deployment state of individual items within a package deployment.
+   * 
+   * This method validates that deployed items are still accessible and functional:
+   * - Retrieves all existing items in the target workspace
+   * - Compares deployed items against current workspace state
+   * - Updates deployment status based on item availability
+   * - Logs any discrepancies or missing items
+   * 
+   * @param packDeployment - Package deployment to validate
+   * @returns Promise<void> - Updates deployment status in place
+   * @throws Error if workspace access fails during validation
+   */
   private async checkItemDeploymentState(packDeployment: PackageDeployment): Promise<void> {
 
     // Get all existing items in the workspace to check for conflicts
@@ -560,6 +709,21 @@ export abstract class DeploymentStrategy {
     });
   }
 
+  /**
+   * Finds a deployed item in the workspace that matches a package item definition.
+   * 
+   * This method searches for items by:
+   * - Matching item type (e.g., Notebook, Report, Dataset)
+   * - Matching display name exactly
+   * - Converting found items to DeployedItem format with metadata
+   * 
+   * Used during deployment validation to verify that items were created successfully
+   * and are accessible in the target workspace.
+   * 
+   * @param itemDef - Package item definition to search for
+   * @param items - List of existing items in the workspace to search through
+   * @returns Promise<DeployedItem | undefined> - Found item or undefined if not found
+   */
   private async getDeployedItem(itemDef: PackageItem, items: Item[]): Promise<DeployedItem | undefined> {
     // List of supported item types in Fabric
     const name = itemDef.displayName;
@@ -567,13 +731,29 @@ export abstract class DeploymentStrategy {
     if (deployedItem) {
       return {
         ...deployedItem,
-        itemDefenitionName: itemDef.displayName
+        itemDefinitionName: itemDef.displayName
       } as DeployedItem;
     } else {
       return undefined;
     }
   }
 
+  /**
+   * Updates deployment job information with the latest status from Fabric scheduler.
+   * 
+   * This method:
+   * - Retrieves current job status from Fabric Platform API
+   * - Updates job timing information (start/end times)
+   * - Updates job status and failure reason if applicable
+   * - Converts UTC timestamps to local Date objects
+   * 
+   * Used by background deployment strategies to monitor long-running jobs
+   * and provide accurate status updates to users.
+   * 
+   * @param depJobInfo - Deployment job information to update
+   * @returns Promise<void> - Updates job information in place
+   * @throws Error if job information retrieval fails
+   */
   protected async updateDeploymentJobInfo(depJobInfo: DeploymentJobInfo): Promise<void> {
     const fabricAPI = this.context.fabricPlatformAPIClient;
     const job = await fabricAPI.scheduler.getItemJobInstance(depJobInfo.item.workspaceId,

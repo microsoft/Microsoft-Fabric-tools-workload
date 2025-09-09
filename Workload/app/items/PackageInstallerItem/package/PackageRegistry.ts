@@ -156,12 +156,16 @@ export function convertConfigToPackage(pack: any): Package {
   };
 }
 
-// Package Registry Class for dynamic package management
+/**
+ * Package Registry Class for dynamic package management
+ */
 export class PackageRegistry {
   private packages: ConfiguredPackages = {};
   private initialized = false;
 
-  // Load packages from asset config files
+  /**
+   * Loads package configurations from asset files.
+   */
   async loadFromAssets(): Promise<void> {
     if (this.initialized) return;
 
@@ -210,7 +214,10 @@ export class PackageRegistry {
     }
   }
 
-  // Add a package dynamically
+  /**
+   * Adds a package dynamically.
+   * @param packageConfig - The package configuration to add.
+   */
   addPackage(packageConfig: Package): void {
     try {
       const packageObj = typeof packageConfig.id === 'string' 
@@ -224,7 +231,11 @@ export class PackageRegistry {
       throw error;
     }
   }
-  // Remove a package
+
+  /**
+   * Removes a package dynamically.
+   * @param id - The ID of the package to remove.
+   */
   removePackage(id: string): boolean {
     if (this.packages[id]) {
       delete this.packages[id];
@@ -234,42 +245,62 @@ export class PackageRegistry {
     return false;
   }
 
-  // Get all packages
+  /**
+   * Gets all packages.
+   */
   getAllPackages(): ConfiguredPackages {
     return { ...this.packages };
   }
 
-  // Get packages as array
+  /**
+   * Gets all packages as an array.
+   */
   getPackagesArray(): Package[] {
     return Object.values(this.packages);
   }
 
-  // Get specific package
+  /**
+   * Gets a specific package.
+   * @param id - The ID of the package to retrieve.
+   * @returns The package if found, or undefined.
+   */
   getPackage(id: string): Package | undefined {
     return this.packages[id];
   }
 
-  // Check if package exists
+  /**
+   * Checks if a package exists.
+   * @param id - The ID of the package to check.
+   * @returns True if the package exists, false otherwise.
+   */
   hasPackage(id: string): boolean {
     return id in this.packages;
   }
 
-  // Clear all packages
+  /**
+   * Clears all packages.
+   */
   clear(): void {
     this.packages = {};
     this.initialized = false;
   }
 }
 
-// Create global registry instance
+/**
+ * Global package registry instance.
+ */
 export const packageRegistry = new PackageRegistry();
 
-// Initialize packages from assets (call this during app startup)
+/**
+ * Initialize packages from assets (call this during app startup)
+ */
 export async function initializePackages(): Promise<void> {
   await packageRegistry.loadFromAssets();
 }
 
-// Utility function to load packages from a specific directory
+/**
+ * Utility function to load packages from a specific directory
+ */
 export async function loadPackagesFromDirectory(packageConfigs: any[]): Promise<void> {
   packageConfigs.forEach(config => {
     try {

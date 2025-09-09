@@ -5,11 +5,18 @@ import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
 
+
+/**
+ * Result of package creation process.
+ */
 export interface PackageCreationResult {
     package: Package
     oneLakeLocation: string
 }
 
+/**
+ * Configuration options for creating a package.
+ */
 export interface CreatePackageConfig {
     originalWorkspaceId?: string;
     displayName: string, 
@@ -27,6 +34,12 @@ export class BasePackageStrategy {
     private context: PackageInstallerContext;
     private item: ItemWithDefinition<PackageInstallerItemDefinition>;
 
+    /**
+     * Creates a new BasePackageStrategy instance.
+     * 
+     * @param context - The package installer context providing access to clients and services
+     * @param item - The package installer item with its definition
+     */
     constructor(
         context: PackageInstallerContext,
         item: ItemWithDefinition<PackageInstallerItemDefinition>
@@ -148,6 +161,16 @@ export class BasePackageStrategy {
         }
     }
 
+    /**
+     * Processes a single item for inclusion in the package.
+     * 
+     * This method handles item-specific logic such as definition extraction,
+     * metadata collection, and error handling.
+     * 
+     * @param packContext - The package context providing access to package metadata and utilities
+     * @param item - The Fabric item to process
+     * @returns The processed package item
+     */
     private async processItem(packContext: PackageContext, item: Item): Promise<PackageItem> {
         try {
             packContext.log(`Processing item: ${item.displayName} (${item.id})`);
@@ -199,8 +222,19 @@ export class BasePackageStrategy {
         }
     }
 
+    /**
+     * Stores a definition part for a Fabric item in the package context.
+     * 
+     * This method handles the logic for saving item definition parts to the
+     * OneLake storage, including path generation and error handling.
+     * 
+     * @param packContext - The package context providing access to package metadata and utilities
+     * @param item - The Fabric item being processed
+     * @param part - The definition part to store
+     * @returns The stored package item part
+     */
     private async storeItemDefinitionPart(packContext: PackageContext, item: Item, part: ItemDefinitionPart): Promise<PackageItemPart> {
-        const partFileName = packContext.getOneLakeDefinionPartPathInItem(item, part);
+        const partFileName = packContext.getOneLakeDefinitionPartPathInItem(item, part);
         const partPath = OneLakeStorageClient.getPath(
             this.item.workspaceId,
             this.item.id,
@@ -221,6 +255,14 @@ export class BasePackageStrategy {
     }
 
 
+    /**
+     * Writes the packaging logs to OneLake storage.
+     * 
+     * This method retrieves the log text from the package context and saves it
+     * to a designated file in OneLake storage for later review.
+     * 
+     * @param packContext - The package context providing access to package metadata and utilities
+     */
     private async writeLogsToOneLake(packContext: PackageContext): Promise<void> {
         const log = await packContext.getLogText();
         const oneLakeClient = this.context.getOneLakeClientItemWrapper(this.item);
