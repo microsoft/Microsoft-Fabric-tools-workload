@@ -166,7 +166,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
           item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
               const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
-              const pack = await oneLakeClient.readFileAsText(oneLakePath);
+              const packJson = await oneLakeClient.readFileAsText(oneLakePath);
+              const pack = JSON.parse(packJson);
               context.packageRegistry.addPackage(pack);
             } catch (error) {
               console.error(`Failed to add package from Onelake ${oneLakePath}:`, error);
@@ -306,7 +307,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         workloadClient,
         process.env.WORKLOAD_NAME,
         `/PackageInstallerItem-packaging-dialog/${editorItem.id}`,
-        800, 600,
+        900, 700,
         true
       );
 
@@ -360,7 +361,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             await SaveItem(newItemDefinition);
             
             // Add the created package to the package registry using the actual package data
-            context.packageRegistry.addPackage(createdPackageItem);
+            context.packageRegistry.addPackage(createdPackageItem.package);
 
             callNotificationOpen(
               workloadClient,
@@ -544,11 +545,14 @@ export function PackageInstallerItemEditor(props: PageProps) {
     const pack = context.getPackage(deployment.packageId);
     const deploymentLocation = pack?.deploymentConfig.location;
     
+    // Serialize package data to pass to dialog
+    const packageDataParam = pack ? encodeURIComponent(JSON.stringify(pack)) : '';
+    
     const dialogResult = await callDialogOpen(
       workloadClient,
       process.env.WORKLOAD_NAME,
-      `/PackageInstallerItem-deploy-dialog/${editorItem.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}`,
-      500, 500,
+      `/PackageInstallerItem-deploy-dialog/${editorItem.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
+      800, 600,
       true)
     const result = dialogResult.value as PackageInstallerDeployResult;
 

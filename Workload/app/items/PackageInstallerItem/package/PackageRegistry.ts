@@ -211,7 +211,7 @@ export class PackageRegistry {
   }
 
   // Add a package dynamically
-  addPackage(packageConfig: Package | any): void {
+  addPackage(packageConfig: Package): void {
     try {
       const packageObj = typeof packageConfig.id === 'string' 
         ? packageConfig as Package 
