@@ -340,6 +340,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             // Create the package
             const createdPackageItem = await packageStrategy.createPackageFromItems(           
               {
+                originalWorkspaceId: result.workspaceId,
                 displayName: packageDisplayName,
                 description: packageDescription,
                 deploymentLocation: result.deploymentLocation,

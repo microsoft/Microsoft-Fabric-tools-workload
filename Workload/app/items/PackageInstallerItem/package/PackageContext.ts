@@ -5,7 +5,10 @@ import { OneLakeStorageClientItemWrapper } from "../../../clients/OneLakeStorage
 
 
 
-export class PackageContext extends BaseContext {
+export class PackageContext extends BaseContext {    
+
+    private static readonly UNSUPPORTED_ITEM_DEFINITION_TYPES = ["Lakehouse"]
+    public static readonly UNSUPPORTED_PACKAGE_ITEM_TYPES = ["SQLEndpoint"]
 
     pack: Package
     originalItemInfo: Record<string, string>;
@@ -22,6 +25,10 @@ export class PackageContext extends BaseContext {
             description: "",
             items: []
         }
+    }
+
+    supportsDefinition(item: Item) {
+        return !PackageContext.UNSUPPORTED_ITEM_DEFINITION_TYPES.includes(item.type);
     }
 
     get OneLakePackageFolderPathInItem() {

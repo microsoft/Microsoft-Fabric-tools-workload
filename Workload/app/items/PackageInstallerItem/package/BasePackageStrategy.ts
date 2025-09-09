@@ -1,6 +1,6 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType } from "../PackageInstallerItemModel";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType, DeploymentVariables } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
@@ -11,6 +11,7 @@ export interface PackageCreationResult {
 }
 
 export interface CreatePackageConfig {
+    originalWorkspaceId?: string;
     displayName: string, 
     description: string, 
     deploymentLocation: DeploymentLocation
@@ -106,17 +107,13 @@ export class BasePackageStrategy {
             const processedItems = await Promise.all(items?.map(item => this.processItem(packContext, item)));
             packContext.pack.items = processedItems.filter(item => item !== undefined) as PackageItem[];
 
-            await packContext.oneLakeClient.writeFileAsText(
-                packContext.OneLakePackageJsonPathInItem,
-                JSON.stringify(packContext.pack, null, 2)
-            );
-
-            packContext.log(`package.json saved to: ${packContext.OneLakePackageJsonPathInItem}`);
-            packContext.log(`Package creation completed with ${packContext.pack.items.length} items`);
-
             if(config.updateItemReferences) {
                 // Convert the originalItemInfo Record to string replacements for future use
                 const replacements: Record<string, string> = {};
+
+                if(config.originalWorkspaceId){
+                    replacements[config.originalWorkspaceId] = DeploymentVariables.WORKSPACE_ID; // Ensure original workspace ID is always replaced
+                }
                 Object.entries(packContext.originalItemInfo).forEach(([itemId, itemName]) => {
                     replacements[itemId] = `{{${itemName}}}`;
                 });
@@ -130,6 +127,13 @@ export class BasePackageStrategy {
                 packContext.pack.deploymentConfig.globalInterceptors[packContext.globalInterceptorId] = defaultInterceptor;
             }
 
+            await packContext.oneLakeClient.writeFileAsText(
+                packContext.OneLakePackageJsonPathInItem,
+                JSON.stringify(packContext.pack, null, 2)
+            );
+
+            packContext.log(`package.json saved to: ${packContext.OneLakePackageJsonPathInItem}`);
+            packContext.log(`Package creation completed with ${packContext.pack.items.length} items`);
 
             return {
                 package: packContext.pack,
@@ -148,31 +152,43 @@ export class BasePackageStrategy {
         try {
             packContext.log(`Processing item: ${item.displayName} (${item.id})`);
             
-            // Download the item definition
-            const response = await this.context.fabricPlatformAPIClient.items.getItemDefinitionWithPolling(
-                item.workspaceId,
-                item.id
-            );
+            const useDefinition = packContext.supportsDefinition(item);
 
-            packContext.log(`Successfully downloaded definition for: ${item.displayName}`);
-            
-            var parts: PackageItemPart[] = [];
-            // Store  definition parts if available
-            if (response?.definition?.parts) {
-                parts = await Promise.all(
-                    response.definition.parts.map(part => this.storeItemDefinitionPart(packContext, item, part))
+            var packageItemDefinition = undefined;
+            if(useDefinition) {
+                // Download the item definition
+                const response = await this.context.fabricPlatformAPIClient.items.getItemDefinitionWithPolling(
+                    item.workspaceId,
+                    item.id
                 );
+
+                packContext.log(`Successfully downloaded definition for: ${item.displayName}`);
+                
+                var parts: PackageItemPart[] = [];
+                // Store  definition parts if available
+                if (response?.definition?.parts) {
+                    parts = await Promise.all(
+                        response.definition.parts.map(part => this.storeItemDefinitionPart(packContext, item, part))
+                    );
+                }
+                packageItemDefinition = {
+                    format: response?.definition?.format,
+                    parts: parts
+                };
             }
             const packageItem: PackageItem = {
                 displayName: item.displayName,
                 description: item.description,
                 type: item.type,
-                definition: {
-                    format: response?.definition?.format,
-                    parts: parts
-                },
-                //if context.globalInterceptorId is set then add a reference to it
-                ...(packContext.globalInterceptorId ? { id: packContext.globalInterceptorId } as ReferenceInterceptorDefinitionConfig : {}),
+                definition: packageItemDefinition,                
+            }
+            if(packContext.globalInterceptorId && packageItem.definition) {
+                packageItem.definition.interceptor = {                    
+                    type: ItemPartInterceptorType.Reference,
+                    config: {
+                        id: packContext.globalInterceptorId
+                    }
+                } as ItemPartInterceptorDefinition<ReferenceInterceptorDefinitionConfig>;
             }
             packContext.originalItemInfo[item.id] = item.displayName;
             return packageItem;

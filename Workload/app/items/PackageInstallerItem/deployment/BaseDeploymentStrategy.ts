@@ -414,7 +414,8 @@ export abstract class DeploymentStrategy {
         retVal = await ContentHelper.getLinkContentAsBase64(depContext, defPart.payload);
         break;
       case PackageItemPayloadType.OneLake:
-        retVal = await this.context.fabricPlatformAPIClient.oneLakeStorage.readFileAsBase64(defPart.payload);
+        const oneLakeClient = this.context.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(this.item);
+        retVal = await oneLakeClient.readFileAsBase64(defPart.payload);
         break;
       case PackageItemPayloadType.InlineBase64:
         // Use base64 payload directly

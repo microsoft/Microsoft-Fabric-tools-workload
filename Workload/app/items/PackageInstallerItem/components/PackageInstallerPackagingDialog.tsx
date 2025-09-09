@@ -9,6 +9,7 @@ import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClien
 import { Item } from "../../../clients/FabricPlatformTypes";
 import { DeploymentLocation } from "../PackageInstallerItemModel";
 import { WizardControl, WizardStep } from "../../../controls/WizardControl";
+import { PackageContext } from "../package/PackageContext";
 
 export interface PackageInstallerPackagingProps extends PageProps {
     title?: string;
@@ -76,7 +77,11 @@ export function PackageInstallerPackagingDialog(props: PackageInstallerPackaging
             setIsLoadingItems(true);
             setError("");
             const fabricAPI = new FabricPlatformAPIClient(workloadClient);
-            const itemList = await fabricAPI.items.getAllItems(selectedWorkspaceId);
+            const allItems = await fabricAPI.items.getAllItems(selectedWorkspaceId);
+            const itemList = allItems.filter(item => {
+                // Exclude unsupported item types
+                return !PackageContext.UNSUPPORTED_PACKAGE_ITEM_TYPES.includes(item.type);
+            });
             setItems(itemList);
             setSelectedItems(new Set());
         } catch (err) {
