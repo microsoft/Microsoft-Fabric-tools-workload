@@ -75,6 +75,16 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           icon={<Settings24Regular />}
           onClick={onSettingsClicked} />
       </Tooltip>
+      <Tooltip
+        content="Refresh Deployment Status"
+        relationship="label">
+        <ToolbarButton
+          disabled={props.isDeploymentInProgress}
+          aria-label="Refresh Deployments"
+          data-testid="item-editor-refresh-deployments-btn"
+          icon={<ArrowSync24Regular />}
+          onClick={ onRefreshDeploymentsClicked } />
+      </Tooltip>
       <ToolbarDivider />
       <Tooltip
         content="Create Installation"
@@ -86,28 +96,8 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           icon={<Add24Regular />}
           onClick={ onCreateInstallationClicked } />
       </Tooltip>
-      <Tooltip
-        content="Refresh Deployment Status"
-        relationship="label">
-        <ToolbarButton
-          disabled={props.isDeploymentInProgress}
-          aria-label="Refresh Deployments"
-          data-testid="item-editor-refresh-deployments-btn"
-          icon={<ArrowSync24Regular />}
-          onClick={ onRefreshDeploymentsClicked } />
-      </Tooltip>
 
-      <Tooltip
-        content="Upload Package JSON"
-        relationship="label">
-        <ToolbarButton
-          disabled={props.isDeploymentInProgress}
-          aria-label="Upload Package JSON"
-          data-testid="item-editor-upload-package-btn"
-          icon={<DocumentAdd24Regular />}
-          onClick={ onUploadPackageClicked } />
-      </Tooltip>
-
+      <ToolbarDivider />
       <Tooltip
         content="Create Package"
         relationship="label">
@@ -117,6 +107,17 @@ const PackageInstallerItemEditorRibbonHome = (props: PackageInstallerItemEditorR
           data-testid="item-editor-create-package-btn"
           icon={<BoxMultiple24Regular />}
           onClick={ onCreatePackageClicked } />
+      </Tooltip>
+      
+      <Tooltip
+        content="Upload Package JSON"
+        relationship="label">
+        <ToolbarButton
+          disabled={props.isDeploymentInProgress}
+          aria-label="Upload Package JSON"
+          data-testid="item-editor-upload-package-btn"
+          icon={<DocumentAdd24Regular />}
+          onClick={ onUploadPackageClicked } />
       </Tooltip>
     </Toolbar>
   );

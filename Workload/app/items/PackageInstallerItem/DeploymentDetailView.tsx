@@ -61,14 +61,12 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
   return (
     <Card className="package-detail-card">
       <CardHeader
-        image={
-          pack?.icon && (
-            <img 
-              src={pack?.icon} 
-              alt={pack?.displayName}
-              style={{ width: "32px", height: "32px", objectFit: "contain" }}
-            />
-          )
+        image={          
+          <img 
+            src={pack?.icon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
+            alt={pack?.displayName}
+            style={{ width: "32px", height: "32px", objectFit: "contain" }}
+          />          
         }
         header={
           <Text weight="semibold" size={500}>
@@ -311,17 +309,17 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
 
 // Add some basic styles to improve the component's appearance
 export const styles = `
-.deplyoment-detail-card {
+.deployment-detail-card {
   margin-bottom: 16px;
   width: 100%;
   max-width: 600px;
 }
 
-.deplyoment-info {
+.deployment-info {
   padding: 0 16px 16px;
 }
 
-.deplyoment-detail-row {
+.deployment-detail-row {
   display: flex;
   justify-content: space-between;
   margin: 6px 0;

@@ -98,7 +98,7 @@ export interface DeploymentJobInfo {
  */
 export interface DeployedItem extends Item {
   /** Name of the item definition used to create this deployed item */
-  itemDefenitionName: string;
+  itemDefinitionName: string;
 }
 
 /**

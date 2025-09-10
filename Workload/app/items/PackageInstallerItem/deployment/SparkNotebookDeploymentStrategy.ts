@@ -3,10 +3,36 @@ import { DeploymentStrategy } from "./BaseDeploymentStrategy";
 import { DeployedItem, PackageDeployment, DeploymentStatus, PackageItem } from "../PackageInstallerItemModel";
 import { ContentHelper } from "./ContentHelper";
 
-// Spark Notebook Deployment Strategy
+/**
+ * Spark Notebook Deployment Strategy
+ * 
+ * Leverages a Spark notebook for the deployment process. The notebook is created dynamically 
+ * based on the deployment configuration and executed using the Fabric OnDemand job scheduler.
+ * 
+ * This strategy is suitable for:
+ * - Complex deployment scenarios requiring custom logic
+ * - Integration with Spark ecosystem and data processing
+ * - Scenarios where deployment needs to be logged and tracked through notebook execution
+ * - Deployments that require Spark cluster resources
+ * 
+ * The strategy creates a temporary notebook with the deployment configuration and executes it
+ * as a background job, providing asynchronous deployment with job status tracking.
+ */
 export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
 
-
+  /**
+   * Executes the internal deployment logic for Spark Notebook strategy.
+   * 
+   * This method:
+   * 1. Creates a temporary Spark notebook with the deployment configuration
+   * 2. Starts a RunNotebook job using the Fabric OnDemand scheduler
+   * 3. Configures job parameters and execution environment
+   * 4. Returns deployment status with job tracking information
+   * 
+   * @param depContext - The deployment context containing workspace, package, and progress tracking
+   * @returns Promise<PackageDeployment> - The deployment object with job information and status
+   * @throws Error if no deployment file is specified in the package configuration
+   */
   async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
     console.log(`Deploying package via Spark Notebook for item: ${this.item.id}. Deployment: ${this.deployment.id} with type: ${this.pack.id}`);
 
@@ -19,7 +45,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     const depConfig = this.pack.deploymentConfig;
     const fabricAPI = this.context.fabricPlatformAPIClient;
 
-    depContext.updateProgress("Deploying Notebook for further deployment  ....", 40);
+    depContext.updateProgress("Deploying Notebook for further deployment...", 40);
     const nbItemDef: PackageItem = {
       displayName: `Deploy_${this.pack.id}`,
       type: "Notebook", // Spark Notebook item type
@@ -42,7 +68,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
 
     createdItems.push({
       ...notebookItem,
-      itemDefenitionName: "<Spark Notebook Deployment file>"
+      itemDefinitionName: "<Spark Notebook Deployment file>"
     });
 
     //create the parameters object for the notebook
@@ -50,7 +76,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     ContentHelper.replaceVariablesInObject(notebookParameters, depContext.variableMap);
 
     // Start a RunNotebook job on the created notebook
-    depContext.updateProgress("Starting background deployment job  ....", 50);
+    depContext.updateProgress("Starting background deployment job...", 50);
     const jobInstanceId = await fabricAPI.scheduler.runOnDemandItemJob(
       depContext.deployment.workspace.id,
       notebookItem.id,
@@ -92,9 +118,20 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     return depContext.deployment;
   }
 
+  /**
+   * Updates the deployment status by checking the associated Spark job status.
+   * 
+   * This method:
+   * 1. Checks the current state of the RunNotebook job
+   * 2. Updates job information with current status and execution details
+   * 3. Maps Spark job status to deployment status
+   * 4. Returns updated deployment information
+   * 
+   * @returns Promise<PackageDeployment> - Updated deployment with current job status
+   */
   async updateDeploymentStatus(): Promise<PackageDeployment> {
 
-    const newDeplyoment = await this.checkDeployementState();
+    const newDeployment = await this.checkDeploymentState();
 
     // Create updated job info with converted dates
     const updatedJob = {
@@ -104,9 +141,9 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     this.updateDeploymentJobInfo(updatedJob);
     // Map the job status to deployment status
     const deploymentStatus = this.mapJobStatusToDeploymentStatus(updatedJob.status);
-    newDeplyoment.status = deploymentStatus;
-    newDeplyoment.job = updatedJob;
-    return newDeplyoment;
+    newDeployment.status = deploymentStatus;
+    newDeployment.job = updatedJob;
+    return newDeployment;
   }
 
 }

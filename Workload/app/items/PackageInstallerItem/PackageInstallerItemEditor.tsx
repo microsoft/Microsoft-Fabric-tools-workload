@@ -38,8 +38,6 @@ import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
-// Component to fetch and display folder name
-
 
 export function PackageInstallerItemEditor(props: PageProps) {
   const pageContext = useParams<ContextProps>();
@@ -165,8 +163,9 @@ export function PackageInstallerItemEditor(props: PageProps) {
         if(item.definition?.oneLakePackages) {
           item.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
-              const oneLakeClient = new OneLakeStorageClient(workloadClient)
-              const pack = await oneLakeClient.readFileAsText(oneLakePath);
+              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+              const packJson = await oneLakeClient.readFileAsText(oneLakePath);
+              const pack = JSON.parse(packJson);
               context.packageRegistry.addPackage(pack);
             } catch (error) {
               console.error(`Failed to add package from Onelake ${oneLakePath}:`, error);
@@ -231,10 +230,12 @@ export function PackageInstallerItemEditor(props: PageProps) {
         try {
           // Read file content
           const fileContent = await file.text();
-          
 
-          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(PackageCreationStrategyType.Standard,
-            context, editorItem);
+          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(
+            PackageCreationStrategyType.Standard,
+            context,
+            editorItem
+          );
           const packageResult = await packageCreationStrategy.createPackageFromJson(
             {
               displayName: undefined,
@@ -306,7 +307,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         workloadClient,
         process.env.WORKLOAD_NAME,
         `/PackageInstallerItem-packaging-dialog/${editorItem.id}`,
-        800, 600,
+        900, 700,
         true
       );
 
@@ -318,6 +319,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           packageDisplayName?: string;
           packageDescription?: string;
           deploymentLocation?: any;
+          updateItemReferences?: boolean;
         };
         
         if (result.state === 'package' && result.selectedItems && result.selectedItems.length > 0) {
@@ -328,7 +330,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             const packageStrategy = PackageCreationStrategyFactory.createStrategy(
               PackageCreationStrategyType.Standard,
               context, 
-              editorItem
+              editorItem,
             );
             
             // Use the provided display name and description from the wizard
@@ -338,9 +340,11 @@ export function PackageInstallerItemEditor(props: PageProps) {
             // Create the package
             const createdPackageItem = await packageStrategy.createPackageFromItems(           
               {
+                originalWorkspaceId: result.workspaceId,
                 displayName: packageDisplayName,
                 description: packageDescription,
-                deploymentLocation: result.deploymentLocation
+                deploymentLocation: result.deploymentLocation,
+                updateItemReferences: result.updateItemReferences
               },
               selectedItems
             );
@@ -358,7 +362,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             await SaveItem(newItemDefinition);
             
             // Add the created package to the package registry using the actual package data
-            context.packageRegistry.addPackage(createdPackageItem);
+            context.packageRegistry.addPackage(createdPackageItem.package);
 
             callNotificationOpen(
               workloadClient,
@@ -542,11 +546,14 @@ export function PackageInstallerItemEditor(props: PageProps) {
     const pack = context.getPackage(deployment.packageId);
     const deploymentLocation = pack?.deploymentConfig.location;
     
+    // Serialize package data to pass to dialog
+    const packageDataParam = pack ? encodeURIComponent(JSON.stringify(pack)) : '';
+    
     const dialogResult = await callDialogOpen(
       workloadClient,
       process.env.WORKLOAD_NAME,
-      `/PackageInstallerItem-deploy-dialog/${editorItem.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}`,
-      500, 500,
+      `/PackageInstallerItem-deploy-dialog/${editorItem.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
+      800, 600,
       true)
     const result = dialogResult.value as PackageInstallerDeployResult;
 
@@ -624,7 +631,7 @@ async function addDeployment(packageId: string) {
     // Update the selectedSolution state
     setSelectedDeployment(updatedDeployment);
 
-    // Update the deplyoments in the editorItem.definition.deployments array
+    // Update the deployments in the editorItem.definition.deployments array
     if (editorItem?.definition?.deployments) {
       const updatedSolutions = editorItem.definition.deployments.map(deployment =>
         deployment.id === updatedDeployment.id ? updatedDeployment : deployment
@@ -837,7 +844,7 @@ async function startDeployment(context: PackageInstallerContext,
 
   try {
     // This allows us to track the deployment status without affecting the original deployment object
-    updateDeploymentProgress?.("Validating config ....", 10);
+    updateDeploymentProgress?.("Validating config...", 10);
     if (!newDeployment.workspace) {
       throw new Error("Deployment workspace is not defined");
     }
@@ -862,7 +869,7 @@ async function startDeployment(context: PackageInstallerContext,
               newDeployment,              
     );
     //set the updated deployment object
-    updateDeploymentProgress?.("Starting deployment ....", 20);
+    updateDeploymentProgress?.("Starting deployment...", 20);
     newDeployment = await strategy.deploy(updateDeploymentProgress);
 
     switch (newDeployment.status) {
