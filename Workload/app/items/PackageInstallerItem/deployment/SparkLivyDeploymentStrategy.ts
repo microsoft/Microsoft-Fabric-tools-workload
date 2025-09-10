@@ -39,10 +39,15 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
 
 
   async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
+    throw new Error("Deployment not implemented");
+  }
+
+
+  // Old deployment method that needs to be revised and updated including the Spark script that was used originally
+  async deployInternalOld(depContext: DeploymentContext): Promise<PackageDeployment> {
 
     depContext.updateProgress("Copy data to OneLake...", 40);
     const sparkDeployment = await this.copyPackageContentToItem(depContext);
-    //TODO needs to be implemented!
     const lakehouseId: string = undefined;
     if (!lakehouseId) {
       throw new Error("Lakehouse ID is not defined for the package deployment.");
