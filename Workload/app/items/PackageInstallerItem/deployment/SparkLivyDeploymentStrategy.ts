@@ -40,7 +40,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
 
   async deployInternal(depContext: DeploymentContext): Promise<PackageDeployment> {
 
-    depContext.updateProgress("Copy data to Onelake  ....", 40);
+    depContext.updateProgress("Copy data to OneLake...", 40);
     const sparkDeployment = await this.copyPackageContentToItem(depContext);
     //TODO needs to be implemented!
     const lakehouseId: string = undefined;
@@ -48,7 +48,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
       throw new Error("Lakehouse ID is not defined for the package deployment.");
     }
 
-    depContext.updateProgress("Starting deployment batch job  ....", 40);
+    depContext.updateProgress("Starting deployment batch job...", 40);
     const batchRequest: BatchRequest = {
       name: `${this.item.displayName} - Deployment - ${this.deployment.packageId} - ${this.deployment.id}`,
       file: sparkDeployment.deploymentScript,

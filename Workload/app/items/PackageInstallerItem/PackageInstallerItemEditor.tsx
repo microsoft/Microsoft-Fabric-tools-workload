@@ -631,7 +631,7 @@ async function addDeployment(packageId: string) {
     // Update the selectedSolution state
     setSelectedDeployment(updatedDeployment);
 
-    // Update the deplyoments in the editorItem.definition.deployments array
+    // Update the deployments in the editorItem.definition.deployments array
     if (editorItem?.definition?.deployments) {
       const updatedSolutions = editorItem.definition.deployments.map(deployment =>
         deployment.id === updatedDeployment.id ? updatedDeployment : deployment
@@ -844,7 +844,7 @@ async function startDeployment(context: PackageInstallerContext,
 
   try {
     // This allows us to track the deployment status without affecting the original deployment object
-    updateDeploymentProgress?.("Validating config ....", 10);
+    updateDeploymentProgress?.("Validating config...", 10);
     if (!newDeployment.workspace) {
       throw new Error("Deployment workspace is not defined");
     }
@@ -869,7 +869,7 @@ async function startDeployment(context: PackageInstallerContext,
               newDeployment,              
     );
     //set the updated deployment object
-    updateDeploymentProgress?.("Starting deployment ....", 20);
+    updateDeploymentProgress?.("Starting deployment...", 20);
     newDeployment = await strategy.deploy(updateDeploymentProgress);
 
     switch (newDeployment.status) {

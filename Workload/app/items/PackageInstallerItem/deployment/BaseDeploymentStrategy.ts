@@ -118,7 +118,7 @@ export abstract class DeploymentStrategy {
    */
   protected async createWorkspaceAndFolder(workspaceConfig: WorkspaceConfig, depContext: DeploymentContext): Promise<WorkspaceConfig> {
 
-    depContext.updateProgress("Creating Workspace enviroment ....", 30);
+    depContext.updateProgress("Creating Workspace environment...", 30);
     const fabricAPI = this.context.fabricPlatformAPIClient;
 
     const newWorkspaceConfig: WorkspaceConfig = {
@@ -313,7 +313,7 @@ export abstract class DeploymentStrategy {
           creationPayload: packItem.creationPayload
         }
       );
-      //set current item immedieately when we have the id
+      //set current item immediately when we have the id
       depContext.setCurrentItem(packItem, newItem);
     } else if (
       packItem.definition?.creationMode === "WithoutDefinition" ||
@@ -324,7 +324,7 @@ export abstract class DeploymentStrategy {
         packItem.data?.files?.length > 0)) {
       //If there is any case where the id of the item is required immediately we first create the item to have the itemId for further calls
       //For the interceptor this is needed replace variables like {{WORKSPACE_ID}}, {{ITEM_ID}}, etc.
-      //For data this is needed to upload the data to the Onelake where the id is needed
+      //For data this is needed to upload the data to the OneLake where the id is needed
       //For schedules this is needed to create a schedule on a specific item
       newItem = await this.context.fabricPlatformAPIClient.items.createItem(
         depContext.getWorkspaceId(),
@@ -337,7 +337,7 @@ export abstract class DeploymentStrategy {
         }
       );
       if (newItem && packItem.definition?.creationMode !== "WithoutDefinition") {
-        //set current item immedieately when we have the id
+        //set current item immediately when we have the id
         depContext.setCurrentItem(packItem, newItem);
         const itemDef = await this.convertPackageItemDefinition(depContext, packItem.definition);
         if (itemDef) {
@@ -609,7 +609,7 @@ export abstract class DeploymentStrategy {
                 depStatus = DeploymentStatus.Failed;
                 break;
               default:
-                console.error("Deplyoment Status is not supported.")
+                console.error("Deployment Status is not supported.")
             }
           }
         });

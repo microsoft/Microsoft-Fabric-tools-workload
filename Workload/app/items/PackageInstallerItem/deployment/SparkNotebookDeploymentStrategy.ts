@@ -45,7 +45,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     const depConfig = this.pack.deploymentConfig;
     const fabricAPI = this.context.fabricPlatformAPIClient;
 
-    depContext.updateProgress("Deploying Notebook for further deployment  ....", 40);
+    depContext.updateProgress("Deploying Notebook for further deployment...", 40);
     const nbItemDef: PackageItem = {
       displayName: `Deploy_${this.pack.id}`,
       type: "Notebook", // Spark Notebook item type
@@ -76,7 +76,7 @@ export class SparkNotebookDeploymentStrategy extends DeploymentStrategy {
     ContentHelper.replaceVariablesInObject(notebookParameters, depContext.variableMap);
 
     // Start a RunNotebook job on the created notebook
-    depContext.updateProgress("Starting background deployment job  ....", 50);
+    depContext.updateProgress("Starting background deployment job...", 50);
     const jobInstanceId = await fabricAPI.scheduler.runOnDemandItemJob(
       depContext.deployment.workspace.id,
       notebookItem.id,

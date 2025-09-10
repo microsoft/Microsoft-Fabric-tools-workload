@@ -51,7 +51,7 @@ export class BasePackageStrategy {
 
     /**
      * Uses the content as the Package Json converts it an checks the correctness.
-     * After that stores it in the onelake item folder
+     * After that stores it in the OneLake item folder
      * @param config 
      * @param content 
      * @returns 
