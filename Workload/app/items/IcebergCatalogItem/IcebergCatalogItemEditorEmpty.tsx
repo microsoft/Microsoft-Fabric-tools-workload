@@ -3,7 +3,7 @@ import { Stack } from "@fluentui/react";
 import { Text, Button, Input, Field, Dropdown, Option, Checkbox, Spinner } from "@fluentui/react-components";
 import "../../styles.scss";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { IcebergCatalogItemDefinition, IcebergCatalogConfig, DEFAULT_SHORTCUT_PREFIX } from "./IcebergCatalogItemModel";
+import { IcebergCatalogItemDefinition, IcebergCatalogConfig } from "./IcebergCatalogItemModel";
 import { IcebergRestApiController } from "./IcebergRestApiController";
 import { FabricPlatformAPIClient } from "../../clients/FabricPlatformAPIClient";
 import { Connection } from "../../clients/FabricPlatformTypes";
@@ -22,26 +22,28 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
   const [authToken, setAuthToken] = useState<string>("");
   const [accessKeyId, setAccessKeyId] = useState<string>("");
   const [secretAccessKey, setSecretAccessKey] = useState<string>("");
-  const [warehouse, setWarehouse] = useState<string>("");
-  const [namespaces, setNamespaces] = useState<string[]>([]);
+  const [selectedNamespace, setSelectedNamespace] = useState<string>("");
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
   const [connectionId, setConnectionId] = useState<string>("");
   
   // UI state
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [availableNamespaces, setAvailableNamespaces] = useState<string[]>([]);
+  const [availableTables, setAvailableTables] = useState<string[]>([]);
   const [availableConnections, setAvailableConnections] = useState<Connection[]>([]);
   const [isLoadingNamespaces, setIsLoadingNamespaces] = useState<boolean>(false);
+  const [isLoadingTables, setIsLoadingTables] = useState<boolean>(false);
   const [isLoadingConnections, setIsLoadingConnections] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>("");
   
-  const canLogin = catalogUri && warehouse && (
+  const canLogin = catalogUri && (
     catalogType === 'REST' && authToken ||
     catalogType === 'GLUE' && accessKeyId && secretAccessKey ||
     catalogType === 'HIVE' ||
     catalogType === 'HADOOP'
   );
-  const canConfigure = isLoggedIn && namespaces.length > 0 && connectionId && 
+  const canConfigure = isLoggedIn && selectedNamespace && selectedTables.length > 0 && connectionId && 
     availableConnections.some(conn => conn.id === connectionId);
 
   // Load connections on component mount
@@ -56,9 +58,8 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
       authToken: authToken || undefined,
       accessKeyId: accessKeyId || undefined,
       secretAccessKey: secretAccessKey || undefined,
-      warehouse,
-      namespaces: [],
-      connectionId: ""
+      namespace: selectedNamespace,
+      connectionId: connectionId
     };
     return new IcebergRestApiController(tempConfig);
   }
@@ -77,6 +78,26 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
     }
   };
 
+  const loadTablesForNamespace = async (namespace: string) => {
+    if (!namespace) return;
+    
+    setIsLoadingTables(true);
+    try {
+      const apiClient = getIcebergCatalogAPIClient();
+      const tablesResponse = await apiClient.getTablesInNamespace(namespace);
+      console.log("Tables in namespace:", tablesResponse);
+
+      setAvailableTables(tablesResponse.map((table: any) => table.name));
+      setSelectedTables([]); // Reset selected tables when namespace changes
+    } catch (error) {
+      console.error("Failed to fetch tables:", error);
+      setAvailableTables([]);
+      setSelectedTables([]);
+    } finally {
+      setIsLoadingTables(false);
+    }
+  };
+
   const handleLogin = async () => {
     if (!canLogin) return;
     
@@ -88,13 +109,13 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
       
       // Test connection and fetch namespaces
       setIsLoadingNamespaces(true);
-      const namespacesResponse = await apiClient.listNamespaces();
-      
-      const availableNamespaces = namespacesResponse.namespaces.map((ns: string[]) => ns.join('.'));
-      setAvailableNamespaces(availableNamespaces);
+      const namespaces = await apiClient.listAllNamespaces();
+
+      // const availableNamespaces = namespacesResponse.namespaces;
+      setAvailableNamespaces(namespaces || []);
       setIsLoggedIn(true);
       setIsLoadingNamespaces(false);
-      
+
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "Failed to connect to Iceberg Catalog");
       setIsLoggedIn(false);
@@ -104,11 +125,21 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
     }
   };
 
-  const handleNamespaceToggle = (namespaceName: string, checked: boolean) => {
+  const handleNamespaceSelection = async (namespace: string) => {
+    setSelectedNamespace(namespace);
+    setAvailableTables([]);
+    setSelectedTables([]);
+    
+    if (namespace) {
+      await loadTablesForNamespace(namespace);
+    }
+  };
+
+  const handleTableToggle = (tableName: string, checked: boolean) => {
     if (checked) {
-      setNamespaces(prev => [...prev, namespaceName]);
+      setSelectedTables(prev => [...prev, tableName]);
     } else {
-      setNamespaces(prev => prev.filter(ns => ns !== namespaceName));
+      setSelectedTables(prev => prev.filter(table => table !== tableName));
     }
   };
   
@@ -119,16 +150,16 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
       authToken: authToken || undefined,
       accessKeyId: accessKeyId || undefined,
       secretAccessKey: secretAccessKey || undefined,
-      warehouse,
-      namespaces,
-      connectionId
+      namespace: selectedNamespace, // Single namespace selected
+      connectionId,
+      selectedTables: selectedTables // Add selected tables to config
     };
     
     const config: IcebergCatalogItemDefinition = {
       icebergConfig: icebergConfig,
       fabricConfig: {
         connectionId: connectionId,
-        shortcutPrefix: DEFAULT_SHORTCUT_PREFIX
+        shortcutPrefix: ""
       }
     };
     
@@ -136,7 +167,9 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
   };
 
   return (
-    <Stack className="empty-item-container" style={{ minHeight: 1200, height: '100%', maxHeight: '100%' }} horizontalAlign="start" tokens={{ childrenGap: 16 }}>
+    <Stack className="empty-item-container" 
+            style={{ minHeight: 1200, height: '100%', maxHeight: '100%' }} 
+            horizontalAlign="start" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
           src="/assets/items/IcebergCatalog/EditorEmpty.png"
@@ -178,15 +211,6 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
             <Option value="HADOOP">Hadoop</Option>
             <Option value="GLUE">AWS Glue</Option>
           </Dropdown>
-        </Field>
-
-        <Field label="Warehouse Location" required>
-          <Input
-            value={warehouse}
-            onChange={(e, data) => setWarehouse(data.value)}
-            placeholder="s3://bucket/warehouse or abfss://container@account.dfs.core.windows.net/warehouse"
-            disabled={isLoggedIn}
-          />
         </Field>
 
         {/* Authentication fields based on catalog type */}
@@ -256,30 +280,48 @@ export const IcebergCatalogItemEmpty: React.FC<IcebergCatalogItemEmptyStateProps
         {/* Step 2: Namespace Selection */}
         {isLoggedIn && (
           <>
-            <Field label="Namespaces" required>
-              <Stack style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #ccc', padding: '8px', borderRadius: '4px' }}>
-                {isLoadingNamespaces ? (
-                  <Stack horizontal tokens={{ childrenGap: 8 }}>
-                    <Spinner size="tiny" />
-                    <Text style={{ fontSize: '12px' }}>Loading namespaces...</Text>
-                  </Stack>
-                ) : availableNamespaces.length > 0 ? (
-                  availableNamespaces.map(namespaceName => (
-                    <Checkbox
-                      key={namespaceName}
-                      label={namespaceName}
-                      checked={namespaces.includes(namespaceName)}
-                      onChange={(e, data) => handleNamespaceToggle(namespaceName, data.checked === true)}
-                    />
-                  ))
-                ) : (
-                  <Text style={{ fontSize: '12px', color: '#666' }}>No namespaces found in this catalog</Text>
-                )}
-              </Stack>
+            <Field label="Namespace" required>
+              <Dropdown
+                placeholder={isLoadingNamespaces ? "Loading namespaces..." : availableNamespaces.length > 0 ? "Select a namespace" : "No namespaces available"}
+                value={selectedNamespace}
+                onOptionSelect={(e, data) => handleNamespaceSelection(data.optionValue as string)}
+                disabled={isLoadingNamespaces || availableNamespaces.length === 0}
+              >
+                {availableNamespaces.map((namespaceName) => (
+                  <Option key={namespaceName} value={namespaceName}>
+                    {namespaceName}
+                  </Option>
+                ))}
+              </Dropdown>
             </Field>
 
-            {/* Step 3: Connection Selection */}
-            {namespaces.length > 0 && (
+            {/* Step 3: Table Selection */}
+            {selectedNamespace && (
+              <Field label="Tables" required>
+                <Stack style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #ccc', padding: '8px', borderRadius: '4px' }}>
+                  {isLoadingTables ? (
+                    <Stack horizontal tokens={{ childrenGap: 8 }}>
+                      <Spinner size="tiny" />
+                      <Text style={{ fontSize: '12px' }}>Loading tables...</Text>
+                    </Stack>
+                  ) : availableTables.length > 0 ? (
+                    availableTables.map(tableName => (
+                      <Checkbox
+                        key={tableName}
+                        label={tableName}
+                        checked={selectedTables.includes(tableName)}
+                        onChange={(e, data) => handleTableToggle(tableName, data.checked === true)}
+                      />
+                    ))
+                  ) : (
+                    <Text style={{ fontSize: '12px', color: '#666' }}>No tables found in this namespace</Text>
+                  )}
+                </Stack>
+              </Field>
+            )}
+
+            {/* Step 4: Connection Selection */}
+            {selectedNamespace && selectedTables.length > 0 && (
               <Field label="Fabric Connection" required>
                 <Stack>
                   <Dropdown

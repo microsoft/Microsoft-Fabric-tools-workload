@@ -24,11 +24,13 @@ router.options('/proxy', (req, res) => {
 });
 
 router.all('/proxy', async (req, res) => {
+
+  // Get the target URL from headers
+  const targetUrl = req.headers['x-target-url'];
+  const targetBaseUrl = req.headers['x-target-base-url'];
+
   try {
-    // Get the target URL from headers
-    const targetUrl = req.headers['x-target-url'];
-    const targetBaseUrl = req.headers['x-target-base-url'];
-    
+
     if (!targetUrl) {
       res.status(400).json({
         error: {
@@ -129,6 +131,9 @@ router.all('/proxy', async (req, res) => {
         code: 500
       }
     });
+  }
+  finally {
+    console.log(`[API Proxy] ${req.method} ${targetUrl} ${res.statusCode}`);
   }
 });
 

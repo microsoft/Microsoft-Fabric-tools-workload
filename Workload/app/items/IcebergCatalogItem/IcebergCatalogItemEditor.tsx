@@ -49,7 +49,17 @@ export function IcebergCatalogItemEditor(props: PageProps) {
     const [selectedShortcuts, setSelectedShortcuts] = useState<Set<string>>(new Set());
     const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
 
-    const shortcutController = new IcebergShortcutController(workloadClient);
+    // Initialize shortcut controller - will be updated when configuration changes
+    const [shortcutController, setShortcutController] = useState<IcebergShortcutController>(
+        () => new IcebergShortcutController(workloadClient)
+    );
+
+    // Update shortcut controller when iceberg config changes
+    useEffect(() => {
+        if (editorItem?.definition?.icebergConfig) {
+            setShortcutController(new IcebergShortcutController(workloadClient, editorItem.definition.icebergConfig));
+        }
+    }, [editorItem?.definition?.icebergConfig, workloadClient]);
 
     // Helper function to update item definition immutably
     const updateItemDefinition = useCallback((updates: Partial<IcebergCatalogItemDefinition>) => {
@@ -115,31 +125,23 @@ export function IcebergCatalogItemEditor(props: PageProps) {
         setIsSyncing(true);
         try {
             // Get all namespaces from the Iceberg catalog
-            const namespaces = await shortcutController.getAllNamespaces();
-            const allTables: TableInfo[] = [];
-
-            // Fetch tables from all namespaces
-            for (const namespace of namespaces) {
-                const tablesInNamespace = await shortcutController.getTablesInNamespace(namespace);
-                allTables.push(...tablesInNamespace);
-            }
-
+            const icebergTables = await shortcutController.getIcebergApi().getTablesInNamespace(config.icebergConfig.namespace);
             const existingShortcuts = editorItem.definition.shortcuts || [];
             var newShortcuts: ShortcutInfo[] = [];
 
-            if (allTables.length > 0) {
+            if (icebergTables) {
                 // Create all new shortcuts
                 newShortcuts = await Promise.all(
-                    allTables.map((table: TableInfo) => checkIcebergTable(config, table))
+                    icebergTables.map((table: TableInfo) => checkIcebergTable(config, table))
                 );
-                
-                // Delete missing shortcuts
-                const missingShortcuts = existingShortcuts.filter(s => !allTables.find((t: TableInfo) =>
-                    t.namespace.join('.') === s.icebergCatalog.namespace &&
+                //delete missing shortcuts
+                const missingShortcuts = existingShortcuts.filter(s => !icebergTables.find(
+                    (t: TableInfo) =>
+                    t.namespace === s.icebergCatalog.namespace &&
                     t.name === s.icebergCatalog.tableName));
                 await Promise.all(missingShortcuts.map(s => shortcutController.deleteShortcut(s)));
             }
-
+            
             // Update item definition
             updateItemDefinition({
                 shortcuts: newShortcuts,
@@ -171,7 +173,9 @@ export function IcebergCatalogItemEditor(props: PageProps) {
 
     async function checkIcebergTable(config: IcebergCatalogItemDefinition, table: TableInfo): Promise<ShortcutInfo> {
         const tableName = table.name;
-        const existingShortcut = config.shortcuts?.find(s => s.icebergCatalog.tableName === tableName);
+        const existingShortcut = config.shortcuts?.find(s => s.icebergCatalog.tableName === tableName
+            && s.icebergCatalog.namespace === table.namespace
+        );
 
         if (!existingShortcut) {
             const shortcutInfo = shortcutController.convertTable(table);         

@@ -118,7 +118,7 @@ export interface IcebergNamespace {
 }
 
 export interface IcebergTableIdentifier {
-    namespace: string[];
+    namespace: string;
     name: string;
 }
 
@@ -189,7 +189,7 @@ export interface PageToken {
 }
 
 export interface ListNamespacesResponse {
-    namespaces: string[][];
+    namespaces: string[];
     'next-page-token'?: string;
 }
 
@@ -199,7 +199,7 @@ export interface ListTablesResponse {
 }
 
 export interface TableInfo {
-    namespace: string[];
+    namespace: string;
     name: string;
     location: string;
     fileFormat: 'PARQUET' | 'ORC' | 'AVRO';
@@ -218,11 +218,27 @@ export class IcebergRestApiController {
 
     constructor(catalogConfig?: IcebergCatalogConfig, proxyUrl?: string) {
         this.catalogConfig = catalogConfig;
+        // Auto-correct common Databricks URL mistakes
         this.baseUrl = catalogConfig?.catalogUri;
         this.proxyUrl = proxyUrl;
         if(!this.proxyUrl && process.env.NODE_ENV === 'development'){
             this.proxyUrl = '/api/proxy';
         }
+    }
+
+    // ========================================
+    // Helper Methods
+    // ========================================
+
+
+    /**
+     * Build a properly formatted API URL with optional prefix
+     */
+    private buildApiUrl(path: string, prefix?: string): string {
+        const prefixPath = prefix ? `${prefix}/` : '';
+        const url = `${this.baseUrl}/v1/${prefixPath}${path}`;
+        console.log(`buildApiUrl: baseUrl=${this.baseUrl}, prefix=${prefix}, path=${path}, result=${url}`);
+        return url;
     }
 
     // ========================================
@@ -242,6 +258,35 @@ export class IcebergRestApiController {
         return await this.makeRequest<IcebergConfigResponse>(url.toString());
     }
 
+
+    async listAllNamespaces(prefix?: string): Promise<string[]> {
+        const response = await this.listNamespaces(prefix);
+        
+        // If parent is undefined, also get child namespaces and add them as parent.child
+        if (response.namespaces && response.namespaces.length > 0) {
+            const childNamespaces: string[] = [];
+            
+            // For each namespace, get its children and add them as parent.child
+            for (const namespace of response.namespaces) {
+                try {
+                    const childResponse = await this.listNamespaces(prefix, namespace);
+                    if (childResponse.namespaces && childResponse.namespaces.length > 0) {
+                        // Add child namespaces in parent.child format
+                        const formattedChildren = childResponse.namespaces.map(child => `${namespace}.${child}`);
+                        childNamespaces.push(...formattedChildren);
+                    }
+                } catch (error) {
+                    console.warn(`Failed to get child namespaces for parent ${namespace}:`, error);
+                    // Continue with other namespaces even if one fails
+                }
+            }
+            
+            return childNamespaces;
+        }
+        
+        return response.namespaces;
+    }
+
     /**
      * GET /v1/{prefix}/namespaces
      * List namespaces
@@ -252,7 +297,7 @@ export class IcebergRestApiController {
         pageToken?: string,
         pageSize?: number
     ): Promise<ListNamespacesResponse> {
-        const url = new URL(`${this.baseUrl}/v1/${prefix || ''}/namespaces`);
+        const url = new URL(this.buildApiUrl(`namespaces`, prefix));
         
         if (parent) url.searchParams.set('parent', parent);
         if (pageToken) url.searchParams.set('pageToken', pageToken);
@@ -269,7 +314,7 @@ export class IcebergRestApiController {
         request: CreateNamespaceRequest,
         prefix?: string
     ): Promise<IcebergNamespace> {
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces`;
+        const url = this.buildApiUrl('namespaces', prefix);
 
         return await this.makeRequest<IcebergNamespace>(url, {
             method: 'POST',
@@ -285,11 +330,10 @@ export class IcebergRestApiController {
      * Load namespace metadata
      */
     async loadNamespaceMetadata(
-        namespace: string[],
+        namespace: string,
         prefix?: string
     ): Promise<IcebergNamespace> {
-        const namespacePath = namespace.join('\u001F'); // Unit separator for multipart namespace
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
+        const url = this.buildApiUrl(`namespaces/${namespace}`, prefix);
 
         return await this.makeRequest<IcebergNamespace>(url);
     }
@@ -299,11 +343,10 @@ export class IcebergRestApiController {
      * Check if namespace exists
      */
     async namespaceExists(
-        namespace: string[],
+        namespace: string,
         prefix?: string
     ): Promise<boolean> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
+        const url = this.buildApiUrl(`namespaces/${namespace}`, prefix);
 
         try {
             const status = await this.makeRequest<number>(url, { method: 'HEAD' });
@@ -318,11 +361,10 @@ export class IcebergRestApiController {
      * Drop a namespace
      */
     async dropNamespace(
-        namespace: string[],
+        namespace: string,
         prefix?: string
     ): Promise<void> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}`;
+        const url = this.buildApiUrl(`namespaces/${encodeURIComponent(namespace)}`, prefix);
 
         await this.makeRequest<void>(url, { method: 'DELETE' });
     }
@@ -332,12 +374,11 @@ export class IcebergRestApiController {
      * Update namespace properties
      */
     async updateNamespaceProperties(
-        namespace: string[],
+        namespace: string,
         request: UpdateNamespacePropertiesRequest,
         prefix?: string
     ): Promise<{ updated: string[]; removed: string[]; missing?: string[] }> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/properties`;
+        const url = this.buildApiUrl(`namespaces/${namespace}/properties`, prefix);
 
         return await this.makeRequest<{ updated: string[]; removed: string[]; missing?: string[] }>(url, {
             method: 'POST',
@@ -353,17 +394,16 @@ export class IcebergRestApiController {
      * List tables in a namespace
      */
     async listTables(
-        namespace: string[],
+        namespace: string,
         prefix?: string,
         pageToken?: string,
         pageSize?: number
     ): Promise<ListTablesResponse> {
-        const namespacePath = namespace.join('\u001F');
-        const url = new URL(`${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables`);
+        const url = new URL(this.buildApiUrl(`namespaces/${namespace}/tables`, prefix));
         
         if (pageToken) url.searchParams.set('pageToken', pageToken);
         if (pageSize) url.searchParams.set('pageSize', pageSize.toString());
-
+        
         return await this.makeRequest<ListTablesResponse>(url.toString());
     }
 
@@ -372,13 +412,12 @@ export class IcebergRestApiController {
      * Create a table
      */
     async createTable(
-        namespace: string[],
+        namespace: string,
         request: CreateTableRequest,
         prefix?: string,
         dataAccess?: string
     ): Promise<LoadTableResult> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables`;
+        const url = this.buildApiUrl(`namespaces/${namespace}/tables`, prefix);
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json'
@@ -400,15 +439,14 @@ export class IcebergRestApiController {
      * Load a table
      */
     async loadTable(
-        namespace: string[],
+        namespace: string,
         tableName: string,
         prefix?: string,
         dataAccess?: string,
         ifNoneMatch?: string,
         snapshots?: 'all' | 'refs'
     ): Promise<LoadTableResult> {
-        const namespacePath = namespace.join('\u001F');
-        const url = new URL(`${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`);
+        const url = new URL(this.buildApiUrl(`namespaces/${namespace}/tables/${encodeURIComponent(tableName)}`, prefix));
         
         if (snapshots) url.searchParams.set('snapshots', snapshots);
 
@@ -431,13 +469,12 @@ export class IcebergRestApiController {
      * Update a table
      */
     async updateTable(
-        namespace: string[],
+        namespace: string,
         tableName: string,
         request: CommitTableRequest,
         prefix?: string
     ): Promise<LoadTableResult> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`;
+        const url = this.buildApiUrl(`namespaces/${namespace}/tables/${encodeURIComponent(tableName)}`, prefix);
 
         return await this.makeRequest<LoadTableResult>(url, {
             method: 'POST',
@@ -453,13 +490,12 @@ export class IcebergRestApiController {
      * Drop a table
      */
     async dropTable(
-        namespace: string[],
+        namespace: string,
         tableName: string,
         prefix?: string,
         purgeRequested?: boolean
     ): Promise<void> {
-        const namespacePath = namespace.join('\u001F');
-        const url = new URL(`${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`);
+        const url = new URL(this.buildApiUrl(`namespaces/${namespace}/tables/${encodeURIComponent(tableName)}`, prefix));
         
         if (purgeRequested !== undefined) {
             url.searchParams.set('purgeRequested', purgeRequested.toString());
@@ -473,12 +509,11 @@ export class IcebergRestApiController {
      * Check if table exists
      */
     async tableExists(
-        namespace: string[],
+        namespace: string,
         tableName: string,
         prefix?: string
     ): Promise<boolean> {
-        const namespacePath = namespace.join('\u001F');
-        const url = `${this.baseUrl}/v1/${prefix || ''}/namespaces/${encodeURIComponent(namespacePath)}/tables/${encodeURIComponent(tableName)}`;
+        const url = this.buildApiUrl(`namespaces/${namespace}/tables/${encodeURIComponent(tableName)}`, prefix);
 
         try {
             const status = await this.makeRequest<number>(url, { method: 'HEAD' });
@@ -496,7 +531,7 @@ export class IcebergRestApiController {
         request: RenameTableRequest,
         prefix?: string
     ): Promise<void> {
-        const url = `${this.baseUrl}/v1/${prefix || ''}/tables/rename`;
+        const url = this.buildApiUrl('tables/rename', prefix);
 
         await this.makeRequest<void>(url, {
             method: 'POST',
@@ -514,7 +549,7 @@ export class IcebergRestApiController {
     /**
      * Convert TableInfo to Iceberg table for use with REST API
      */
-    async getIcebergTable(namespace: string[], tableName: string, prefix?: string): Promise<TableInfo> {
+    async getIcebergTable(namespace: string, tableName: string, prefix?: string): Promise<TableInfo> {
         const tableResult = await this.loadTable(namespace, tableName, prefix);
         
         return {
@@ -530,28 +565,25 @@ export class IcebergRestApiController {
     /**
      * List tables from Iceberg catalog and convert to TableInfo format
      */
-    async getTablesInNamespace(namespace: string[], prefix?: string): Promise<TableInfo[]> {
-        const tablesResponse = await this.listTables(namespace, prefix);
-        const tables: TableInfo[] = [];
+    async getTablesInNamespace(namespace: string, prefix?: string): Promise<TableInfo[]> {
+        
+        try {
+            const tablesResponse = await this.listTables(namespace, prefix);
+            const tables: TableInfo[] = [];
 
-        for (const identifier of tablesResponse.identifiers) {
-            try {
-                const table = await this.getIcebergTable(identifier.namespace, identifier.name, prefix);
-                tables.push(table);
-            } catch (error) {
-                console.warn(`Failed to load table ${identifier.namespace.join('.')}.${identifier.name}:`, error);
+            for (const identifier of tablesResponse.identifiers) {
+                try {
+                    const table = await this.getIcebergTable(namespace, identifier.name, prefix);
+                    tables.push(table);
+                } catch (error) {
+                    console.warn(`Failed to load table for namespace ${namespace} and prefix ${prefix}:`, error);
+                }
             }
+            return tables;
+        } catch (error) {
+            console.error(`getTablesInNamespace: Failed to list tables for namespace ${namespace}:`, error);
+            throw error;
         }
-
-        return tables;
-    }
-
-    /**
-     * Get all namespaces from the catalog
-     */
-    async getAllNamespaces(prefix?: string): Promise<string[][]> {
-        const response = await this.listNamespaces(prefix);
-        return response.namespaces;
     }
 
     // ========================================
@@ -573,6 +605,7 @@ export class IcebergRestApiController {
         const { method = 'GET', headers = {}, body } = options;
         
         let requestUrl = targetUrl;
+        console.info(`makeRequest: method=${method}, targetUrl=${targetUrl}`);
 
         const requestOptions: RequestInit = {
             method,
@@ -584,11 +617,13 @@ export class IcebergRestApiController {
         // If proxy is configured, use it and add the target URL as headers
         if (this.proxyUrl) {
             requestUrl = this.proxyUrl;
+            const baseUrl = this.extractBaseUrl(this.baseUrl);
             requestOptions.headers = {
                 ...requestOptions.headers,
                 'X-Target-URL': targetUrl,
-                'X-Target-Base-URL': this.baseUrl.replace('/api/2.1/unity-catalog/iceberg-rest', '') // Remove API path for base URL
+                'X-Target-Base-URL': baseUrl
             };
+            console.info(`makeRequest: Using proxy ${this.proxyUrl}, X-Target-URL=${targetUrl}, X-Target-Base-URL=${baseUrl}`);
         }
 
         if (body && method !== 'GET') {
@@ -596,6 +631,7 @@ export class IcebergRestApiController {
         }
 
          const response = await fetch(requestUrl, requestOptions);
+         console.info(`makeRequest: Response status=${response.status}, url=${response.url}`);
 
         // Special handling for 304 Not Modified
         if (response.status === 304) {
@@ -603,6 +639,7 @@ export class IcebergRestApiController {
         }
 
         if (!response.ok) {
+            console.error(`makeRequest: Request failed with status ${response.status} for URL: ${targetUrl}`);
             throw await this.handleErrorResponse(response);
         }
 
@@ -637,6 +674,23 @@ export class IcebergRestApiController {
             return new Error(`Iceberg API Error: ${errorData.error.message} (${errorData.error.code})`);
         } catch {
             return new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+    }
+
+    /**
+     * Extract base URL from catalog URL by keeping only the protocol and domain
+     * This ensures maximum compatibility with any catalog provider
+     */
+    private extractBaseUrl(catalogUrl: string): string {
+        if (!catalogUrl) return '';
+
+        try {
+            const url = new URL(catalogUrl);
+            return `${url.protocol}//${url.host}`;
+        } catch (error) {
+            // Fallback: if URL parsing fails, return the original URL
+            console.warn('Failed to parse catalog URL:', catalogUrl, error);
+            return catalogUrl;
         }
     }
 }

@@ -1,10 +1,10 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { IcebergCatalogItemDefinition, ShortcutInfo, DEFAULT_SHORTCUT_PREFIX, IcebergCatalogConfig } from "./IcebergCatalogItemModel";
+import { IcebergCatalogItemDefinition, ShortcutInfo, IcebergCatalogConfig } from "./IcebergCatalogItemModel";
 import { OneLakeShortcutClient } from "../../clients/OneLakeShortcutClient";
 import { CreateShortcutRequest } from "../../clients/FabricPlatformTypes";
 import { v4 as uuidv4 } from 'uuid';
-import { IcebergRestApiController, TableInfo, IcebergTableSchema, IcebergComplexType } from "./IcebergRestApiController";
+import { IcebergRestApiController, TableInfo } from "./IcebergRestApiController";
 
 /**
  * Controller for managing Iceberg Catalog shortcuts in Microsoft Fabric
@@ -31,27 +31,6 @@ export class IcebergShortcutController {
         return this.icebergApi;
     }
 
-    /**
-     * Get tables from a namespace using the Iceberg API
-     */
-    async getTablesInNamespace(namespace: string[], prefix?: string): Promise<TableInfo[]> {
-        return this.icebergApi.getTablesInNamespace(namespace, prefix);
-    }
-
-    /**
-     * Get all namespaces from the catalog
-     */
-    async getAllNamespaces(prefix?: string): Promise<string[][]> {
-        return this.icebergApi.getAllNamespaces(prefix);
-    }
-
-    /**
-     * Get a specific table from the catalog
-     */
-    async getIcebergTable(namespace: string[], tableName: string, prefix?: string): Promise<TableInfo> {
-        return this.icebergApi.getIcebergTable(namespace, tableName, prefix);
-    }
-
     // ========================================
     // Fabric Shortcut Management Methods
     // ========================================
@@ -64,61 +43,15 @@ export class IcebergShortcutController {
         return {
             id: shortcutId,
             icebergCatalog: {
-                namespace: table.namespace.join('.'), // Convert array to string
+                namespace: table.namespace, // Keep as array
                 tableName: table.name,
                 tableLocation: table.location,
                 fileFormat: table.fileFormat,
-                schema: table.schema ? this.convertIcebergSchemaToLegacy(table.schema) : undefined
+                schema: table.schema
             },
             status: 'creating',
             createdDate: new Date()
         };
-    }
-
-    /**
-     * Convert the full Iceberg schema to the legacy simplified format
-     */
-    private convertIcebergSchemaToLegacy(schema: IcebergTableSchema): any {
-        return {
-            type: schema.type,
-            fields: schema.fields.map(field => ({
-                id: field.id,
-                name: field.name,
-                required: field.required,
-                type: typeof field.type === 'string' ? field.type : this.convertComplexType(field.type)
-            }))
-        };
-    }
-
-    /**
-     * Convert complex Iceberg types to legacy format
-     */
-    private convertComplexType(type: IcebergComplexType): any {
-        switch (type.type) {
-            case 'list':
-                return {
-                    type: 'list',
-                    element: typeof type.element === 'string' ? type.element : this.convertComplexType(type.element!)
-                };
-            case 'map':
-                return {
-                    type: 'map',
-                    key: typeof type.key === 'string' ? type.key : this.convertComplexType(type.key!),
-                    value: typeof type.value === 'string' ? type.value : this.convertComplexType(type.value!)
-                };
-            case 'struct':
-                return {
-                    type: 'struct',
-                    fields: type.fields?.map(field => ({
-                        id: field.id,
-                        name: field.name,
-                        required: field.required,
-                        type: typeof field.type === 'string' ? field.type : this.convertComplexType(field.type)
-                    })) || []
-                };
-            default:
-                return type;
-        }
     }
 
     /**
@@ -129,9 +62,11 @@ export class IcebergShortcutController {
         config: IcebergCatalogItemDefinition,
         shortcutInfo: ShortcutInfo
     ): Promise<void> {
-        const tableName = shortcutInfo.icebergCatalog.tableName;
         const namespace = shortcutInfo.icebergCatalog.namespace;
-        const shortcutName = `${config.fabricConfig?.shortcutPrefix || DEFAULT_SHORTCUT_PREFIX}_${namespace}_${tableName}`;
+        const tableName = shortcutInfo.icebergCatalog.tableName;
+        console.log(`Creating shortcut for Iceberg table:  ${namespace}.${tableName}`);
+
+        const shortcutName = `${config.fabricConfig?.shortcutPrefix + "_" || ""}${namespace}_${tableName}`;
         
         try {
             // Extract location details from Iceberg table location

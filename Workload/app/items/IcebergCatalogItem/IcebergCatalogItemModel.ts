@@ -1,6 +1,5 @@
 import { ItemReference } from "../../controller/ItemCRUDController";
 
-export const DEFAULT_SHORTCUT_PREFIX = "iceberg";
 export const ICEBERG_PROXY_URL = "http://localhost:60006/api/iceberg-catalog";
 
 export interface ShortcutInfo {
@@ -56,10 +55,9 @@ export interface IcebergCatalogConfig {
     authToken?: string;
     accessKeyId?: string;
     secretAccessKey?: string;
-    warehouse: string;
-    namespaces: string[];
+    namespace: string;
     connectionId: string;
-    properties?: Record<string, string>;
+    selectedTables?: string[]; // Tables selected within the namespace
 }
 
 export interface FabricConfig {

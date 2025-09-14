@@ -22,7 +22,6 @@ export const IcebergCatalogItemEditorSettingsPage: React.FC<IcebergCatalogItemEd
     const [authToken, setAuthToken] = useState<string>(definition.icebergConfig?.authToken || "");
     const [accessKeyId, setAccessKeyId] = useState<string>(definition.icebergConfig?.accessKeyId || "");
     const [secretAccessKey, setSecretAccessKey] = useState<string>(definition.icebergConfig?.secretAccessKey || "");
-    const [warehouse, setWarehouse] = useState<string>(definition.icebergConfig?.warehouse || "");
     const [connectionId, setConnectionId] = useState<string>(definition.icebergConfig?.connectionId || "");
     const [shortcutPrefix, setShortcutPrefix] = useState<string>(definition.fabricConfig?.shortcutPrefix || "iceberg");
     
@@ -54,8 +53,7 @@ export const IcebergCatalogItemEditorSettingsPage: React.FC<IcebergCatalogItemEd
             authToken: authToken || undefined,
             accessKeyId: accessKeyId || undefined,
             secretAccessKey: secretAccessKey || undefined,
-            warehouse,
-            namespaces: definition.icebergConfig?.namespaces || [],
+            namespace: definition.icebergConfig?.namespace || "",
             connectionId
         };
 
@@ -95,14 +93,6 @@ export const IcebergCatalogItemEditorSettingsPage: React.FC<IcebergCatalogItemEd
                         <Option value="HADOOP">Hadoop</Option>
                         <Option value="GLUE">AWS Glue</Option>
                     </Dropdown>
-                </Field>
-
-                <Field label="Warehouse Location" required>
-                    <Input
-                        value={warehouse}
-                        onChange={(e, data) => setWarehouse(data.value)}
-                        placeholder="s3://bucket/warehouse or abfss://container@account.dfs.core.windows.net/warehouse"
-                    />
                 </Field>
 
                 {catalogType === 'REST' && (
@@ -197,8 +187,7 @@ export function IcebergCatalogItemEditorSettingsPageWrapper({ workloadClient }: 
         icebergConfig: {
             catalogUri: "",
             catalogType: 'REST',
-            warehouse: "",
-            namespaces: [],
+            namespace: "",
             connectionId: ""
         },
         fabricConfig: {
