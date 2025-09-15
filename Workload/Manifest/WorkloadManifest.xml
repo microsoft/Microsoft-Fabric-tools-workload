@@ -9,7 +9,7 @@
           <!-- Add your entra application here that you have created for the Workload -->
           <AppId>{{FRONTEND_APPID}}</AppId>
         </AADFEApp>
-        <EnableSandboxRelaxation>false</EnableSandboxRelaxation>
+        <EnableSandboxRelaxation>true</EnableSandboxRelaxation>
         <Endpoints>
           <ServiceEndpoint>
             <Name>Frontend</Name>

@@ -6,6 +6,7 @@
 const manifestApi = require('./manifestApi');
 const schemaApi = require('./schemaApi');
 const proxyApi = require('./proxyApi');
+const { WOPIHostEndpoints } = require('./wopiHost');
 
 /**
  * Register all dev server APIs with an Express application
@@ -19,10 +20,16 @@ function registerDevServerApis(app) {
   console.log('*** Mounting Proxy API ***');
   app.use('/api', proxyApi);
 
+  // Initialize WOPI Host endpoints for Excel Online integration
+  console.log('*** Mounting WOPI Host API ***');
+  const wopiHost = new WOPIHostEndpoints();
+  wopiHost.initializeEndpoints(app);
+
   // Mount other APIs here
 }
 
 module.exports = {
   manifestApi,
-  registerDevServerApis
+  registerDevServerApis,
+  WOPIHostEndpoints
 };
