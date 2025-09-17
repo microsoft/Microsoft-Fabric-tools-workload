@@ -2,55 +2,33 @@ import React, { useState } from "react";
 import { Stack } from "@fluentui/react";
 import { Button, Text, Spinner } from "@fluentui/react-components";
 import { Table24Regular, Cloud24Regular } from "@fluentui/react-icons";
-import { callDatahubWizardOpen } from "../../controller/DataHubController";
+import { callDatahubOpen } from "../../controller/DataHubController";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { OneLakeTable } from "./ExcelTableEditorItemModel";
+import { Item } from "../../clients";
 
-interface ExcelTableEditorItemEmptyProps {
+interface ExcelEditorItemEmptyProps {
   workloadClient: WorkloadClientAPI;
-  onTablesSelected: (selectedItem: any, selectedTables: any[]) => void;
+  onLakehouseSelected: (item: Item) => void;
 }
 
-export function ExcelTableEditorItemEmpty({ workloadClient, onTablesSelected }: ExcelTableEditorItemEmptyProps) {
+export function ExcelEditorItemEmpty({ workloadClient, onLakehouseSelected }: ExcelEditorItemEmptyProps) {
   const [isSelecting, setIsSelecting] = useState(false);
 
   const handleConnectToTables = async () => {
     setIsSelecting(true);
     try {
       // Open DataHub wizard to select Lakehouse tables
-      const result = await callDatahubWizardOpen(
+      const result = await callDatahubOpen(
         workloadClient,
         ["Lakehouse"], // Support only Lakehouse items for table selection
-        "Select Tables", // Submit button text
-        "Select tables from your lakehouse to edit in Excel", // Dialog description
-        false, // Single selection for now
-        true, // Show files folder to access tables
-        true // Workspace navigation enabled
+        "Select a Lakehouse", false
       );
 
       if (result) {
         console.log('✅ Selected lakehouse item:', result);
         
-        const tables: OneLakeTable[] = [];
-        
-        if (result.selectedPath) {
-          // If a specific path was selected, create a table based on that
-          const pathParts = result.selectedPath.split('/');
-          const tableName = pathParts[pathParts.length - 1] || `Table_${Date.now()}`;
-          
-
-          tables.push({
-            name: tableName,
-            description: `Table from ${result.displayName} - ${result.selectedPath}`,
-            item: {
-              ...result,
-              type: "Lakehouse"
-            },
-            lastModified: new Date()
-          });
-          // Pass the selected item and tables back to the parent
-          onTablesSelected(result, tables);
-        }
+        // Pass the selected item and tables back to the parent
+        onLakehouseSelected(result);
       }
     } catch (error) {
       console.error('❌ Error selecting tables:', error);

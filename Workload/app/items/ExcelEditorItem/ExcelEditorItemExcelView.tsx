@@ -1,24 +1,24 @@
 import React from "react";
 import { Text, Button, Spinner } from "@fluentui/react-components";
-import { OneLakeTable } from "./ExcelTableEditorItemModel";
+import { ContentReference } from "./ExcelEditorItemModel";
 
-interface ExcelTableEditorItemExcelViewProps {
-  selectedTable: OneLakeTable;
+interface ExcelEditorItemExcelViewProps {
+  selectedContent: ContentReference;
   excelOnlineUrl: string;
   isLoadingExcel: boolean;
   onRetryLoading: () => void;
 }
 
-export function ExcelTableEditorItemExcelView({
-  selectedTable,
+export function ExcelEditorItemExcelView({
+  selectedContent,
   excelOnlineUrl,
   isLoadingExcel,
   onRetryLoading
-}: ExcelTableEditorItemExcelViewProps) {
+}: ExcelEditorItemExcelViewProps) {
 
   // Debug logging
-  console.log('🎯 ExcelTableEditorItemExcelView render state:', {
-    selectedTable: selectedTable?.name,
+  console.log('🎯 ExcelEditorItemExcelView render state:', {
+    selectedContent: selectedContent?.displayName,
     excelOnlineUrl,
     isLoadingExcel
   });
@@ -57,12 +57,12 @@ export function ExcelTableEditorItemExcelView({
                   borderRadius: "0 0 4px 4px"
                 }}
                 allow="clipboard-read; clipboard-write; fullscreen"
-                title={`Excel Interface - ${selectedTable.name}`}
+                title={`Excel Interface - ${selectedContent.displayName}`}
                 onLoad={(e) => {
-                  console.log('✅ Excel interface loaded successfully for table:', selectedTable.name);
+                  console.log('✅ Excel interface loaded successfully for content:', selectedContent.displayName);
                 }}
                 onError={(e) => {
-                  console.error('❌ Excel interface failed to load for table:', selectedTable.name, e);
+                  console.error('❌ Excel interface failed to load for content:', selectedContent.displayName, e);
                 }}
               />
             </div>

@@ -7,7 +7,7 @@ import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/Package
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
-import { ExcelTableEditorItemEditor } from "./items/ExcelTableEditorItem/ExcelTableEditorItemEditor";
+import { ExcelEditorItemEditor } from "./items/ExcelEditorItem/ExcelEditorItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
 
@@ -85,9 +85,9 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
-            <Route path="/ExcelTableEditorItem-editor/:itemObjectId">
-                <ExcelTableEditorItemEditor
-                    workloadClient={workloadClient} data-testid="ExcelTableEditorItem-editor" />
+            <Route path="/ExcelEditorItem-editor/:itemObjectId">
+                <ExcelEditorItemEditor
+                    workloadClient={workloadClient} data-testid="ExcelEditorItem-editor" />
             </Route>
 
         </Switch>
