@@ -1,8 +1,9 @@
 import { ItemReference } from "src/controller/ItemCRUDController";
+import { Item } from "../../clients/FabricPlatformTypes";
 
 export interface ExcelEditorItemDefinition {
-  selectedLakehouse: ItemReference
-  selectedContent: ContentReference
+  selectedLakehouse?: Item | ItemReference
+  selectedContent?: ContentReference
 }
 
 

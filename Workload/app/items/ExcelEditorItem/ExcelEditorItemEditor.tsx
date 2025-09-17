@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { Text } from "@fluentui/react-components";
-import { PageProps, ContextProps } from "../../App";
+import { PageProps, ContextProps} from  "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
@@ -64,35 +64,73 @@ export function ExcelEditorItemEditor(props: PageProps) {
           pageContext.itemObjectId,
         );
 
-
         setItem(loadedItem);
         setCurrentView(loadedItem?.definition?.selectedLakehouse ? VIEW_TYPES.EDITOR : VIEW_TYPES.EMPTY);
         
         // Set selected content if one is saved
-        setSelectedContent(loadedItem.definition.selectedContent);
+        setSelectedContent(loadedItem.definition.selectedContent || null);
       } catch (error) {
-        setItem(undefined);
+        console.error('Error loading item:', error);
+        // Create a minimal item structure for new items or when loading fails
+        loadedItem = {
+          id: '',
+          workspaceId: '',
+          type: 'ExcelEditorItem',
+          displayName: 'New Excel Editor Item',
+          definition: {
+            selectedLakehouse: undefined,
+            selectedContent: undefined
+          }
+        };
+        setItem(loadedItem);
+        setCurrentView(VIEW_TYPES.EMPTY);
       }
     } else {
-      console.log(`non-editor context. Current Path: ${pathname}`);
+      console.log(`Creating new item context. Current Path: ${pathname}`);
+      // Create a new empty item definition for new items
+      loadedItem = {
+        id: '',
+        workspaceId: '',
+        type: 'ExcelEditorItem',
+        displayName: 'New Excel Editor Item',
+        definition: {
+          selectedLakehouse: undefined,
+          selectedContent: undefined
+        }
+      };
+      setItem(loadedItem);
+      setCurrentView(VIEW_TYPES.EMPTY);
     }
     setIsLoading(false);
   }
 
   useEffect(() => {
     setHasUnsavedChanges(false);
-  }, [currentView, item?.id]);
+  }, [item?.definition, item?.id]);
 
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
 
-  // Excel Online functions
+  // Fix the loadExcelOnline dependencies to prevent infinite loop
   const loadExcelOnline = useCallback(async (content: ContentReference): Promise<void> => {
     console.log('🚀 loadExcelOnline called with content:', content?.displayName);
-    console.log('🚀 Current state - isLoadingExcel:', isLoadingExcel, 'excelOnlineUrl:', excelOnlineUrl);
+    
+    // Prevent multiple simultaneous loading attempts
+    if (isLoadingExcel) {
+      console.log('🚫 Already loading Excel, skipping duplicate request');
+      return;
+    }
     
     setIsLoadingExcel(true);
+    
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn('⏰ Excel loading timed out after 30 seconds');
+      setIsLoadingExcel(false);
+      setExcelOnlineUrl('');
+    }, 30000); // 30 seconds timeout
+    
     try {
       console.log('🚀 Loading Excel Online for content:', content.displayName);
 
@@ -107,43 +145,86 @@ export function ExcelEditorItemEditor(props: PageProps) {
       const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:60006' : window.location.origin;
       console.log('🚀 Using baseUrl:', baseUrl);
       
-      // Create file from lakehouse content data using the real Excel API
-      const response = await fetch(`${baseUrl}/api/excel/create-real`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
+      // Try real Excel API first, fallback to demo if not available
+      let response;
       
-      console.log('🚀 Real Excel API response status:', response.status);
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Real Excel API response:', result);
+      try {
+        console.log('🎯 Attempting real Excel API...');
+        response = await fetch(`${baseUrl}/api/excel/create-real`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
+        });
         
-        if (result.success && result.embedUrl) {
-          // Use the real Excel Online embed URL
-          console.log('✅ Setting real Excel embedUrl:', result.embedUrl);
-          setExcelOnlineUrl(result.embedUrl);
-        } else {
-          console.error('❌ Real Excel API indicated failure:', result.error);
+        if (!response.ok) {
+          throw new Error(`Real Excel API failed: ${response.statusText}`);
         }
-      } else {
-        console.error('❌ Failed to call real Excel API:', response.statusText);
+        
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || 'Real Excel API indicated failure');
+        }
+        
+        console.log('✅ Real Excel API succeeded:', result);
+        setExcelOnlineUrl(result.embedUrl);
+        
+      } catch (realExcelError) {
+        console.warn('⚠️ Real Excel API failed, falling back to demo:', realExcelError.message);
+        
+        // Fallback to demo Excel API
+        try {
+          response = await fetch(`${baseUrl}/wopi/createFromLakehouse`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              tableName: requestBody.tableName,
+              data: requestBody.tableData,
+              metadata: requestBody.metadata
+            })
+          });
+          
+          console.log('🚀 Demo Excel API response status:', response.status);
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Demo Excel API response:', result);
+            
+            if (result.fileId && result.excelOnlineUrl) {
+              console.log('✅ Setting demo Excel embedUrl:', result.excelOnlineUrl);
+              setExcelOnlineUrl(result.excelOnlineUrl);
+            } else {
+              console.error('❌ Demo Excel API missing required fields:', result);
+              setExcelOnlineUrl('');
+            }
+          } else {
+            console.error('❌ Failed to call demo Excel API:', response.statusText);
+            setExcelOnlineUrl('');
+          }
+        } catch (demoError) {
+          console.error('❌ Both real and demo Excel APIs failed:', demoError);
+          setExcelOnlineUrl('');
+        }
       }
     } catch (error) {
       console.error('❌ Error loading Excel Online:', error);
+      // Clear any previous URL on error
+      setExcelOnlineUrl('');
     } finally {
+      // Clear the timeout and reset loading state
+      clearTimeout(timeoutId);
       console.log('🔄 Setting isLoadingExcel to false');
       setIsLoadingExcel(false);
     }
-  }, [workloadClient, isLoadingExcel, excelOnlineUrl]);
+  }, [workloadClient, isLoadingExcel]); // Include isLoadingExcel to track loading state
 
-  // Auto-load Excel Online when selectedcontent changes
+  // Auto-load Excel Online when selectedContent changes
   useEffect(() => {
-    console.log('🔄 selectedcontent useEffect triggered:', {
-      selectedcontent: selectedContent?.displayName,
+    console.log('🔄 selectedContent useEffect triggered:', {
+      selectedContent: selectedContent?.displayName,
       currentView,
       viewIsEditor: currentView === VIEW_TYPES.EDITOR
     });
@@ -321,11 +402,23 @@ export function ExcelEditorItemEditor(props: PageProps) {
           onTableSelected={onTableSelected}
           onItemChanged={async (item: any) => {
             console.log('Item changed:', item);
-            // Handle item change
+            // Update the selected lakehouse when the user changes the item in the explorer
+            if (item && item.id && item.workspaceId) {
+              updateItemDefinition({
+                selectedLakehouse: item,
+                selectedContent: undefined // Clear selected content when changing lakehouse
+              });
+              setSelectedContent(null); // Clear selected content in state as well
+            }
           }}
           config={{
-            allowItemSelection: false,
-            refreshTrigger: Date.now()
+            allowItemSelection: true,
+            refreshTrigger: Date.now(),
+            initialItem: item?.definition?.selectedLakehouse ? {
+              id: item.definition.selectedLakehouse.id,
+              workspaceId: item.definition.selectedLakehouse.workspaceId,
+              displayName: (item.definition.selectedLakehouse as any).displayName || (item.definition.selectedLakehouse as any).type || 'Selected Lakehouse'
+            } : undefined
           }}
         />
 

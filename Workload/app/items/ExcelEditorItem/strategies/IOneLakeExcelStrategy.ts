@@ -81,7 +81,7 @@ export interface IOneLakeExcelStrategy {
   buildExcelApiRequestBody(
     workloadClient: WorkloadClientAPI,
     content: ContentReference
-  ): ExcelApiRequestBody;
+  ): Promise<ExcelApiRequestBody>;
 
   /**
    * Determines if this strategy supports saving data back to the data source

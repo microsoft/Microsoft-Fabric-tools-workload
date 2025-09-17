@@ -5,12 +5,12 @@ import { ExcelData, IOneLakeExcelStrategy, LoadingOptions, OneLakeSaveResult, Sa
 
 export class OneLakeTableExcelStrategy implements IOneLakeExcelStrategy {
     canHandle(dataSource: ContentReference): boolean {
-        throw new Error("Method not implemented.");
+        return dataSource.contentType === "table";
     }
     loadData(workloadClient: WorkloadClientAPI, dataSource: ContentReference, options?: LoadingOptions): Promise<ExcelData> {
         throw new Error("Method not implemented.");
     }
-    buildExcelApiRequestBody(workloadClient: WorkloadClientAPI, content: ContentReference): ExcelApiRequestBody {
+    async buildExcelApiRequestBody(workloadClient: WorkloadClientAPI, content: ContentReference): Promise<ExcelApiRequestBody> {
         throw new Error("Method not implemented.");
     }
     supportsSaving(dataSource: ContentReference): boolean {

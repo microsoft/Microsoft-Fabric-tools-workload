@@ -157,105 +157,91 @@ export class OneLakeCSVExcelStrategy implements IOneLakeExcelStrategy {
     }
 
     async loadData(workloadClient: WorkloadClientAPI, dataSource: ContentReference, options?: LoadingOptions): Promise<ExcelData> {
-        try {
-            console.log(`Loading CSV data from OneLake: ${dataSource.path}`);
-            
-            // Initialize OneLake storage client
-            const oneLakeClient = new OneLakeStorageClient(workloadClient);
-            
-            // Construct the full OneLake path
-            const oneLakePath = OneLakeStorageClient.getPath(
-                dataSource.workspaceId, 
-                dataSource.id, 
-                dataSource.path
-            );
-            
-            // Read the CSV file content from OneLake
-            const csvContent = await oneLakeClient.readFileAsText(oneLakePath);
-            
-            if (!csvContent || csvContent.trim().length === 0) {
-                return {
-                    contentReference: dataSource,
-                    success: false,
-                    data: [],
-                    schema: [],
-                    rowCount: 0,
-                    columnCount: 0,
-                    error: "CSV file is empty or could not be read"
-                };
-            }
-
-            // Parse CSV options
-            const delimiter = options?.delimiter || ',';
-            const includeHeaders = options?.includeHeaders !== false; // Default to true
-            const maxRows = options?.maxRows;
-            const inferSchemaOption = options?.inferSchema !== false; // Default to true
-
-            // Parse the CSV content
-            const { data: parsedData, headers } = CSVParser.parseCSV(csvContent, delimiter, includeHeaders);
-            
-            // Apply row limit if specified
-            let finalData = parsedData;
-            if (maxRows && maxRows > 0) {
-                finalData = parsedData.slice(0, maxRows);
-            }
-
-            // Infer schema if requested
-            let schema: TableSchema[] = [];
-            if (inferSchemaOption) {
-                schema = CSVParser.inferSchema(finalData, headers);
-            } else {
-                // Create basic string schema
-                schema = headers.map(header => ({ name: header, dataType: 'string' as const }));
-            }
-
-            console.log(`Successfully loaded CSV data: ${finalData.length} rows, ${headers.length} columns`);
-
-            return {
-                contentReference: dataSource,
-                success: true,
-                data: finalData,
-                schema: schema,
-                rowCount: finalData.length,
-                columnCount: headers.length,
-                warnings: options?.preview ? ["This is a preview of the data"] : undefined
-            };
-
-        } catch (error) {
-            console.error(`Error loading CSV data from OneLake:`, error);
-            return {
-                contentReference: dataSource,
-                success: false,
-                data: [],
-                schema: [],
-                rowCount: 0,
-                columnCount: 0,
-                error: error instanceof Error ? error.message : "Unknown error occurred while loading CSV data"
-            };
+        console.log(`Loading CSV data from OneLake: ${dataSource.path}`);
+        
+        // Initialize OneLake storage client
+        const oneLakeClient = new OneLakeStorageClient(workloadClient);
+               
+        // Read the CSV file content from OneLake
+        const csvContent = await oneLakeClient.readFileAsText(dataSource.path);
+        
+        if (!csvContent || csvContent.trim().length === 0) {
+            throw Error("CSV file is empty or could not be read");
         }
-    }
 
-    buildExcelApiRequestBody(workloadClient: WorkloadClientAPI, content: ContentReference): ExcelApiRequestBody {
-        // Extract table name from file path
-        const pathParts = content.path.split('/');
-        const fileName = pathParts[pathParts.length - 1];
-        const tableName = fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
+        // Parse CSV options
+        const delimiter = options?.delimiter || ',';
+        const includeHeaders = options?.includeHeaders !== false; // Default to true
+        const maxRows = options?.maxRows;
+        const inferSchemaOption = options?.inferSchema !== false; // Default to true
+
+        // Parse the CSV content
+        const { data: parsedData, headers } = CSVParser.parseCSV(csvContent, delimiter, includeHeaders);
+        
+        // Apply row limit if specified
+        let finalData = parsedData;
+        if (maxRows && maxRows > 0) {
+            finalData = parsedData.slice(0, maxRows);
+        }
+
+        // Infer schema if requested
+        let schema: TableSchema[] = [];
+        if (inferSchemaOption) {
+            schema = CSVParser.inferSchema(finalData, headers);
+        } else {
+            // Create basic string schema
+            schema = headers.map(header => ({ name: header, dataType: 'string' as const }));
+        }
+
+        console.log(`Successfully loaded CSV data: ${finalData.length} rows, ${headers.length} columns`);
 
         return {
-            tableName: tableName,
-            tableData: [], // Will be populated when data is loaded
-            schema: [], // Will be populated when data is loaded
+            contentReference: dataSource,
+            success: true,
+            data: finalData,
+            schema: schema,
+            rowCount: finalData.length,
+            columnCount: headers.length,
+            warnings: options?.preview ? ["This is a preview of the data"] : undefined
+        };
+
+
+    }
+
+    async buildExcelApiRequestBody(workloadClient: WorkloadClientAPI, content: ContentReference): Promise<ExcelApiRequestBody> {
+
+        console.log('🏗️ Building Excel API request body for CSV:', content.displayName);
+        
+        // Load the actual data using the loadData function
+        const excelData = await this.loadData(workloadClient, content, {
+            includeHeaders: true,
+            inferSchema: true,
+            maxRows: 1000 // Limit to prevent Excel from becoming too large
+        });
+
+        if (!excelData.success) {
+            console.warn('Failed to load CSV data for Excel API request:', excelData.error);
+            throw Error(excelData.error);
+        }
+
+        console.log(`✅ Successfully loaded CSV data: ${excelData.rowCount} rows, ${excelData.columnCount} columns`);
+
+        return {
+            tableName: content.displayName,
+            tableData: excelData.data,
+            schema: excelData.schema,
             metadata: {
                 lakehouseId: content.id,
-                tableName: tableName,
+                tableName: content.displayName,
                 workspaceId: content.workspaceId,
                 sourceType: 'csv',
                 filePath: content.path,
                 fileSize: 0, // Could be populated if needed
-                rowCount: 0, // Will be updated after loading
-                columnCount: 0 // Will be updated after loading
+                rowCount: excelData.rowCount,
+                columnCount: excelData.columnCount
             }
         };
+        
     }
 
     supportsSaving(dataSource: ContentReference): boolean {
@@ -264,46 +250,30 @@ export class OneLakeCSVExcelStrategy implements IOneLakeExcelStrategy {
     }
 
     async saveData(workloadClient: WorkloadClientAPI, data: ExcelData, options?: SaveOptions): Promise<OneLakeSaveResult> {
-        try {
-            console.log(`Saving Excel data back to CSV in OneLake: ${data.contentReference.path}`);
-            
-            // Initialize OneLake storage client
-            const oneLakeClient = new OneLakeStorageClient(workloadClient);
-            
-            // Convert data back to CSV format
-            const csvContent = this.convertDataToCSV(data.data, data.schema);
-            
-            // Construct the full OneLake path
-            const oneLakePath = OneLakeStorageClient.getPath(
-                data.contentReference.workspaceId, 
-                data.contentReference.id, 
-                data.contentReference.path
-            );
-            
-            // Write the CSV content back to OneLake
-            await oneLakeClient.writeFileAsText(oneLakePath, csvContent);
-            
-            console.log(`Successfully saved CSV data to OneLake: ${data.rowCount} rows`);
+        console.log(`Saving Excel data back to CSV in OneLake: ${data.contentReference.path}`);
+        
+        // Initialize OneLake storage client
+        const oneLakeClient = new OneLakeStorageClient(workloadClient);
+        
+        // Convert data back to CSV format
+        const csvContent = this.convertDataToCSV(data.data, data.schema);
+        
+        // Write the CSV content back to OneLake
+        await oneLakeClient.writeFileAsText(data.contentReference.path, csvContent);
+        
+        console.log(`Successfully saved CSV data to OneLake: ${data.rowCount} rows`);
 
-            return {
-                success: true,
-                rowsAffected: data.rowCount,
-                newVersion: new Date().toISOString(),
-                metadata: {
-                    filePath: data.contentReference.path,
-                    rowCount: data.rowCount,
-                    columnCount: data.columnCount,
-                    savedAt: new Date().toISOString()
-                }
-            };
-
-        } catch (error) {
-            console.error(`Error saving CSV data to OneLake:`, error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : "Unknown error occurred while saving CSV data"
-            };
-        }
+        return {
+            success: true,
+            rowsAffected: data.rowCount,
+            newVersion: new Date().toISOString(),
+            metadata: {
+                filePath: data.contentReference.path,
+                rowCount: data.rowCount,
+                columnCount: data.columnCount,
+                savedAt: new Date().toISOString()
+            }
+        };
     }
 
     /**

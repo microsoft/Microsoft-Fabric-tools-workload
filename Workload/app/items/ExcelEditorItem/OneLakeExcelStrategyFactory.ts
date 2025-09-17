@@ -20,18 +20,18 @@ export class OneLakeExcelStrategyFactory {
   public static getStrategy(dataSource: ContentReference): IOneLakeExcelStrategy {
     // Check table strategy first (structured data)
     if (this.tableStrategy.canHandle(dataSource)) {
-      console.log('🏭 Factory: Using OneLakeTableExcelStrategy for', dataSource.type);
+      console.log('🏭 Factory: Using OneLakeTableExcelStrategy for', dataSource.contentType);
       return this.tableStrategy;
     }
 
     // Check CSV strategy (file-based data)
     if (this.csvStrategy.canHandle(dataSource)) {
-      console.log('🏭 Factory: Using OneLakeCSVExcelStrategy for', dataSource.type);
+      console.log('🏭 Factory: Using OneLakeCSVExcelStrategy for', dataSource.contentType);
       return this.csvStrategy;
     }
 
     // No strategy can handle this data source
-    throw new Error(`No Excel strategy available for data source: ${dataSource.type})`);
+    throw new Error(`No Excel strategy available for data source: ${dataSource.contentType})`);
   }
 
   /**
