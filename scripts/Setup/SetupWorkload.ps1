@@ -165,17 +165,14 @@ $placeholders = @{
 $environments = @{
     "dev" = @{
         "{{FRONTEND_URL}}" = "http://localhost:60006/"
-        "{{BACKEND_URL}}" = "http://127.0.0.1:5000/workload"
         "{{LOG_LEVEL}}" = "debug"
     }
     "test" = @{
         "{{FRONTEND_URL}}" = "https://your-staging-url.azurestaticapps.net/"
-        "{{BACKEND_URL}}" = "https://your-staging-url.azurestaticapps.net/BE"
         "{{LOG_LEVEL}}" = "info"
     }
     "prod" = @{
         "{{FRONTEND_URL}}" = "https://your-production-url.azurestaticapps.net/"
-        "{{BACKEND_URL}}" = "https://your-production-url.azurestaticapps.net/BE"
         "{{LOG_LEVEL}}" = "warn"
     }
 }

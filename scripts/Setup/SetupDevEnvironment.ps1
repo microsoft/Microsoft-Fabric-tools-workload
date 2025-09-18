@@ -113,13 +113,11 @@ Write-Host "🔧 Generating DevGateway configuration..." -ForegroundColor Blue
 
 $WorkloadName = $EnvConfig['WORKLOAD_NAME']
 $WorkloadVersion = $EnvConfig['WORKLOAD_VERSION']
-$BackendBaseUrl = $EnvConfig['BACKEND_URL']
 $ManifestPath = Join-Path $ManifestDir "$WorkloadName.$WorkloadVersion.nupkg"
 
 $DevGatewayConfig = @{
     WorkspaceGuid = $DevWorkspaceId
     ManifestPackageFilePath = $ManifestPath
-    WorkloadEndpointURL = $BackendBaseUrl
 }
 
 $DevGatewayFile = Join-Path $DevGatewayDir "workload-dev-mode.json"

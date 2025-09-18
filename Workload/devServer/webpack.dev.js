@@ -10,14 +10,12 @@ const { registerDevServerApis } = require('.'); // Import our manifest API
 process.env.DEV_AAD_CONFIG_FE_APPID = process.env.FRONTEND_APPID;
 process.env.DEV_AAD_CONFIG_BE_APPID = process.env.BACKEND_APPID;
 process.env.DEV_AAD_CONFIG_BE_AUDIENCE= ""
-process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI=process.env.BACKEND_URL;
 
 
 console.log('********************   Development Configuration   *******************');
 console.log('process.env.DEV_AAD_CONFIG_FE_APPID: ' + process.env.DEV_AAD_CONFIG_FE_APPID);
 console.log('process.env.DEV_AAD_CONFIG_BE_APPID: ' + process.env.DEV_AAD_CONFIG_BE_APPID);
 console.log('process.env.DEV_AAD_CONFIG_BE_AUDIENCE: ' + process.env.DEV_AAD_CONFIG_BE_AUDIENCE);
-console.log('process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI: ' + process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI);
 console.log('*********************************************************************');
 
 
@@ -29,7 +27,6 @@ module.exports = merge(baseConfig, {
             "process.env.DEV_AAD_CONFIG_FE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_FE_APPID),
             "process.env.DEV_AAD_CONFIG_BE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_APPID),
             "process.env.DEV_AAD_CONFIG_BE_AUDIENCE": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_AUDIENCE),
-            "process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI),
             "NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development")
         }),
     ],
