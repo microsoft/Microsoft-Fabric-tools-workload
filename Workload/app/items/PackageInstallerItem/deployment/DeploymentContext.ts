@@ -103,7 +103,7 @@ export class DeploymentContext extends BaseContext {
    */
   getSortedItems(): PackageItem[] {
     //Sorting the items based on dependencies
-    const sortedItems =  sortPackageItemsByDependencies(this.pack.items, this.deployment.workspace?.id);
+    const sortedItems =  sortPackageItemsByDependencies(this.pack.items);
     return sortedItems;
   }
 
