@@ -361,6 +361,8 @@ export interface PackageItem {
   schedules?: ItemSchedule[];
   /** OneLake shortcuts to be created for this item */
   shortcuts?: OneLakeShortcutDefinition[];
+  /** A list of dependencies for this item. */
+  dependsOn?: PackageItemDependency[]
 }
 
 /**
@@ -406,6 +408,19 @@ export interface PackageItemDefinition {
    * this is needed as some items have difficulties to be created with definition. 
    * Default we use createandupdateDefinition as createwithdefinition will not return the id of the item immediately which we need for interceptors*/
   creationMode?: "WithoutDefinition" | "WithDefinition" | "CreateAndUpdateDefinition";
+}
+
+/**
+ * Defines a dependency for other items. 
+ * The dependency can be absolute (when the workspaceId and itemId are set) or relative (when only the itemId is set, it will be resolved in the current workspace).
+ */
+export interface PackageItemDependency {
+  /** The workspace ID where the item is located */
+  workspaceId?: string;
+  /** The item ID of the dependency */
+  itemId: string;
+  /** The type of the dependency */
+  type?: string;
 }
 
 /**
@@ -529,6 +544,7 @@ export interface OneLakeShortcutDefinition {
   /** Shortcut configuration matching Fabric API requirements */
   configuration: any;
 }
+
 
 
 

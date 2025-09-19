@@ -1,6 +1,7 @@
 import { PackageDeployment, Package, PackageItem, DeploymentVariables } from "../PackageInstallerItemModel";
 import { Item } from "../../../clients/FabricPlatformTypes";
 import { BaseContext } from "../package/BaseContext";
+import { sortPackageItemsByDependencies } from "../package/PackageDependencyUtils";
 
 
 
@@ -95,6 +96,17 @@ export class DeploymentContext extends BaseContext {
       }
     }
   }
+
+  /**
+   * Gets the list of package items sorted based on their dependencies.
+   * @returns The list of package items sorted based on their dependencies.
+   */
+  getSortedItems(): PackageItem[] {
+    //Sorting the items based on dependencies
+    const sortedItems =  sortPackageItemsByDependencies(this.pack.items, this.deployment.workspace?.id);
+    return sortedItems;
+  }
+
 
   /**
    * Gets the workspace ID from the deployment configuration.

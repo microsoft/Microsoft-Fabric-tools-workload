@@ -220,7 +220,8 @@ export abstract class DeploymentStrategy {
     depContext.currentProgress = 30;
     // Create each item defined in the package
     if (this.pack.items?.length > 0) {
-      for (const itemDef of this.pack.items) {
+      const sortedItems = depContext.getSortedItems();
+      for (const itemDef of sortedItems) {
         depContext.updateProgress(`Creating item: ${itemDef.displayName} of type: ${itemDef.type}`);
         //create the item
         await this.createItem(depContext, itemDef);
