@@ -64,7 +64,7 @@ export class DeploymentContext extends BaseContext {
     // adding parameters 
     if (Array.isArray(this.pack.deploymentConfig?.parameters) && this.pack.deploymentConfig.parameters.length > 0) {
       for (const [key, value] of this.pack.deploymentConfig.parameters) {
-        this.variableMap[`{{${key}}}`] = value;
+        this.variableMap[DeploymentVariables.getVariableForId(key)] = value;
       }
     }
     // Initialize variable map with deployment variables
@@ -158,8 +158,8 @@ export class DeploymentContext extends BaseContext {
     const itemName = itemPac ? this.getRemovedSuffixItemName(itemPac) : item?.displayName;
     const itemId = item?.id || '<undefined>';
     if(itemName) {
-      this.variableMap[`{{ITEM_ID_${itemName}}}`] = itemId ;
-      this.variableMap[`{{${itemName}}}`] = itemId ;
+      this.variableMap[DeploymentVariables.getVariableForId(`ITEM_ID_${itemName}`)] = itemId ;
+      this.variableMap[DeploymentVariables.getVariableForItem(item)] = itemId ;
     }
     //Setting the current Item_ID variable as well to make sure they can use current id
     this.variableMap[`${DeploymentVariables.ITEM_ID}`] = itemId;

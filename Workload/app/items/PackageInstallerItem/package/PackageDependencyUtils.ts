@@ -1,4 +1,4 @@
-import { PackageItem, PackageItemDependency } from "../PackageInstallerItemModel";
+import { DeploymentVariables, PackageItem, PackageItemDependency } from "../PackageInstallerItemModel";
 
 /**
  * Error thrown when circular dependencies are detected during package item sorting.
@@ -149,13 +149,15 @@ function findDependencyKey(
     // Absolute dependency outside current workspace - not resolvable in current set
     return null;
   }
+
+  const depDisplayName = DeploymentVariables.getItemDisplayNameFromVariable(dependency.itemId);
   
-  // Find item by itemId - we'll assume itemId matches displayName for now
-  // In a real implementation, you'd want to have a proper ID system
+  // Find item by matching the display name extracted from the variable format
+  // The dependency.itemId is in format {{DisplayName}}, so we extract the display name
+  // Also check the item type if specified in the dependency
   const matchingItem = items.find(item => 
-    item.displayName === dependency.itemId ||
-    (item as any).id === dependency.itemId
-  );
+    item.displayName === depDisplayName &&
+    (dependency.itemType === undefined || dependency.itemType === item.type));
   
   return matchingItem?.displayName || null;
 }

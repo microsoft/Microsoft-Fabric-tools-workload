@@ -1,6 +1,6 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType, DeploymentVariables, PackageItemDependency } from "../PackageInstallerItemModel";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType, DeploymentVariables } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
@@ -121,7 +121,7 @@ export class BasePackageStrategy {
             packContext.pack.items = processedItems.filter(item => item !== undefined) as PackageItem[];
 
             // Update dependencies after all items are processed
-            await this.updateItemDependencies(packContext);
+            await this.updateItemDependencies(config, packContext);
 
             // Update item references if configured
             this.updateItemReplacements(config, packContext);
@@ -155,8 +155,8 @@ export class BasePackageStrategy {
             if (config.originalWorkspaceId) {
                 replacements[config.originalWorkspaceId] = DeploymentVariables.WORKSPACE_ID; // Ensure original workspace ID is always replaced
             }
-            Object.entries(packContext.originalItemInfo).forEach(([itemId, itemName]) => {
-                replacements[itemId] = `{{${itemName}}}`;
+            Object.entries(packContext.originalItemInfo).forEach(([itemId, item]) => {
+                replacements[itemId] = DeploymentVariables.getVariableForItem(item);
             });
 
             const defaultInterceptor: ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig> = {
@@ -270,7 +270,7 @@ export class BasePackageStrategy {
      * 
      * @param packContext - The package context containing items and original item info
      */
-    private async updateItemDependencies(packContext: PackageContext): Promise<void> {
+    private async updateItemDependencies(config: CreatePackageConfig,packContext: PackageContext): Promise<void> {
         packContext.log('Starting dependency analysis...');
         
         const originalItemIds = Object.keys(packContext.originalItemInfo);
@@ -280,50 +280,54 @@ export class BasePackageStrategy {
             return;
         }
 
-        // Process all items in parallel for better performance
-        await Promise.all(packContext.pack.items.map(async (packageItem) => {
-            if (!packageItem.definition?.parts) {
-                return; // Skip items without definition parts
-            }
-            
-            // Initialize dependsOn array
-            packageItem.dependsOn = [];
-            
-            // Scan each definition part for item ID references
-            for (const part of packageItem.definition.parts) {
-                try {
-                    // Read the content once for this part
-                    const partContent = await this.readDefinitionPartContent(part, packContext);
-                    if (!partContent) {
-                        continue; // Skip if content couldn't be read
-                    }
+        if (config.updateItemReferences) {
+            // Process all items in parallel for better performance
+            await Promise.all(packContext.pack.items.map(async (packageItem) => {
+                if (!packageItem.definition?.parts) {
+                    return; // Skip items without definition parts
+                }
+                
+                // Initialize dependsOn array
+                packageItem.dependsOn = [];
+                
+                // Scan each definition part for item ID references
+                for (const part of packageItem.definition.parts) {
+                    try {
+                        // Read the content once for this part
+                        const partContent = await this.readDefinitionPartContent(part, packContext);
+                        if (!partContent) {
+                            continue; // Skip if content couldn't be read
+                        }
 
-                    // Check all original item IDs in this content
-                    for (const itemId of originalItemIds) {
-                        if (partContent.includes(itemId)) {
-                            const referencedItem = packContext.originalItemInfo[itemId];
-                            if (referencedItem && referencedItem.displayName !== packageItem.displayName) {
-                                // Avoid self-references and duplicates
-                                const existingDependency = packageItem.dependsOn.find(dep => dep.itemId === referencedItem.displayName);
-                                if (!existingDependency) {
-                                    packageItem.dependsOn.push({
-                                        itemId: referencedItem.displayName,
-                                        itemType: referencedItem.type
-                                    });
-                                    packContext.log(`Found dependency: ${packageItem.displayName} -> ${referencedItem.displayName} (ID: ${itemId} in ${part.path})`);
+                        // Check all original item IDs in this content
+                        for (const itemId of originalItemIds) {
+                            if (partContent.includes(itemId)) {
+                                const referencedItem = packContext.originalItemInfo[itemId];
+                                if (referencedItem && referencedItem.displayName !== packageItem.displayName) {
+                                    // Avoid self-references and duplicates
+                                    const existingDependency = packageItem.dependsOn.find(dep => dep.itemId === referencedItem.displayName);
+                                    if (!existingDependency) {
+                                        packageItem.dependsOn.push({
+                                            itemId: DeploymentVariables.getVariableForItem(referencedItem),
+                                            itemType: referencedItem.type
+                                        });
+                                        packContext.log(`Found dependency: ${packageItem.displayName} -> ${referencedItem.displayName} (ID: ${itemId} in ${part.path})`);
+                                    }
                                 }
                             }
                         }
+                    } catch (error) {
+                        packContext.logError(`Error analyzing part ${part.path} for item ${packageItem.displayName}:`, error);
                     }
-                } catch (error) {
-                    packContext.logError(`Error analyzing part ${part.path} for item ${packageItem.displayName}:`, error);
                 }
-            }
 
-            if (packageItem.dependsOn.length > 0) {
-                packContext.log(`Set ${packageItem.dependsOn.length} dependencies for ${packageItem.displayName}: [${packageItem.dependsOn.map(d => d.itemId).join(', ')}]`);
-            }
-        }));
+                if (packageItem.dependsOn.length > 0) {
+                    packContext.log(`Set ${packageItem.dependsOn.length} dependencies for ${packageItem.displayName}: [${packageItem.dependsOn.map(d => d.itemId).join(', ')}]`);
+                }
+            }));
+        } else {
+            packContext.log('Skipping dependency analysis as updateItemReferences is false');
+        }
 
         const totalDependencies = packContext.pack.items?.reduce((total, item) => total + (item.dependsOn?.length || 0), 0) || 0;
         packContext.log(`Dependency analysis completed. Found ${totalDependencies} total dependencies across ${packContext.pack.items?.length || 0} items.`);

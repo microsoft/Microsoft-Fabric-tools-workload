@@ -23,8 +23,33 @@ export class DeploymentVariables {
   static readonly FOLDER_ID: string = "{{FOLDER_ID}}";
   /** Placeholder for the current item ID - replaced with actual item identifier */
   static readonly ITEM_ID: string = "{{ITEM_ID}}";
-}
 
+  static getVariableForId(id: string): string {
+    return `{{${id}}}`;
+  }
+
+  static getIdFromVariable(variable: string): string | null {
+    const match = variable.match(/^\{\{(.+?)\}\}$/);
+    return match ? match[1] : null;
+  }
+
+  static getVariableForItem(item: Item): string {
+    return `{{${item.displayName}}}`;
+  }
+
+  static getItemDisplayNameFromVariable(variable: string): string | null {
+    return DeploymentVariables.getIdFromVariable(variable);
+  }
+
+  static getItemIdFromVariable(variable: string, items: Record<string, Item>): string | null {
+    for (const itemId in items) {
+      if (items[itemId].displayName === variable) {
+        return itemId;
+      }
+    }
+    return null;
+  }
+}
 
 /**
  * Defines the structure for a Package Installer Item that can contain multiple deployments.
