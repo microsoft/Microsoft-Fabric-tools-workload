@@ -38,7 +38,7 @@ export class PackageContext extends BaseContext {
      * Record of original item information keyed by item ID.
      * Stores original metadata that may be needed during package creation.
      */
-    originalItemInfo: Record<string, string>;
+    originalItemInfo: Record<string, Item>;
     
     /** Identifier for the global interceptor used during package processing */
     globalInterceptorId: string;

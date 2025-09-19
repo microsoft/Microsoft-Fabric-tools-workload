@@ -420,7 +420,7 @@ export interface PackageItemDependency {
   /** The item ID of the dependency */
   itemId: string;
   /** The type of the dependency */
-  type?: string;
+  itemType?: string;
 }
 
 /**

@@ -210,6 +210,13 @@
           "items": {
             "$ref": "#/definitions/OneLakeShortcutDefinition"
           }
+        },
+        "dependsOn": {
+          "type": "array",
+          "description": "A list of dependencies for this item",
+          "items": {
+            "$ref": "#/definitions/PackageItemDependency"
+          }
         }
       },
       "additionalProperties": false
@@ -393,6 +400,27 @@
           "additionalProperties": {
             "type": "string"
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "PackageItemDependency": {
+      "type": "object",
+      "description": "Defines a dependency for other items. The dependency can be absolute (when the workspaceId and itemId are set) or relative (when only the itemId is set, it will be resolved in the current workspace).",
+      "required": ["itemId"],
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "description": "The workspace ID where the item is located"
+        },
+        "itemId": {
+          "type": "string",
+          "description": "The item ID of the dependency",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of the dependency"
         }
       },
       "additionalProperties": false

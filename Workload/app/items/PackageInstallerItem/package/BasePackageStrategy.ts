@@ -1,6 +1,6 @@
 import { PackageInstallerContext } from "./PackageInstallerContext";
 import { ItemWithDefinition } from "../../../controller/ItemCRUDController";
-import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType, DeploymentVariables } from "../PackageInstallerItemModel";
+import { PackageInstallerItemDefinition, DeploymentLocation, DeploymentType, Package, PackageItem, PackageItemPayloadType, PackageItemPart, ReferenceInterceptorDefinitionConfig, StringReplacementInterceptorDefinitionConfig, ItemPartInterceptorDefinition, ItemPartInterceptorType, DeploymentVariables, PackageItemDependency } from "../PackageInstallerItemModel";
 import { Item, ItemDefinitionPart } from "../../../clients/FabricPlatformTypes";
 import { PackageContext } from "./PackageContext";
 import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
@@ -120,25 +120,11 @@ export class BasePackageStrategy {
             const processedItems = await Promise.all(items?.map(item => this.processItem(packContext, item)));
             packContext.pack.items = processedItems.filter(item => item !== undefined) as PackageItem[];
 
-            if(config.updateItemReferences) {
-                // Convert the originalItemInfo Record to string replacements for future use
-                const replacements: Record<string, string> = {};
+            // Update dependencies after all items are processed
+            await this.updateItemDependencies(packContext);
 
-                if(config.originalWorkspaceId){
-                    replacements[config.originalWorkspaceId] = DeploymentVariables.WORKSPACE_ID; // Ensure original workspace ID is always replaced
-                }
-                Object.entries(packContext.originalItemInfo).forEach(([itemId, itemName]) => {
-                    replacements[itemId] = `{{${itemName}}}`;
-                });
-
-                const defaultInterceptor: ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig> = {
-                    type: ItemPartInterceptorType.StringReplacement,
-                    config: {
-                        replacements: replacements
-                    }
-                };
-                packContext.pack.deploymentConfig.globalInterceptors[packContext.globalInterceptorId] = defaultInterceptor;
-            }
+            // Update item references if configured
+            this.updateItemReplacements(config, packContext);
 
             await packContext.oneLakeClient.writeFileAsText(
                 packContext.OneLakePackageJsonPathInItem,
@@ -158,6 +144,28 @@ export class BasePackageStrategy {
             throw new Error(`Package creation failed: ${error.message}`);
         } finally {
             this.writeLogsToOneLake(packContext)
+        }
+    }
+
+    private updateItemReplacements(config: CreatePackageConfig, packContext: PackageContext) {
+        if (config.updateItemReferences) {
+            // Convert the originalItemInfo Record to string replacements for future use
+            const replacements: Record<string, string> = {};
+
+            if (config.originalWorkspaceId) {
+                replacements[config.originalWorkspaceId] = DeploymentVariables.WORKSPACE_ID; // Ensure original workspace ID is always replaced
+            }
+            Object.entries(packContext.originalItemInfo).forEach(([itemId, itemName]) => {
+                replacements[itemId] = `{{${itemName}}}`;
+            });
+
+            const defaultInterceptor: ItemPartInterceptorDefinition<StringReplacementInterceptorDefinitionConfig> = {
+                type: ItemPartInterceptorType.StringReplacement,
+                config: {
+                    replacements: replacements
+                }
+            };
+            packContext.pack.deploymentConfig.globalInterceptors[packContext.globalInterceptorId] = defaultInterceptor;
         }
     }
 
@@ -213,7 +221,7 @@ export class BasePackageStrategy {
                     }
                 } as ItemPartInterceptorDefinition<ReferenceInterceptorDefinitionConfig>;
             }
-            packContext.originalItemInfo[item.id] = item.displayName;
+            packContext.originalItemInfo[item.id] = item;
             return packageItem;
             
         } catch (error) {
@@ -254,6 +262,99 @@ export class BasePackageStrategy {
         };
     }
 
+
+    /**
+     * Analyzes dependencies between package items by scanning definition parts for item ID references.
+     * This method examines the content of each item's definition parts to find references to other items
+     * in the package and automatically populates the dependsOn property.
+     * 
+     * @param packContext - The package context containing items and original item info
+     */
+    private async updateItemDependencies(packContext: PackageContext): Promise<void> {
+        packContext.log('Starting dependency analysis...');
+        
+        const originalItemIds = Object.keys(packContext.originalItemInfo);
+        packContext.log(`Analyzing for references to ${originalItemIds.length} original item IDs`);
+
+        if (!packContext.pack.items) {
+            return;
+        }
+
+        // Process all items in parallel for better performance
+        await Promise.all(packContext.pack.items.map(async (packageItem) => {
+            if (!packageItem.definition?.parts) {
+                return; // Skip items without definition parts
+            }
+            
+            // Initialize dependsOn array
+            packageItem.dependsOn = [];
+            
+            // Scan each definition part for item ID references
+            for (const part of packageItem.definition.parts) {
+                try {
+                    // Read the content once for this part
+                    const partContent = await this.readDefinitionPartContent(part, packContext);
+                    if (!partContent) {
+                        continue; // Skip if content couldn't be read
+                    }
+
+                    // Check all original item IDs in this content
+                    for (const itemId of originalItemIds) {
+                        if (partContent.includes(itemId)) {
+                            const referencedItem = packContext.originalItemInfo[itemId];
+                            if (referencedItem && referencedItem.displayName !== packageItem.displayName) {
+                                // Avoid self-references and duplicates
+                                const existingDependency = packageItem.dependsOn.find(dep => dep.itemId === referencedItem.displayName);
+                                if (!existingDependency) {
+                                    packageItem.dependsOn.push({
+                                        itemId: referencedItem.displayName,
+                                        itemType: referencedItem.type
+                                    });
+                                    packContext.log(`Found dependency: ${packageItem.displayName} -> ${referencedItem.displayName} (ID: ${itemId} in ${part.path})`);
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    packContext.logError(`Error analyzing part ${part.path} for item ${packageItem.displayName}:`, error);
+                }
+            }
+
+            if (packageItem.dependsOn.length > 0) {
+                packContext.log(`Set ${packageItem.dependsOn.length} dependencies for ${packageItem.displayName}: [${packageItem.dependsOn.map(d => d.itemId).join(', ')}]`);
+            }
+        }));
+
+        const totalDependencies = packContext.pack.items?.reduce((total, item) => total + (item.dependsOn?.length || 0), 0) || 0;
+        packContext.log(`Dependency analysis completed. Found ${totalDependencies} total dependencies across ${packContext.pack.items?.length || 0} items.`);
+    }
+
+    /**
+     * Reads the content of a definition part from OneLake storage.
+     * 
+     * @param part - The definition part to read
+     * @param packContext - The package context for logging
+     * @returns The content as string, or null if it cannot be read
+     */
+    private async readDefinitionPartContent(part: PackageItemPart, packContext: PackageContext): Promise<string | null> {
+        // Only read OneLake payload types
+        if (part.payloadType !== PackageItemPayloadType.OneLake || !part.payload) {
+            throw new Error("Not supported payload type " + part.payloadType)
+        }
+
+        try {
+            const oneLakeClient = this.context.fabricPlatformAPIClient.oneLakeStorage.createItemWrapper(this.item);
+            // Read the content from OneLake
+            const content = await oneLakeClient.readFileAsText(part.payload);
+            
+            packContext.log(`Read ${content.length} characters from part ${part.path} (${part.payload})`);
+            return content;
+            
+        } catch (error) {
+            packContext.logError(`Error reading content from ${part.payload}:`, error);
+            return null;
+        }
+    }
 
     /**
      * Writes the packaging logs to OneLake storage.
