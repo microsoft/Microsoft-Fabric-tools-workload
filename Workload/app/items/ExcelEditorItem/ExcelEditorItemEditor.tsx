@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { Text } from "@fluentui/react-components";
 import { PageProps, ContextProps} from  "../../App";
@@ -11,6 +11,7 @@ import { ExcelEditorItemEmpty } from "./ExcelEditorItemEditorEmpty";
 import { ExcelEditorItemRibbon } from "./ExcelEditorItemEditorRibbon";
 import { ExcelEditorItemExcelView } from "./ExcelEditorItemExcelView";
 import { OneLakeExcelStrategyFactory } from "./OneLakeExcelStrategyFactory";
+import { wopiExcelService } from "./services/WOPIExcelService";
 import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
 import "../../styles.scss";
 import { callDatahubOpen } from "../../controller/DataHubController";
@@ -32,9 +33,13 @@ export function ExcelEditorItemEditor(props: PageProps) {
   const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [selectedContent, setSelectedContent] = useState<ContentReference | null>(null);
-  // Excel Online state
-  const [excelOnlineUrl, setExcelOnlineUrl] = useState<string>('');
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
+  // Excel state - WOPI integration
+  const [excelData, setExcelData] = useState<any[][]>([]);
   const [isLoadingExcel, setIsLoadingExcel] = useState(false);
+  const [excelOnlineUrl, setExcelOnlineUrl] = useState<string>('');
+  const isLoadingExcelRef = useRef(false);
+  const previousSelectedContentRef = useRef<ContentReference | null>(null);
 
   const { pathname } = useLocation();
 
@@ -112,128 +117,105 @@ export function ExcelEditorItemEditor(props: PageProps) {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
 
-  // Fix the loadExcelOnline dependencies to prevent infinite loop
-  const loadExcelOnline = useCallback(async (content: ContentReference): Promise<void> => {
-    console.log('🚀 loadExcelOnline called with content:', content?.displayName);
+  // Load Excel data using WOPI integration
+  const loadExcelData = useCallback(async (content: ContentReference): Promise<void> => {
+    console.log('🚀 loadExcelData called with content:', content?.displayName);
     
-    // Prevent multiple simultaneous loading attempts
-    if (isLoadingExcel) {
+    // Prevent multiple simultaneous loading attempts using ref
+    if (isLoadingExcelRef.current) {
       console.log('🚫 Already loading Excel, skipping duplicate request');
       return;
     }
     
+    isLoadingExcelRef.current = true;
     setIsLoadingExcel(true);
     
     // Add a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       console.warn('⏰ Excel loading timed out after 30 seconds');
+      isLoadingExcelRef.current = false;
       setIsLoadingExcel(false);
-      setExcelOnlineUrl('');
+      setExcelData([]);
     }, 30000); // 30 seconds timeout
     
     try {
-      console.log('🚀 Loading Excel Online for content:', content.displayName);
+      console.log('🚀 Loading Excel data for content:', content.displayName);
 
       // Get the appropriate Excel strategy
       const strategy = OneLakeExcelStrategyFactory.getStrategy(content);
       console.log('🏭 Using strategy:', strategy.constructor.name);
       
-      // Load the data using the strategy
-      const requestBody = await strategy.buildExcelApiRequestBody(workloadClient, content);
+      // Load the data using the strategy (modified to return ExcelData directly)
+      const excelData = await strategy.loadData(workloadClient, content);
       
-      // Use WOPI service to generate Excel Online URL
-      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:60006' : window.location.origin;
-      console.log('🚀 Using baseUrl:', baseUrl);
-      
-      // Try real Excel API first, fallback to demo if not available
-      let response;
-      
-      try {
-        console.log('🎯 Attempting real Excel API...');
-        response = await fetch(`${baseUrl}/api/excel/create-real`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
+      if (excelData.success && excelData.data.length > 0) {
+        console.log('✅ Data loaded successfully:', excelData.data.length, 'rows');
+        setExcelData(excelData.data);
         
-        if (!response.ok) {
-          throw new Error(`Real Excel API failed: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Real Excel API indicated failure');
-        }
-        
-        console.log('✅ Real Excel API succeeded:', result);
-        setExcelOnlineUrl(result.embedUrl);
-        
-      } catch (realExcelError) {
-        console.warn('⚠️ Real Excel API failed, falling back to demo:', realExcelError.message);
-        
-        // Fallback to demo Excel API
+        // Initialize WOPI Excel service and generate Excel Online URL
         try {
-          response = await fetch(`${baseUrl}/wopi/createFromLakehouse`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              tableName: requestBody.tableName,
-              data: requestBody.tableData,
-              metadata: requestBody.metadata
-            })
-          });
-          
-          console.log('🚀 Demo Excel API response status:', response.status);
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Demo Excel API response:', result);
+          const initialized = await wopiExcelService.initialize();
+          if (initialized) {
+            // Generate Excel Online URL from content reference
+            const excelUrl = await wopiExcelService.createExcelFromContentReference(content);
             
-            if (result.fileId && result.excelOnlineUrl) {
-              console.log('✅ Setting demo Excel embedUrl:', result.excelOnlineUrl);
-              setExcelOnlineUrl(result.excelOnlineUrl);
+            if (excelUrl) {
+              setExcelOnlineUrl(excelUrl);
+              console.log('✅ WOPI Excel Online URL generated');
             } else {
-              console.error('❌ Demo Excel API missing required fields:', result);
+              console.log('📋 No valid Excel file URL available, using table view only');
               setExcelOnlineUrl('');
             }
           } else {
-            console.error('❌ Failed to call demo Excel API:', response.statusText);
+            console.warn('⚠️ WOPI service failed to initialize');
             setExcelOnlineUrl('');
           }
-        } catch (demoError) {
-          console.error('❌ Both real and demo Excel APIs failed:', demoError);
+        } catch (wopiError) {
+          console.warn('⚠️ WOPI Excel failed, displaying data in table mode:', wopiError);
           setExcelOnlineUrl('');
         }
+      } else {
+        console.error('❌ Failed to load data:', excelData.error);
+        setExcelData([]);
+        setExcelOnlineUrl('');
       }
     } catch (error) {
-      console.error('❌ Error loading Excel Online:', error);
-      // Clear any previous URL on error
+      console.error('❌ Error loading Excel data:', error);
+      setExcelData([]);
       setExcelOnlineUrl('');
     } finally {
       // Clear the timeout and reset loading state
       clearTimeout(timeoutId);
       console.log('🔄 Setting isLoadingExcel to false');
+      isLoadingExcelRef.current = false;
       setIsLoadingExcel(false);
     }
-  }, [workloadClient, isLoadingExcel]); // Include isLoadingExcel to track loading state
+  }, [workloadClient]); // Removed isLoadingExcel dependency to prevent infinite loop
 
-  // Auto-load Excel Online when selectedContent changes
+  // Auto-load Excel data when selectedContent changes
   useEffect(() => {
     console.log('🔄 selectedContent useEffect triggered:', {
       selectedContent: selectedContent?.displayName,
       currentView,
-      viewIsEditor: currentView === VIEW_TYPES.EDITOR
+      viewIsEditor: currentView === VIEW_TYPES.EDITOR,
+      isCurrentlyLoading: isLoadingExcelRef.current,
+      previousContent: previousSelectedContentRef.current?.displayName
     });
     
-    if (selectedContent && currentView === VIEW_TYPES.EDITOR) {
-      console.log('🔄 Selected content changed, loading Excel Online:', selectedContent.displayName);
-      loadExcelOnline(selectedContent);
+    // Check if content actually changed (not just a re-render with same content)
+    const contentChanged = selectedContent?.displayName !== previousSelectedContentRef.current?.displayName ||
+                          selectedContent?.path !== previousSelectedContentRef.current?.path;
+    
+    // Only load if we have content, we're in editor view, we're not already loading, and content actually changed
+    if (selectedContent && currentView === VIEW_TYPES.EDITOR && !isLoadingExcelRef.current && contentChanged) {
+      console.log('🔄 Selected content changed, loading Excel data:', selectedContent.displayName);
+      previousSelectedContentRef.current = selectedContent;
+      loadExcelData(selectedContent);
+    } else if (selectedContent) {
+      // Update the ref even if we don't load (to track current content)
+      previousSelectedContentRef.current = selectedContent;
     }
-  }, [selectedContent, currentView, loadExcelOnline]);
+  }, [selectedContent, currentView, loadExcelData]);
 
   const handleOpenSettings = async () => {
     if (item) {
@@ -247,7 +229,8 @@ export function ExcelEditorItemEditor(props: PageProps) {
   };
 
   const handleRefresh = () => {
-    // TODO: Implement refresh functionality
+    // Update refresh trigger to force OneLake explorer refresh
+    setRefreshTrigger(Date.now());
     callNotificationOpen(
       workloadClient,
       "Refreshed",
@@ -258,31 +241,39 @@ export function ExcelEditorItemEditor(props: PageProps) {
   };
 
 
-  const onFileSelected = async (fileName: string, oneLakeLink: string): Promise<void> => {
+  const onFileSelected = useCallback(async (fileName: string, oneLakeLink: string): Promise<void> => {
     console.log('File selected:', fileName, oneLakeLink);
+    
+    if (!item?.definition?.selectedLakehouse) {
+      console.warn('No lakehouse selected, cannot set file content');
+      return;
+    }
+    
     setSelectedContent({
-      id: item.definition.selectedLakehouse.id,
-      workspaceId: item.definition.selectedLakehouse.workspaceId,
+      ...item.definition.selectedLakehouse,
       displayName: fileName,
       contentType: "file",
       path: oneLakeLink,
       itemType: "Lakehouse"
     });
-    // TODO: Implement file selection logic
-  }
+  }, [item?.definition?.selectedLakehouse]);
 
- const onTableSelected = async (tableName: string, oneLakeLink: string): Promise<void> => {
+ const onTableSelected = useCallback(async (tableName: string, oneLakeLink: string): Promise<void> => {
     console.log('Table selected:', tableName, oneLakeLink);
+    
+    if (!item?.definition?.selectedLakehouse) {
+      console.warn('No lakehouse selected, cannot set table content');
+      return;
+    }
+    
     setSelectedContent({
-      id: item.definition.selectedLakehouse.id,
-      workspaceId: item.definition.selectedLakehouse.workspaceId,
+      ...item.definition.selectedLakehouse,
       displayName: tableName,
       contentType: "table",
       path: oneLakeLink,
       itemType: "Lakehouse"
     });
-    // TODO: Implement table selection logic
-  }
+  }, [item?.definition?.selectedLakehouse]);
 
   const handleOpenItem = async () => {
     // Open DataHub wizard to select Lakehouse tables
@@ -351,6 +342,29 @@ export function ExcelEditorItemEditor(props: PageProps) {
     setCurrentView(VIEW_TYPES.EDITOR);
   };
 
+  const handleItemChanged = useCallback(async (item: any) => {
+    console.log('Item changed:', item);
+    // Update the selected lakehouse when the user changes the item in the explorer
+    if (item && item.id && item.workspaceId) {
+      updateItemDefinition({
+        selectedLakehouse: item,
+        selectedContent: undefined // Clear selected content when changing lakehouse
+      });
+      setSelectedContent(null); // Clear selected content in state as well
+    }
+  }, [updateItemDefinition]);
+
+  // Memoize the OneLake explorer config to prevent unnecessary re-renders
+  const oneLakeExplorerConfig = useMemo(() => ({
+    allowItemSelection: true,
+    refreshTrigger: refreshTrigger,
+    initialItem: item?.definition?.selectedLakehouse ? {
+      id: item.definition.selectedLakehouse.id,
+      workspaceId: item.definition.selectedLakehouse.workspaceId,
+      displayName: (item.definition.selectedLakehouse as any).displayName || (item.definition.selectedLakehouse as any).type || 'Selected Lakehouse'
+    } : undefined
+  }), [refreshTrigger, item?.definition?.selectedLakehouse?.id, item?.definition?.selectedLakehouse?.workspaceId, (item?.definition?.selectedLakehouse as any)?.displayName, (item?.definition?.selectedLakehouse as any)?.type]);
+
   if (isLoading) {
     return <ItemEditorLoadingProgressBar message="Loading Excel OneLake content Editor..." />;
   }
@@ -400,37 +414,20 @@ export function ExcelEditorItemEditor(props: PageProps) {
           workloadClient={workloadClient}
           onFileSelected={onFileSelected}
           onTableSelected={onTableSelected}
-          onItemChanged={async (item: any) => {
-            console.log('Item changed:', item);
-            // Update the selected lakehouse when the user changes the item in the explorer
-            if (item && item.id && item.workspaceId) {
-              updateItemDefinition({
-                selectedLakehouse: item,
-                selectedContent: undefined // Clear selected content when changing lakehouse
-              });
-              setSelectedContent(null); // Clear selected content in state as well
-            }
-          }}
-          config={{
-            allowItemSelection: true,
-            refreshTrigger: Date.now(),
-            initialItem: item?.definition?.selectedLakehouse ? {
-              id: item.definition.selectedLakehouse.id,
-              workspaceId: item.definition.selectedLakehouse.workspaceId,
-              displayName: (item.definition.selectedLakehouse as any).displayName || (item.definition.selectedLakehouse as any).type || 'Selected Lakehouse'
-            } : undefined
-          }}
+          onItemChanged={handleItemChanged}
+          config={oneLakeExplorerConfig}
         />
 
         {/* Right Panel - Excel Editor */}
         {selectedContent ? (
           <ExcelEditorItemExcelView
             selectedContent={selectedContent}
+            excelData={excelData}
             excelOnlineUrl={excelOnlineUrl}
             isLoadingExcel={isLoadingExcel}
             onRetryLoading={() => {
               console.log('🔄 Retry loading triggered for content:', selectedContent?.displayName);
-              loadExcelOnline(selectedContent);
+              loadExcelData(selectedContent);
             }}
           />
         ) : (
