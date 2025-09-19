@@ -13,6 +13,22 @@ export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> 
     context,
     onPackageSelected: onPackageSelected }) => {
 
+  const packages = context.packageRegistry.getPackagesArray();
+  
+  // Debug logging
+  console.log('PackageSelectionView render - Available packages:', packages.length);
+  packages.forEach(pack => {
+    console.log(`Package: ${pack.id} - ${pack.displayName}`);
+  });
+
+  if (packages.length === 0) {
+    return (
+      <Stack style={{ padding: "20px", textAlign: "center" }}>
+        <Text size={400}>No packages available. Check console for loading errors.</Text>
+      </Stack>
+    );
+  }
+
   return (
     <Stack>
       <div style={{ 

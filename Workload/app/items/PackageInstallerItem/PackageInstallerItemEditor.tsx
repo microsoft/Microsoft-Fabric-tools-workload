@@ -160,18 +160,32 @@ export function PackageInstallerItemEditor(props: PageProps) {
         }
         const context = new PackageInstallerContext(workloadClient);
         await context.packageRegistry.loadFromAssets();
-        if(item.definition?.oneLakePackages) {
-          item.definition.oneLakePackages.forEach(async oneLakePath => {
+        
+        // Load OneLake packages if they exist - wait for all to complete
+        if(item.definition?.oneLakePackages && item.definition.oneLakePackages.length > 0) {
+          console.log(`Loading ${item.definition.oneLakePackages.length} packages from OneLake...`);
+          const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+          
+          const packageLoadPromises = item.definition.oneLakePackages.map(async (oneLakePath) => {
             try {
-              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+              console.log(`Loading package from: ${oneLakePath}`);
               const packJson = await oneLakeClient.readFileAsText(oneLakePath);
               const pack = JSON.parse(packJson);
               context.packageRegistry.addPackage(pack);
+              console.log(`Successfully loaded package: ${pack.id || pack.displayName}`);
+              return pack;
             } catch (error) {
-              console.error(`Failed to add package from Onelake ${oneLakePath}:`, error);
+              console.error(`Failed to load package from OneLake ${oneLakePath}:`, error);
+              return null;
             }
           });
+          
+          // Wait for all packages to load before proceeding
+          await Promise.all(packageLoadPromises);
+          const successfulPackages = (await Promise.all(packageLoadPromises)).filter(p => p !== null);
+          console.log(`Successfully loaded ${successfulPackages.length} packages from OneLake`);
         }
+        
         setContext(context);
         setEditorItem(item);        
       } catch (error) {
