@@ -71,13 +71,16 @@ To run the development environment locally you need the following prerequisites:
 
 - [Node.js](https://nodejs.org/en/download/)
 - [Powershell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
-- [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version
+- [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version - after installing make sure to restart the powershell.
 - [VSCode](https://code.visualstudio.com/download) or similar development environment
 - [Fabric Tenant](https://app.fabric.microsoft.com/) that you use for development and publishing the Workload later on
 - [Fabric Workspace](https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces) that you can use to build your workload
 - [Fabric Capacity](https://learn.microsoft.com/en-us/fabric/enterprise/licenses) that is assigned to the workspace you are planning to use
-- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation)
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation) - after installing make sure to restart powershell.
 - [Entra App](https://entra.microsoft.com/) You either need an existing Entra App you can use that is [configured](./docs/How-To.md) correctly or you need permission to create a new Entra App.
+
+[!NOTE]
+After installing new software please make sure that you restart Powershell and Visual Studio, otherwise the scripts might file because the software is not part of the path variable.
 
 Alternatively we suggest to use a [Codespace](https://github.com/features/codespaces) in GitHub which has everything preconfigured:
 
