@@ -21,16 +21,12 @@ The OneLake Explorer Item enables users to browse, edit, and manage files stored
 ## 📚 Documentation
 
 - **[Architecture Overview](./docs/architecture.md)** - System architecture and component structure
-- **[Excel Integration Guide](./docs/excel-integration.md)** - Working with Excel tables and OneLake data
-- **[OneLake APIs](./docs/onelake-apis.md)** - OneLake storage integration and file operations
-- **[User Guide](./docs/user-guide.md)** - Complete user documentation and workflows
 
 ## 🔌 Fabric APIs & Permissions
 
 ### Required Fabric API Scopes
 - **`https://api.onelake.dfs.fabric.microsoft.com/.default`** - Primary scope for OneLake file operations
 - **`https://api.fabric.microsoft.com/Item.Read.All`** - Read access to Fabric items (Lakehouses, etc.)
-- **`https://api.fabric.microsoft.com/Workspace.Read.All`** - Browse workspaces and navigate item hierarchy
 
 ### Fabric Platform APIs Used
 - **OneLake Data API** (`https://{tenant}.dfs.fabric.microsoft.com/`)
