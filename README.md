@@ -84,7 +84,7 @@ After installing new software please make sure that you restart Powershell and V
 
 Alternatively we suggest to use a [Codespace](https://github.com/features/codespaces) in GitHub which has everything preconfigured:
 
-If you use a codespace please make sure that you select at least an 8 core machine and open the Codespace in VSCode locally. This way everything will work out of the box if you follow the [Setup Guide](./docs/Project_Setup.md).
+If you use a codespace please make sure that you select at least an 8 core machine and open the Codespace in VSCode locally. This way everything will work out of the box.
 
 ### Project structure
 
