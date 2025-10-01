@@ -531,11 +531,25 @@ Add your item to the cards array for the create hub:
     "cards": [
       // ... existing cards ...
       {
-        "cardKey": "[ItemName]Item",
-        "cardType": "SampleCard",
-        "learnMoreUrl": "",
-        "openInFabric": "",
-        "previewImageUrl": ""
+        "title": "[ItemName]Item_DisplayName",           // ← ADD THIS
+        "description": "[ItemName]Item_Description",     // ← ADD THIS  
+        "icon": {
+          "name": "assets/images/[ItemName]Item-icon.png"
+        },
+        "icon_small": {
+          "name": "assets/images/[ItemName]Item-icon.png"
+        },
+        "availableIn": [
+          "home",
+          "create-hub", 
+          "workspace-plus-new",
+          "workspace-plus-new-teams"
+        ],
+        "itemType": "[ItemName]",                        // ← CRITICAL: Must match JSON manifest name
+        "createItemDialogConfig": {
+          "onCreationFailure": { "action": "item.onCreationFailure" },
+          "onCreationSuccess": { "action": "item.onCreationSuccess" }
+        }
       }
     ]
   }
@@ -548,12 +562,10 @@ Add your item to the recommended types for the home page:
 
 ```json
 {
-  "homeExperience": {
-    "quickAccess": {
+  "homePage": {
+    "newSection": {
       "recommendedItemTypes": [
-        "Lakehouse",
-        "Dataset", 
-        "Report",
+        "HelloWorld", // ... existing items ...
         "[ItemName]Item"  // Add your item here
       ]
     }
@@ -573,22 +585,34 @@ After updating Product.json:
 {
   "createExperience": {
     "cards": [
-      {
-        "cardKey": "LakehouseExplorerItem",
-        "cardType": "SampleCard", 
-        "learnMoreUrl": "",
-        "openInFabric": "",
-        "previewImageUrl": ""
-      }
+       {
+          "title": "SampleItem_DisplayName",
+          "description": "SampleItem_Description",
+          "icon": {
+            "name": "assets/images/SampleItem-icon.png"
+          },
+          "icon_small": {
+            "name": "assets/images/SampleItem-icon.png"
+          },
+          "availableIn": [
+            "home",
+            "create-hub",
+            "workspace-plus-new",
+            "workspace-plus-new-teams"
+          ],
+          "itemType": "SampleItem",
+          "createItemDialogConfig": {
+            "onCreationFailure": { "action": "item.onCreationFailure" },
+            "onCreationSuccess": { "action": "item.onCreationSuccess" }
+          }
+        }
     ]
   },
-  "homeExperience": {
-    "quickAccess": {
+  "homePage": {
+    "newSection": {
       "recommendedItemTypes": [
-        "Lakehouse",
-        "Dataset",
-        "Report", 
-        "LakehouseExplorerItem"
+        "HelloWorld",
+        "SampleItem"  
       ]
     }
   }
@@ -653,7 +677,7 @@ When creating a new item, ensure all these components are created:
 - [ ] Update `Product.json` - Add createExperience.cards and recommendedItemTypes entries
 
 **Configuration Updates**:
-- [ ] Update `Workload/app/BaseApp.tsx` routing for new item
+- [ ] Update `Workload/app/App.tsx` routing for new item
 - [ ] Add route mapping in routing configuration
 
 **Asset Files**:

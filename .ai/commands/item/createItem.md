@@ -284,7 +284,7 @@ export const [ItemName]ItemEmpty: React.FC<[ItemName]ItemEmptyStateProps> = ({
     <Stack className="empty-item-container" horizontalAlign="center" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
-          src="/assets/items/[ItemName]/EditorEmpty.jpg"
+          src="/assets/items/[ItemName]/EditorEmpty.svg"
           alt="Empty item illustration"
           className="empty-item-image"
         />
