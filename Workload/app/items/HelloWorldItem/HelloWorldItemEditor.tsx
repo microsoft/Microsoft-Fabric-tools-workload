@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { Stack } from "@fluentui/react";
+import { MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Warning20Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
 import { HelloWorldItemDefinition, VIEW_TYPES, CurrentView } from "./HelloWorldItemModel";
 import { HelloWorldItemEditorEmpty } from "./HelloWorldItemEditorEmpty";
 import { HelloWorldItemEditorDefault } from "./HelloWorldItemEditorDefault";
-import "../../styles.scss";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
+import "../../styles.scss";
 
 
 export function HelloWorldItemEditor(props: PageProps) {
@@ -137,15 +138,27 @@ export function HelloWorldItemEditor(props: PageProps) {
 
   // Render appropriate view based on state
   return (
-    <Stack className="editor" data-testid="item-editor-inner">
-      <HelloWorldItemRibbon
-        {...props}
-        isSaveButtonEnabled={isSaveEnabled()}
-        currentView={currentView}
-        saveItemCallback={SaveItem}
-        openSettingsCallback={handleOpenSettings}
-        navigateToGettingStartedCallback={navigateToGettingStarted}
-      />
+    <BaseItemEditor
+      ribbon={
+        <HelloWorldItemRibbon
+          {...props}
+          isSaveButtonEnabled={isSaveEnabled()}
+          currentView={currentView}
+          saveItemCallback={SaveItem}
+          openSettingsCallback={handleOpenSettings}
+          navigateToGettingStartedCallback={navigateToGettingStarted}
+        />
+      }
+      notification={
+        currentView === VIEW_TYPES.GETTING_STARTED ? (
+          <MessageBar intent="warning" icon={<Warning20Filled />}>
+            <MessageBarBody>
+              {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
+            </MessageBarBody>
+          </MessageBar>
+        ) : undefined
+      }
+    >
       {currentView === VIEW_TYPES.EMPTY ? (
         <HelloWorldItemEditorEmpty
           workloadClient={workloadClient}
@@ -158,6 +171,6 @@ export function HelloWorldItemEditor(props: PageProps) {
           item={item}
         />
       )}
-    </Stack>
+    </BaseItemEditor>
   );
 }

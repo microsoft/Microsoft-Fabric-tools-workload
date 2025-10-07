@@ -4,12 +4,9 @@ import {
   Card,
   CardHeader,
   Text,
-  MessageBar,
-  MessageBarBody,
 } from "@fluentui/react-components";
 import {
-  ChevronDown20Regular,
-  Warning20Filled
+  ChevronDown20Regular
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
@@ -46,18 +43,7 @@ export function HelloWorldItemEditorDefault({
   };
 
   return (
-    <div className="getting-started-container">
-      {/* Warning Message Bar */}
-      <MessageBar
-        intent="warning"
-        icon={<Warning20Filled />}
-        className="warning-bar"
-      >
-        <MessageBarBody>
-          {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
-        </MessageBarBody>
-      </MessageBar>
-
+    <div className="editor-default-view getting-started-container">
       <div className="content-wrapper">
         {/* Left Hero Section */}
         <div className="hero-section">
