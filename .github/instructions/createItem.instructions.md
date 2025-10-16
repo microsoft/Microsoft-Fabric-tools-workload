@@ -349,6 +349,9 @@ Create an icon file: `Workload/Manifest/assets/images/[ItemName]Item-icon.png`
 
 #### 8.2: Add Localization Strings
 
+**🚨 CRITICAL: Two Different Translation Locations**
+
+**For Manifest Files (Product.json, [ItemName]Item.json)**:
 Update `Workload/Manifest/assets/locales/en-US/translations.json`:
 
 ```json
@@ -360,9 +363,27 @@ Update `Workload/Manifest/assets/locales/en-US/translations.json`:
 }
 ```
 
+**For React Components (App code)**:
+Update `Workload/app/assets/locales/en-US/translation.json`:
+
+```json
+{
+  // Add entries for UI components, buttons, messages, etc.
+  "[ItemName]Item_Loading": "Loading [Item Name]...",
+  "[ItemName]Item_SaveSuccess": "[Item Name] saved successfully",
+  "[ItemName]Item_Ribbon_Save_Label": "Save",
+  "[ItemName]Item_Ribbon_Settings_Label": "Settings"
+}
+```
+
+**Key Differences**:
+- **Manifest translations** (`Workload/Manifest/assets/locales/`) - Used by Product.json, ItemName.json
+- **App translations** (`Workload/app/assets/locales/`) - Used by React components with `useTranslation()`
+
 **For Additional Locales**:
 - Add corresponding entries in other locale files (e.g., `es/translations.json`)
 - Maintain the same keys with translated values
+- Update BOTH manifest and app translation files
 
 #### 8.3: 🚨 CRITICAL: Update Product.json Configuration
 
@@ -494,7 +515,111 @@ Update `Workload/Manifest/assets/locales/en-US/translations.json`:
    - Verify editor loads correctly
    - Test save/load functionality
 
-### Step 11: Build and Deploy
+## Step 11: Update Product.json Configuration
+
+**🚨 CRITICAL: Product.json Must Be Updated for Item Visibility**
+
+The `Workload/Manifest/Product.json` file controls which items appear in Fabric's create experience and home page. **Without updating this file, your new item will not be discoverable by users.**
+
+### 11.1: Add to createExperience.cards
+
+Add your item to the cards array for the create hub:
+
+```json
+{
+  "createExperience": {
+    "cards": [
+      // ... existing cards ...
+      {
+        "title": "[ItemName]Item_DisplayName",           // ← ADD THIS
+        "description": "[ItemName]Item_Description",     // ← ADD THIS  
+        "icon": {
+          "name": "assets/images/[ItemName]Item-icon.png"
+        },
+        "icon_small": {
+          "name": "assets/images/[ItemName]Item-icon.png"
+        },
+        "availableIn": [
+          "home",
+          "create-hub", 
+          "workspace-plus-new",
+          "workspace-plus-new-teams"
+        ],
+        "itemType": "[ItemName]",                        // ← CRITICAL: Must match JSON manifest name
+        "createItemDialogConfig": {
+          "onCreationFailure": { "action": "item.onCreationFailure" },
+          "onCreationSuccess": { "action": "item.onCreationSuccess" }
+        }
+      }
+    ]
+  }
+}
+```
+
+### 11.2: Add to recommendedItemTypes
+
+Add your item to the recommended types for the home page:
+
+```json
+{
+  "homePage": {
+    "newSection": {
+      "recommendedItemTypes": [
+        "HelloWorld", // ... existing items ...
+        "[ItemName]Item"  // Add your item here
+      ]
+    }
+  }
+}
+```
+
+### 11.3: Verification
+
+After updating Product.json:
+1. The item should appear in the "Create" hub in Fabric
+2. The item should be recommended on the home page
+3. Use translation keys defined in `Workload/Manifest/assets/locales/en-US/translations.json`
+
+**Example Complete Entry**:
+```json
+{
+  "createExperience": {
+    "cards": [
+       {
+          "title": "SampleItem_DisplayName",
+          "description": "SampleItem_Description",
+          "icon": {
+            "name": "assets/images/SampleItem-icon.png"
+          },
+          "icon_small": {
+            "name": "assets/images/SampleItem-icon.png"
+          },
+          "availableIn": [
+            "home",
+            "create-hub",
+            "workspace-plus-new",
+            "workspace-plus-new-teams"
+          ],
+          "itemType": "SampleItem",
+          "createItemDialogConfig": {
+            "onCreationFailure": { "action": "item.onCreationFailure" },
+            "onCreationSuccess": { "action": "item.onCreationSuccess" }
+          }
+        }
+    ]
+  },
+  "homePage": {
+    "newSection": {
+      "recommendedItemTypes": [
+        "HelloWorld",
+        "SampleItem"  
+      ]
+    }
+  }
+}
+```
+
+### Step 12: Build and Deploy
 
 1. **Build manifest package**:
    ```powershell
@@ -549,11 +674,16 @@ When creating a new item, ensure all these components are created:
 **Manifest Files** (in `Workload/Manifest/`):
 - [ ] `[ItemName]Item.xml` - XML manifest configuration
 - [ ] `[ItemName]Item.json` - JSON manifest with editor path and metadata
-- [ ] `Product.json` - Product JSON manifest that contains the frontend configuration for all Items. Need to include a createExperience for the newly created item.
+- [ ] Update `Product.json` - Add createExperience.cards and recommendedItemTypes entries
+
+**Configuration Updates**:
+- [ ] Update `Workload/app/App.tsx` routing for new item
+- [ ] Add route mapping in routing configuration
 
 **Asset Files**:
 - [ ] `Workload/Manifest/assets/images/[ItemName]Item-icon.png` - Item icon
-- [ ] Localization entries in `Workload/Manifest/assets/locales/*/translations.json`
+- [ ] Manifest localization in `Workload/Manifest/assets/locales/*/translations.json`
+- [ ] App localization in `Workload/app/assets/locales/*/translation.json`
 
 **Code Integration**:
 - [ ] Route added to `Workload/app/App.tsx`

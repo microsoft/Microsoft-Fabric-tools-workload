@@ -284,7 +284,7 @@ export const [ItemName]ItemEmpty: React.FC<[ItemName]ItemEmptyStateProps> = ({
     <Stack className="empty-item-container" horizontalAlign="center" tokens={{ childrenGap: 16 }}>
       <Stack.Item>
         <img
-          src="/assets/items/[ItemName]/EditorEmpty.jpg"
+          src="/assets/items/[ItemName]/EditorEmpty.svg"
           alt="Empty item illustration"
           className="empty-item-image"
         />
@@ -327,6 +327,8 @@ export const [ItemName]ItemEmpty: React.FC<[ItemName]ItemEmptyStateProps> = ({
 ### Step 5: Implement the Ribbon (`[ItemName]ItemEditorRibbon.tsx`)
 
 The ribbon provides toolbar actions and navigation tabs. **Use the HelloWorld pattern as template**:
+
+**CRITICAL**: Always use the `Tooltip` + `ToolbarButton` pattern for ALL toolbar actions. This ensures accessibility and consistent user experience. Import both components from `@fluentui/react-components` and wrap every `ToolbarButton` in a `Tooltip` with appropriate content and relationship properties.
 
 ```typescript
 // Based on HelloWorldItemEditorRibbon.tsx - Complete functional implementation
@@ -408,10 +410,17 @@ export function [ItemName]ItemEditorRibbon(props: [ItemName]ItemEditorRibbonProp
 
 - **Save Button**: Integrated with save callback and enabled/disabled states
 - **Settings Button**: Opens item settings dialog
-- **Tooltip Support**: Accessible button descriptions
+- **Tooltip Support**: Accessible button descriptions - **REQUIRED for all ToolbarButton components**
 - **Tab Navigation**: Home tab with toolbar actions
 - **Disabled States**: Ribbon can be disabled during empty state
 - **Test IDs**: Includes test identifiers for automated testing
+
+**Toolbar Pattern Requirements**:
+- Import `Tooltip` and `ToolbarButton` from `@fluentui/react-components`
+- Every `ToolbarButton` MUST be wrapped in a `Tooltip`
+- Use `relationship="label"` on the Tooltip for proper accessibility
+- Provide meaningful `content` for each Tooltip
+- Include `aria-label` on ToolbarButton for screen readers
 
 ### Step 6: Create Manifest Configuration
 
