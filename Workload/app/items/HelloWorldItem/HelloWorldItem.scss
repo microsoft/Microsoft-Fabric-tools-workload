@@ -30,17 +30,15 @@
 .hello-world-getting-started-container {
   width: 100%;
   height: 100%;
-  background: var(--colorNeutralBackground1, #ffffff);
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+  background: linear-gradient(135deg, var(--colorBrandBackground, #E3F7EF) 0%, var(--colorNeutralBackground1, #ffffff) 100%);
   overflow: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 .hello-world-content-wrapper {
   display: flex;
   flex-direction: row;
+  min-height: 100%;
+  gap: var(--spacingHorizontalXXL, 32px);
 }
 
 // ============================================================================
@@ -48,27 +46,22 @@
 // ============================================================================
 
 .hello-world-hero-section {
-  width: 600px;
+  flex: 0 0 30%;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 40px 60px 40px 60px;
-  background: var(--colorBrandBackground2, #E3F7EF);
-  border-radius: 0;
+  padding: var(--spacingVerticalXXL, 32px) var(--spacingHorizontalXL, 24px);
+  background: var(--colorBrandBackground, #E3F7EF);
 }
 
 .hello-world-hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
+  max-width: 400px;
 }
 
 .hello-world-hero-text {
-  padding-top: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacingVerticalL, 16px);
 }
 
 .hello-world-hero-title {
@@ -94,17 +87,14 @@
 // ============================================================================
 
 .hello-world-main-content {
-  flex: 1;
-  padding: 40px 48px;
+  flex: 1 1 70%;
+  padding: var(--spacingVerticalXXL, 32px) var(--spacingHorizontalXL, 24px);
   background: var(--colorNeutralBackground1, #ffffff);
-  display: flex;
-  flex-direction: column;
 }
 
 .hello-world-content-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 // ============================================================================
@@ -112,12 +102,7 @@
 // ============================================================================
 
 .hello-world-content-header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
+  margin-bottom: var(--spacingVerticalXXL, 32px);
 }
 
 .hello-world-section-title {
@@ -130,15 +115,12 @@
 }
 
 .hello-world-section-subtitle {
-  color: var(--colorNeutralForeground1, #242424);
-  font-size: 16px;
-  font-family: 'Segoe UI', sans-serif;
+  font-size: var(--fontSizeBase300, 14px);
   font-weight: var(--fontWeightRegular, 400);
-  line-height: 22px;
+  line-height: var(--lineHeightBase300, 20px);
+  color: var(--colorNeutralForeground2, #424242);
   margin: 0;
-  padding: 0;
-  text-align: left;
-  width: 100%;
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
 }
 
 // ============================================================================
@@ -146,30 +128,28 @@
 // ============================================================================
 
 .hello-world-item-details-section {
-  // No styles on the section itself
+  margin-bottom: var(--spacingVerticalXXL, 32px);
 }
 
 .hello-world-expandable-card {
-  padding: 0;
-  border-radius: 8px;
-  border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-  background: white;
+  border: 1px solid var(--colorNeutralStroke1, #D1D1D1);
+  border-radius: var(--borderRadiusMedium, 4px);
+  background: var(--colorNeutralBackground1, #ffffff);
   overflow: hidden;
 }
 
 .hello-world-expand-button {
   width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacingHorizontalS, 8px);
+  padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+  border: none;
+  background: transparent;
   cursor: pointer;
   text-align: left;
   transition: background-color 0.1s ease;
+  min-height: 44px; // Fabric UX guideline: Minimum touch target
 
   &:hover {
     background: var(--colorNeutralBackground1Hover, #F5F5F5);
@@ -182,54 +162,49 @@
 }
 
 .hello-world-expand-icon {
-  width: 20px;
-  height: 20px;
   transition: transform 0.2s ease;
-  color: var(--colorNeutralForeground1, #242424);
+  color: var(--colorNeutralForeground2, #424242);
 
   &.expanded {
-    transform: rotate(0deg);
+    transform: rotate(180deg);
   }
 
-  &:not(.expanded) {
-    transform: rotate(-90deg);
+  &.collapsed {
+    transform: rotate(0deg);
   }
 }
 
 .hello-world-expand-title {
-  flex: 1;
-  text-align: left;
-  color: var(--colorNeutralForeground1, #242424);
-  font-size: 16px;
+  font-size: var(--fontSizeBase400, 16px);
   font-weight: var(--fontWeightSemibold, 600);
+  color: var(--colorNeutralForeground1, #242424);
   font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
-  line-height: 22px;
 }
 
 .hello-world-expand-content {
-  padding: 16px;
-  border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 0 var(--spacingHorizontalL, 16px) var(--spacingVerticalL, 16px);
+  border-top: 1px solid var(--colorNeutralStroke2, #E0E0E0);
 }
 
 .hello-world-detail-row {
   display: flex;
-  gap: 5px;
-  font-size: 14px;
-  font-family: 'Segoe UI', sans-serif;
-  line-height: 20px;
+  justify-content: space-between;
+  padding: var(--spacingVerticalS, 8px) 0;
+  border-bottom: 1px solid var(--colorNeutralStroke2, #E0E0E0);
 }
 
 .hello-world-detail-label {
-  font-weight: 700;
-  color: var(--colorNeutralForeground1, #242424);
+  font-size: var(--fontSizeBase300, 14px);
+  font-weight: var(--fontWeightSemibold, 600);
+  color: var(--colorNeutralForeground2, #424242);
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
 }
 
 .hello-world-detail-value {
-  font-weight: 400;
+  font-size: var(--fontSizeBase300, 14px);
+  font-weight: var(--fontWeightRegular, 400);
   color: var(--colorNeutralForeground1, #242424);
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
   word-break: break-all;
 }
 
@@ -238,18 +213,16 @@
 // ============================================================================
 
 .hello-world-recommended-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  margin-top: var(--spacingVerticalXXL, 32px);
 }
 
 .hello-world-recommended-title {
-  color: var(--colorNeutralForeground1, #242424);
-  font-size: 20px;
-  font-family: 'Segoe UI', sans-serif;
+  font-size: var(--fontSizeBase500, 20px);
   font-weight: var(--fontWeightSemibold, 600);
-  line-height: 28px;
-  margin: 0;
+  line-height: var(--lineHeightBase500, 28px);
+  color: var(--colorNeutralForeground1, #242424);
+  margin: 0 0 var(--spacingVerticalL, 16px) 0;
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
 }
 
 // ============================================================================
@@ -258,103 +231,103 @@
 
 .hello-world-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacingHorizontalL, 16px);
 }
 
 .hello-world-resource-card {
-  max-width: 100%;
-  background: var(--colorNeutralBackground1, white);
-  border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-  overflow: hidden;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.2s ease;
+  border: 1px solid var(--colorNeutralStroke1, #D1D1D1);
+  border-radius: var(--borderRadiusMedium, 4px);
+  background: var(--colorNeutralBackground1, #ffffff);
+  padding: var(--spacingVerticalL, 16px);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: default;
 
   &:hover {
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.14);
+    box-shadow: var(--shadow8, 0 0 4px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.18));
+    transform: translateY(-2px);
   }
 }
 
 .hello-world-card-header-section {
   display: flex;
-  align-items: flex-start;
-  padding: 16px 16px 0 16px;
-  gap: 12px;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
+  margin-bottom: var(--spacingVerticalM, 12px);
 }
 
 .hello-world-card-image-container {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  height: 120px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  background: var(--colorNeutralBackground2, #F3F2F1);
+  border-radius: var(--borderRadiusMedium, 4px);
+  margin-bottom: var(--spacingVerticalS, 8px);
 }
 
 .hello-world-card-image {
-  width: 48px;
-  height: 48px;
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
 }
 
 .hello-world-card-body {
-  padding: 16px;
-  flex: 1;
+  flex: 1 1 auto;
+  margin-bottom: var(--spacingVerticalM, 12px);
 }
 
 .hello-world-card-list {
   margin: 0;
-  padding-left: 20px;
-
-  li {
-    color: var(--colorNeutralForeground2, #424242);
-    font-size: 12px;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 400;
-    line-height: 16px;
-    margin-bottom: 4px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
+  padding-left: var(--spacingHorizontalL, 16px);
+  list-style-type: disc;
 }
 
 .hello-world-card-list-item {
-  // Styles moved to .hello-world-card-list li selector above
+  font-size: var(--fontSizeBase300, 14px);
+  line-height: var(--lineHeightBase300, 20px);
+  color: var(--colorNeutralForeground2, #424242);
+  margin-bottom: var(--spacingVerticalS, 8px);
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
 }
 
 .hello-world-card-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
   display: flex;
   justify-content: flex-start;
+  padding-top: var(--spacingVerticalM, 12px);
+  border-top: 1px solid var(--colorNeutralStroke2, #E0E0E0);
 }
 
 // ============================================================================
 // Responsive Design
 // ============================================================================
 
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .hello-world-content-wrapper {
     flex-direction: column;
+    gap: 0;
   }
 
   .hello-world-hero-section {
-    width: 100%;
-    padding: 40px 30px;
+    flex: 0 0 auto;
+    padding: var(--spacingVerticalL, 16px);
+  }
+
+  .hello-world-hero-title {
+    font-size: var(--fontSizeBase600, 24px);
+    line-height: var(--lineHeightBase600, 32px);
   }
 
   .hello-world-main-content {
-    padding: 24px;
+    flex: 1 1 auto;
+    padding: var(--spacingVerticalL, 16px);
   }
 
   .hello-world-cards-grid {
     grid-template-columns: 1fr;
-  }
-
-  .hello-world-resource-card {
-    max-width: 100%;
+    gap: var(--spacingHorizontalM, 12px);
   }
 }
