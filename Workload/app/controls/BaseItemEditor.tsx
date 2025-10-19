@@ -122,9 +122,9 @@ export function BaseItemEditor({
   contentClassName = ""
 }: BaseItemEditorProps) {
   return (
-    <div className={`item-editor-container ${className}`.trim()} data-testid="base-item-editor">
+    <div className={`item-editor-container ${className}`.trim()} data-testid="item-editor">
       {/* Fixed ribbon at the top */}
-      <div className="item-editor-container__ribbon" data-testid="base-item-editor-ribbon">
+      <div className="item-editor-container__ribbon" data-testid="item-editor-ribbon">
         {ribbon}
       </div>
       
