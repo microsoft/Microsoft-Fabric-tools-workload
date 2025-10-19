@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import "./BaseItemEditor.scss";
+import "../styles.scss";
 
 /**
  * BaseItemEditor Props Interface
@@ -122,21 +122,21 @@ export function BaseItemEditor({
   contentClassName = ""
 }: BaseItemEditorProps) {
   return (
-    <div className={`base-item-editor ${className}`.trim()} data-testid="base-item-editor">
+    <div className={`item-editor-container ${className}`.trim()} data-testid="base-item-editor">
       {/* Fixed ribbon at the top */}
-      <div className="base-item-editor__ribbon" data-testid="base-item-editor-ribbon">
+      <div className="item-editor-container__ribbon" data-testid="base-item-editor-ribbon">
         {ribbon}
       </div>
       
       {/* Optional notification area (fixed, not scrolled) */}
       {notification && (
-        <div className="base-item-editor__notification" data-testid="base-item-editor-notification">
+        <div className="item-editor-container__notification" data-testid="base-item-editor-notification">
           {notification}
         </div>
       )}
       
       {/* Scrollable content area */}
-      <div className={`base-item-editor__content ${contentClassName}`.trim()} data-testid="base-item-editor-content">
+      <div className={`item-editor-container__content ${contentClassName}`.trim()} data-testid="base-item-editor-content">
         {children}
       </div>
     </div>

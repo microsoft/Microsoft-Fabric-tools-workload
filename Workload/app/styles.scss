@@ -1,657 +1,355 @@
-.editor {
-    background: #f3f2f1;
-    padding: 8px;
-    height: 100%;
-}
+/**
+ * ============================================================================
+ * Fabric Extensibility Toolkit - Global Styles
+ * ============================================================================
+ * 
+ * This stylesheet follows Microsoft Fabric UX System guidelines:
+ * 
+ * ## Design Tokens
+ * - Colors: Use var(--color*) tokens for consistent theming
+ * - Spacing: Use var(--spacing*) tokens (XS: 4px, S: 8px, M: 12px, L: 16px, XL: 24px, XXL: 32px)
+ * - Typography: Use var(--fontSize*) and var(--fontWeight*) tokens
+ * - Border Radius: Use var(--borderRadius*) tokens
+ * - Shadows: Use var(--shadow*) tokens for elevation
+ * 
+ * ## Accessibility
+ * - Minimum touch target size: 32px x 32px
+ * - Color contrast ratios: WCAG 2.1 AA compliant
+ * - Keyboard navigation support
+ * - Screen reader compatibility
+ * 
+ * ## Component Guidelines
+ * - Buttons: Use Fluent UI Button component with proper appearance variants
+ * - Toolbars: Always wrap ToolbarButton in Tooltip for accessibility
+ * - Inputs: Use Field component for proper label-input association
+ * - Dialogs: Follow standard dialog pattern with header, body, footer
+ * 
+ * ## SCSS Architecture Strategy (Three-Tier Approach)
+ * 
+ * This project uses a three-tier SCSS architecture for maintainability and scalability:
+ * 
+ * ### 1. Global Styles (THIS FILE - styles.scss)
+ * **Location**: `Workload/app/styles.scss`
+ * **Purpose**: Shared styles used across multiple components and items
+ * **Contains**:
+ *   - Item editor layout (ribbon, notification, content)
+ *   - Common ribbon and toolbar styles
+ *   - Empty state components
+ *   - Settings panel containers
+ * **When to use**: Styles that are shared by 2+ components or items
+ * **Import pattern**: `import "../../styles.scss"`
+ * 
+ * ### 2. Component-Specific Styles (Component SCSS files)
+ * **Location**: Next to component (e.g., `controls/BaseItemEditor.scss`)
+ * **Purpose**: Layout and structure for reusable components
+ * **Contains**:
+ *   - Component-specific layout (BEM naming: `.base-item-editor__*`)
+ *   - Responsive design patterns for the component
+ *   - Accessibility enhancements specific to component
+ * **When to use**: Component has complex layout/structure needs
+ * **Import pattern**: `import "./ComponentName.scss"`
+ * **Example**: BaseItemEditor.scss provides fixed ribbon + scrollable content layout
+ * 
+ * ### 3. Item-Specific Styles (Item SCSS files)
+ * **Location**: Next to item (e.g., `items/HelloWorldItem/HelloWorldItem.scss`)
+ * **Purpose**: Unique styling for specific workload items
+ * **Contains**:
+ *   - Item-branded colors and typography
+ *   - Custom layouts for item views (getting started, detail pages)
+ *   - Item-specific UI patterns
+ * **When to use**: Styling is unique to this item and not reused elsewhere
+ * **Import pattern**: `import "./ItemName.scss"`
+ * **Naming convention**: Prefix all classes with item name (e.g., `.hello-world-*`)
+ * **Example**: HelloWorldItem.scss has branded gradient backgrounds and custom card layouts
+ * 
+ * **IMPORTANT**: Every item editor SHOULD have its own SCSS file for item-specific styling.
+ * The basic layout (ribbon, editor container, notification area) comes from styles.scss,
+ * but item-specific views, colors, and custom components go in the item's SCSS file.
+ * 
+ * ### Decision Guide: Where Should My Styles Go?
+ * 
+ * ```
+ * Is the style used by multiple items/components?
+ * ├─ YES → Add to styles.scss (Global)
+ * │        Examples: .item-editor-container, .ribbon-container, .empty-state
+ * │
+ * └─ NO → Is it a reusable component structure?
+ *    ├─ YES → Create/add to ComponentName.scss (Component-Specific)
+ *    │        Note: Only for complex reusable components, NOT for BaseItemEditor
+ *    │
+ *    └─ NO → Create/add to ItemName.scss (Item-Specific)
+ *             REQUIRED for every item editor!
+ *             Examples: .hello-world-*, .my-item-*
+ * ```
+ * 
+ * ### For Item Editors Specifically
+ * 
+ * **Every item editor must follow this pattern:**
+ * 
+ * 1. **Use BaseItemEditor component** (provides .item-editor-container layout from global styles)
+ * 2. **Create ItemName.scss** for your item-specific styling:
+ *    - Item views: getting started, default, detail pages, settings
+ *    - Custom colors and branding
+ *    - Item-specific components
+ * 3. **Import ItemName.scss** in your item's view components
+ * 4. **Prefix all classes** with your item name (e.g., .hello-world-getting-started)
+ * 
+ * **Example Structure:**
+ * ```
+ * items/HelloWorldItem/
+ * ├── HelloWorldItem.scss          ← Item-specific styles
+ * ├── HelloWorldItemEditor.tsx     ← Uses BaseItemEditor (gets .item-editor)
+ * ├── HelloWorldItemEditorDefault.tsx  ← Imports HelloWorldItem.scss
+ * └── HelloWorldItemEditorEmpty.tsx    ← Imports HelloWorldItem.scss
+ * ```
+ * 
+ * ### Benefits of This Architecture
+ * - **Maintainability**: Clear ownership of styles (no guessing where to add/edit)
+ * - **Scalability**: New items get their own SCSS without polluting global styles
+ * - **Performance**: Only import what you need (component/item specific)
+ * - **Consistency**: Global styles ensure consistent UX patterns
+ * - **Modularity**: Components are self-contained with their styles
+ * 
+ * ## References
+ * - Fluent UI v9: https://react.fluentui.dev/
+ * - Fabric Design Tokens: https://aka.ms/fabric-tokens
+ * - Accessibility Guidelines: https://www.w3.org/WAI/WCAG21/quickref/
+ * - BEM Methodology: https://getbem.com/
+ */
 
-.editor .main {
-    border-radius: 8px;
-    background: white; 
-    box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
-    margin: 5px 0;
-    padding: 5px;
-}
-.description {
-    white-space: pre-wrap;
-}
+// ============================================================================
+// Item Editor Layout - Used by BaseItemEditor component (shared by all items)
+// ============================================================================
 
-.editor h2 {
-    padding: 0 0 0 20px
-}
-
-.editor .field {
-    flex-grow: 1;
-}
-
-.margin-top {
-    margin-top: 16px;
-}
-
-.editor .section {
-    padding: 0 0 30px 20px;
-    display: flex;
-    flex-direction: column;
-    row-gap: 10px;
-    width: 400px;
-}
-
-.ribbon .toolbarContainer {
-    height: 40px;
-    border-radius:8px;
-    background:white;
-    box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
-    margin:5px 0;
-}
-
-.ribbon button[role="tab"] {
-    padding: 0 6px;
-}
-
-// Toolbar buttons should not have green/brand color highlighting
-.ribbon button[role="button"],
-.ribbon button.fui-ToolbarButton {
-    &:active,
-    &[aria-pressed="true"],
-    &[aria-checked="true"] {
-        background-color: transparent;
-        color: var(--colorNeutralForeground1);
-    }
-
-    &:hover {
-        background-color: var(--colorNeutralBackground1Hover);
-    }
-
-    &:active:hover {
-        background-color: var(--colorNeutralBackground1Pressed);
-    }
-}
-
-.tablistContainer {
-    margin:10px 0;
-}
-
-.collabContainer {
-    float:right;
-    padding-top: 10px;
-}
-
-.collabContainer button {
-    height:25px;
-    margin: 0 5px;
-}
-
-.authButton {
-    margin-right: 40%;
-    margin-left: 40%;
-    margin-top: 5px;
-}
-
-.ribbon .comboboxLabel {
-    padding-right: 8px;
-}
-
-.shared-state-dialog,
-.create-dialog {
-    width: 360px;
-    padding: 16px 24px 24px 24px;
-    white-space: pre-wrap;
-
-    h2 {
-        padding: 0;
-        margin:0;
-        white-space: inherit;
-        font-size: 20px;
-        font-weight: 600;
-    }
-
-    .section {
-        display: flex;
-        flex-direction: column;
-        row-gap: 10px;
-        white-space: inherit;
-    }
-    
-    .shared-state-iframe-buttons,
-    .create-buttons {
-        justify-content: right;
-    }
-}
-.panel {
-    padding:8px;
-}
-.panel .section {
-    margin: 5px;
-}
-.panel .field {
-    flex-grow: 1;
-}
-
-
-.explorer {
-    min-width: 200px;
-    width:25vw;
-    height: 70vh;
-    vertical-align: middle;
-    border-radius: 8px;
-    background: white; 
-    box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
-    margin: 5px 0;
-    padding: 5px;
-    display: flex;
-
-    .top {
-        padding: 5px 10px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        h1 {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            margin:10px;
-        }
-    }
-
-    .selector-body {
-        display: flex;
-        align-items: start;
-        overflow:hidden;
-        .tree-container {
-            width:100%;
-            overflow-y: auto;
-        }
-    }
-    
-    .selector-tree-item {
-        display:flex;
-        width: 100%;
-    }
-    
-    .fui-TreeItemLayout__main  {
-        text-overflow: ellipsis;
-        overflow:hidden;
-        white-space: nowrap;
-    }
-
-    .main-body {
-        display: flex;
-        height: 100%;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        flex-direction: column;
- 
-        .add-button {
-            margin: 0;
-            width: 51px;
-            min-width: auto;
-            height: 32px;
-            font-size: 14px;
-        }
-        
-        .add {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0px;
-            padding: 24px 0;
-        }
-    }
-}
-    
-
-.hidden-explorer {
-    width: max-content;
-    min-width: auto;
-}
-.vertical-text {
-    writing-mode: vertical-lr;
-}
-.tree {
-    --spacingHorizontalXXL: 16px;
-    .selected {
-        background-color: var(--colorNeutralBackground1Selected);
-    }    
-}
-
-.spinner {
-    justify-content: center;
-}
-
-
-.rtl > * {
-    direction: rtl;
-    text-align: start;
-}
-
-.message-bar-body {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem
-}
-
-.card {
-    margin-bottom: 10px;
-}
-
-.card-content {
-    padding: 5px;
-}
-
-.field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.api-authentication-field {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.api-authentication-field-label {
-    flex: 0 0 250px;
-    margin-right: 10px;
-}
-
-.api-authentication-input {
-    flex: 1;
-    width: 100%; 
-    max-width: 500px;
-}
-
-.authButton {
-    margin-top: 10px;
-    margin-bottom: 20px;
-    align-self: center;
-    display: flex;
-    justify-content: center;
-}
-
-.api-authentication-textarea {
-    resize: both;
-    overflow: auto;
-    width: 500px;
-    min-height: 100px; 
-    font-size: 14px;
-    font-weight: normal;
-}
-
-// Empty state styles
-.empty-item-container {
-  padding: 40px 20px;
-  width: 100%;
+/**
+ * Provides a consistent layout for all item editors following Fabric UX guidelines:
+ * - Fixed ribbon at the top (always visible)
+ * - Optional notification area (fixed, not scrolled)
+ * - Scrollable content area (fills remaining space)
+ * - Full height to fill iframe
+ * 
+ * This is a foundational component used by ALL items, hence in global styles.
+ * 
+ * ## Item-Specific Styling Guidelines
+ * Each item editor should have its own SCSS file (e.g., HelloWorldItem.scss) for:
+ * - Item-specific view layouts (getting started, detail pages, settings)
+ * - Custom colors, branding, and typography
+ * - Item-specific components and UI patterns
+ * 
+ * The base layout (.item-editor-container, .item-editor-container__ribbon, etc.) is provided here.
+ * Import this file via BaseItemEditor component, and create your item SCSS for custom styling.
+ */
+.item-editor-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  
-  img {
-    max-width: 300px;
-    margin-bottom: 24px;
+  width: 100%;
+  height: 100vh; // Fill entire viewport/iframe height
+  background: var(--colorNeutralBackground2, #f3f2f1);
+  overflow: hidden; // Prevent outer scroll
+
+  // Ribbon Container - Fixed at the top
+  &__ribbon {
+    flex-shrink: 0; // Don't shrink the ribbon
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px) 0 var(--spacingHorizontalS, 8px);
+    background: var(--colorNeutralBackground2, #f3f2f1);
+    z-index: 1; // Keep ribbon above content during scroll
+  }
+
+  // Notification Area (Optional) - Fixed below the ribbon
+  &__notification {
+    flex-shrink: 0; // Don't shrink the notification area
+    padding: 0 var(--spacingHorizontalS, 8px);
+    background: var(--colorNeutralBackground2, #f3f2f1);
+    z-index: 1; // Keep notification above content during scroll
+  }
+
+  // Content Area - Fills remaining space and scrolls independently
+  &__content {
+    flex: 1; // Take all remaining space
+    overflow-y: auto; // Allow vertical scrolling
+    overflow-x: hidden; // Prevent horizontal scroll
+    padding: var(--spacingVerticalS, 8px);
+    background: var(--colorNeutralBackground2, #f3f2f1);
+
+    // Custom scrollbar styling - Fabric UX guideline
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--colorNeutralStroke1, #d1d1d1);
+      border-radius: var(--borderRadiusMedium, 4px);
+      
+      &:hover {
+        background: var(--colorNeutralStroke1Hover, #b3b3b3);
+      }
+    }
+  }
+
+  // Focus management for accessibility
+  &:focus-within {
+    outline: none;
+  }
+
+  // Skip to content link support
+  &__content:focus {
+    outline: 2px solid var(--colorCompoundBrandStroke, #0078d4);
+    outline-offset: -2px;
   }
 }
 
-.empty-state-container {
+// Responsive adjustments for item editor
+@media (max-width: 768px) {
+  .item-editor-container {
+    &__ribbon {
+      padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalXS, 4px) 0 var(--spacingHorizontalXS, 4px);
+    }
+
+    &__notification {
+      padding: 0 var(--spacingHorizontalXS, 4px);
+    }
+
+    &__content {
+      padding: var(--spacingVerticalXS, 4px);
+    }
+  }
+}
+
+// High contrast mode support for item editor
+@media (prefers-contrast: high) {
+  .item-editor-container {
+    &__ribbon,
+    &__notification,
+    &__content {
+      border: 1px solid transparent; // Will be visible in high contrast mode
+    }
+  }
+}
+
+// ============================================================================
+// Ribbon Styles - Shared across items
+// ============================================================================
+
+.ribbon-container .toolbarContainer {
+    // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
+    min-height: 40px;
+    height: auto; // Allow flexible height for content
+    border-radius: var(--borderRadiusMedium, 4px); // Use Fabric design tokens
+    background: var(--colorNeutralBackground1, #ffffff);
+    box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
+    margin: 5px 0;
+    padding: 4px 8px; // Add padding for content spacing
+    display: flex;
+    align-items: center;
+    gap: 4px; // Spacing between toolbar items
+}
+
+.ribbon-container button[role="tab"] {
+    // Fabric UX guideline: Tabs should have adequate padding for accessibility
+    padding: 8px 12px;
+    min-height: 32px; // Ensure minimum touch target size
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// ============================================================================
+// Empty State Styles - Used in BaseItemEditorEmpty component
+// ============================================================================
+
+.item-editor-empty-state-container {
   width: 100%;
   height: 100%;
-  background: var(--colorNeutralBackground1, white);
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.12);
+  background: var(--colorNeutralBackground1, #ffffff);
+  box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--borderRadiusMedium, 4px);
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: var(--spacingVerticalXL, 24px);
 
   .empty-state-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: var(--spacingVerticalXL, 24px);
+    max-width: 600px; // Default max-width, can be overridden via inline style
 
     .empty-state-image {
       width: 200px;
       height: 200px;
+      max-width: 100%; // Responsive
+      height: auto;
+      object-fit: contain;
     }
 
     .empty-state-text-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: var(--spacingVerticalS, 8px);
       text-align: center;
-      max-width: 600px;
-      padding: 0 24px;
+      padding: 0 var(--spacingHorizontalXL, 24px);
 
       .empty-state-header {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: var(--spacingVerticalS, 8px);
 
         h2 {
           color: var(--colorNeutralForeground1, #242424);
-          font-size: 20px;
-          font-family: 'Segoe UI', sans-serif;
-          font-weight: 600;
-          line-height: 26px;
+          font-size: var(--fontSizeBase500, 20px);
+          font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+          font-weight: var(--fontWeightSemibold, 600);
+          line-height: var(--lineHeightBase500, 28px);
           margin: 0;
+          padding: 0;
         }
 
         .empty-state-description {
           color: var(--colorNeutralForeground2, #424242);
-          font-size: 14px;
-          font-family: 'Segoe UI', sans-serif;
-          font-weight: 400;
-          line-height: 20px;
-          white-space: nowrap;
-          max-width: none;
+          font-size: var(--fontSizeBase300, 14px);
+          font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+          font-weight: var(--fontWeightRegular, 400);
+          line-height: var(--lineHeightBase300, 20px);
+          margin: 0;
+          padding: 0;
+          max-width: 500px;
         }
       }
     }
   }
 }
 
-// Getting Started page styles
-.getting-started-container {
-  width: 100%;
-  background: var(--colorNeutralBackground1);
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
+// Responsive adjustments for empty state
+@media (max-width: 768px) {
+  .item-editor-empty-state-container {
+    padding: var(--spacingVerticalL, 16px);
 
-  .content-wrapper {
-    display: flex;
-  }
-
-  .hero-section {
-    width: 600px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 40px 60px 40px 60px;
-    background: var(--colorBrandBackground2, #E3F7EF);
-    border-radius: 0;
-
-    .hero-content {
-      display: flex;
-      flex-direction: column;
-      gap: 24px; 
-      width: 100%;
-    }
-
-    .hero-text {
-      padding-top: 0; 
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-
-      .hero-title {
-        color: var(--colorNeutralForegroundStatic, #242424);
-        font-size: 68px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 600;
-        line-height: 92px;
-        margin: 0;
+    .empty-state-content {
+      .empty-state-image {
+        width: 150px;
+        height: 150px;
       }
 
-      .hero-subtitle {
-        color: var(--colorNeutralForegroundStatic, #242424);
-        font-size: 20px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 400;
-        line-height: 28px;
-        margin: 0;
-      }
-    }
-  }
+      .empty-state-text-container {
+        padding: 0 var(--spacingHorizontalL, 16px);
 
-  .main-content {
-    flex: 1;
-    padding: 40px 48px;
-    display: flex;
-    flex-direction: column;
-
-    .content-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    .content-header {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: flex-start;
-      justify-content: flex-start;
-      width: 100%;
-
-      .section-title {
-        color: var(--colorNeutralForeground1, #242424);
-        font-size: 28px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 600;
-        line-height: 36px;
-        margin: 0;
-        padding: 0;
-        text-align: left;
-        width: 100%;
-      }
-
-      .section-subtitle {
-        color: var(--colorNeutralForeground1, #242424);
-        font-size: 16px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 400;
-        line-height: 22px;
-        margin: 0;
-        padding: 0;
-        text-align: left;
-        width: 100%;
-      }
-    }
-
-    .item-details-section {
-      .expandable-card {
-        padding: 0;
-        border-radius: 8px;
-        border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-        background: white;
-
-        .expand-button {
-          width: 100%;
-          height: 48px;
-          padding: 0 16px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          transition: background-color 0.1s;
-
-          &:hover {
-            background: var(--colorNeutralBackground1Hover, #F5F5F5);
+        .empty-state-header {
+          h2 {
+            font-size: var(--fontSizeBase400, 16px);
+            line-height: var(--lineHeightBase400, 22px);
           }
 
-          .expand-icon {
-            width: 20px;
-            height: 20px;
-            transition: transform 0.2s;
-            color: var(--colorNeutralForeground1, #242424);
-
-            &.expanded {
-              transform: rotate(0deg);
-            }
-
-            &:not(.expanded) {
-              transform: rotate(-90deg);
-            }
-          }
-
-          .expand-title {
-            flex: 1;
-            text-align: left;
-            color: var(--colorNeutralForeground1, #242424);
-            font-size: 16px;
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: 600;
-            line-height: 22px;
-          }
-        }
-
-        .expand-content {
-          padding: 16px;
-          border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-
-          .detail-row {
-            display: flex;
-            gap: 5px;
-            font-size: 14px;
-            font-family: 'Segoe UI', sans-serif;
-            line-height: 20px;
-
-            .detail-label {
-              font-weight: 700;
-              color: var(--colorNeutralForeground1, #242424);
-            }
-
-            .detail-value {
-              font-weight: 400;
-              color: var(--colorNeutralForeground1, #242424);
-              word-break: break-all;
-            }
-          }
-        }
-      }
-    }
-
-    .recommended-section {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-
-      .recommended-title {
-        color: var(--colorNeutralForeground1, #242424);
-        font-size: 20px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 600;
-        line-height: 28px;
-        margin: 0;
-      }
-
-      .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 16px;
-
-        .resource-card {
-          max-width: 100%;
-          background: var(--colorNeutralBackground1, white);
-          border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-          overflow: hidden;
-          border-radius: 8px;
-          display: flex;
-          flex-direction: column;
-          transition: box-shadow 0.2s;
-
-          &:hover {
-            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.14);
-          }
-
-          .card-header-section {
-            display: flex;
-            align-items: flex-start;
-            padding: 16px 16px 0 16px;
-            gap: 12px;
-
-            .card-image {
-              flex-shrink: 0;
-              width: 48px;
-              height: 48px;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-
-              img {
-                width: 48px;
-                height: 48px;
-                object-fit: contain;
-              }
-            }
-
-            .ms-Card-cardHeader {
-              padding: 0;
-              flex: 1;
-              gap: 4px;
-
-              .fui-CardHeader__header {
-                color: var(--colorNeutralForeground1, #242424);
-                font-size: 14px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 600;
-                line-height: 20px;
-              }
-
-              .fui-CardHeader__description {
-                color: var(--colorNeutralForeground3, #616161);
-                font-size: 12px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 400;
-                line-height: 16px;
-              }
-            }
-          }
-
-          .card-body {
-            padding: 16px;
-            flex: 1;
-
-            .card-list {
-              margin: 0;
-              padding-left: 20px;
-              
-              li {
-                color: var(--colorNeutralForeground2, #424242);
-                font-size: 12px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 400;
-                line-height: 16px;
-                margin-bottom: 4px;
-                
-                &:last-child {
-                  margin-bottom: 0;
-                }
-              }
-            }
-          }
-
-          .card-footer {
-            padding: 12px 16px;
-            border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-
-            .fui-Button {
-              height: 32px;
-              padding: 0 12px;
-              background: var(--colorNeutralBackground1, white);
-              border-radius: 4px;
-              border: 1px solid var(--colorNeutralStroke1, #D1D1D1);
-              font-size: 14px;
-              font-family: 'Segoe UI', sans-serif;
-              font-weight: 600;
-              line-height: 20px;
-              color: var(--colorNeutralForeground1, #242424);
-
-              &:hover {
-                background: var(--colorNeutralBackground1Hover, #F5F5F5);
-              }
-            }
+          .empty-state-description {
+            font-size: var(--fontSizeBase200, 12px);
+            line-height: var(--lineHeightBase200, 16px);
           }
         }
       }
@@ -659,99 +357,37 @@
   }
 }
 
-// Responsive adjustments
-@media (max-width: 1200px) {
-  .getting-started-container {
-    .content-wrapper {
-      flex-direction: column;
-    }
+// ============================================================================
+// Settings Panel Styles - Used in HelloWorldItemEditorSettingsPage
+// ============================================================================
 
-    .hero-section {
-      width: 100%;
-      padding: 40px 30px;
-    }
-
-    .main-content {
-      padding: 24px;
-      
-      .cards-grid {
-        grid-template-columns: 1fr;
-        
-        .resource-card {
-          max-width: 100%;
-        }
-      }
-    }
-  }
-}
-
-// Settings Panel styles
-.settings-panel-container {
+.item-settings-panel-container {
   width: 100%;
   height: 100%;
-  position: relative;
   background: var(--colorBrandBackground2, #E3F7EF);
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--borderRadiusMedium, 4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-  .settings-panel-content {
+  .item-settings-panel-content {
     width: 100%;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 24px;
+    padding: var(--spacingVerticalXL, 24px);
 
     .settings-placeholder-text {
       text-align: center;
       color: var(--colorBrandForeground2, #0C695A);
-      font-size: 16px;
-      font-family: 'Segoe UI', sans-serif;
-      font-weight: 400;
-      line-height: 16px;
+      font-size: var(--fontSizeBase400, 16px);
+      font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+      font-weight: var(--fontWeightRegular, 400);
+      line-height: var(--lineHeightBase400, 22px);
       word-wrap: break-word;
-    }
-  }
-}
-
-// Panel-specific overrides when settings page is shown in a panel
-.ms-Panel {
-  .settings-panel-container {
-    // Ensure full height in panel context
-    min-height: 100vh;
-  }
-}
-
-// Alternative styling for future content sections
-.settings-panel-container {
-  &.with-content {
-    background: var(--colorNeutralBackground1, white);
-    
-    .settings-section {
-      padding: 20px;
-      border-bottom: 1px solid var(--colorNeutralStroke1, #E0E0E0);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .settings-section-title {
-        color: var(--colorNeutralForeground1, #242424);
-        font-size: 16px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 600;
-        line-height: 22px;
-        margin-bottom: 12px;
-      }
-      
-      .settings-section-description {
-        color: var(--colorNeutralForeground2, #424242);
-        font-size: 14px;
-        font-family: 'Segoe UI', sans-serif;
-        font-weight: 400;
-        line-height: 20px;
-        margin-bottom: 16px;
-      }
+      max-width: 600px;
     }
   }
 }

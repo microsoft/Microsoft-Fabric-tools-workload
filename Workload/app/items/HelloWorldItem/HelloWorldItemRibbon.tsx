@@ -77,7 +77,7 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
       icon: Rocket24Regular,
       label: t("ItemEditor_Ribbon_GettingStarted_Label", "Getting Started"),
       onClick: props.navigateToGettingStartedCallback,
-      testId: 'item-editor-getting-started-btn',
+      testId: 'ribbon-getting-started-btn',
       hidden: props.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
     }
   ];

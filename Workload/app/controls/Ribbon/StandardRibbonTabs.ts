@@ -39,7 +39,7 @@ export function createHomeTab(label: string, disabled?: boolean): RibbonTab {
   return {
     value: 'home',
     label,
-    testId: 'home-tab-btn',
+    testId: 'ribbon-home-tab-btn',
     disabled
   };
 }
@@ -94,7 +94,7 @@ export function createInsertTab(label: string, disabled?: boolean): RibbonTab {
   return {
     value: 'insert',
     label,
-    testId: 'insert-tab-btn',
+    testId: 'ribbon-insert-tab-btn',
     disabled
   };
 }
@@ -110,7 +110,7 @@ export function createFormatTab(label: string, disabled?: boolean): RibbonTab {
   return {
     value: 'format',
     label,
-    testId: 'format-tab-btn',
+    testId: 'ribbon-format-tab-btn',
     disabled
   };
 }
@@ -126,7 +126,7 @@ export function createDataTab(label: string, disabled?: boolean): RibbonTab {
   return {
     value: 'data',
     label,
-    testId: 'data-tab-btn',
+    testId: 'ribbon-data-tab-btn',
     disabled
   };
 }
@@ -142,7 +142,7 @@ export function createViewTab(label: string, disabled?: boolean): RibbonTab {
   return {
     value: 'view',
     label,
-    testId: 'view-tab-btn',
+    testId: 'ribbon-view-tab-btn',
     disabled
   };
 }
@@ -168,7 +168,7 @@ export function createCustomTab(
   return {
     value,
     label,
-    testId: `${value}-tab-btn`,
+    testId: `ribbon-${value}-tab-btn`,
     disabled
   };
 }

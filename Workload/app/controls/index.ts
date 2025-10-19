@@ -9,6 +9,10 @@
 export { BaseItemEditor } from './BaseItemEditor';
 export type { BaseItemEditorProps } from './BaseItemEditor';
 
+// Base Item Editor Empty State - Reusable empty state component
+export { BaseItemEditorEmpty } from './BaseItemEditorEmpty';
+export type { BaseItemEditorEmptyProps, EmptyStateTask } from './BaseItemEditorEmpty';
+
 // Item Editor Loading Progress Bar
 export { ItemEditorLoadingProgressBar } from './ItemEditorLoadingProgressBar';
 

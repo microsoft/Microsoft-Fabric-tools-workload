@@ -20,7 +20,7 @@ import { ApiAuthenticationFrontend } from './ApiAuthenticationFrontend';
 import { ApiAuthentication } from './ApiAuthentication';
 import { PageProps } from '../../App';
 import { callNavigationBeforeNavigateAway, callNavigationNavigate } from "../../controller/NavigationController";
-import "../../styles.scss";
+import "../Playground.scss";
 import SampleSparkTerminal from '../../samples/views/SampleSparkTerminal/SampleSparkTerminal';
 import { TabContentProps } from './ClientSDKPlaygroundModel';
 
@@ -41,7 +41,7 @@ export function ClientSDKPlayground(props: TabContentProps) {
 
 
   return (
-    <Stack className="editor" >
+    <Stack className="playground-container" >
       <TabList
         className="tabListContainer"
         selectedValue={selectedApiTab}
@@ -104,7 +104,7 @@ export function ClientSDKPlayground(props: TabContentProps) {
 
 export function SamplePage({ workloadClient, history }: PageProps) {
   return (
-    <Stack className="editor">
+    <Stack className="playground-container">
       <Stack className="main">
         <Button
           onClick={() => {

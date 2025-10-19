@@ -17,7 +17,7 @@ import {
 } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular, FolderAdd20Regular, Link20Regular } from "@fluentui/react-icons";
 import { TableMetadata, FileMetadata, OneLakeObjectMetadata } from "./SampleOneLakeItemExplorerModel";
-import "../../../styles.scss";
+import "./SampleOneLakeItemExplorer.scss";
 import { getTables, getFiles } from "./SampleOneLakeItemExplorerController";
 import { PageProps } from "../../../App";
 import { Item } from "../../../clients/FabricPlatformTypes";

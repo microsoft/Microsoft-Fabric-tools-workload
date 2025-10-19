@@ -53,12 +53,15 @@ export interface RibbonButtonProps {
  * - Consistent Tooltip + ToolbarButton pattern (mandatory for accessibility)
  * - Proper icon sizing (24px Regular icons)
  * - Accessibility attributes
- * - Standardized styling
+ * - Standardized styling with 'subtle' appearance (neutral colors, not brand colors)
+ * 
+ * Fabric UX Guideline: Toolbar buttons should use 'subtle' appearance for neutral styling.
+ * Never use 'primary' appearance in toolbars - that's reserved for dialog CTAs.
  * 
  * @example
  * ```tsx
  * <RibbonButton
- *   icon={<Save24Regular />}
+ *   icon={Save24Regular}
  *   label="Save"
  *   onClick={handleSave}
  *   disabled={!hasChanges}

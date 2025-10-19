@@ -1,0 +1,176 @@
+/**
+ * ============================================================================
+ * Playground - Specific Styles
+ * ============================================================================
+ * 
+ * This file contains styles specific to the Playground components.
+ * These styles are shared across multiple playground views (ClientSDK, Data, etc.)
+ * 
+ * ## Usage
+ * Import this file in playground components that need these shared styles:
+ * ```typescript
+ * import "../Playground.scss";
+ * ```
+ * 
+ * ## Components Using These Styles
+ * - ClientSDKPlayground
+ * - DataPlayground
+ * 
+ * ## Design Principles
+ * - Uses Fabric UX design tokens exclusively
+ * - Follows Microsoft Fabric UX System guidelines
+ * - Consistent with global styles architecture
+ * 
+ * ## References
+ * - Fabric Design Tokens: https://aka.ms/fabric-tokens
+ * - Fluent UI v9: https://react.fluentui.dev/
+ */
+
+// ============================================================================
+// Playground Container Styles
+// ============================================================================
+
+// Main playground container - Provides consistent layout for all playground views
+.playground-container {
+  background: var(--colorNeutralBackground2, #f3f2f1);
+  padding: var(--spacingHorizontalM, 8px);
+  height: 100%;
+  overflow-y: auto; // Allow scrolling when content overflows
+}
+
+// Content cards within playground
+.playground-container .main {
+  border-radius: var(--borderRadiusMedium, 4px);
+  background: var(--colorNeutralBackground1, #ffffff); 
+  box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
+  margin: 5px 0;
+  padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 16px);
+}
+
+// Description text formatting - preserves whitespace for formatted text
+.description {
+  white-space: pre-wrap;
+}
+
+// Section headings
+.playground-container h2 {
+  padding: 0 0 0 20px;
+}
+
+// Form fields
+.playground-container .field {
+  flex-grow: 1;
+}
+
+// Content sections
+.playground-container .section {
+  padding: 0 0 var(--spacingVerticalXXL, 24px) var(--spacingHorizontalL, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
+  max-width: 600px;
+  width: 100%;
+}
+
+// ============================================================================
+// API Authentication Form Styles
+// ============================================================================
+
+// Field groups for API authentication forms
+.api-authentication-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacingVerticalM, 12px);
+  gap: var(--spacingHorizontalM, 12px);
+}
+
+.api-authentication-field-label {
+  flex: 0 0 250px;
+  font-size: var(--fontSizeBase300, 14px);
+  font-weight: var(--fontWeightSemibold, 600);
+  color: var(--colorNeutralForeground1, #242424);
+}
+
+.api-authentication-input {
+  flex: 1;
+  width: 100%; 
+  max-width: 500px;
+  min-width: 200px; // Ensure minimum usable width
+}
+
+// Textarea styling for API responses
+.api-authentication-textarea {
+  resize: both;
+  overflow: auto;
+  width: 100%;
+  max-width: 500px;
+  min-height: 100px;
+  font-size: var(--fontSizeBase300, 14px);
+  font-weight: var(--fontWeightRegular, 400);
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+  line-height: var(--lineHeightBase300, 20px);
+  padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+  border-radius: var(--borderRadiusMedium, 4px);
+  border: 1px solid var(--colorNeutralStroke1, #D1D1D1);
+  
+  &:hover {
+    border-color: var(--colorNeutralStroke1Hover, #B3B3B3);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--colorCompoundBrandStroke, #0078D4);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+}
+
+// ============================================================================
+// Playground Form Styles
+// ============================================================================
+
+// TabList container styling
+.tabListContainer {
+  margin: var(--spacingVerticalM, 12px) 0;
+}
+
+// Section container for grouping related form elements
+.section {
+  padding: 0 0 var(--spacingVerticalXXL, 24px) var(--spacingHorizontalL, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
+  max-width: 600px;
+  width: 100%;
+}
+
+// Field styling for form inputs
+.field {
+  flex-grow: 1;
+  min-width: 0; // Prevent flex items from overflowing
+}
+
+// Authentication button - Centered layout
+.authButton {
+  margin: var(--spacingVerticalL, 16px) auto var(--spacingVerticalM, 12px);
+  display: flex;
+  justify-content: center;
+  min-width: 120px; // Ensure button is usable
+}
+
+// Card components
+.card {
+  margin-bottom: var(--spacingVerticalM, 12px);
+}
+
+.card-content {
+  padding: var(--spacingVerticalXS, 4px);
+}
+
+// ============================================================================
+// Utility Classes
+// ============================================================================
+
+// Top margin utility for spacing elements
+.margin-top {
+  margin-top: var(--spacingVerticalL, 16px);
+}

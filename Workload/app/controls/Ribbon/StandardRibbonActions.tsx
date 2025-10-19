@@ -37,8 +37,7 @@ export const createSaveAction = (
   label,
   onClick,
   disabled,
-  testId: 'item-editor-save-btn',
-  appearance: 'primary'
+  testId: 'ribbon-save-btn',
 });
 
 /**
@@ -54,7 +53,7 @@ export const createSettingsAction = (
   icon: Settings24Regular,
   label,
   onClick,
-  testId: 'item-editor-settings-btn',
+  testId: 'ribbon-settings-btn',
   showDividerAfter: true
 });
 
@@ -71,5 +70,5 @@ export const createAboutAction = (
   icon: Info24Regular,
   label,
   onClick,
-  testId: 'item-editor-about-btn'
+  testId: 'ribbon-about-btn'
 });

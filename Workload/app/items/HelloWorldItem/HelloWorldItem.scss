@@ -1,0 +1,360 @@
+/**
+ * ============================================================================
+ * HelloWorld Item - Specific Styles
+ * ============================================================================
+ * 
+ * This file contains styles specific to the HelloWorld item.
+ * All styles are prefixed with "hello-world-" to clearly indicate they are item-specific.
+ * 
+ * ## Design Principles
+ * - Uses Fabric UX design tokens exclusively (var(--color*, --spacing*, --fontSize*))
+ * - Follows Microsoft Fabric UX System guidelines for layout and typography
+ * - Responsive design with proper spacing and sizing
+ * - Accessibility-first approach with proper contrast and touch targets
+ * 
+ * ## Architecture Pattern
+ * This demonstrates the recommended pattern for item-specific styles:
+ * - Global utilities: Defined in styles.scss (root)
+ * - Component layouts: Defined in component SCSS files (e.g., BaseItemEditor.scss)
+ * - Item-specific styles: Defined here (e.g., HelloWorldItem.scss)
+ * 
+ * ## References
+ * - Fabric Design Tokens: https://aka.ms/fabric-tokens
+ * - Fluent UI v9: https://react.fluentui.dev/
+ */
+
+// ============================================================================
+// Main Container & Layout
+// ============================================================================
+
+.hello-world-getting-started-container {
+  width: 100%;
+  height: 100%;
+  background: var(--colorNeutralBackground1, #ffffff);
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.hello-world-content-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+// ============================================================================
+// Left Hero Section (30% width)
+// ============================================================================
+
+.hello-world-hero-section {
+  width: 600px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 60px 40px 60px;
+  background: var(--colorBrandBackground2, #E3F7EF);
+  border-radius: 0;
+}
+
+.hello-world-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.hello-world-hero-text {
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hello-world-hero-title {
+  font-size: 68px;
+  font-weight: var(--fontWeightSemibold, 600);
+  line-height: 92px;
+  color: var(--colorNeutralForegroundStatic, #242424);
+  margin: 0;
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+}
+
+.hello-world-hero-subtitle {
+  font-size: 20px;
+  font-weight: var(--fontWeightRegular, 400);
+  line-height: 28px;
+  color: var(--colorNeutralForegroundStatic, #242424);
+  margin: 0;
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+}
+
+// ============================================================================
+// Right Content Section (70% width)
+// ============================================================================
+
+.hello-world-main-content {
+  flex: 1;
+  padding: 40px 48px;
+  background: var(--colorNeutralBackground1, #ffffff);
+  display: flex;
+  flex-direction: column;
+}
+
+.hello-world-content-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+// ============================================================================
+// Content Header
+// ============================================================================
+
+.hello-world-content-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.hello-world-section-title {
+  font-size: var(--fontSizeBase600, 24px);
+  font-weight: var(--fontWeightSemibold, 600);
+  line-height: var(--lineHeightBase600, 32px);
+  color: var(--colorNeutralForeground1, #242424);
+  margin: 0 0 var(--spacingVerticalS, 8px) 0;
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+}
+
+.hello-world-section-subtitle {
+  color: var(--colorNeutralForeground1, #242424);
+  font-size: 16px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: var(--fontWeightRegular, 400);
+  line-height: 22px;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+// ============================================================================
+// Item Details Expandable Section
+// ============================================================================
+
+.hello-world-item-details-section {
+  // No styles on the section itself
+}
+
+.hello-world-expandable-card {
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
+  background: white;
+  overflow: hidden;
+}
+
+.hello-world-expand-button {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+
+  &:hover {
+    background: var(--colorNeutralBackground1Hover, #F5F5F5);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--colorCompoundBrandStroke, #0078D4);
+    outline-offset: -2px;
+  }
+}
+
+.hello-world-expand-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+  color: var(--colorNeutralForeground1, #242424);
+
+  &.expanded {
+    transform: rotate(0deg);
+  }
+
+  &:not(.expanded) {
+    transform: rotate(-90deg);
+  }
+}
+
+.hello-world-expand-title {
+  flex: 1;
+  text-align: left;
+  color: var(--colorNeutralForeground1, #242424);
+  font-size: 16px;
+  font-weight: var(--fontWeightSemibold, 600);
+  font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
+  line-height: 22px;
+}
+
+.hello-world-expand-content {
+  padding: 16px;
+  border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hello-world-detail-row {
+  display: flex;
+  gap: 5px;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 20px;
+}
+
+.hello-world-detail-label {
+  font-weight: 700;
+  color: var(--colorNeutralForeground1, #242424);
+}
+
+.hello-world-detail-value {
+  font-weight: 400;
+  color: var(--colorNeutralForeground1, #242424);
+  word-break: break-all;
+}
+
+// ============================================================================
+// Recommended Steps Section
+// ============================================================================
+
+.hello-world-recommended-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hello-world-recommended-title {
+  color: var(--colorNeutralForeground1, #242424);
+  font-size: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: var(--fontWeightSemibold, 600);
+  line-height: 28px;
+  margin: 0;
+}
+
+// ============================================================================
+// Resource Cards Grid
+// ============================================================================
+
+.hello-world-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.hello-world-resource-card {
+  max-width: 100%;
+  background: var(--colorNeutralBackground1, white);
+  border: 1px solid var(--colorNeutralStroke1, #E0E0E0);
+  overflow: hidden;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.14);
+  }
+}
+
+.hello-world-card-header-section {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 16px 0 16px;
+  gap: 12px;
+}
+
+.hello-world-card-image-container {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hello-world-card-image {
+  width: 48px;
+  height: 48px;
+}
+
+.hello-world-card-body {
+  padding: 16px;
+  flex: 1;
+}
+
+.hello-world-card-list {
+  margin: 0;
+  padding-left: 20px;
+
+  li {
+    color: var(--colorNeutralForeground2, #424242);
+    font-size: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 400;
+    line-height: 16px;
+    margin-bottom: 4px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.hello-world-card-list-item {
+  // Styles moved to .hello-world-card-list li selector above
+}
+
+.hello-world-card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--colorNeutralStroke1, #E0E0E0);
+  display: flex;
+  justify-content: flex-start;
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 1200px) {
+  .hello-world-content-wrapper {
+    flex-direction: column;
+  }
+
+  .hello-world-hero-section {
+    width: 100%;
+    padding: 40px 30px;
+  }
+
+  .hello-world-main-content {
+    padding: 24px;
+  }
+
+  .hello-world-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hello-world-resource-card {
+    max-width: 100%;
+  }
+}

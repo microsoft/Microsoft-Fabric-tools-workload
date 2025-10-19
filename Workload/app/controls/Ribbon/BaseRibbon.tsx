@@ -83,7 +83,7 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`ribbon ${className}`.trim()}>
+    <div className={`ribbon-container ${className}`.trim()}>
       {/* Tab Navigation - Only show if tabs are provided and showTabs is true */}
       {showTabs && tabs.length > 0 && (
         <TabList defaultSelectedValue={defaultSelectedTab}>
@@ -91,7 +91,7 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
             <Tab
               key={tab.value}
               value={tab.value}
-              data-testid={tab.testId || `${tab.value}-tab-btn`}
+              data-testid={tab.testId || `ribbon-${tab.value}-tab-btn`}
               disabled={tab.disabled}
             >
               {tab.label}

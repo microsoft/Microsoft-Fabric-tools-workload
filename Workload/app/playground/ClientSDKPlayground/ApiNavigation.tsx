@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Divider, Label } from "@fluentui/react-components";
 import { PanelRightExpand20Regular } from "@fluentui/react-icons";
 import { callNavigationNavigate, callNavigationOpenInNewBrowserTab } from "../../controller/NavigationController";
-import "../../styles.scss";
+import "../Playground.scss";
 import { TabContentProps } from "./ClientSDKPlaygroundModel";
 import { callPageOpen } from "../../controller/PageController";
 

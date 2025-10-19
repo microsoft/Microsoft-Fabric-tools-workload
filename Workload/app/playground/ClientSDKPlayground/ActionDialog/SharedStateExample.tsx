@@ -6,7 +6,7 @@ import { RootState } from "../Store/Store";
 import { setLocalSharedStateMessage } from "../Store/actionDialogSlice";
 import { callDialogOpen } from "../../../controller/DialogController";
 import { SharedState } from "../../../App";
-import "../../../styles.scss";
+import "../../Playground.scss";
 import { TabContentProps } from '../ClientSDKPlaygroundModel';
 
 

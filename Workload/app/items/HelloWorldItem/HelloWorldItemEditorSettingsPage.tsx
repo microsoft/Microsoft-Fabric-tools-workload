@@ -10,9 +10,9 @@ export function HelloWorldItemEditorSettingsPage(props: PageProps) {
   console.log("HelloWorldItemEditorSettingsPage rendered with props:", props);
   
   return (
-    <div className="settings-panel-container">
+    <div className="item-settings-panel-container">
       <Stack 
-        className="settings-panel-content"
+        className="item-settings-panel-content"
         horizontalAlign="center" 
         verticalAlign="center"
       >

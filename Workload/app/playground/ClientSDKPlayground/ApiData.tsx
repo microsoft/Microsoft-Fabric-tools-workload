@@ -19,7 +19,7 @@ import {
     setMultiSelectionEnabled,
     setSelectedLinkedItem,
 } from "./Store/apiDataSlice";
-import "../../styles.scss";
+import "../Playground.scss";
 import { TabContentProps } from "./ClientSDKPlaygroundModel";
 import { callDatahubOpen, callDatahubWizardOpen } from "../../controller/DataHubController";
 
