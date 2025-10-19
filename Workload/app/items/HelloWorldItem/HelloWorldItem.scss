@@ -345,3 +345,57 @@
     max-width: 100%;
   }
 }
+
+// ============================================================================
+// Settings Panel - Item-specific branded customization
+// ============================================================================
+
+/**
+ * HelloWorld-specific settings panel customization.
+ * 
+ * This demonstrates how to extend the generic .item-settings-panel-container
+ * from styles.scss with item-specific branding.
+ * 
+ * ## Approach
+ * - Uses .item-settings-panel-container as the base class (from global styles.scss)
+ * - Adds .hello-world-settings-panel-container to override only branded elements
+ * 
+ * ## What's Overridden
+ * - Background: Branded green instead of neutral white
+ * - Text color: Branded dark green instead of neutral gray
+ * 
+ * ## What's Inherited
+ * - Layout structure (flex, padding, scrollbar)
+ * - Border radius, shadows, responsive behavior
+ * - All spacing and typography from design tokens
+ * 
+ * ## Usage in Component
+ * ```tsx
+ * <div className="item-settings-panel-container hello-world-settings-panel-container">
+ *   <div className="item-settings-placeholder">
+ *     <span className="item-settings-placeholder-text">...</span>
+ *   </div>
+ * </div>
+ * ```
+ * 
+ * This follows the CSS cascading principle: generic styles first, then item-specific overrides.
+ */
+.hello-world-settings-panel-container {
+  // Override background with branded color
+  background: var(--colorBrandBackground2);
+
+  // Override text colors with branded colors
+  .item-settings-placeholder-text {
+    color: var(--colorBrandForeground2);
+  }
+
+  // Override section headers with branded colors (if needed)
+  .item-settings-section-header {
+    color: var(--colorBrandForeground2);
+  }
+
+  // Override section descriptions with branded colors (if needed)
+  .item-settings-section-description {
+    color: var(--colorBrandForeground2);
+  }
+}

@@ -1,25 +1,20 @@
 import React from 'react';
-import { Stack } from '@fluentui/react';
-import { Text } from '@fluentui/react-components';
 import { PageProps } from '../../App';
 import { useTranslation } from 'react-i18next';
-import '../../styles.scss';
+import '../../styles.scss'; // Import generic settings panel styles
+import './HelloWorldItem.scss'; // Import HelloWorld-specific overrides
 
 export function HelloWorldItemEditorSettingsPage(props: PageProps) {
   const { t } = useTranslation();
   console.log("HelloWorldItemEditorSettingsPage rendered with props:", props);
   
   return (
-    <div className="item-settings-panel-container">
-      <Stack 
-        className="item-settings-panel-content"
-        horizontalAlign="center" 
-        verticalAlign="center"
-      >
-        <Text className="settings-placeholder-text">
+    <div className="item-settings-panel-container hello-world-settings-panel-container">
+      <div className="item-settings-placeholder">
+        <span className="item-settings-placeholder-text">
           {t('Settings_PlaceholderText', 'Your content will appear here')}
-        </Text>
-      </Stack>
+        </span>
+      </div>
     </div>
   );
 }
