@@ -535,3 +535,137 @@
     }
   }
 }
+
+// ============================================================================
+// Loading Progress Styles - Standard Fabric UX System Pattern
+// ============================================================================
+
+/**
+ * Loading progress indicator following Fabric UX System guidelines.
+ * 
+ * This provides a standard indeterminate progress indicator for loading states
+ * that follows Microsoft Fabric design patterns.
+ * 
+ * ## Design Principles
+ * - Indeterminate state for unknown duration operations
+ * - Non-blocking interaction pattern
+ * - Accessible with proper ARIA support
+ * - Centered layout for full-page loading states
+ * 
+ * ## Usage
+ * Use this for item editor loading states and other long-running operations.
+ * 
+ * ## Example
+ * ```tsx
+ * <div className="item-editor-loading-container" role="progressbar" aria-label="Loading..." aria-busy="true">
+ *   <div className="item-editor-loading-icon">
+ *     <img src="/assets/icon.png" alt="" />
+ *   </div>
+ *   <div className="item-editor-loading-text">Loading item...</div>
+ *   <div className="item-editor-loading-progress">
+ *     <div className="item-editor-loading-progress-fill"></div>
+ *   </div>
+ * </div>
+ * ```
+ */
+.item-editor-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: var(--spacingVerticalXL);
+  background-color: var(--colorNeutralBackground2);
+}
+
+.item-editor-loading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacingVerticalM);
+
+  img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+
+  // Support for Fluent UI icon components (rendered as SVG or span)
+  svg, span {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.item-editor-loading-text {
+  font-size: var(--fontSizeBase400);
+  font-weight: var(--fontWeightSemibold);
+  color: var(--colorNeutralForeground1);
+  font-family: var(--fontFamilyBase);
+  line-height: var(--lineHeightBase400);
+}
+
+.item-editor-loading-progress {
+  width: 300px;
+  height: 4px;
+  background-color: var(--colorNeutralBackground5);
+  border-radius: var(--borderRadiusMedium);
+  overflow: hidden;
+  position: relative;
+}
+
+.item-editor-loading-progress-fill {
+  height: 100%;
+  background-color: var(--colorBrandBackground);
+  width: 30%;
+  position: absolute;
+  animation: progress-indeterminate 2s ease-in-out infinite;
+}
+
+// Indeterminate progress animation
+@keyframes progress-indeterminate {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Responsive adjustments for loading progress
+@media (max-width: 768px) {
+  .item-editor-loading-container {
+    gap: var(--spacingVerticalL);
+  }
+
+  .item-editor-loading-icon {
+    img, svg, span {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .item-editor-loading-text {
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+  }
+
+  .item-editor-loading-progress {
+    width: 240px;
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .item-editor-loading-container {
+    border: 1px solid transparent; // Will be visible in high contrast mode
+  }
+
+  .item-editor-loading-progress {
+    border: 1px solid transparent;
+  }
+
+  .item-editor-loading-progress-fill {
+    border: 1px solid transparent;
+  }
+}
