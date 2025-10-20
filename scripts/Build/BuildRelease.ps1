@@ -82,7 +82,7 @@ Write-Host ""
 Write-Host "You can now upload the manifest package and the app release to the Fabric portal." 
 Write-Host "The manifest package is located at $realeaseManifestDir"
 Write-Host ""
-write-Host "To upload the app release, to Azuer you can use the Deploy scripts."
+write-Host "To upload the app release, to Azure you can use the Deploy scripts."
 Write-Host "The app release is located at $realeaseApptDir"
 
 
