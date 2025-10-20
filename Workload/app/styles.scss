@@ -30,27 +30,20 @@
  * 
  * ### 1. Global Styles (THIS FILE - styles.scss)
  * **Location**: `Workload/app/styles.scss`
- * **Purpose**: Shared styles used across multiple components and items
+ * **Purpose**: Shared styles used across ALL components and items
  * **Contains**:
- *   - Item editor layout (ribbon, notification, content)
+ *   - BaseItemEditor layout (ribbon, notification, content) - used by ALL items
  *   - Common ribbon and toolbar styles
- *   - Empty state components
- *   - Settings panel containers
+ *   - Empty state components (BaseItemEditorEmpty)
+ *   - Settings panel containers (generic, neutral styling)
  * **When to use**: Styles that are shared by 2+ components or items
  * **Import pattern**: `import "../../styles.scss"`
+ * **Examples**: 
+ *   - `.item-editor-container` (used by BaseItemEditor - ALL items use this)
+ *   - `.ribbon-container` (standard ribbon layout)
+ *   - `.item-settings-panel-container` (generic settings panel)
  * 
- * ### 2. Component-Specific Styles (Component SCSS files)
- * **Location**: Next to component (e.g., `controls/BaseItemEditor.scss`)
- * **Purpose**: Layout and structure for reusable components
- * **Contains**:
- *   - Component-specific layout (BEM naming: `.base-item-editor__*`)
- *   - Responsive design patterns for the component
- *   - Accessibility enhancements specific to component
- * **When to use**: Component has complex layout/structure needs
- * **Import pattern**: `import "./ComponentName.scss"`
- * **Example**: BaseItemEditor.scss provides fixed ribbon + scrollable content layout
- * 
- * ### 3. Item-Specific Styles (Item SCSS files)
+ * ### 2. Item-Specific Styles (Item SCSS files) - MOST COMMON
  * **Location**: Next to item (e.g., `items/HelloWorldItem/HelloWorldItem.scss`)
  * **Purpose**: Unique styling for specific workload items
  * **Contains**:
@@ -60,36 +53,56 @@
  * **When to use**: Styling is unique to this item and not reused elsewhere
  * **Import pattern**: `import "./ItemName.scss"`
  * **Naming convention**: Prefix all classes with item name (e.g., `.hello-world-*`)
- * **Example**: HelloWorldItem.scss has branded gradient backgrounds and custom card layouts
+ * **Examples**: 
+ *   - HelloWorldItem.scss: Branded gradient backgrounds and custom card layouts
+ *   - HelloWorldItem.scss: `.hello-world-settings-panel-container` (overrides generic with green theme)
  * 
- * **IMPORTANT**: Every item editor SHOULD have its own SCSS file for item-specific styling.
+ * **IMPORTANT**: Every item editor MUST have its own SCSS file for item-specific styling.
  * The basic layout (ribbon, editor container, notification area) comes from styles.scss,
  * but item-specific views, colors, and custom components go in the item's SCSS file.
+ * 
+ * ### 3. Component-Specific Styles (Component SCSS files) - RARE
+ * **Location**: Next to component (e.g., `samples/views/SampleOneLakeItemExplorer.scss`)
+ * **Purpose**: Layout and structure for specialized reusable components
+ * **Contains**:
+ *   - Component-specific layout (BEM naming: `.component-name__*`)
+ *   - Responsive design patterns for the component
+ *   - Complex component-specific UI patterns
+ * **When to use**: Component has complex layout/structure needs AND is reused across items
+ * **Import pattern**: `import "./ComponentName.scss"`
+ * **Examples**: 
+ *   - SampleOneLakeItemExplorer.scss: Complex explorer view with tree navigation
+ *   - Custom data grid components with specialized layouts
+ * 
+ * **NOTE**: BaseItemEditor does NOT have its own SCSS file because its styles are in 
+ * styles.scss (tier 1) since ALL items use it. Only create component SCSS for specialized
+ * components that aren't universal.
  * 
  * ### Decision Guide: Where Should My Styles Go?
  * 
  * ```
- * Is the style used by multiple items/components?
- * ├─ YES → Add to styles.scss (Global)
- * │        Examples: .item-editor-container, .ribbon-container, .empty-state
+ * Is the style used by ALL items/components?
+ * ├─ YES → Add to styles.scss (Global - Tier 1)
+ * │        Examples: .item-editor-container (BaseItemEditor), .ribbon-container, .item-settings-panel-container
  * │
- * └─ NO → Is it a reusable component structure?
- *    ├─ YES → Create/add to ComponentName.scss (Component-Specific)
- *    │        Note: Only for complex reusable components, NOT for BaseItemEditor
+ * └─ NO → Is it specific to one item?
+ *    ├─ YES → Create/add to ItemName.scss (Item-Specific - Tier 2) ← MOST COMMON
+ *    │        REQUIRED for every item editor!
+ *    │        Examples: .hello-world-*, .my-item-*
  *    │
- *    └─ NO → Create/add to ItemName.scss (Item-Specific)
- *             REQUIRED for every item editor!
- *             Examples: .hello-world-*, .my-item-*
+ *    └─ NO → Create/add to ComponentName.scss (Component-Specific - Tier 3) ← RARE
+ *             Only for specialized reusable components (not BaseItemEditor)
+ *             Examples: SampleOneLakeItemExplorer.scss, CustomDataGrid.scss
  * ```
  * 
  * ### For Item Editors Specifically
  * 
- * **Every item editor must follow this pattern:**
+ * **Every item editor MUST follow this pattern:**
  * 
- * 1. **Use BaseItemEditor component** (provides .item-editor-container layout from global styles)
+ * 1. **Use BaseItemEditor component** (provides .item-editor-container layout from global styles.scss)
  * 2. **Create ItemName.scss** for your item-specific styling:
  *    - Item views: getting started, default, detail pages, settings
- *    - Custom colors and branding
+ *    - Custom colors and branding (override generic styles)
  *    - Item-specific components
  * 3. **Import ItemName.scss** in your item's view components
  * 4. **Prefix all classes** with your item name (e.g., .hello-world-getting-started)
@@ -97,8 +110,8 @@
  * **Example Structure:**
  * ```
  * items/HelloWorldItem/
- * ├── HelloWorldItem.scss          ← Item-specific styles
- * ├── HelloWorldItemEditor.tsx     ← Uses BaseItemEditor (gets .item-editor)
+ * ├── HelloWorldItem.scss              ← Item-specific styles (TIER 2 - REQUIRED)
+ * ├── HelloWorldItemEditor.tsx         ← Uses BaseItemEditor (gets layout from TIER 1)
  * ├── HelloWorldItemEditorDefault.tsx  ← Imports HelloWorldItem.scss
  * └── HelloWorldItemEditorEmpty.tsx    ← Imports HelloWorldItem.scss
  * ```
