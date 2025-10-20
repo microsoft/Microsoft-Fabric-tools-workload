@@ -22,6 +22,10 @@ console.log('*******************************************************************
 module.exports = merge(baseConfig, {
     mode: "development",
     devtool: "source-map",
+    cache: {
+        type: 'filesystem',
+        allowCollectingMemory: true,
+    },
     plugins: [
         new Webpack.DefinePlugin({
             "process.env.DEV_AAD_CONFIG_FE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_FE_APPID),
