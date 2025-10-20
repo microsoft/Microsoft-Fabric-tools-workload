@@ -12,19 +12,86 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
 
 ## 🤖 GitHub Copilot Enhanced Features
 
+### 🚨 CRITICAL: Mandatory Architecture Patterns
+
+**BEFORE GENERATING ANY ITEM CODE**: All item editors MUST use these standardized components:
+
+1. **BaseItemEditor Component** (MANDATORY):
+   - Container for ALL item editors
+   - Import: `import { BaseItemEditor } from "../../controls";`
+   - Provides fixed ribbon + scrollable content layout
+   - DO NOT create custom layouts with Stack or div
+
+2. **Standard Ribbon Components** (MANDATORY):
+   - `BaseRibbon`: Ribbon container
+   - `BaseRibbonToolbar`: Action toolbar
+   - `createRibbonTabs`: Tab creation helper
+   - `createSaveAction`: Standard Save button
+   - `createSettingsAction`: Standard Settings button
+   - Import: `import { BaseRibbon, BaseRibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/Ribbon';`
+
+3. **Item-Specific SCSS File** (MANDATORY - VERIFIED):
+   - Create `[ItemName]Item.scss` in item folder
+   - Override ONLY item-specific branding (colors, fonts)
+   - DO NOT duplicate layout/structure styles
+   - Import both: `import "../../styles.scss"; import "./[ItemName]Item.scss";`
+   - **Verification team will check this pattern**
+
+### 🚨 CRITICAL: Styling Rules (VERIFIED BY TEAM)
+
+GitHub Copilot MUST follow these styling rules. **Violations will fail verification**:
+
+**✅ REQUIRED**:
+1. Create separate `[ItemName]Item.scss` file in item folder
+2. Import generic styles: `import "../../styles.scss";`
+3. Import item styles: `import "./[ItemName]Item.scss";`
+4. Use CSS cascading: `className="generic-class item-specific-class"`
+5. Override only colors/fonts, not layout/structure
+6. Use design tokens: `var(--colorBrand*, --spacing*, --fontSize*)`
+
+**❌ PROHIBITED** (Will fail verification):
+1. Modifying `Workload/app/styles.scss` for item-specific needs
+2. Using inline styles instead of SCSS file
+3. Duplicating layout styles from generic patterns
+4. Creating custom ribbon/editor container styles
+5. Overriding BaseItemEditor/BaseRibbon structural styles
+6. Not creating separate `[ItemName]Item.scss` file
+
+**Example - Correct Pattern**:
+```scss
+// [ItemName]Item.scss - ONLY item-specific overrides
+.item-name-settings-panel-container {
+  background-color: var(--colorBrandBackground2);  // ✅ Override color
+  // ❌ DON'T duplicate: display: flex, padding, etc.
+}
+```
+
+```tsx
+// [ItemName]ItemEditor.tsx - Import both
+import "../../styles.scss";        // ✅ Generic styles
+import "./[ItemName]Item.scss";    // ✅ Item overrides
+
+// Use cascading
+<div className="item-settings-panel-container item-name-settings-panel-container">
+```
+
 ### Smart Code Generation
 When creating a new item, GitHub Copilot provides:
 
-#### Auto-Complete Item Structure
+#### Auto-Complete Item Structure with BaseItemEditor
 Type `fabric item create [ItemName]` to trigger:
 - Automatic 4-file structure generation in `Workload/app/items/[ItemName]Item/`
+- **Editor with BaseItemEditor container** (MANDATORY)
+- **Ribbon with standard components** (BaseRibbon + BaseRibbonToolbar)
 - Intelligent TypeScript interface suggestions
 - Pre-configured Fluent UI component templates
 - Smart import resolution for Fabric APIs
 - Manifest template generation with placeholder support
 
-#### Pattern Recognition
+#### Pattern Recognition with Architecture Compliance
 GitHub Copilot learns from existing items and suggests:
+- **BaseItemEditor wrapper pattern** (from HelloWorldItemEditor.tsx)
+- **Standard Ribbon pattern** (from HelloWorldItemRibbon.tsx)
 - Consistent naming conventions ([ItemName]Item pattern)
 - Similar state management patterns
 - Matching component structures
@@ -72,29 +139,125 @@ GitHub Copilot understands:
 // fabric create MyCustomItem with fluent ui table editor
 ```
 
-### Smart Completions
+### Smart Completions with Standard Architecture
+- `fabric.editor` → Expands to BaseItemEditor with ribbon and children pattern
+- `fabric.ribbon` → Expands to BaseRibbon + BaseRibbonToolbar with standard actions
 - `fabric.save` → Expands to complete saveItemDefinition pattern
 - `fabric.load` → Expands to complete getWorkloadItem pattern  
 - `fabric.notify` → Expands to callNotificationOpen with proper typing
-- `fabric.ribbon` → Generates complete Toolbar with ToolbarButton and icons
-- `fabric.toolbar` → Creates Toolbar component with icon buttons and tooltips
+- `fabric.action` → Creates custom RibbonAction object
 
-### Ribbon Template Expansion
-When typing `fabric.ribbon`, GitHub Copilot expands to:
+### Editor Template Expansion (MANDATORY PATTERN)
+When typing `fabric.editor`, GitHub Copilot expands to:
 ```typescript
-<Toolbar>
-  <Tooltip content="Save" relationship="label">
-    <ToolbarButton
-      icon={<Save24Regular />}
-      onClick={onSaveClicked}
-      aria-label="Save"
-      data-testid="save-btn"
-    />
-  </Tooltip>
-</Toolbar>
+// 🚨 CORRECT: BaseItemEditor with standard components
+return (
+  <BaseItemEditor
+    ribbon={
+      <[ItemName]ItemRibbon
+        {...props}
+        isSaveButtonEnabled={isSaveEnabled()}
+        saveItemCallback={SaveItem}
+        openSettingsCallback={handleOpenSettings}
+      />
+    }
+    notification={
+      showNotification ? (
+        <MessageBar intent="warning" icon={<Warning20Filled />}>
+          <MessageBarBody>{t('[ItemName]_Warning')}</MessageBarBody>
+        </MessageBar>
+      ) : undefined
+    }
+  >
+    {currentView === VIEW_TYPES.EMPTY ? <Empty /> : <Default />}
+  </BaseItemEditor>
+);
 ```
 
-**IMPORTANT**: Always generates `Toolbar` component, never plain `div` with buttons.
+**❌ NEVER generate this OLD pattern**:
+```typescript
+// ❌ WRONG: Custom layout without BaseItemEditor
+return (
+  <Stack className="editor">
+    <[ItemName]ItemRibbon {...props} />
+    <Stack className="main">{content}</Stack>
+  </Stack>
+);
+```
+
+### Ribbon Template Expansion (MANDATORY PATTERN)
+When typing `fabric.ribbon`, GitHub Copilot expands to:
+```typescript
+// 🚨 CORRECT: BaseRibbon with standard components
+const tabs = createRibbonTabs(t("ItemEditor_Ribbon_Home_Label"));
+const actions: RibbonAction[] = [
+  createSaveAction(onSave, !isSaveEnabled, t("Save")),
+  createSettingsAction(onSettings, t("Settings")),
+  { key: 'custom', icon: Icon, label: t("Custom"), onClick: onCustom, testId: 'custom-btn' }
+];
+
+return (
+  <BaseRibbon tabs={tabs}>
+    <BaseRibbonToolbar actions={actions} />
+  </BaseRibbon>
+);
+```
+
+**❌ NEVER generate this OLD pattern**:
+```typescript
+// ❌ WRONG: Manual Toolbar with Tooltip wrapping
+return (
+  <div className="ribbon">
+    <TabList><Tab>Home</Tab></TabList>
+    <Toolbar>
+      <Tooltip content="Save" relationship="label">
+        <ToolbarButton icon={<Save24Regular />} onClick={onSave} />
+      </Tooltip>
+    </Toolbar>
+  </div>
+);
+```
+
+### SCSS File Generation (MANDATORY - VERIFIED)
+When creating a new item, GitHub Copilot MUST generate `[ItemName]Item.scss`:
+
+```scss
+// 🚨 CORRECT: Item-specific overrides only
+// [ItemName]Item.scss
+
+// Settings panel with item branding
+.item-name-settings-panel-container {
+  background-color: var(--colorBrandBackground2);
+  color: var(--colorBrandForeground2);
+  
+  .item-settings-section-header {
+    color: var(--colorBrandForeground1);
+  }
+}
+
+// Hero section with item branding
+.item-name-hero-section {
+  background: linear-gradient(135deg, var(--colorBrandBackground), var(--colorBrandBackground2));
+}
+```
+
+**❌ NEVER generate**:
+```scss
+// ❌ WRONG: Duplicating layout from generic styles
+.item-name-settings-panel-container {
+  display: flex;              // ❌ Already in styles.scss
+  flex-direction: column;     // ❌ Already in styles.scss
+  padding: 24px;              // ❌ Already in styles.scss
+  background-color: blue;     // ✅ Only this should be here
+}
+```
+
+**Import Pattern in Every Component**:
+```typescript
+// ✅ ALWAYS include both imports
+import "../../styles.scss";        // Generic styles
+import "./[ItemName]Item.scss";    // Item-specific overrides
+```
 
 ### Auto-Import Intelligence
 GitHub Copilot automatically suggests and adds:
@@ -104,29 +267,70 @@ import { Stack, TextField, PrimaryButton } from "@fluentui/react";
 import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 ```
 
-### Template Expansion
-When creating components, GitHub Copilot expands to full patterns:
-- Empty state components with proper onboarding flow
-- Editor components with complete CRUD operations
-- Ribbon components with standard action buttons
-- Model interfaces with Fabric-compatible types
+### Template Expansion with Standard Architecture
+When creating components, GitHub Copilot expands to MANDATORY patterns:
+- **Editor components**: BaseItemEditor container with ribbon and children
+- **Ribbon components**: BaseRibbon + BaseRibbonToolbar with standard actions
+- **Empty state components**: Proper onboarding flow with navigation callback
+- **Model interfaces**: Fabric-compatible types with VIEW_TYPES enum
+- **SCSS files**: Separate `[ItemName]Item.scss` with item-specific overrides only
+
+## ✅ Pre-Generation Verification Checklist
+
+Before generating any item code, GitHub Copilot should verify:
+
+**Architecture Compliance** (MANDATORY):
+- [ ] Editor uses `<BaseItemEditor>` container
+- [ ] Ribbon uses `<BaseRibbon>` + `<BaseRibbonToolbar>`
+- [ ] Standard action factories used (`createSaveAction`, `createSettingsAction`)
+- [ ] No custom Stack/div layouts for editor container
+- [ ] No manual Tooltip + ToolbarButton wrapping
+
+**Styling Compliance** (VERIFIED BY TEAM):
+- [ ] `[ItemName]Item.scss` file created in item folder
+- [ ] Both style imports present: `../../styles.scss` and `./[ItemName]Item.scss`
+- [ ] Only colors/fonts overridden, not layout/structure
+- [ ] CSS cascading used: `generic-class item-specific-class`
+- [ ] Design tokens used: `var(--color*, --spacing*, --fontSize*)`
+- [ ] No modifications to `Workload/app/styles.scss`
+
+**File Structure** (REQUIRED):
+- [ ] `[ItemName]ItemModel.ts` - Data model with VIEW_TYPES
+- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor
+- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component
+- [ ] `[ItemName]ItemRibbon.tsx` - Ribbon with standard components
+- [ ] `[ItemName]Item.scss` - Item-specific style overrides
+
+**Import Verification**:
+- [ ] `import { BaseItemEditor } from "../../controls";`
+- [ ] `import { BaseRibbon, BaseRibbonToolbar, ... } from '../../controls/Ribbon';`
+- [ ] `import "../../styles.scss";`
+- [ ] `import "./[ItemName]Item.scss";`
 
 ## 🎯 Workspace Intelligence
 
 ### Context Detection
 GitHub Copilot detects:
+- **BaseItemEditor usage** in HelloWorldItemEditor.tsx as reference
+- **Standard Ribbon pattern** in HelloWorldItemRibbon.tsx as reference
 - Existing item patterns to maintain consistency
 - Available Fabric API clients in the workspace
 - Component libraries already in use
 - Authentication patterns from other items
 
-### Build Integration
-- Suggests manifest updates when items are created
-- Validates TypeScript compilation in real-time
-- Checks for missing dependencies
-- Ensures proper export statements
+### Architecture Validation
+- **Verifies BaseItemEditor usage**: Warns if custom layouts are detected
+- **Checks Ribbon components**: Ensures BaseRibbon + BaseRibbonToolbar pattern
+- **Validates action factories**: Confirms use of createSaveAction, createSettingsAction
+- **Suggests manifest updates** when items are created
+- **Validates TypeScript compilation** in real-time
+- **Checks for missing dependencies**
+- **Ensures proper export statements**
 
-### Error Prevention
+### Error Prevention with Architecture Compliance
+- **Warns about missing BaseItemEditor**: Prevents custom layout implementations
+- **Warns about manual Tooltip + ToolbarButton**: Suggests BaseRibbonToolbar instead
+- **Warns about custom ribbon layouts**: Requires BaseRibbon component
 - Warns about common Fabric integration mistakes
 - Suggests proper error handling for async operations
 - Validates component prop interfaces
@@ -136,16 +340,133 @@ GitHub Copilot detects:
 
 **Reference**: For complete step-by-step instructions, always consult `.ai/commands/item/createItem.md` first, then apply these Copilot-specific enhancements.
 
+## 🚨 MANDATORY: Step 3 Editor Implementation Pattern
+
 **Purpose**:
-- Provide initial setup/configuration interface
-- Guide users through first-time item creation
-- Can be skipped if item doesn't need initial setup
+- Create main editor component with BaseItemEditor
+- MUST use BaseItemEditor as container
+- MUST pass ribbon via ribbon prop
+- Content goes in children (scrollable area)
 
-### Step 5: Implement the Ribbon (`[ItemName]ItemEditorRibbon.tsx`)
-
-The ribbon provides toolbar actions and navigation tabs using Fluent UI's `Toolbar` component with `ToolbarButton` elements and icons:
+**🚨 CRITICAL**: GitHub Copilot MUST generate this pattern:
 
 ```typescript
+// 🚨 CORRECT: BaseItemEditor with standard architecture
+export function [ItemName]ItemEditor(props: PageProps) {
+  // ... state management, loading logic, handlers ...
+  
+  if (isLoading) {
+    return <ItemEditorLoadingProgressBar message={t("Loading...")} />;
+  }
+  
+  return (
+    <BaseItemEditor
+      ribbon={<[ItemName]ItemRibbon {...ribbonProps} />}
+      notification={showWarning ? <MessageBar>...</MessageBar> : undefined}
+    >
+      {currentView === VIEW_TYPES.EMPTY ? <Empty /> : <Default />}
+    </BaseItemEditor>
+  );
+}
+```
+
+**❌ NEVER generate**:
+```typescript
+// ❌ WRONG: Custom layout
+return (
+  <Stack className="editor">
+    <[ItemName]ItemRibbon />
+    <Stack className="main">{content}</Stack>
+  </Stack>
+);
+```
+
+## 🚨 MANDATORY: Step 5 Ribbon Implementation Pattern
+
+## 🚨 MANDATORY: Step 5 Ribbon Implementation Pattern
+
+**Purpose**:
+- Create ribbon with standard components
+- MUST use BaseRibbon as container
+- MUST use BaseRibbonToolbar for actions
+- MUST use standard action factories
+
+**🚨 CRITICAL**: GitHub Copilot MUST generate this pattern:
+
+```typescript
+// 🚨 CORRECT: BaseRibbon with standard components
+import { 
+  BaseRibbon, 
+  BaseRibbonToolbar, 
+  RibbonAction,
+  createSaveAction,
+  createSettingsAction,
+  createRibbonTabs
+} from '../../controls/Ribbon';
+
+export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
+  const { t } = useTranslation();
+  
+  const tabs = createRibbonTabs(t("ItemEditor_Ribbon_Home_Label"));
+  
+  const actions: RibbonAction[] = [
+    createSaveAction(props.saveItemCallback, !props.isSaveButtonEnabled, t("Save")),
+    createSettingsAction(props.openSettingsCallback, t("Settings")),
+    // Custom actions inline:
+    { 
+      key: 'custom', 
+      icon: CustomIcon24Regular, 
+      label: t("Custom"), 
+      onClick: props.customCallback,
+      testId: 'custom-btn'
+    }
+  ];
+  
+  return (
+    <BaseRibbon tabs={tabs}>
+      <BaseRibbonToolbar actions={actions} />
+    </BaseRibbon>
+  );
+}
+```
+
+**❌ NEVER generate**:
+```typescript
+// ❌ WRONG: Manual Toolbar with Tooltip wrapping
+return (
+  <div className="ribbon">
+    <TabList><Tab>Home</Tab></TabList>
+    <Toolbar>
+      <Tooltip content="Save" relationship="label">
+        <ToolbarButton icon={<Save24Regular />} onClick={onSave} />
+      </Tooltip>
+    </Toolbar>
+  </div>
+);
+```
+
+**Key Requirements**:
+- Import from `'../../controls/Ribbon'`
+- Use `createRibbonTabs()` for tabs
+- Use `createSaveAction()` and `createSettingsAction()` for standard actions
+- Define custom actions inline as `RibbonAction` objects
+- Return `<BaseRibbon><BaseRibbonToolbar /></BaseRibbon>` structure
+
+---
+
+## 📋 DEPRECATED Patterns (DO NOT USE)
+
+The following section shows the OLD pattern that GitHub Copilot should NOT generate:
+
+### ❌ DEPRECATED: Old Ribbon Implementation Pattern
+
+The following shows the OLD pattern with manual Toolbar and Tooltip wrapping. **This pattern is DEPRECATED and should NOT be generated by GitHub Copilot.**
+
+**⚠️ WARNING**: This code example is kept for reference only. DO NOT generate code following this pattern.
+
+```typescript
+// ❌❌❌ DEPRECATED PATTERN - DO NOT USE ❌❌❌
+// This example shows what NOT to do
 import React from "react";
 import { Tab, TabList } from '@fluentui/react-tabs';
 import { Toolbar } from '@fluentui/react-toolbar';
@@ -221,45 +542,22 @@ export function [ItemName]ItemEditorRibbon(props: [ItemName]ItemEditorRibbonProp
     </div>
   );
 }
+// ❌❌❌ END DEPRECATED PATTERN ❌❌❌
 ```
 
-**CRITICAL: Ribbon Implementation Requirements**:
-- **Must use `Toolbar` component**: Never use plain `div` with buttons
-- **Must use `ToolbarButton`**: Each action must be a `ToolbarButton` with an icon
-- **Must include icons**: All buttons require icons from `@fluentui/react-icons`
-- **Must include tooltips**: Wrap each `ToolbarButton` in a `Tooltip` component
-- **Must follow accessibility**: Include `aria-label` and `data-testid` attributes
-- **Must use localization**: All text must use `t()` function for translations
+**Why This Pattern is DEPRECATED**:
+- ❌ Manual Tooltip wrapping - repetitive and error-prone
+- ❌ Custom ribbon div - not using BaseRibbon component
+- ❌ No standardization - each ribbon implements differently
+- ❌ Accessibility issues - inconsistent implementation
+- ❌ Hard to maintain - changes require updates in all ribbons
+- ❌ More code - ~80 lines vs ~30 lines with BaseRibbon pattern
 
-**❌ WRONG - Don't Generate This**:
-```typescript
-// DON'T DO THIS - Plain div with buttons
-<div>
-  <button onClick={onSave}>Save</button>
-  <button onClick={onSettings}>Settings</button>
-</div>
-```
+**✅ USE THIS INSTEAD**: See "MANDATORY: Step 5 Ribbon Implementation Pattern" above for the correct BaseRibbon + BaseRibbonToolbar pattern with action factories.
 
-**✅ CORRECT - Always Generate This**:
-```typescript
-// DO THIS - Proper Toolbar with ToolbarButton and icons
-<Toolbar>
-  <Tooltip content={t("Save")} relationship="label">
-    <ToolbarButton icon={<Save24Regular />} onClick={onSave} />
-  </Tooltip>
-  <Tooltip content={t("Settings")} relationship="label">
-    <ToolbarButton icon={<Settings24Regular />} onClick={onSettings} />
-  </Tooltip>
-</Toolbar>
-```
+---
 
-**Common Ribbon Actions**:
-- Save button with `Save24Regular` icon (required)
-- Settings/Options with `Settings24Regular` icon
-- Export with `ArrowExport24Regular` icon  
-- Refresh with `ArrowClockwise24Regular` icon
-- Delete with `Delete24Regular` icon
-- Add with `Add24Regular` icon
+## 📋 Manifest Configuration (Step 6)
 
 ### Step 6: Create Manifest Configuration
 

@@ -4,9 +4,158 @@ applyTo: "/Workload/app/items/[ItemName]Item/"
 
 # Create New Workload Item
 
+## 🏗️ Architecture Overview
+
+**CRITICAL**: All item editors MUST use the standardized architecture patterns:
+
+### Required Base Components
+
+1. **BaseItemEditor** (`Workload/app/controls/BaseItemEditor.tsx`)
+   - 🚨 **MANDATORY**: ALL item editors must use BaseItemEditor as the container
+   - Provides consistent layout: Fixed ribbon + scrollable content
+   - Handles full-height iframe rendering
+   - Ensures proper scroll behavior (ribbon stays fixed, content scrolls)
+   - **DO NOT create custom layout patterns** - use BaseItemEditor
+
+2. **Ribbon Components** (`Workload/app/controls/Ribbon/`)
+   - 🚨 **MANDATORY**: Use the standardized Ribbon pattern
+   - **BaseRibbon**: Standard ribbon structure with tabs
+   - **BaseRibbonToolbar**: Renders action buttons with proper spacing
+   - **Standard Action Factories**: `createSaveAction`, `createSettingsAction`, `createAboutAction`
+   - **Tooltip + ToolbarButton**: ALWAYS wrap ToolbarButton in Tooltip for accessibility
+
+### Standard Architecture Pattern
+
+```typescript
+// CORRECT Pattern - Use BaseItemEditor + Standard Ribbon
+export function [ItemName]ItemEditor(props: PageProps) {
+  // ... state and logic ...
+  
+  return (
+    <BaseItemEditor
+      ribbon={
+        <[ItemName]ItemRibbon
+          saveItemCallback={handleSave}
+          openSettingsCallback={handleSettings}
+          isSaveButtonEnabled={hasChanges}
+        />
+      }
+    >
+      {currentView === VIEW_TYPES.EMPTY ? (
+        <[ItemName]ItemEditorEmpty {...emptyProps} />
+      ) : (
+        <[ItemName]ItemEditorDefault {...defaultProps} />
+      )}
+    </BaseItemEditor>
+  );
+}
+```
+
+### ❌ INCORRECT Patterns - DO NOT USE
+
+```typescript
+// ❌ WRONG: Custom Stack layout without BaseItemEditor
+<Stack className="editor">
+  <MyCustomRibbon />
+  <Stack className="main">
+    {content}
+  </Stack>
+</Stack>
+
+// ❌ WRONG: Not using standard ribbon components
+<div className="custom-toolbar">
+  <button onClick={save}>Save</button>  // No Tooltip wrapper
+</div>
+
+// ❌ WRONG: Custom scroll handling
+<div style={{height: '100vh', overflow: 'scroll'}}>
+  {/* BaseItemEditor handles this */}
+</div>
+```
+
+### Key Benefits of Standard Architecture
+
+✅ **Consistent UX**: All items look and behave the same way  
+✅ **Accessibility**: Built-in ARIA labels, keyboard navigation, screen reader support  
+✅ **Maintenance**: Centralized updates benefit all items  
+✅ **Scroll Behavior**: Proper fixed ribbon + scrollable content  
+✅ **Responsive**: Mobile-friendly layouts and touch targets  
+✅ **Testing**: Standard patterns = standard test coverage  
+
+### 🚨 CRITICAL: Styling Requirements
+
+**MANDATORY**: All styling MUST follow the standardized patterns and will be verified by the verification team:
+
+1. **Base Styles** (DO NOT MODIFY):
+   - `Workload/app/styles.scss` contains global styles for all items
+   - `.item-editor-container` - Base editor layout (used by BaseItemEditor)
+   - `.ribbon` - Base ribbon styling (used by BaseRibbon)
+   - `.item-settings-panel-container` - Generic settings panel styles
+   - **DO NOT add item-specific styles to styles.scss**
+
+2. **Item-Specific Styles** (REQUIRED):
+   - Create `[ItemName]Item.scss` in your item folder
+   - Import both global and item styles: `import "../../styles.scss"; import "./[ItemName]Item.scss";`
+   - Override ONLY item-specific branding (colors, fonts, item-specific classes)
+   - Use CSS cascading: Apply generic class + item-specific class
+
+3. **Styling Pattern** (HelloWorld Example):
+   ```scss
+   // [ItemName]Item.scss - Override ONLY what's different
+   .hello-world-settings-panel-container {
+     background-color: var(--colorBrandBackground2);  // Item brand color
+     color: var(--colorBrandForeground2);
+     
+     .item-settings-section-header {
+       color: var(--colorBrandForeground1);  // Override header color
+     }
+   }
+   ```
+
+4. **Component Usage**:
+   ```tsx
+   // Apply both generic + item-specific classes
+   <div className="item-settings-panel-container hello-world-settings-panel-container">
+     {/* Content uses generic classes from styles.scss */}
+   </div>
+   ```
+
+5. **Verification Checklist** (Will be checked):
+   - ✅ BaseItemEditor used (no custom editor layout)
+   - ✅ BaseRibbon + BaseRibbonToolbar used (no custom ribbon layout)
+   - ✅ Styles in separate `[ItemName]Item.scss` file
+   - ✅ No modifications to `styles.scss` for item-specific needs
+   - ✅ CSS cascading pattern used (generic class + item class)
+   - ✅ Only brand colors overridden, not layout/structure
+
+**❌ STYLE VIOLATIONS** (Will fail verification):
+```scss
+// ❌ WRONG: Adding item-specific styles to styles.scss
+// styles.scss
+.my-custom-item-editor {
+  background: blue;  // Don't add item-specific styles here
+}
+
+// ❌ WRONG: Not using separate SCSS file
+// Inline styles in JSX
+<div style={{background: 'blue'}}>  // Use SCSS file instead
+
+// ❌ WRONG: Duplicating entire generic style
+// [ItemName]Item.scss
+.my-item-settings-panel {
+  display: flex;           // ❌ Don't duplicate layout
+  flex-direction: column;  // ❌ Already in generic
+  background: blue;        // ✅ Only override this
+}
+```
+
+---
+
 ## Process
 
 This guide provides step-by-step instructions for AI tools to create a new item in the Microsoft Fabric Extensibility Toolkit. Creating a new item requires implementation files, manifest configuration, routing setup, and environment variable updates.
+
+**🚨 REMEMBER**: Always use BaseItemEditor and standard Ribbon components!
 
 ### Step 1: Create Item Implementation Structure
 
@@ -46,199 +195,214 @@ export interface [ItemName]ItemDefinition {
 
 ### Step 3: Implement the Editor (`[ItemName]ItemEditor.tsx`)
 
-The main editor component handles the item's primary interface. **Use the HelloWorld pattern as template**:
+The main editor component handles the item's primary interface. **🚨 CRITICAL: MUST use BaseItemEditor component!**
 
 ```typescript
-// Based on HelloWorldItemEditor.tsx - Complete functional implementation
-import { Label, Stack } from "@fluentui/react";
-import { Field, Input, TabValue } from "@fluentui/react-components";
-import React, { useEffect, useState, useCallback } from "react";
-import { ContextProps, PageProps } from "../../App";
-import { [ItemName]ItemEditorRibbon } from "./[ItemName]ItemEditorRibbon";
-import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
-import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { useLocation, useParams } from "react-router-dom";
-import "../../styles.scss";
+// Based on HelloWorldItemEditor.tsx - Complete functional implementation with BaseItemEditor
+import React, { useEffect, useState } from "react";
+import { useParams, useLocation } from "react-router-dom";
+import { MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Warning20Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
-import { [ItemName]ItemEmpty } from "./[ItemName]ItemEditorEmpty";
-import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
-import { callNotificationOpen } from "../../controller/NotificationController";
+import { PageProps, ContextProps } from "../../App";
+import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
+import { callNotificationOpen } from "../../controller/NotificationController";
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { [ItemName]ItemDefinition, VIEW_TYPES, CurrentView } from "./[ItemName]ItemModel";
+import { [ItemName]ItemEditorEmpty } from "./[ItemName]ItemEditorEmpty";
+import { [ItemName]ItemEditorDefault } from "./[ItemName]ItemEditorDefault";
+import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
+import "../../styles.scss";
+
 
 export function [ItemName]ItemEditor(props: PageProps) {
-  const pageContext = useParams<ContextProps>();
-  const { pathname } = useLocation();
-  const { t } = useTranslation();
   const { workloadClient } = props;
-  const [isUnsaved, setIsUnsaved] = useState<boolean>(true);
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-  const [editorItem, setEditorItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>(undefined);
-  const [selectedView, setSelectedView] = useState<TabValue>("");
+  const pageContext = useParams<ContextProps>();
+  const { t } = useTranslation();
 
-  // Computed value from editorItem (single source of truth)
-  const payload = editorItem?.definition?.message ?? "";
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
+  const [item, setItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>();
+  const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
+  const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
 
-  // Helper function to update item definition immutably
-  const updateItemDefinition = useCallback((updates: Partial<[ItemName]ItemDefinition>) => {
-    setEditorItem(prevItem => {
-      if (!prevItem) return prevItem;
-      
-      return {
-        ...prevItem,
-        definition: {
-          ...prevItem.definition,
-          ...updates
-        }
-      };
-    });
-    setIsUnsaved(true);
-  }, []);
-
-  useEffect(() => {
-      loadDataFromUrl(pageContext, pathname);
-    }, [pageContext, pathname]);
-
-  async function SaveItem(definition?: [ItemName]ItemDefinition) {
-    var successResult = await saveItemDefinition<[ItemName]ItemDefinition>(
-      workloadClient,
-      editorItem.id,
-      definition || editorItem.definition);
-    setIsUnsaved(!successResult);
-    callNotificationOpen(
-            workloadClient,
-            t("ItemEditor_Saved_Notification_Title"),
-            t("ItemEditor_Saved_Notification_Text", { itemName: editorItem.displayName }),
-            undefined,
-            undefined
-        );
-  }
-
-  async function openSettings() {
-    if (editorItem) {      
-      const item = await callGetItem(workloadClient, editorItem.id);
-      const result = await callOpenSettings(workloadClient, item, 'About');
-      console.log("Settings opened result:", result.value);
-    }
-  }
+  const { pathname } = useLocation();
 
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
-    setIsLoadingData(true);
-    var item: ItemWithDefinition<[ItemName]ItemDefinition> = undefined;    
+    setIsLoading(true);
+    var LoadedItem: ItemWithDefinition<[ItemName]ItemDefinition> = undefined;
     if (pageContext.itemObjectId) {
       try {
-        item = await getWorkloadItem<[ItemName]ItemDefinition>(
+        LoadedItem = await getWorkloadItem<[ItemName]ItemDefinition>(
           workloadClient,
-          pageContext.itemObjectId,          
+          pageContext.itemObjectId,
         );
-        
+
         // Ensure item definition is properly initialized without mutation
-        if (!item.definition) {
-          item = {
-            ...item,
+        if (!LoadedItem.definition) {
+          LoadedItem = {
+            ...LoadedItem,
             definition: {
-              message: undefined,
+              state: undefined,
             }
           };
         }
-        setEditorItem(item);        
+
+        setItem(LoadedItem);
+        setCurrentView(!LoadedItem?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED);
+
       } catch (error) {
-        setEditorItem(undefined);        
-      } 
+        setItem(undefined);
+      }
     } else {
       console.log(`non-editor context. Current Path: ${pathname}`);
     }
-    setIsUnsaved(false);
-    if(item?.definition?.message) {
-      setSelectedView("home");
-    } else {
-      setSelectedView("empty");
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    setHasBeenSaved(false);
+  }, [currentView, item?.id]);
+
+  useEffect(() => {
+    loadDataFromUrl(pageContext, pathname);
+  }, [pageContext, pathname]);
+
+  const navigateToDefaultView = () => {
+    setCurrentView(VIEW_TYPES.GETTING_STARTED);
+  };
+
+  const handleOpenSettings = async () => {
+    if (item) {
+      try {
+        const item_res = await callGetItem(workloadClient, item.id);
+        await callOpenSettings(workloadClient, item_res.item, 'About');
+      } catch (error) {
+        console.error('Failed to open settings:', error);
+      }
     }
-    setIsLoadingData(false);
-  }
+  };
 
-  function onUpdateItemDefinition(newDefinition: string) {
-    updateItemDefinition({ message: newDefinition });
-  }
-
-  async function handleFinishEmpty(message: string) {
-    const newItemDefinition = { message: message };
-    updateItemDefinition(newItemDefinition);
-    await SaveItem(newItemDefinition);
-    setSelectedView("home");
-  }
-
-  if (isLoadingData) {
-    return (<ItemEditorLoadingProgressBar 
-      message={t("[ItemName]ItemEditor_LoadingProgressBar_Text")} />);
-  }
-  else {
-    return (
-      <Stack className="editor" data-testid="item-editor-inner">
-        <[ItemName]ItemEditorRibbon
-            {...props}        
-            isRibbonDisabled={selectedView === "empty"}
-            isSaveButtonEnabled={isUnsaved}
-            saveItemCallback={SaveItem}
-            openSettingsCallback={openSettings}
-        />
-        <Stack className="main">
-          {["empty"].includes(selectedView as string) && (
-            <span>
-              <[ItemName]ItemEmpty
-                workloadClient={workloadClient}
-                item={editorItem}
-                itemDefinition={editorItem?.definition}
-                onFinishEmpty={handleFinishEmpty}
-              />
-            </span>
-          )}
-          {["home"].includes(selectedView as string) && (
-          <span>
-              <h2>{t('[ItemName]ItemEditor_Title')}</h2>            
-              <div> 
-                <div className="section" data-testid='item-editor-metadata' >
-                  <Field label={t('Item_ID_Label')} orientation="horizontal" className="field">
-                    <Label>{editorItem?.id} </Label>
-                  </Field>
-                  <Field label={t('Item_Type_Label')} orientation="horizontal" className="field">
-                    <Label>{editorItem?.type} </Label>
-                  </Field>
-                  <Field label={t('Item_Name_Label')} orientation="horizontal" className="field">
-                    <Label>{editorItem?.displayName} </Label>
-                  </Field>
-                  <Field label={t('Item_Description_Label')} orientation="horizontal" className="field">
-                    <Label>{editorItem?.description} </Label>
-                  </Field>
-                  <Field label={t('Workspace_ID_Label')} orientation="horizontal" className="field">
-                    <Label>{editorItem?.workspaceId} </Label>
-                  </Field>
-
-                  <Field label={t('[ItemName]ItemEditor_Definition_Message_Label')} orientation="horizontal" className="field">
-                    <Input
-                      size="small"
-                      type="text"
-                      placeholder="Enter your [ItemName] message"
-                      value={payload}
-                      onChange={(e) => onUpdateItemDefinition(e.target.value)}              
-                      data-testid="payload-input"
-                    />
-                  </Field>
-                </div>
-              </div>
-          </span>
-          )}       
-        </Stack>
-      </Stack>
+  async function SaveItem() {
+    var successResult = await saveItemDefinition<[ItemName]ItemDefinition>(
+      workloadClient,
+      item.id,
+      {
+        state: VIEW_TYPES.GETTING_STARTED
+      });
+    const wasSaved = Boolean(successResult);
+    setHasBeenSaved(wasSaved);
+    callNotificationOpen(
+      props.workloadClient,
+      t("ItemEditor_Saved_Notification_Title"),
+      t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
+      undefined,
+      undefined
     );
   }
+
+  const isSaveEnabled = () => {
+    if (currentView === VIEW_TYPES.EMPTY) {
+      return false;
+    }
+
+    if (currentView === VIEW_TYPES.GETTING_STARTED) {
+      if (hasBeenSaved) {
+        return false;
+      }
+
+      if (!item?.definition?.state) {
+        return true;
+      }
+
+      return false;
+    }
+
+    return false;
+  };
+
+  // 🚨 CRITICAL: Show loading state BEFORE BaseItemEditor
+  if (isLoading) {
+    return (
+      <ItemEditorLoadingProgressBar
+        message={t("[ItemName]ItemEditor_Loading", "Loading item...")}
+      />
+    );
+  }
+
+  // 🚨 CRITICAL: Use BaseItemEditor as the container
+  return (
+    <BaseItemEditor
+      ribbon={
+        <[ItemName]ItemRibbon
+          {...props}
+          isSaveButtonEnabled={isSaveEnabled()}
+          currentView={currentView}
+          saveItemCallback={SaveItem}
+          openSettingsCallback={handleOpenSettings}
+          navigateToDefaultViewCallback={navigateToDefaultView}
+        />
+      }
+      notification={
+        currentView === VIEW_TYPES.GETTING_STARTED ? (
+          <MessageBar intent="warning" icon={<Warning20Filled />}>
+            <MessageBarBody>
+              {t('[ItemName]_Warning', 'Optional notification message for this view.')}
+            </MessageBarBody>
+          </MessageBar>
+        ) : undefined
+      }
+    >
+      {currentView === VIEW_TYPES.EMPTY ? (
+        <[ItemName]ItemEditorEmpty
+          workloadClient={workloadClient}
+          item={item}
+          onNavigateToDefaultView={navigateToDefaultView}
+        />
+      ) : (
+        <[ItemName]ItemEditorDefault
+          workloadClient={workloadClient}
+          item={item}
+        />
+      )}
+    </BaseItemEditor>
+  );
 }
 ```
+
+**🚨 CRITICAL Architecture Requirements**:
+
+1. **BaseItemEditor Container**:
+   - MUST use `<BaseItemEditor>` as the root container
+   - Provides fixed ribbon + scrollable content layout
+   - Handles proper scroll behavior automatically
+   - DO NOT create custom layout patterns
+
+2. **Ribbon Prop**:
+   - Pass ribbon component via `ribbon={<[ItemName]ItemRibbon />}` prop
+   - Ribbon will be fixed at the top (doesn't scroll)
+   - Use standard Ribbon components (see Step 5)
+
+3. **Notification Prop** (Optional):
+   - Pass notification via `notification={<MessageBar />}` prop
+   - Appears between ribbon and content
+   - Fixed position (doesn't scroll)
+
+4. **Children Content**:
+   - Content inside `<BaseItemEditor>` children will scroll
+   - Switch between Empty and Default views based on state
+   - Content fills remaining space automatically
+
+5. **Loading State**:
+   - MUST return `<ItemEditorLoadingProgressBar />` before BaseItemEditor
+   - DO NOT render BaseItemEditor while loading
 
 **Key Features**:
 
 - **Complete State Management**: Loading, saving, and updating item definitions
-- **Empty State Handling**: Automatic detection and transitions between empty and loaded states
+- **View Switching**: Automatic transitions between empty and loaded states
+- **BaseItemEditor Integration**: Proper use of the standard layout component
 - **Error Handling**: Proper try/catch for async operations
 - **Immutable Updates**: Safe state updates using functional patterns
 - **Notifications**: User feedback on save operations
@@ -324,103 +488,250 @@ export const [ItemName]ItemEmpty: React.FC<[ItemName]ItemEmptyStateProps> = ({
 - **Localization Support**: Uses translation keys for all user-facing text
 - **Fluent UI Components**: Follows Microsoft design system patterns
 
-### Step 5: Implement the Ribbon (`[ItemName]ItemEditorRibbon.tsx`)
+### Step 5: Implement the Ribbon (`[ItemName]ItemRibbon.tsx`)
 
-The ribbon provides toolbar actions and navigation tabs. **Use the HelloWorld pattern as template**:
-
-**CRITICAL**: Always use the `Tooltip` + `ToolbarButton` pattern for ALL toolbar actions. This ensures accessibility and consistent user experience. Import both components from `@fluentui/react-components` and wrap every `ToolbarButton` in a `Tooltip` with appropriate content and relationship properties.
+The ribbon provides toolbar actions and navigation tabs. **🚨 CRITICAL: Use standard Ribbon components!**
 
 ```typescript
-// Based on HelloWorldItemEditorRibbon.tsx - Complete functional implementation
+// Based on HelloWorldItemRibbon.tsx - Demonstrates RECOMMENDED ribbon pattern
 import React from "react";
-import { Tab, TabList } from '@fluentui/react-tabs';
-import { Toolbar } from '@fluentui/react-toolbar';
-import {
-  ToolbarButton, Tooltip
-} from '@fluentui/react-components';
-import {
-  Save24Regular,
-  Settings24Regular,
-} from "@fluentui/react-icons";
 import { PageProps } from '../../App';
+import { CurrentView, VIEW_TYPES } from "./[ItemName]ItemModel";
+import { useTranslation } from "react-i18next";
+import { 
+  BaseRibbon, 
+  BaseRibbonToolbar, 
+  RibbonAction,
+  createSaveAction,
+  createSettingsAction,
+  createRibbonTabs
+} from '../../controls/Ribbon';
+import { Rocket24Regular } from '@fluentui/react-icons';
 import '../../styles.scss';
-import { t } from "i18next";
 
-const [ItemName]ItemEditorRibbonHomeTabToolbar = (props: [ItemName]ItemEditorRibbonProps) => {
-
-  async function onSaveAsClicked() {
-    await props.saveItemCallback();
-    return;
-  }
-
-  async function onSettingsClicked() {
-    await props.openSettingsCallback();
-    return;
-  }
-
-  return (
-    <Toolbar>
-      <Tooltip
-        content={t("ItemEditor_Ribbon_Save_Label")}
-        relationship="label">
-        <ToolbarButton
-          disabled={!props.isSaveButtonEnabled}
-          aria-label={t("ItemEditor_Ribbon_Save_Label")}
-          data-testid="item-editor-save-btn"
-          icon={<Save24Regular />}
-          onClick={onSaveAsClicked} />
-      </Tooltip>
-      <Tooltip
-        content={t("ItemEditor_Ribbon_Settings_Label")}
-        relationship="label">
-        <ToolbarButton
-          aria-label={t("ItemEditor_Ribbon_Settings_Label")}
-          data-testid="item-editor-settings-btn"
-          icon={<Settings24Regular />}
-          onClick={onSettingsClicked} />
-      </Tooltip>
-    </Toolbar>
-  );
-};
-
-export interface [ItemName]ItemEditorRibbonProps extends PageProps {
-  isRibbonDisabled?: boolean;
+/**
+ * Props interface for the [ItemName] Ribbon component
+ */
+export interface [ItemName]ItemRibbonProps extends PageProps {
   isSaveButtonEnabled?: boolean;
+  currentView: CurrentView;
   saveItemCallback: () => Promise<void>;
   openSettingsCallback: () => Promise<void>;
+  navigateToDefaultViewCallback: () => void;
 }
 
-export function [ItemName]ItemEditorRibbon(props: [ItemName]ItemEditorRibbonProps) {
-  const { isRibbonDisabled } = props;
-  return (
-    <div className="ribbon">
-      <TabList disabled={isRibbonDisabled}>
-        <Tab value="home" data-testid="home-tab-btn">
-          {t("ItemEditor_Ribbon_Home_Label")}</Tab>
-      </TabList>
-      <div className="toolbarContainer">
-        <[ItemName]ItemEditorRibbonHomeTabToolbar {...props} />
-      </div>
-    </div>
+/**
+ * [ItemName]ItemRibbon - Implements the standard ribbon pattern
+ * 
+ * This demonstrates the MANDATORY pattern for creating consistent ribbons
+ * across all item editors in the Fabric Extensibility Toolkit.
+ * 
+ * 🚨 REQUIRED COMPONENTS:
+ * - BaseRibbon: Provides consistent ribbon structure and layout
+ * - BaseRibbonToolbar: Renders actions with automatic Tooltip + ToolbarButton pattern
+ * - createRibbonTabs: Ensures Home tab is always present
+ * - Standard action factories: createSaveAction, createSettingsAction
+ * 
+ * Key Features:
+ * - Automatic accessibility (Tooltip + ToolbarButton pattern)
+ * - Consistent styling across all item editors
+ * - Follows Fabric design guidelines
+ * - Support for custom actions when needed
+ */
+export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
+  const { t } = useTranslation();
+  
+  // 🚨 REQUIRED: Define ribbon tabs using createRibbonTabs
+  // Home tab is mandatory, additional tabs can be added as second parameter
+  const tabs = createRibbonTabs(
+    t("ItemEditor_Ribbon_Home_Label")
+    // Additional tabs can be added here:
+    // [
+    //   createDataTab(t("Data")),
+    //   createFormatTab(t("Format"))
+    // ]
   );
-};
+  
+  // Define ribbon actions - mix of standard and custom actions
+  const actions: RibbonAction[] = [
+    // 🚨 STANDARD ACTION: Save button
+    // Use createSaveAction factory for consistent behavior
+    createSaveAction(
+      props.saveItemCallback,
+      !props.isSaveButtonEnabled,  // disabled when save not needed
+      t("ItemEditor_Ribbon_Save_Label")
+    ),
+    
+    // 🚨 STANDARD ACTION: Settings button
+    // Use createSettingsAction factory for consistent behavior
+    createSettingsAction(
+      props.openSettingsCallback,
+      t("ItemEditor_Ribbon_Settings_Label")
+    ),
+    
+    // ✅ CUSTOM ACTION EXAMPLE: View navigation
+    // Define custom actions inline for item-specific functionality
+    {
+      key: 'navigate-default',
+      icon: Rocket24Regular,
+      label: t("ItemEditor_Ribbon_Navigate_Label", "Navigate to Default"),
+      onClick: props.navigateToDefaultViewCallback,
+      testId: 'ribbon-navigate-default-btn',
+      hidden: props.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
+    }
+  ];
+  
+  // 🚨 REQUIRED: Use BaseRibbon + BaseRibbonToolbar pattern
+  return (
+    <BaseRibbon tabs={tabs}>
+      <BaseRibbonToolbar actions={actions} />
+    </BaseRibbon>
+  );
+}
 ```
 
-**Key Features**:
+**🚨 CRITICAL Architecture Requirements**:
 
-- **Save Button**: Integrated with save callback and enabled/disabled states
-- **Settings Button**: Opens item settings dialog
-- **Tooltip Support**: Accessible button descriptions - **REQUIRED for all ToolbarButton components**
-- **Tab Navigation**: Home tab with toolbar actions
-- **Disabled States**: Ribbon can be disabled during empty state
-- **Test IDs**: Includes test identifiers for automated testing
+1. **BaseRibbon Component** (MANDATORY):
+   - Use `<BaseRibbon tabs={tabs}>` as the container
+   - Provides consistent structure and styling
+   - DO NOT create custom ribbon layouts with `<div className="ribbon">`
 
-**Toolbar Pattern Requirements**:
-- Import `Tooltip` and `ToolbarButton` from `@fluentui/react-components`
-- Every `ToolbarButton` MUST be wrapped in a `Tooltip`
-- Use `relationship="label"` on the Tooltip for proper accessibility
-- Provide meaningful `content` for each Tooltip
-- Include `aria-label` on ToolbarButton for screen readers
+2. **BaseRibbonToolbar Component** (MANDATORY):
+   - Use `<BaseRibbonToolbar actions={actions} />` for action rendering
+   - Automatically applies Tooltip + ToolbarButton pattern
+   - Handles accessibility and styling automatically
+   - DO NOT create custom `<Toolbar>` components
+
+3. **createRibbonTabs Helper** (MANDATORY):
+   - Use `createRibbonTabs()` to define tabs
+   - Ensures Home tab is always present
+   - Accepts Home tab label and optional additional tabs array
+
+4. **Standard Action Factories** (REQUIRED for common actions):
+   - `createSaveAction()`: Save button with standard behavior
+   - `createSettingsAction()`: Settings button with standard behavior
+   - Import from `'../../controls/Ribbon'`
+
+5. **Custom Actions** (when needed):
+   - Define inline as `RibbonAction` objects
+   - Include: key, icon, label, onClick, testId
+   - Optional: disabled, hidden (for conditional visibility)
+
+**❌ INCORRECT Patterns - DO NOT USE**:
+
+```typescript
+// ❌ WRONG: Custom ribbon layout
+return (
+  <div className="ribbon">
+    <TabList><Tab>Home</Tab></TabList>
+    <Toolbar>
+      <Tooltip><ToolbarButton /></Tooltip>
+    </Toolbar>
+  </div>
+);
+
+// ❌ WRONG: Manual Tooltip + ToolbarButton pattern
+<Toolbar>
+  <Tooltip content="Save" relationship="label">
+    <ToolbarButton icon={<Save24Regular />} onClick={onSave} />
+  </Tooltip>
+</Toolbar>
+
+// ❌ WRONG: Creating custom action factories
+export function createCustomSaveAction() { ... }  // Use standard factories instead
+```
+
+**✅ CORRECT Pattern**:
+
+```typescript
+// ✅ CORRECT: Use standard components and factories
+const tabs = createRibbonTabs(t("Home"));
+const actions = [
+  createSaveAction(onSave, disabled, label),
+  createSettingsAction(onSettings, label),
+  { key: 'custom', icon: Icon, label, onClick, testId }  // Custom actions inline
+];
+
+return (
+  <BaseRibbon tabs={tabs}>
+    <BaseRibbonToolbar actions={actions} />
+  </BaseRibbon>
+);
+```
+
+**Key Benefits**:
+
+- ✅ **Consistency**: Same ribbon pattern across all item editors
+- ✅ **Accessibility**: Automatic Tooltip + ToolbarButton implementation
+- ✅ **Maintainability**: Changes to ribbon behavior centralized
+- ✅ **Type Safety**: TypeScript interfaces ensure correct usage
+- ✅ **Less Code**: Factory functions reduce boilerplate
+- ✅ **Best Practices**: Follows Fabric design guidelines automatically
+
+### Step 5.1: Create Item-Specific Styles (`[ItemName]Item.scss`)
+
+**🚨 MANDATORY**: Create a separate SCSS file for item-specific styling. This will be verified by the verification team.
+
+**File Location**: `Workload/app/items/[ItemName]Item/[ItemName]Item.scss`
+
+```scss
+// [ItemName]Item.scss - Item-specific style overrides
+// Based on HelloWorldItem.scss pattern
+
+// 🚨 IMPORTANT: Only override item-specific branding, NOT layout/structure
+// Layout and structure are defined in ../../styles.scss
+
+// Example: Settings panel with item branding
+.item-name-settings-panel-container {
+  background-color: var(--colorBrandBackground2);  // Your brand color
+  color: var(--colorBrandForeground2);
+  
+  .item-settings-section-header {
+    color: var(--colorBrandForeground1);  // Brand header color
+  }
+}
+
+// Example: Item-specific editor elements
+.item-name-hero-section {
+  background: linear-gradient(135deg, var(--colorBrandBackground), var(--colorBrandBackground2));
+  padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+  border-radius: var(--borderRadiusLarge);
+}
+
+// Add other item-specific styles here
+```
+
+**Import Pattern in Components**:
+
+```tsx
+// In [ItemName]ItemEditor.tsx, [ItemName]ItemEditorEmpty.tsx, etc.
+import "../../styles.scss";           // Generic styles (REQUIRED)
+import "./[ItemName]Item.scss";       // Item-specific styles (REQUIRED)
+```
+
+**Usage Pattern**:
+
+```tsx
+// Apply both generic + item-specific classes (CSS cascading)
+<div className="item-settings-panel-container item-name-settings-panel-container">
+  {/* Generic structure with item-specific branding */}
+</div>
+```
+
+**✅ DO** (Will pass verification):
+- Create separate `[ItemName]Item.scss` file
+- Override only colors, fonts, and item-specific elements
+- Use design tokens (`var(--color*, --spacing*, --fontSize*)`)
+- Follow BEM naming: `.item-name-element-modifier`
+- Import both `styles.scss` and `[ItemName]Item.scss` in components
+
+**❌ DON'T** (Will fail verification):
+- Modify `Workload/app/styles.scss` for item-specific needs
+- Duplicate layout/structure styles from generic patterns
+- Use inline styles instead of SCSS file
+- Create custom ribbon or editor container styles
+- Override BaseItemEditor or BaseRibbon structural styles
 
 ### Step 6: Create Manifest Configuration
 
