@@ -90,12 +90,15 @@ Type `fabric item create [ItemName]` to trigger:
 
 #### Pattern Recognition with Architecture Compliance
 GitHub Copilot learns from existing items and suggests:
-- **BaseItemEditor wrapper pattern** (from HelloWorldItemEditor.tsx)
-- **Standard Ribbon pattern** (from HelloWorldItemRibbon.tsx)
-- Consistent naming conventions ([ItemName]Item pattern)
+- **BaseItemEditor wrapper pattern** (core architecture requirement)
+- **Standard Ribbon pattern** (BaseRibbon + BaseRibbonToolbar architecture)
+- **Standard View patterns** (Empty, Default, Detail, Settings views)
+- Consistent naming conventions ([ItemName]Item pattern with View suffix)
 - Similar state management patterns
 - Matching component structures
 - Proper TypeScript type definitions
+
+**Note**: HelloWorld components serve as sample implementations of the BaseItemEditor architecture.
 
 ### Real-time Validation
 - **Manifest Sync Detection**: Warns when implementation doesn't match manifest templates
@@ -109,13 +112,15 @@ GitHub Copilot learns from existing items and suggests:
 #### Model Creation (`[ItemName]ItemModel.ts`)
 ```typescript
 // Copilot suggests based on existing patterns:
-export interface CustomItemDefinition {
-  // Learns from other item models in the workspace
-  title?: string;          // Common pattern detected
-  configuration?: any;     // Fabric standard
-  metadata?: ItemMetadata; // Auto-suggested import
+// Model contains ONLY data that needs to be persisted
+export interface [ItemName]ItemDefinition {
+  // Data that gets saved to Fabric
+  message?: string;          // User-entered data
+  // NO UI state, view types, or temporary data here
 }
 ```
+
+**Architecture Note**: EDITOR_VIEW_TYPES enum belongs in the Editor component, not the model.
 
 #### Component Templates
 GitHub Copilot auto-generates components with:
@@ -164,28 +169,30 @@ return (
         onViewChange={setCurrentView}
       />
     )}
-    notification={(currentView) => 
-      currentView === VIEW_TYPES.MAIN ? (
-        <MessageBar intent="warning" icon={<Warning20Filled />}>
-          <MessageBarBody>{t('[ItemName]_Warning')}</MessageBarBody>
-        </MessageBar>
-      ) : undefined
-    }
     views={(setCurrentView) => [
       {
-        name: VIEW_TYPES.EMPTY,
+        name: EDITOR_VIEW_TYPES.EMPTY,
         component: (
-          <[ItemName]ItemEditorEmpty
-            workloadClient={workloadClient}
-            item={item}
-            onStart={() => setCurrentView(VIEW_TYPES.MAIN)}
+          <BaseItemEditorEmptyView
+            title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
+            description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
+            imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
+            imageAlt="Empty state illustration"
+            tasks={[
+              {
+                id: 'getting-started',
+                label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
+                onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT),
+                appearance: 'primary'
+              }
+            ]}
           />
         )
       },
       {
-        name: VIEW_TYPES.MAIN,
+        name: EDITOR_VIEW_TYPES.DEFAULT,
         component: (
-          <[ItemName]ItemEditorMain
+          <[ItemName]ItemDefaultView
             workloadClient={workloadClient}
             item={item}
             onShowDetail={(id) => setCurrentView(`detail-${id}`)}
@@ -194,7 +201,7 @@ return (
       }
       // Add detail views here using BaseItemEditorDetailView
     ]}
-    initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}
+    initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
   />
 );
 ```
@@ -318,7 +325,8 @@ When creating components, GitHub Copilot expands to MANDATORY patterns:
 - **Editor components**: BaseItemEditor container with ribbon and children
 - **Ribbon components**: BaseRibbon + BaseRibbonToolbar with standard actions
 - **Empty state components**: Proper onboarding flow with navigation callback
-- **Model interfaces**: Fabric-compatible types with VIEW_TYPES enum
+- **Model interfaces**: Fabric-compatible data types for persisted state only
+- **Editor view types**: EDITOR_VIEW_TYPES enum defined in the Editor component
 - **SCSS files**: Separate `[ItemName]Item.scss` with item-specific overrides only
 
 ## ✅ Pre-Generation Verification Checklist
@@ -330,7 +338,7 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] View registration pattern: `views={(setCurrentView) => [...]}`
 - [ ] Ribbon render prop: `ribbon={(currentView, setCurrentView) => ...}`
 - [ ] Notification render prop: `notification={(currentView) => ...}`
-- [ ] Initial view expression: `initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}`
+- [ ] Initial view expression: `initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}`
 - [ ] Detail views use `<BaseItemEditorDetailView>` component
 - [ ] Detail views define `DetailViewAction[]` for ribbon
 - [ ] Back navigation provided in detail views
@@ -349,17 +357,16 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] No modifications to `Workload/app/styles.scss`
 
 **File Structure** (REQUIRED):
-- [ ] `[ItemName]ItemModel.ts` - Data model with VIEW_TYPES enum
-- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor + view registration
-- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component (onboarding)
-- [ ] `[ItemName]ItemEditorMain.tsx` - Main/default view component
-- [ ] `[ItemName]ItemEditorDetail.tsx` - Detail view(s) using BaseItemEditorDetailView (if needed)
+- [ ] `[ItemName]ItemModel.ts` - Data model with persisted state interfaces only
+- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor + view registration + EDITOR_VIEW_TYPES enum
+- [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component (onboarding)
+- [ ] `[ItemName]ItemDefaultView.tsx` - Main/default view component
 - [ ] `[ItemName]ItemRibbon.tsx` - Ribbon with standard components
 - [ ] `[ItemName]Item.scss` - Item-specific style overrides
 
 **Import Verification**:
 - [ ] `import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";`
-- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";` (for detail views)
+- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";` (for detail views only)
 - [ ] `import { BaseRibbon, BaseRibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/Ribbon';`
 - [ ] `import "../../styles.scss";`
 - [ ] `import "./[ItemName]Item.scss";`
@@ -369,12 +376,15 @@ Before generating any item code, GitHub Copilot should verify:
 
 ### Context Detection
 GitHub Copilot detects:
-- **BaseItemEditor usage** in HelloWorldItemEditor.tsx as reference
-- **Standard Ribbon pattern** in HelloWorldItemRibbon.tsx as reference
+- **BaseItemEditor architecture** as the primary pattern (mandatory for all items)
+- **Standard View patterns** in HelloWorld sample implementation (Empty, Default, Detail, Settings views)
+- **Standard Ribbon pattern** in HelloWorld sample implementation as reference
 - Existing item patterns to maintain consistency
 - Available Fabric API clients in the workspace
 - Component libraries already in use
 - Authentication patterns from other items
+
+**Note**: HelloWorld serves as a sample implementation of BaseItemEditor architecture - the BaseItemEditor components are the foundation.
 
 ### Architecture Validation
 - **Verifies BaseItemEditor usage**: Warns if custom layouts are detected
@@ -411,7 +421,15 @@ GitHub Copilot detects:
 ```typescript
 // 🚨 CORRECT: BaseItemEditor with view registration
 import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
-import { HelloWorldItemDefinition, VIEW_TYPES, CurrentView } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+
+/**
+ * Different views that are available for the [ItemName] item
+ */
+export const EDITOR_VIEW_TYPES = {
+  EMPTY: 'empty',
+  DEFAULT: 'default',
+} as const;
 
 export function [ItemName]ItemEditor(props: PageProps) {
   const { workloadClient } = props;
@@ -439,7 +457,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
   };
   
   const isSaveEnabled = (currentView: string) => {
-    return currentView !== VIEW_TYPES.EMPTY && !hasBeenSaved;
+    return currentView !== EDITOR_VIEW_TYPES.EMPTY && !hasBeenSaved;
   };
   
   if (isLoading) {
@@ -458,33 +476,32 @@ export function [ItemName]ItemEditor(props: PageProps) {
           saveItemCallback={handleSave}
           onViewChange={setCurrentView}  // Pass setCurrentView down
         />
-      )}
-      
-      // Notification receives currentView
-      notification={(currentView) => 
-        currentView === VIEW_TYPES.MAIN ? (
-          <MessageBar intent="warning" icon={<Warning20Filled />}>
-            <MessageBarBody>{t('[ItemName]_Warning')}</MessageBarBody>
-          </MessageBar>
-        ) : undefined
-      }
-      
+      )}      
       // Views receives setCurrentView - allows navigation
       views={(setCurrentView) => [
         {
-          name: VIEW_TYPES.EMPTY,
+          name: EDITOR_VIEW_TYPES.EMPTY,
           component: (
-            <[ItemName]ItemEditorEmpty
-              workloadClient={workloadClient}
-              item={item}
-              onStart={() => setCurrentView(VIEW_TYPES.MAIN)}
+            <BaseItemEditorEmptyView
+              title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
+              description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
+              imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
+              imageAlt="Empty state illustration"
+              tasks={[
+                {
+                  id: 'getting-started',
+                  label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
+                  onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT),
+                  appearance: 'primary'
+                }
+              ]}
             />
           )
         },
         {
-          name: VIEW_TYPES.MAIN,
+          name: EDITOR_VIEW_TYPES.DEFAULT,
           component: (
-            <[ItemName]ItemEditorMain
+            <[ItemName]ItemDefaultView
               workloadClient={workloadClient}
               item={item}
             />
@@ -493,7 +510,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
       ]}
       
       // Initial view determined from item data
-      initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}
+      initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
     />
   );
 }
@@ -555,7 +572,6 @@ interface [ItemName]ItemDetailViewProps {
   workloadClient: WorkloadClientAPI;
   item: ItemWithDefinition<[ItemName]ItemDefinition>;
   recordId: string;
-  onBack: () => void;  // Navigation back to main view
 }
 
 export function [ItemName]ItemDetailView({
@@ -579,16 +595,7 @@ export function [ItemName]ItemDetailView({
   
   // Define detail view specific actions
   useEffect(() => {
-    const detailActions: DetailViewAction[] = [
-      {
-        id: 'back',
-        label: t('Back'),
-        icon: <ArrowLeft24Regular />,
-        onClick: onBack,
-        appearance: 'subtle',
-        testId: 'back-btn'
-      },
-      {
+    const detailActions: DetailViewAction[] = [      {
         id: 'save-detail',
         label: t('Save'),
         icon: <Save24Regular />,
@@ -634,13 +641,28 @@ export function [ItemName]ItemDetailView({
 // In [ItemName]ItemEditor.tsx
 views={(setCurrentView) => [
   {
-    name: VIEW_TYPES.EMPTY,
-    component: <[ItemName]ItemEditorEmpty onStart={() => setCurrentView(VIEW_TYPES.MAIN)} />
+    name: EDITOR_VIEW_TYPES.EMPTY,
+    component: (
+      <BaseItemEditorEmptyView
+        title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
+        description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
+        imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
+        imageAlt="Empty state illustration"
+        tasks={[
+          {
+            id: 'getting-started',
+            label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
+            onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DETAIL),
+            appearance: 'primary'
+          }
+        ]}
+      />
+    )
   },
   {
-    name: VIEW_TYPES.MAIN,
+    name: EDITOR_VIEW_TYPES.DETAIL,
     component: (
-      <[ItemName]ItemEditorMain
+      <[ItemName]ItemDefaultView
         workloadClient={workloadClient}
         item={item}
         // Navigate to detail view
@@ -657,7 +679,7 @@ views={(setCurrentView) => [
         item={item}
         recordId={selectedRecordId}
         // Navigate back to main
-        onBack={() => setCurrentView(VIEW_TYPES.MAIN)}
+        onBack={() => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT)}
       />
     )
   }] : [])
@@ -1260,19 +1282,29 @@ After updating Product.json:
 The repository currently contains one fully implemented item:
 
 **Implemented Items**:
-- `HelloWorldItem` - A sample item to demonstrate the workload development pattern
+- `HelloWorldItem` - A sample implementation demonstrating BaseItemEditor architecture and standard patterns
+
+**Core Architecture Focus**:
+The BaseItemEditor component system is the foundation. HelloWorld serves as one example of how to implement it.
 
 **Repository Items Folder Structure**:
 ```
 Workload/app/items/
-└── HelloWorldItem/
-    ├── HelloWorldItemModel.ts
-    ├── HelloWorldItemEditor.tsx
-    ├── HelloWorldItemEditorEmpty.tsx
-    ├── HelloWorldItemEditorRibbon.tsx
-    ├── HelloWorldItemEditorAboutPage.tsx
-    └── HelloWorldItemEditorSettingsPage.tsx
+└── HelloWorldItem/                    ← Sample Implementation
+    ├── HelloWorldItemModel.ts         ← Data model
+    ├── HelloWorldItemEditor.tsx       ← Main editor using BaseItemEditor
+    ├── HelloWorldItemEmptyView.tsx    ← Empty state view
+    ├── HelloWorldItemDefaultView.tsx  ← Main content view  
+    ├── HelloWorldItemRibbon.tsx       ← Ribbon using BaseRibbon
+    ├── HelloWorldItemAboutView.tsx    ← About settings view
+    └── HelloWorldItemSettingsView.tsx ← Settings view
 ```
+
+**Core Architecture** (BaseItemEditor components are the foundation):
+- **BaseItemEditor**: Main container component (mandatory)
+- **BaseRibbon & BaseRibbonToolbar**: Standard ribbon components
+- **Standard View Types**: Empty, Default, Detail, Settings patterns
+- **HelloWorld**: Sample implementation demonstrating the architecture
 
 **Manifest Structure**:
 ```
@@ -1290,10 +1322,12 @@ Workload/Manifest/items/
 When creating a new item, ensure all these components are created:
 
 **Implementation Files** (in `Workload/app/items/[ItemName]Item/`):
-- [ ] `[ItemName]ItemModel.ts` - Data model interface
+- [ ] `[ItemName]Item.scss` - Data model interface (persistable data only)
+- [ ] `[ItemName]ItemModel.ts` - Data model interface (persistable data only)
 - [ ] `[ItemName]ItemEditor.tsx` - Main editor component  
-- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component
-- [ ] `[ItemName]ItemEditorRibbon.tsx` - Ribbon/toolbar component
+- [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component
+- [ ] `[ItemName]ItemDefaultView.tsx` - Default/main content view component
+- [ ] `[ItemName]ItemRibbon.tsx` - Ribbon/toolbar component
 
 **Manifest Files** (in `Workload/Manifest/`):
 - [ ] `[ItemName]Item.xml` - XML manifest configuration

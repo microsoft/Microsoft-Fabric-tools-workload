@@ -4,7 +4,30 @@ Quick reference guide for using the `BaseItemEditor` control in Microsoft Fabric
 
 ## 🚀 Quick Start
 
-### Basic Pattern
+### Basic Pattern (View Registration - Recommended)
+
+```tsx
+import { BaseItemEditor, RegisteredView } from "../../controls";
+
+export function MyItemEditor(props: PageProps) {
+  const views: RegisteredView[] = [
+    {
+      name: 'main',
+      component: <MyContent />
+    }
+  ];
+
+  return (
+    <BaseItemEditor
+      views={views}
+      defaultView="main"
+      ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
+    />
+  );
+}
+```
+
+### Legacy Pattern (Children - Still Supported)
 
 ```tsx
 import { BaseItemEditor } from "../../controls";
@@ -30,12 +53,42 @@ import { BaseItemEditor, BaseItemEditorProps } from "../../controls";
 
 ## 🎯 Props
 
+### BaseItemEditorPropsWithViews (Recommended)
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `views` | `RegisteredView[]` | ✅ | Array of view definitions |
+| `defaultView` | `string` | ✅ | Initial view name to display |
+| `ribbon` | `(context: ViewContext) => ReactNode` | ✅ | Ribbon with ViewContext |
+| `className` | `string` | ❌ | Additional CSS class for container |
+| `contentClassName` | `string` | ❌ | Additional CSS class for content area |
+
+### BaseItemEditorPropsLegacy (Legacy Support)
+
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `ribbon` | `ReactNode` | ✅ | Ribbon component (fixed at top) |
 | `children` | `ReactNode` | ✅ | Content (scrollable) |
 | `className` | `string` | ❌ | Additional CSS class for container |
 | `contentClassName` | `string` | ❌ | Additional CSS class for content area |
+
+### ViewContext Interface
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `currentView` | `string` | Name of currently active view |
+| `setCurrentView` | `(view: string) => void` | Navigate to different view |
+| `isDetailView` | `boolean` | True if current view is a detail view |
+| `goBack` | `() => void` | Navigate to previous view |
+| `viewHistory` | `string[]` | Stack of previous views |
+
+### RegisteredView Interface
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | `string` | ✅ | Unique identifier for the view |
+| `component` | `ReactNode` | ✅ | React component to render |
+| `isDetailView` | `boolean` | ❌ | Enables automatic back navigation |
 
 ## 📐 Layout Structure
 
@@ -51,18 +104,25 @@ import { BaseItemEditor, BaseItemEditorProps } from "../../controls";
 
 ## 💡 Common Patterns
 
-### Pattern 1: With View Switching
+### Pattern 1: View Registration System
 
 ```tsx
+const views: RegisteredView[] = [
+  {
+    name: 'empty',
+    component: <MyEmptyView onStart={() => setCurrentView('main')} />
+  },
+  {
+    name: 'main',
+    component: <MyDefaultView item={item} />
+  }
+];
+
 <BaseItemEditor
-  ribbon={<MyRibbon currentView={currentView} />}
->
-  {currentView === 'empty' ? (
-    <MyEmptyView onStart={handleStart} />
-  ) : (
-    <MyDefaultView item={item} />
-  )}
-</BaseItemEditor>
+  views={views}
+  defaultView={item?.id ? 'main' : 'empty'}
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+/>
 ```
 
 ### Pattern 2: With Loading State
@@ -73,9 +133,11 @@ if (isLoading) {
 }
 
 return (
-  <BaseItemEditor ribbon={<MyRibbon />}>
-    <MyContent />
-  </BaseItemEditor>
+  <BaseItemEditor
+    views={views}
+    defaultView="main"
+    ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+  />
 );
 ```
 
@@ -83,21 +145,44 @@ return (
 
 ```tsx
 <BaseItemEditor
-  ribbon={<MyRibbon />}
+  views={views}
+  defaultView="main"
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
   className="custom-editor"
   contentClassName="custom-content"
->
-  <MyContent />
-</BaseItemEditor>
+/>
 ```
 
-### Pattern 4: With Detail Pages
+### Pattern 4: With Detail Views
+
+```tsx
+const views: RegisteredView[] = [
+  {
+    name: 'main',
+    component: <MyMainView onViewDetail={(id) => setCurrentView('detail')} />
+  },
+  {
+    name: 'detail',
+    component: <MyDetailView detailId={selectedId} />,
+    isDetailView: true  // ⭐ Auto back button
+  }
+];
+
+<BaseItemEditor
+  views={views}
+  defaultView="main"
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+/>
+```
+
+### Pattern 5: Legacy Children Pattern
 
 ```tsx
 <BaseItemEditor
-  ribbon={
-    <MyRibbon
-      showBack={page === 'detail'}
+  ribbon={<MyRibbon showBack={page === 'detail'} onBack={handleBack} />}
+>
+  {page === 'main' ? <MyMainView /> : <MyDetailView />}
+</BaseItemEditor>
       onBack={() => setPage('main')}
     />
   }
@@ -147,11 +232,11 @@ return (
 
 **Key Classes**: `editor-default-view`, `main`
 
-### Detail Page
+### Detail View
 
 ```tsx
 <BaseItemEditor ribbon={<MyRibbon />}>
-  <div className="editor-detail-page">
+  <div className="editor-detail-view">
     <div className="detail-content">
       <h2>Detail View</h2>
       {/* Detail content */}
@@ -160,7 +245,7 @@ return (
 </BaseItemEditor>
 ```
 
-**Key Classes**: `editor-detail-page`, `detail-content`
+**Key Classes**: `editor-detail-view`, `detail-content`
 
 ## 📝 Complete Example
 
@@ -243,7 +328,7 @@ export function MyItemEditor(props: PageProps) {
 ```scss
 .empty-state-container    // Empty view
 .editor-default-view      // Default view
-.editor-detail-page       // Detail page
+.editor-detail-view       // Detail view
 .main                     // Content card
 .detail-content           // Detail card
 ```
@@ -307,8 +392,12 @@ expect(content).toBeVisible();
 ## 📚 Related Documentation
 
 - **[Full BaseItemEditor Documentation](./README.md)**
-- **[Ribbon Controls](../RibbonControls/README.md)**
-- **[HelloWorld Reference](../../Workload/app/items/HelloWorldItem/)**
+- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container
+- **[BaseRibbonToolbar](./BaseRibbonToolbar.md)** - Toolbar actions  
+- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default view layout
+- **[BaseItemEditorEmptyView](./BaseItemEditorEmptyView.md)** - Empty state layout
+- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail view layout
+- **[HelloWorld Sample](../../Workload/app/items/HelloWorldItem/)**
 
 ## 🆘 Common Issues
 
@@ -326,4 +415,4 @@ expect(content).toBeVisible();
 
 ---
 
-**Quick Tip**: Check `HelloWorldItemEditor.tsx` for a complete reference implementation!
+**Quick Tip**: Check `HelloWorldItemEditor.tsx` for a complete sample implementation!

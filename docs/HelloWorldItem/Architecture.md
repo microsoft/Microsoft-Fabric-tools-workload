@@ -6,16 +6,16 @@
 graph TB
     subgraph "Core Components"
         A[HelloWorldItemEditor] --> B[HelloWorldItemRibbon]
-        A --> C[HelloWorldItemEditorEmpty]
-        A --> D[HelloWorldItemEditorDefault]
-        A --> E[HelloWorldItemEditorSettingsPage]
-        A --> F[HelloWorldItemEditorAboutPage]
+        A --> C[HelloWorldItemEmptyView]
+        A --> D[HelloWorldItemDefaultView]
+        A --> E[HelloWorldItemSettingsView]
+        A --> F[HelloWorldItemAboutView]
     end
     
     subgraph "Data Layer"
         G[HelloWorldItemModel]
         H[HelloWorldItemDefinition]
-        I[VIEW_TYPES]
+        I[EDITOR_VIEW_TYPES]
     end
     
     subgraph "Fabric Integration"
@@ -73,12 +73,12 @@ interface EditorState {
 ```typescript
 const renderCurrentView = () => {
   switch (currentView) {
-    case VIEW_TYPES.EMPTY:
-      return <HelloWorldItemEditorEmpty />;
-    case VIEW_TYPES.GETTING_STARTED:
-      return <HelloWorldItemEditorDefault />;
+    case EDITOR_VIEW_TYPES.EMPTY:
+      return <HelloWorldItemEmptyView />;
+    case EDITOR_VIEW_TYPES.DEFAULT:
+      return <HelloWorldItemDefaultView />;
     default:
-      return <HelloWorldItemEditorEmpty />;
+      return <HelloWorldItemEmptyView />;
   }
 };
 ```
@@ -121,7 +121,7 @@ export function HelloWorldItemRibbon(props: RibbonProps) {
 }
 ```
 
-### HelloWorldItemEditorEmpty (Onboarding)
+### HelloWorldItemEmptyView (Onboarding)
 
 **First-time user experience and onboarding flow**
 
@@ -146,7 +146,7 @@ interface EmptyStateProps {
 - Responsive image sizing
 - Theme-aware graphics
 
-### HelloWorldItemEditorDefault (Main View)
+### HelloWorldItemDefaultView (Main View)
 
 **Primary content interface where users perform main tasks**
 
@@ -175,21 +175,21 @@ interface HelloWorldItemDefinition {
 #### View State Management
 
 ```typescript
-const VIEW_TYPES = {
+const EDITOR_VIEW_TYPES = {
   EMPTY: 'empty',
-  GETTING_STARTED: 'getting-started'
+  DEFAULT: 'default'
 } as const;
 
-type CurrentView = typeof VIEW_TYPES[keyof typeof VIEW_TYPES];
+type CurrentView = typeof EDITOR_VIEW_TYPES[keyof typeof EDITOR_VIEW_TYPES];
 ```
 
 **State Transitions**
 ```mermaid
 stateDiagram-v2
     [*] --> EMPTY: New Item Created
-    EMPTY --> GETTING_STARTED: User Clicks Start
-    GETTING_STARTED --> EMPTY: Reset/Clear
-    GETTING_STARTED --> [*]: Item Saved
+    EMPTY --> DEFAULT: User Clicks Start
+    DEFAULT --> EMPTY: Reset/Clear
+    DEFAULT --> [*]: Item Saved
 ```
 
 ## Integration Architecture
@@ -270,7 +270,7 @@ useEffect(() => {
 const { t } = useTranslation();
 
 // Usage in components
-<Text>{t('HelloWorldItemEditorEmpty_Title', 'Welcome to HelloWorld!')}</Text>
+<Text>{t('HelloWorldItemEmptyView_Title', 'Welcome to HelloWorld!')}</Text>
 ```
 
 #### Translation Key Patterns
@@ -347,7 +347,7 @@ interface CustomItemDefinition extends HelloWorldItemDefinition {
 #### 2. View Addition
 ```typescript
 const CUSTOM_VIEW_TYPES = {
-  ...VIEW_TYPES,
+  ...EDITOR_VIEW_TYPES,
   ADVANCED: 'advanced',
   SETTINGS: 'settings'
 } as const;

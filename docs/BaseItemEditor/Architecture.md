@@ -1,6 +1,6 @@
 # BaseItemEditor Architecture
 
-Visual architecture and technical design documentation for the BaseItemEditor control.
+Visual architecture and technical design documentation for the BaseItemEditor control with view registration system.
 
 ## Component Architecture
 
@@ -16,10 +16,18 @@ Visual architecture and technical design documentation for the BaseItemEditor co
 │  │         (flex-shrink: 0, z-index: 1)            │ │
 │  │                                                  │ │
 │  │  ┌─────────────────────────────────────────┐   │ │
-│  │  │      Your Ribbon Component              │   │ │
-│  │  │      (BaseRibbon + tabs + actions)      │   │ │
+│  │  │      Ribbon with ViewContext            │   │ │
+│  │  │      (Back button or Tabs + Actions)    │   │ │
 │  │  └─────────────────────────────────────────┘   │ │
 │  │                                                  │ │
+│  └─────────────────────────────────────────────────┘ │
+│                                                       │
+│  ┌─────────────────────────────────────────────────┐ │
+│  │         base-item-editor__notification               │ │
+│  │         (optional, fixed above content)         │ │
+│  │  ┌─────────────────────────────────────────┐   │ │
+│  │  │      MessageBar / Notifications         │   │ │
+│  │  └─────────────────────────────────────────┘   │ │
 │  └─────────────────────────────────────────────────┘ │
 │                                                       │
 │  ┌─────────────────────────────────────────────────┐ │
@@ -28,13 +36,11 @@ Visual architecture and technical design documentation for the BaseItemEditor co
 │  │                                                  │ │
 │  │  ┌─────────────────────────────────────────┐   │ │
 │  │  │                                          │   │ │
-│  │  │      Empty View                         │   │ │
-│  │  │      or                                  │   │ │
-│  │  │      Default View                        │   │ │
-│  │  │      or                                  │   │ │
-│  │  │      Detail Page                         │   │ │
-│  │  │      or                                  │   │ │
-│  │  │      Custom View                         │   │ │
+│  │  │      Registered View (Dynamic)          │   │ │
+│  │  │      ├─ Empty View                      │   │ │
+│  │  │      ├─ Getting Started View            │   │ │
+│  │  │      ├─ Detail Views (L2)               │   │ │
+│  │  │      └─ Custom Views                    │   │ │
 │  │  │                                          │   │ │
 │  │  │      (Content scrolls here)             │   │ │
 │  │  │                                          │   │ │
@@ -48,53 +54,103 @@ Visual architecture and technical design documentation for the BaseItemEditor co
 ## Component Hierarchy
 
 ```
-BaseItemEditor
+BaseItemEditor (View Registration Mode)
 ├── Props
-│   ├── ribbon: ReactNode ✅ Required
-│   ├── children: ReactNode ✅ Required
+│   ├── ribbon: (context: ViewContext) => ReactNode ✅ Required
+│   ├── notification?: (currentView: string) => ReactNode ❌ Optional
+│   ├── views: RegisteredView[] | Function ✅ Required
+│   ├── initialView: string ✅ Required
+│   ├── onViewChange?: (view: string) => void ❌ Optional
 │   ├── className?: string ❌ Optional
 │   └── contentClassName?: string ❌ Optional
+│
+├── State Management (Internal)
+│   ├── currentView: string
+│   ├── viewHistory: string[] (for detail view navigation)
+│   └── ViewContext: { currentView, setCurrentView, isDetailView, goBack, viewHistory }
 │
 ├── DOM Structure
 │   ├── <div className="base-item-editor">
 │   │   ├── <div className="base-item-editor__ribbon">
-│   │   │   └── {ribbon prop}
+│   │   │   └── {ribbon(viewContext)}
+│   │   │
+│   │   ├── <div className="base-item-editor__notification"> (optional)
+│   │   │   └── {notification(currentView)}
 │   │   │
 │   │   └── <div className="base-item-editor__content">
-│   │       └── {children prop}
+│   │       └── {resolvedViews.find(v => v.name === currentView)?.component}
 │
 └── CSS Classes
     ├── .base-item-editor (container)
     ├── .base-item-editor__ribbon (fixed ribbon area)
+    ├── .base-item-editor__notification (optional notification area)
     └── .base-item-editor__content (scrollable content area)
 ```
 
-## Data Flow
+## View Registration System
+
+### RegisteredView Interface
+
+```typescript
+interface RegisteredView {
+  /** Unique name/key for the view */
+  name: string;
+  /** The view component to render */
+  component: ReactNode;
+  /** Whether this is a detail view (L2 page) - affects ribbon behavior */
+  isDetailView?: boolean;
+}
+```
+
+### ViewContext Interface
+
+```typescript
+interface ViewContext {
+  /** Current active view name */
+  currentView: string;
+  /** Function to navigate to a different view */
+  setCurrentView: (view: string) => void;
+  /** Whether the current view is a detail view */
+  isDetailView: boolean;
+  /** Function to navigate back to previous view (only available in detail views) */
+  goBack: () => void;
+  /** History of visited views */
+  viewHistory: string[];
+}
+```
+
+## Data Flow with View Registration
 
 ```
 Item Editor Component
         │
-        ├─────────► BaseItemEditor
+        ├─────────► BaseItemEditor (View Registration Mode)
         │              │
-        │              ├─────► ribbon={...}
+        │              ├─────► ribbon={(context) => <YourRibbon />}
         │              │         │
         │              │         └─► Ribbon Component
-        │              │               ├─► Tabs
+        │              │               ├─► ViewContext received
+        │              │               ├─► Back button (detail views)
+        │              │               ├─► Tabs (normal views)
         │              │               └─► Actions
         │              │
-        │              └─────► children={...}
-        │                        │
-        │                        └─► View Components
-        │                              ├─► Empty View
-        │                              ├─► Default View
-        │                              ├─► Detail Pages
-        │                              └─► Custom Views
+        │              ├─────► views={registeredViews}
+        │              │         │
+        │              │         └─► View Registration
+        │              │               ├─► EMPTY view
+        │              │               ├─► DEFAULT view
+        │              │               ├─► DETAIL views (isDetailView: true)
+        │              │               └─► CUSTOM views
+        │              │
+        │              ├─────► initialView="empty"
+        │              │
+        │              └─────► notification={(currentView) => ...}
         │
-        └─────────► State Management
-                       ├─► currentView
-                       ├─► item data
-                       ├─► loading state
-                       └─► view navigation
+        └─────────► Internal State Management
+                       ├─► currentView (managed internally)
+                       ├─► viewHistory (automatic tracking)
+                       ├─► ViewContext (passed to ribbon)
+                       └─► View resolution and rendering
 ```
 
 ## Layout Flow
@@ -175,7 +231,7 @@ Level 1: Base Styles
 Level 2: View-Specific Styles
   .base-item-editor__content .empty-state-container { ... }
   .base-item-editor__content .editor-default-view { ... }
-  .base-item-editor__content .editor-detail-page { ... }
+  .base-item-editor__content .editor-detail-view { ... }
 
 Level 3: Custom Overrides (via props)
   .base-item-editor.my-custom-editor { ... }
@@ -276,7 +332,7 @@ BaseItemEditor
         │       ├─► Cards
         │       └─► Sections
         │
-        ├─► Detail Pages
+        ├─► Detail Views
         │   └─► Level 2 navigation
         │       ├─► Focused content
         │       └─► Back navigation

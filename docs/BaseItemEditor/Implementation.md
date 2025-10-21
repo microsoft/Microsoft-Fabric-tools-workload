@@ -17,12 +17,26 @@ The `BaseItemEditor` control has been successfully created and integrated into t
 - Fixed ribbon at the top (always visible during scroll)
 - Scrollable content area that fills remaining space
 - Full-height layout (100vh) to fill iframe
-- Support for multiple view types (empty, default, detail pages)
+- **View registration system** with automatic navigation
+- **ViewContext** for centralized state management
+- Support for multiple view types (empty, default, detail views)
+- **Automatic back navigation** for detail views
 - Customizable via className props
 
-**Props**:
+**Props** (View Registration - Recommended):
 ```typescript
-interface BaseItemEditorProps {
+interface BaseItemEditorPropsWithViews {
+  views: RegisteredView[];                           // Required: View definitions
+  defaultView: string;                              // Required: Initial view name
+  ribbon: (context: ViewContext) => ReactNode;     // Required: Ribbon with context
+  className?: string;                               // Optional: Editor container class
+  contentClassName?: string;                        // Optional: Content area class
+}
+```
+
+**Props** (Legacy - Still Supported):
+```typescript
+interface BaseItemEditorPropsLegacy {
   ribbon: ReactNode;        // Required: Ribbon component
   children: ReactNode;      // Required: Content to display
   className?: string;       // Optional: Editor container class
@@ -53,29 +67,43 @@ export { BaseItemEditor } from './BaseItemEditor';
 export type { BaseItemEditorProps } from './BaseItemEditor';
 ```
 
-#### `HelloWorldItemEditor.tsx`
-**Changes**: Refactored to use BaseItemEditor pattern
+#### `MyItemEditor.tsx`
+**Changes**: Refactored to use BaseItemEditor with view registration pattern
 - Removed Stack import from @fluentui/react
 - Replaced Stack container with BaseItemEditor
-- Ribbon passed as prop instead of child
-- Content wrapped as children
+- **Added view registration system** with RegisteredView[]
+- **Ribbon function** receives ViewContext instead of static component
+- **ViewContext integration** for centralized navigation
 
-**Before**:
+**Before** (Legacy Stack Pattern):
 ```tsx
 <Stack className="editor">
-  <HelloWorldItemRibbon {...} />
+  <MyItemRibbon {...} />
   {currentView === 'empty' ? <Empty /> : <Default />}
 </Stack>
 ```
 
-**After**:
+**After** (View Registration Pattern):
 ```tsx
-<BaseItemEditor ribbon={<HelloWorldItemRibbon {...} />}>
-  {currentView === 'empty' ? <Empty /> : <Default />}
-</BaseItemEditor>
+const views: RegisteredView[] = [
+  {
+    name: EDITOR_VIEW_TYPES.EMPTY,
+    component: <MyItemEmptyView onStart={() => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT)} />
+  },
+  {
+    name: EDITOR_VIEW_TYPES.DEFAULT,
+    component: <MyItemDefaultView item={item} />
+  }
+];
+
+<BaseItemEditor
+  views={views}
+  defaultView={item?.definition?.greeting ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY}
+  ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
+/>
 ```
 
-#### `HelloWorldItemEditorDefault.tsx`
+#### `MyItemDefaultView.tsx`
 **Changes**: Added `editor-default-view` className for proper styling
 ```tsx
 <div className="editor-default-view getting-started-container">
@@ -143,7 +171,7 @@ export type { BaseItemEditorProps } from './BaseItemEditor';
 ### 5. Developer Experience
 - Simple API with only 2 required props
 - Clear documentation
-- Reference implementation in HelloWorldItemEditor
+- Reference implementation in sample HelloWorldItemEditor
 - TypeScript support with full type definitions
 
 ## 📐 Layout Architecture
@@ -156,7 +184,7 @@ BaseItemEditor (100vh height, flex column)
     └── [Your Views]
         ├── Empty View (empty-state-container)
         ├── Default View (editor-default-view)
-        ├── Detail Pages (editor-detail-page)
+        ├── Detail Views (editor-detail-view)
         └── Custom Views
 ```
 
@@ -210,7 +238,7 @@ if (isLoading) return <LoadingProgressBar />;
 return <BaseItemEditor ribbon={<MyRibbon />}>...</BaseItemEditor>;
 ```
 
-### Pattern 4: With Detail Pages
+### Pattern 4: With Detail Views
 ```tsx
 <BaseItemEditor ribbon={<MyRibbon showBack={isDetail} />}>
   {isDetail ? <Detail /> : <Main />}
@@ -231,10 +259,10 @@ return <BaseItemEditor ribbon={<MyRibbon />}>...</BaseItemEditor>;
 - Uses `editor-default-view` class
 - Scrolls when content overflows
 
-### 3. Detail Pages (Level 2)
+### 3. Detail Views (Level 2)
 - Deep-dive into specific entities
 - Back navigation support
-- Uses `editor-detail-page` class
+- Uses `editor-detail-view` class
 - Same styling patterns as default
 
 ### 4. Custom Views
@@ -339,7 +367,7 @@ When creating a new item editor:
 - **ItemEditorLoadingProgressBar**: Loading state before editor renders
 
 ### Used By
-- **HelloWorldItemEditor**: Reference implementation
+- **HelloWorldItemEditor**: Sample implementation
 - **[Your Custom Item Editors]**: All future item editors
 
 ## 📚 Documentation Structure
@@ -354,7 +382,7 @@ docs/BaseItemEditor/
 
 1. **Start Here**: [QuickReference.md](./QuickReference.md)
 2. **Deep Dive**: [README.md](./README.md)
-3. **See It In Action**: `Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx`
+3. **See It In Action**: `Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx` (sample)
 4. **Understand Styling**: `Workload/app/controls/BaseItemEditor.scss`
 
 ## 🛠️ Customization Examples
@@ -434,7 +462,7 @@ docs/BaseItemEditor/
 
 - ✅ **Implementation**: Complete
 - ✅ **Documentation**: Complete
-- ✅ **Reference Example**: Complete (HelloWorldItemEditor)
+- ✅ **Sample Example**: Complete (HelloWorldItemEditor)
 - ✅ **Type Definitions**: Complete
 - ✅ **Styling**: Complete
 - ✅ **Exports**: Complete
@@ -442,7 +470,7 @@ docs/BaseItemEditor/
 ## 🎉 Next Steps
 
 1. Review the [QuickReference.md](./QuickReference.md) for quick usage
-2. Check the reference implementation in `HelloWorldItemEditor.tsx`
+2. Check the sample implementation in `HelloWorldItemEditor.tsx`
 3. Use BaseItemEditor for all new item editors
 4. Consider migrating existing editors to use BaseItemEditor
 

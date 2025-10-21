@@ -41,10 +41,10 @@ export function [ItemName]ItemEditor(props: PageProps) {
         />
       }
     >
-      {currentView === VIEW_TYPES.EMPTY ? (
-        <[ItemName]ItemEditorEmpty {...emptyProps} />
+      {currentView === EDITOR_VIEW_TYPES.EMPTY ? (
+        <[ItemName]ItemEmptyView {...emptyProps} />
       ) : (
-        <[ItemName]ItemEditorDefault {...defaultProps} />
+        <[ItemName]ItemDefaultView {...defaultProps} />
       )}
     </BaseItemEditor>
   );
@@ -164,11 +164,12 @@ This guide provides step-by-step instructions for AI tools to create a new item 
    Workload/app/items/[ItemName]Item/
    ```
 
-2. **Create the four required implementation files**:
+2. **Create the required implementation files**:
    - `[ItemName]ItemModel.ts` - Data model and interface definitions
    - `[ItemName]ItemEditor.tsx` - Main editor component
-   - `[ItemName]ItemEditorEmpty.tsx` - Empty state component (shown when item is first created)
-   - `[ItemName]ItemEditorRibbon.tsx` - Ribbon/toolbar component
+   - `[ItemName]ItemEmptyView.tsx` - Empty state component (shown when item is first created)
+   - `[ItemName]ItemDefaultView.tsx` - Default/main content view (shown when item has data)
+   - `[ItemName]ItemRibbon.tsx` - Ribbon/toolbar component
 
 ### Step 2: Implement the Model (`[ItemName]ItemModel.ts`)
 
@@ -208,10 +209,9 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
-import { [ItemName]ItemDefinition, VIEW_TYPES, CurrentView } from "./[ItemName]ItemModel";
-import { [ItemName]ItemEditorEmpty } from "./[ItemName]ItemEditorEmpty";
-import { [ItemName]ItemEditorDefault } from "./[ItemName]ItemEditorDefault";
+import { BaseItemEditor, ItemEditorLoadingProgressBar, BaseItemEditorEmptyView } from "../../controls";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
 import "../../styles.scss";
 
@@ -221,10 +221,18 @@ export function [ItemName]ItemEditor(props: PageProps) {
   const pageContext = useParams<ContextProps>();
   const { t } = useTranslation();
 
+  // Different views that are available for the [ItemName] item
+  const EDITOR_VIEW_TYPES = {
+    EMPTY: 'empty',
+    DEFAULT: 'default',
+  } as const;
+
+  type CurrentView = keyof typeof EDITOR_VIEW_TYPES;
+
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>();
-  const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
+  const [currentView, setCurrentView] = useState<CurrentView>(EDITOR_VIEW_TYPES.EMPTY);
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
 
   const { pathname } = useLocation();
@@ -250,7 +258,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
         }
 
         setItem(LoadedItem);
-        setCurrentView(!LoadedItem?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED);
+        setCurrentView(!LoadedItem?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT);
 
       } catch (error) {
         setItem(undefined);
@@ -270,7 +278,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
   }, [pageContext, pathname]);
 
   const navigateToDefaultView = () => {
-    setCurrentView(VIEW_TYPES.GETTING_STARTED);
+    setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
   };
 
   const handleOpenSettings = async () => {
@@ -289,7 +297,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
       workloadClient,
       item.id,
       {
-        state: VIEW_TYPES.GETTING_STARTED
+        state: EDITOR_VIEW_TYPES.DEFAULT
       });
     const wasSaved = Boolean(successResult);
     setHasBeenSaved(wasSaved);
@@ -303,11 +311,11 @@ export function [ItemName]ItemEditor(props: PageProps) {
   }
 
   const isSaveEnabled = () => {
-    if (currentView === VIEW_TYPES.EMPTY) {
+    if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
     }
 
-    if (currentView === VIEW_TYPES.GETTING_STARTED) {
+    if (currentView === EDITOR_VIEW_TYPES.DEFAULT) {
       if (hasBeenSaved) {
         return false;
       }
@@ -344,29 +352,38 @@ export function [ItemName]ItemEditor(props: PageProps) {
           navigateToDefaultViewCallback={navigateToDefaultView}
         />
       }
-      notification={
-        currentView === VIEW_TYPES.GETTING_STARTED ? (
-          <MessageBar intent="warning" icon={<Warning20Filled />}>
-            <MessageBarBody>
-              {t('[ItemName]_Warning', 'Optional notification message for this view.')}
-            </MessageBarBody>
-          </MessageBar>
-        ) : undefined
-      }
-    >
-      {currentView === VIEW_TYPES.EMPTY ? (
-        <[ItemName]ItemEditorEmpty
-          workloadClient={workloadClient}
-          item={item}
-          onNavigateToDefaultView={navigateToDefaultView}
-        />
-      ) : (
-        <[ItemName]ItemEditorDefault
-          workloadClient={workloadClient}
-          item={item}
-        />
-      )}
-    </BaseItemEditor>
+      views={(setCurrentView) => [
+        {
+          name: EDITOR_VIEW_TYPES.EMPTY,
+          component: (
+            <BaseItemEditorEmptyView
+              title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
+              description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
+              imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
+              imageAlt="Empty state illustration"
+              tasks={[
+                {
+                  id: 'getting-started',
+                  label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
+                  onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT),
+                  appearance: 'primary'
+                }
+              ]}
+            />
+          )
+        },
+        {
+          name: EDITOR_VIEW_TYPES.DEFAULT,
+          component: (
+            <[ItemName]ItemDefaultView
+              workloadClient={workloadClient}
+              item={item}
+            />
+          )
+        }
+      ]}
+      initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
+    />
   );
 }
 ```
@@ -379,20 +396,26 @@ export function [ItemName]ItemEditor(props: PageProps) {
    - Handles proper scroll behavior automatically
    - DO NOT create custom layout patterns
 
-2. **Ribbon Prop**:
+2. **View Registration System** (MANDATORY):
+   - Use `views={(setCurrentView) => [...]}` prop to register views
+   - Each view has `name` and `component` properties
+   - Use `initialView` prop to set the starting view
+   - Views are automatically managed by BaseItemEditor
+
+3. **Ribbon Prop**:
    - Pass ribbon component via `ribbon={<[ItemName]ItemRibbon />}` prop
    - Ribbon will be fixed at the top (doesn't scroll)
    - Use standard Ribbon components (see Step 5)
 
-3. **Notification Prop** (Optional):
+4. **Notification Prop** (Optional):
    - Pass notification via `notification={<MessageBar />}` prop
    - Appears between ribbon and content
    - Fixed position (doesn't scroll)
 
-4. **Children Content**:
-   - Content inside `<BaseItemEditor>` children will scroll
-   - Switch between Empty and Default views based on state
-   - Content fills remaining space automatically
+5. **View Navigation**:
+   - Views receive `setCurrentView` function for navigation
+   - Call `setCurrentView(EDITOR_VIEW_TYPES.VIEWNAME)` to switch views
+   - DO NOT use manual if/else statements in children
 
 5. **Loading State**:
    - MUST return `<ItemEditorLoadingProgressBar />` before BaseItemEditor
@@ -409,84 +432,210 @@ export function [ItemName]ItemEditor(props: PageProps) {
 - **Settings Integration**: Opens item settings when needed
 - **Loading States**: Progress indicators during data operations
 
-### Step 4: Implement the Empty State (`[ItemName]ItemEditorEmpty.tsx`)
+### Step 4: Implement the Empty State (`[ItemName]ItemEmptyView.tsx`)
 
-The empty state is shown when users first create the item. **Use the HelloWorld pattern as template**:
+The empty state is shown when users first create the item. **🚨 CRITICAL: Use BaseItemEditorEmptyView component**:
 
 ```typescript
-// Based on HelloWorldItemEditorEmpty.tsx - Complete functional implementation
-import React, { useState } from "react";
-import { Stack } from "@fluentui/react";
-import { Text, Button, Input } from "@fluentui/react-components";
-import "../../styles.scss";
+// Based on HelloWorldItemEmptyView.tsx - Uses BaseItemEditorEmptyView component
+import React from "react";
 import { useTranslation } from "react-i18next";
+
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
 
-interface [ItemName]ItemEmptyStateProps {
-  workloadClient: WorkloadClientAPI,
-  item: ItemWithDefinition<[ItemName]ItemDefinition>;
-  itemDefinition: [ItemName]ItemDefinition,
-  onFinishEmpty: (message: string) => void;
+interface [ItemName]ItemEmptyViewProps {
+  workloadClient: WorkloadClientAPI;
+  item?: ItemWithDefinition<[ItemName]ItemDefinition>;
+  onNavigateToDefaultView: () => void;
 }
 
-export const [ItemName]ItemEmpty: React.FC<[ItemName]ItemEmptyStateProps> = ({
+/**
+ * Empty state component - the first screen users see
+ * This component uses the BaseItemEditorEmptyView control for consistency
+ * across all item types.
+ */
+export function [ItemName]ItemEmptyView({
   workloadClient,
   item,
-  itemDefinition: definition,
-  onFinishEmpty: onFinishEmpty
-}) => {
-  const [message, setMessage] = useState<string>(`Hello ${item.displayName}!`);
+  onNavigateToDefaultView
+}: [ItemName]ItemEmptyViewProps) {
   const { t } = useTranslation();
-  
-  const saveItem = () => {
-    onFinishEmpty(message);
-  };
-  
+
+  // Define onboarding tasks using the standard EmptyStateTask interface
+  const tasks: EmptyStateTask[] = [
+    {
+      id: 'getting-started',
+      label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
+      description: t('[ItemName]ItemEmptyView_StartDescription', 'Learn how to use this item'),
+      onClick: onNavigateToDefaultView,
+      appearance: 'primary'
+    }
+  ];
+
   return (
-    <Stack className="empty-item-container" horizontalAlign="center" tokens={{ childrenGap: 16 }}>
-      <Stack.Item>
-        <img
-          src="/assets/items/[ItemName]/EditorEmpty.svg"
-          alt="Empty item illustration"
-          className="empty-item-image"
-        />
-      </Stack.Item>
-      <Stack.Item>
-        <Text as="h2" size={800} weight="semibold">
-          Your [ItemName] item has been created!
-        </Text>
-      </Stack.Item>
-      <Stack.Item style={{ marginTop: '16px', marginBottom: '24px' }}>
-        <Text>
-          {t('[ItemName]ItemEditorEmpty_Message', {itemName: item.displayName})}
-        </Text>
-      </Stack.Item>
-      <Stack.Item style={{ width: '300px', marginTop: '16px' }}>
-        <Input
-          placeholder="Enter your [ItemName] message"
-          value={message}
-          onChange={(e, data) => setMessage(data.value)}
-        />
-      </Stack.Item>
-      <Stack.Item style={{ marginTop: '16px' }}>
-        <Button appearance="primary" onClick={saveItem}>
-          {t('[ItemName]ItemEditorEmpty_Button')}
-        </Button>
-      </Stack.Item>
-    </Stack>
+    <BaseItemEditorEmptyView
+      title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
+      description={t('[ItemName]ItemEmptyView_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
+      imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
+      imageAlt="Empty state illustration"
+      tasks={tasks}
+    />
+  );
+}
+```
+
+**🚨 CRITICAL Requirements**:
+
+1. **Use BaseItemEditorEmptyView** (MANDATORY):
+   - Import from `../../controls`
+   - Provides consistent empty state UI across all items
+   - DO NOT create custom empty state layouts
+
+2. **EmptyStateTask Interface** (REQUIRED):
+   - Use `EmptyStateTask[]` for defining action buttons
+   - Standard properties: `id`, `label`, `description`, `onClick`, `appearance`
+   - Tasks are automatically rendered as buttons by BaseItemEditorEmptyView
+
+3. **Standard Props** (REQUIRED):
+   - `title`: Main heading displayed to users
+   - `description`: Explanatory text below title
+   - `imageSrc`: Path to empty state illustration
+   - `imageAlt`: Accessibility text for illustration
+   - `tasks`: Array of EmptyStateTask for user actions
+
+**Key Features**:
+
+- ✅ **Consistency**: Same empty state pattern across all item editors
+- ✅ **Accessibility**: Built-in ARIA labels and keyboard navigation
+- ✅ **Localization**: Uses translation keys for all user-facing text
+- ✅ **Standard Layout**: Follows Fabric design guidelines automatically
+- ✅ **Maintainability**: Changes to empty state behavior centralized
+- ✅ **Less Code**: Base component handles layout and styling
+
+### Step 4.1: Implement the Default View (`[ItemName]ItemDefaultView.tsx`)
+
+The default view is shown when the item has content and is the main editing interface. **Use the HelloWorld pattern as template**:
+
+```typescript
+// Based on HelloWorldItemDefaultView.tsx - Complete functional implementation
+import React, { useState, useEffect } from "react";
+import { Stack } from "@fluentui/react";
+import { Text, Input, Button, Card, CardHeader } from "@fluentui/react-components";
+import "../../styles.scss";
+import { useTranslation } from "react-i18next";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { ItemWithDefinition, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+
+interface [ItemName]ItemDefaultViewProps {
+  workloadClient: WorkloadClientAPI;
+  item: ItemWithDefinition<[ItemName]ItemDefinition>;
+}
+
+export const [ItemName]ItemDefaultView: React.FC<[ItemName]ItemDefaultViewProps> = ({
+  workloadClient,
+  item
+}) => {
+  const { t } = useTranslation();
+  const [message, setMessage] = useState<string>(item?.definition?.message || "");
+  const [isEdited, setIsEdited] = useState<boolean>(false);
+
+  // Track changes to enable save functionality
+  useEffect(() => {
+    setIsEdited(message !== (item?.definition?.message || ""));
+  }, [message, item?.definition?.message]);
+
+  const handleMessageChange = (value: string) => {
+    setMessage(value);
+  };
+
+  const handleSaveChanges = async () => {
+    if (item && isEdited) {
+      try {
+        await saveItemDefinition<[ItemName]ItemDefinition>(
+          workloadClient,
+          item.id,
+          {
+            ...item.definition,
+            message: message
+          }
+        );
+        setIsEdited(false);
+      } catch (error) {
+        console.error('Failed to save changes:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="editor-default-view">
+      <Stack tokens={{ childrenGap: 24 }} style={{ padding: '24px' }}>
+        <Stack.Item>
+          <Text as="h1" size={900} weight="semibold">
+            {t('[ItemName]ItemDefaultView_Title', `${item?.displayName} Editor`)}
+          </Text>
+        </Stack.Item>
+        
+        <Stack.Item>
+          <Card>
+            <CardHeader
+              header={
+                <Text weight="semibold">
+                  {t('[ItemName]ItemDefaultView_Content_Header', 'Content')}
+                </Text>
+              }
+            />
+            <Stack tokens={{ childrenGap: 16 }} style={{ padding: '16px' }}>
+              <Stack.Item>
+                <Text>
+                  {t('[ItemName]ItemDefaultView_Message_Label', 'Message:')}
+                </Text>
+              </Stack.Item>
+              <Stack.Item>
+                <Input
+                  value={message}
+                  onChange={(e, data) => handleMessageChange(data.value)}
+                  placeholder={t('[ItemName]ItemDefaultView_Message_Placeholder', 'Enter your message here...')}
+                  style={{ width: '100%' }}
+                />
+              </Stack.Item>
+              {isEdited && (
+                <Stack.Item>
+                  <Button 
+                    appearance="primary" 
+                    onClick={handleSaveChanges}
+                  >
+                    {t('[ItemName]ItemDefaultView_Save_Button', 'Save Changes')}
+                  </Button>
+                </Stack.Item>
+              )}
+            </Stack>
+          </Card>
+        </Stack.Item>
+        
+        <Stack.Item>
+          <Text size={400} style={{ color: 'var(--colorNeutralForeground3)' }}>
+            {t('[ItemName]ItemDefaultView_Help_Text', 'This is your main editing interface. Customize this view based on your item\'s functionality.')}
+          </Text>
+        </Stack.Item>
+      </Stack>
+    </div>
   );
 };
 ```
 
 **Key Features**:
 
-- **Default Value**: Initializes with a friendly message using the item's display name
-- **User Input**: Allows users to customize their initial message
-- **Callback Integration**: Calls `onFinishEmpty` to transition to the main editor
+- **State Management**: Tracks changes and enables conditional save functionality
+- **User Interface**: Clean card-based layout following Fluent UI patterns
+- **Change Detection**: Automatically detects when content has been modified
+- **Save Integration**: Provides inline save functionality for immediate feedback
 - **Localization Support**: Uses translation keys for all user-facing text
-- **Fluent UI Components**: Follows Microsoft design system patterns
+- **Responsive Design**: Adapts to different screen sizes and container widths
+- **Error Handling**: Includes proper try/catch for save operations
 
 ### Step 5: Implement the Ribbon (`[ItemName]ItemRibbon.tsx`)
 
@@ -496,7 +645,7 @@ The ribbon provides toolbar actions and navigation tabs. **🚨 CRITICAL: Use st
 // Based on HelloWorldItemRibbon.tsx - Demonstrates RECOMMENDED ribbon pattern
 import React from "react";
 import { PageProps } from '../../App';
-import { CurrentView, VIEW_TYPES } from "./[ItemName]ItemModel";
+import { CurrentView, EDITOR_VIEW_TYPES } from "./[ItemName]ItemModel";
 import { useTranslation } from "react-i18next";
 import { 
   BaseRibbon, 
@@ -577,7 +726,7 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
       label: t("ItemEditor_Ribbon_Navigate_Label", "Navigate to Default"),
       onClick: props.navigateToDefaultViewCallback,
       testId: 'ribbon-navigate-default-btn',
-      hidden: props.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
+      hidden: props.currentView !== EDITOR_VIEW_TYPES.EMPTY  // Only show in EMPTY view
     }
   ];
   
@@ -705,7 +854,7 @@ return (
 **Import Pattern in Components**:
 
 ```tsx
-// In [ItemName]ItemEditor.tsx, [ItemName]ItemEditorEmpty.tsx, etc.
+// In [ItemName]ItemEditor.tsx, [ItemName]ItemEmptyView.tsx, [ItemName]ItemDefaultView.tsx, etc.
 import "../../styles.scss";           // Generic styles (REQUIRED)
 import "./[ItemName]Item.scss";       // Item-specific styles (REQUIRED)
 ```
@@ -852,7 +1001,7 @@ Workload/app/assets/items/
 - **Style**: Follow Fabric design system guidelines
 - **Content**: Visual representation that communicates the item's purpose when empty
 
-**Usage**: This asset is referenced in the `[ItemName]ItemEditorEmpty.tsx` component to provide visual guidance when the item has no content yet.
+**Usage**: This asset is referenced in the `[ItemName]ItemEmptyView.tsx` component to provide visual guidance when the item has no content yet.
 
 #### 8.3: Add Localization Strings
 
@@ -864,11 +1013,7 @@ Update `Workload/Manifest/assets/locales/en-US/translations.json` **following th
   "[ItemName]Item_DisplayName": "Your Item Display Name",
   "[ItemName]Item_DisplayName_Plural": "Your Item Display Names",
   "[ItemName]Item_Description": "Description of what this item does",
-  "[ItemName]ItemEditor_Title": "Your [ItemName] Editor",
-  "[ItemName]ItemEditor_Definition_Message_Label": "Message",
-  "[ItemName]ItemEditor_LoadingProgressBar_Text": "Loading your [ItemName] item...",
-  "[ItemName]ItemEditorEmpty_Message": "Welcome to your new {itemName}! Enter a message to get started.",
-  "[ItemName]ItemEditorEmpty_Button": "Get Started"
+  "[ItemName]ItemEditor_Title": "Your [ItemName] Editor"
 }
 ```
 
@@ -878,10 +1023,6 @@ Update `Workload/Manifest/assets/locales/en-US/translations.json` **following th
 - `[ItemName]Item_DisplayName_Plural`: Plural form for lists
 - `[ItemName]Item_Description`: Item description
 - `[ItemName]ItemEditor_Title`: Main editor title
-- `[ItemName]ItemEditor_Definition_Message_Label`: Field label in editor
-- `[ItemName]ItemEditor_LoadingProgressBar_Text`: Loading message
-- `[ItemName]ItemEditorEmpty_Message`: Empty state message
-- `[ItemName]ItemEditorEmpty_Button`: Empty state button text
 
 **For Additional Locales**:
 
@@ -1090,8 +1231,9 @@ HelloWorld → [ItemName]
 HelloWorldItem → [ItemName]Item
 HelloWorldItemDefinition → [ItemName]ItemDefinition
 HelloWorldItemEditor → [ItemName]ItemEditor
-HelloWorldItemEmpty → [ItemName]ItemEmpty
-HelloWorldItemEditorRibbon → [ItemName]ItemEditorRibbon
+HelloWorldItemEmptyView → [ItemName]ItemEmptyView
+HelloWorldItemDefaultView → [ItemName]ItemDefaultView
+HelloWorldItemRibbon → [ItemName]ItemRibbon
 ```
 
 ### 3. Update File Names
@@ -1099,8 +1241,9 @@ HelloWorldItemEditorRibbon → [ItemName]ItemEditorRibbon
 # Rename all files to match the new item name
 mv [ItemName]Item/HelloWorldItemModel.ts [ItemName]Item/[ItemName]ItemModel.ts
 mv [ItemName]Item/HelloWorldItemEditor.tsx [ItemName]Item/[ItemName]ItemEditor.tsx
-mv [ItemName]Item/HelloWorldItemEditorEmpty.tsx [ItemName]Item/[ItemName]ItemEditorEmpty.tsx
-mv [ItemName]Item/HelloWorldItemEditorRibbon.tsx [ItemName]Item/[ItemName]ItemEditorRibbon.tsx
+mv [ItemName]Item/HelloWorldItemEmptyView.tsx [ItemName]Item/[ItemName]ItemEmptyView.tsx
+mv [ItemName]Item/HelloWorldItemDefaultView.tsx [ItemName]Item/[ItemName]ItemDefaultView.tsx
+mv [ItemName]Item/HelloWorldItemRibbon.tsx [ItemName]Item/[ItemName]ItemRibbon.tsx
 # Continue for all files...
 ```
 
@@ -1117,8 +1260,9 @@ When creating a new item, ensure all these components are created:
 **Implementation Files** (in `Workload/app/items/[ItemName]Item/`):
 - [ ] `[ItemName]ItemModel.ts` - Data model interface
 - [ ] `[ItemName]ItemEditor.tsx` - Main editor component  
-- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component
-- [ ] `[ItemName]ItemEditorRibbon.tsx` - Ribbon/toolbar component
+- [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component
+- [ ] `[ItemName]ItemDefaultView.tsx` - Default/main content view
+- [ ] `[ItemName]ItemRibbon.tsx` - Ribbon/toolbar component
 
 **Manifest Files** (in `Workload/Manifest/items/[ItemName]/`):
 - [ ] `[ItemName]Item.xml` - XML manifest template with placeholders like `{{WORKLOAD_NAME}}`

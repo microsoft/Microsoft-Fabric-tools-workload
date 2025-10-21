@@ -90,10 +90,10 @@ This template demonstrates the **minimal required permissions** for Fabric item 
 HelloWorldItem/
 ├── HelloWorldItemEditor.tsx              # Main editor component
 ├── HelloWorldItemRibbon.tsx              # Toolbar and actions
-├── HelloWorldItemEditorEmpty.tsx         # Empty state/onboarding
-├── HelloWorldItemEditorDefault.tsx       # Main content view
-├── HelloWorldItemEditorSettingsPage.tsx  # Settings interface
-├── HelloWorldItemEditorAboutPage.tsx     # About/info page
+├── HelloWorldItemEmptyView.tsx           # Empty state/onboarding
+├── HelloWorldItemDefaultView.tsx         # Main content view
+├── HelloWorldItemSettingsView.tsx      # Settings interface
+├── HelloWorldItemAboutView.tsx         # About/info page
 ├── HelloWorldItemModel.ts                # Data models and types
 └── docs/                                 # Documentation
     ├── Architecture.md                   # System architecture
@@ -142,14 +142,14 @@ HelloWorldItem/
 - Context-sensitive actions
 - Consistent Fabric UI patterns
 
-### HelloWorldItemEditorEmpty (Onboarding)
+### HelloWorldItemEmptyView (Onboarding)
 **Purpose:**
 - First-time user experience
 - Getting started guidance
 - Call-to-action for initial setup
 - Easy removal or customization
 
-### HelloWorldItemEditorDefault (Main View)
+### HelloWorldItemDefaultView (Main View)
 **Contains:**
 - Primary item functionality
 - Content editing interface
@@ -174,9 +174,9 @@ interface HelloWorldItemDefinition {
 
 ### View Types
 ```typescript
-const VIEW_TYPES = {
+const EDITOR_VIEW_TYPES = {
   EMPTY: 'empty',
-  GETTING_STARTED: 'getting-started'
+  DEFAULT: 'default'
 } as const;
 ```
 
@@ -243,9 +243,9 @@ const VIEW_TYPES = {
 The HelloWorld Item includes comprehensive internationalization support:
 
 ### Translation Keys
-- `HelloWorldItemEditorEmpty_Title`: Welcome screen title
-- `HelloWorldItemEditorEmpty_Description`: Onboarding description
-- `HelloWorldItemEditorEmpty_StartButton`: Getting started button
+- `HelloWorldItemEmptyView_Title`: Welcome screen title
+- `HelloWorldItemEmptyView_Description`: Onboarding description
+- `HelloWorldItemEmptyView_StartButton`: Getting started button
 
 ### Adding Translations
 1. **Define Keys**: Add translation keys to components
