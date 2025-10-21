@@ -11,7 +11,8 @@ export type {
   BaseItemEditorProps, 
   BaseItemEditorPropsLegacy, 
   BaseItemEditorPropsWithViews,
-  RegisteredView 
+  RegisteredView,
+  ViewContext
 } from './BaseItemEditor';
 
 // Base Item Editor Empty View - Reusable empty state component

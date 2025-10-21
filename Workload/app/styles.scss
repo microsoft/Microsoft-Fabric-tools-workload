@@ -272,6 +272,22 @@
     justify-content: center;
 }
 
+// Back button container for detail views
+.ribbon-back-button-container {
+    display: flex;
+    align-items: center;
+    padding: var(--spacingVerticalS, 4px) var(--spacingHorizontalM, 8px);
+    min-height: 32px;
+    
+    button {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalXS, 4px);
+        min-height: 32px;
+        font-weight: var(--fontWeightSemibold, 600);
+    }
+}
+
 // ============================================================================
 // Empty State Styles - Used in BaseItemEditorEmptyView component
 // ============================================================================

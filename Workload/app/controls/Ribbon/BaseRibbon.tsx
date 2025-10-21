@@ -1,5 +1,7 @@
 import React, { ReactNode } from "react";
 import { Tab, TabList } from '@fluentui/react-tabs';
+import { Button, Tooltip } from '@fluentui/react-components';
+import { ArrowLeft24Regular } from '@fluentui/react-icons';
 import '../../styles.scss';
 
 /**
@@ -31,6 +33,22 @@ export interface BaseRibbonProps {
    * Additional CSS class name
    */
   className?: string;
+  
+  /**
+   * Whether this is a detail view (shows back button instead of tabs)
+   */
+  isDetailView?: boolean;
+  
+  /**
+   * Callback when back button is clicked (required if isDetailView is true)
+   */
+  onBack?: () => void;
+  
+  /**
+   * Optional label for the back button
+   * @default "Back"
+   */
+  backButtonLabel?: string;
 }
 
 /**
@@ -65,12 +83,19 @@ export interface RibbonTab {
  * - Consistent ribbon structure across all item editors
  * - Mandatory Home tab as default selected
  * - Optional tab navigation
+ * - Automatic back button for detail views
  * - Proper styling and shadow effects
  * - Accessibility support
  * 
  * @example
  * ```tsx
+ * // Normal view with tabs
  * <BaseRibbon tabs={createRibbonTabs(t('Home'))}>
+ *   <BaseRibbonToolbar actions={actions} />
+ * </BaseRibbon>
+ * 
+ * // Detail view with back button
+ * <BaseRibbon isDetailView={true} onBack={handleBack} backButtonLabel={t('Back')}>
  *   <BaseRibbonToolbar actions={actions} />
  * </BaseRibbon>
  * ```
@@ -80,24 +105,44 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
   tabs = [],
   defaultSelectedTab = 'home',
   showTabs = true,
-  className = ''
+  className = '',
+  isDetailView = false,
+  onBack,
+  backButtonLabel = 'Back'
 }) => {
   return (
     <div className={`ribbon-container ${className}`.trim()}>
-      {/* Tab Navigation - Only show if tabs are provided and showTabs is true */}
-      {showTabs && tabs.length > 0 && (
-        <TabList defaultSelectedValue={defaultSelectedTab}>
-          {tabs.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              data-testid={tab.testId || `ribbon-${tab.value}-tab-btn`}
-              disabled={tab.disabled}
+      {/* Back Button for Detail Views - Replaces tab navigation */}
+      {isDetailView ? (
+        <div className="ribbon-back-button-container">
+          <Tooltip content={backButtonLabel} relationship="label">
+            <Button
+              appearance="subtle"
+              icon={<ArrowLeft24Regular />}
+              onClick={onBack}
+              data-testid="ribbon-back-btn"
+              aria-label={backButtonLabel}
             >
-              {tab.label}
-            </Tab>
-          ))}
-        </TabList>
+              {backButtonLabel}
+            </Button>
+          </Tooltip>
+        </div>
+      ) : (
+        /* Tab Navigation - Only show if tabs are provided and showTabs is true */
+        showTabs && tabs.length > 0 && (
+          <TabList defaultSelectedValue={defaultSelectedTab}>
+            {tabs.map((tab) => (
+              <Tab
+                key={tab.value}
+                value={tab.value}
+                data-testid={tab.testId || `ribbon-${tab.value}-tab-btn`}
+                disabled={tab.disabled}
+              >
+                {tab.label}
+              </Tab>
+            ))}
+          </TabList>
+        )
       )}
 
       {/* Toolbar Container */}

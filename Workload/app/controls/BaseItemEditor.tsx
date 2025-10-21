@@ -9,6 +9,8 @@ export interface RegisteredView {
   name: string;
   /** The view component to render */
   component: ReactNode;
+  /** Whether this is a detail view (L2 page) - affects ribbon behavior */
+  isDetailView?: boolean;
 }
 
 /**
@@ -34,11 +36,36 @@ export interface BaseItemEditorPropsLegacy {
 }
 
 /**
+ * View context information passed to ribbon
+ */
+export interface ViewContext {
+  /** Current active view name */
+  currentView: string;
+  /** Function to navigate to a different view */
+  setCurrentView: (view: string) => void;
+  /** Whether the current view is a detail view */
+  isDetailView: boolean;
+  /** Function to navigate back to previous view (only available in detail views) */
+  goBack: () => void;
+  /** History of visited views */
+  viewHistory: string[];
+}
+
+/**
  * BaseItemEditor Props Interface (View Registration Mode)
  * 
  * BaseItemEditor manages the view state internally. Children can change views using setCurrentView.
  * 
- * @property {ReactNode | Function} ribbon - The ribbon component (can access currentView and setCurrentView)
+ * ## Detail View Support (Automatic Back Navigation)
+ * When a view is marked as `isDetailView: true`, BaseItemEditor AUTOMATICALLY:
+ * - Tracks view history for back navigation (no manual implementation needed)
+ * - Provides `context.goBack()` function to ribbon (navigates to previous view)
+ * - Signals ribbon with `context.isDetailView` flag (show back button instead of tabs)
+ * - Maintains complete navigation history in `context.viewHistory`
+ * 
+ * **NO MANUAL IMPLEMENTATION REQUIRED** - Just mark views as detail views and use `context.goBack()`
+ * 
+ * @property {ReactNode | Function} ribbon - The ribbon component (receives ViewContext)
  * @property {ReactNode | Function} notification - Optional notification (can access currentView)
  * @property {RegisteredView[] | Function} views - Array of registered views or factory function
  * @property {string} initialView - Name of the initial view to show
@@ -47,8 +74,8 @@ export interface BaseItemEditorPropsLegacy {
  * @property {string} contentClassName - Optional additional CSS class for the scrollable content area
  */
 export interface BaseItemEditorPropsWithViews {
-  /** The ribbon component - can be ReactNode or function receiving (currentView, setCurrentView) */
-  ribbon: ReactNode | ((currentView: string, setCurrentView: (view: string) => void) => ReactNode);
+  /** The ribbon component - can be ReactNode or function receiving (ViewContext) */
+  ribbon: ReactNode | ((context: ViewContext) => ReactNode);
   /** Optional notification area - can be ReactNode or function receiving (currentView) */
   notification?: ReactNode | ((currentView: string) => ReactNode);
   /** Array of registered views or factory function that receives setCurrentView */
@@ -122,39 +149,79 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * 
  * ### View Registration Mode (Recommended)
  * ```tsx
- * import { BaseItemEditor, RegisteredView } from "../../controls";
+ * import { BaseItemEditor, RegisteredView, ViewContext } from "../../controls";
  * 
- * // Option 1: Static views array
- * const views: RegisteredView[] = [
- *   { name: 'empty', component: <EmptyView /> },
- *   { name: 'default', component: <DefaultView /> }
- * ];
- * 
- * // Option 2: Factory function (when views need setCurrentView)
- * const createViews = (setCurrentView: (view: string) => void) => [
+ * // Define views with detail view flag
+ * const views = (setCurrentView: (view: string) => void): RegisteredView[] => [
  *   { 
  *     name: 'empty', 
- *     component: <EmptyView onStart={() => setCurrentView('default')} /> 
+ *     component: <EmptyView onStart={() => setCurrentView('main')} />
  *   },
- *   { name: 'default', component: <DefaultView /> }
+ *   { 
+ *     name: 'main', 
+ *     component: <MainView onShowDetail={(id) => setCurrentView(`detail-${id}`)} />
+ *   },
+ *   { 
+ *     name: 'detail-123', 
+ *     component: <DetailView recordId="123" />,
+ *     isDetailView: true  // ⭐ Marks as detail view - enables automatic back navigation
+ *   }
  * ];
  * 
  * <BaseItemEditor 
- *   // Ribbon receives currentView and setCurrentView
- *   ribbon={(currentView, setCurrentView) => (
+ *   // Ribbon receives ViewContext with AUTOMATIC back navigation support
+ *   ribbon={(context: ViewContext) => (
  *     <MyRibbon 
- *       currentView={currentView}
- *       onViewChange={setCurrentView} 
+ *       currentView={context.currentView}
+ *       isDetailView={context.isDetailView}  // True when on detail view
+ *       onViewChange={context.setCurrentView}
+ *       onBack={context.goBack}  // ⭐ Automatically navigates to previous view - NO MANUAL LOGIC NEEDED
  *     />
  *   )}
- *   // Notification receives currentView
  *   notification={(currentView) => 
- *     currentView === 'default' ? <MessageBar>Info</MessageBar> : undefined
+ *     currentView === 'main' ? <MessageBar>Info</MessageBar> : undefined
  *   }
- *   views={createViews}  // or static views array
+ *   views={views}
  *   initialView="empty"
- *   onViewChange={(view) => console.log('View changed:', view)}
  * />
+ * ```
+ * 
+ * ### Detail Views (L2 Pages) - Automatic Back Navigation
+ * Detail views are special drill-down pages with AUTOMATIC back navigation:
+ * 
+ * **What You Do:**
+ * 1. Set `isDetailView: true` in RegisteredView
+ * 2. Pass `context.goBack` to ribbon back button
+ * 3. Ribbon shows back button when `context.isDetailView === true`
+ * 
+ * **What BaseItemEditor Does AUTOMATICALLY:**
+ * - ✅ Tracks complete view history
+ * - ✅ Provides `context.goBack()` function (no manual implementation)
+ * - ✅ Navigates to previous view when goBack() is called
+ * - ✅ Maintains navigation stack across multiple detail levels
+ * 
+ * ```tsx
+ * {
+ *   name: 'detail-record-123',
+ *   component: (
+ *     <BaseItemEditorDetailView
+ *       center={<RecordDetails recordId="123" />}
+ *       actions={[  // These actions appear in ribbon when view is active
+ *         { id: 'save', label: 'Save', icon: <Save24Regular />, onClick: handleSave },
+ *         { id: 'delete', label: 'Delete', icon: <Delete24Regular />, onClick: handleDelete }
+ *       ]}
+ *     />
+ *   ),
+ *   isDetailView: true  // ⭐ This is ALL you need - back navigation is automatic!
+ * }
+ * 
+ * // In your ribbon - just wire up the back button:
+ * ribbon={(context) => (
+ *   <Ribbon
+ *     showBackButton={context.isDetailView}
+ *     onBack={context.goBack}  // ⭐ No manual logic - BaseItemEditor handles everything
+ *   />
+ * )}
  * ```
  * 
  * ## Features
@@ -163,6 +230,8 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * - **Full Height**: Editor fills 100% of the iframe
  * - **Independent Scrolling**: Content scrolls while ribbon remains visible
  * - **View Management**: Centralized view registration and switching
+ * - **Detail View Support**: Automatic history tracking and back navigation
+ * - **View Context**: Ribbon receives full context including isDetailView flag
  * - **Consistent Layout**: Enforces Fabric design guidelines
  * - **Backward Compatible**: Supports both legacy and new patterns
  * 
@@ -173,39 +242,42 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Internal state for view management
   const [currentView, setCurrentViewInternal] = React.useState<string>('');
+  // View history for back navigation in detail views
+  const [viewHistory, setViewHistory] = React.useState<string[]>([]);
 
   // Initialize view state from initialView prop
   React.useEffect(() => {
     if ('views' in props && 'initialView' in props && !currentView) {
       setCurrentViewInternal(props.initialView);
+      setViewHistory([props.initialView]);
     }
   }, [props, currentView]);
 
-  // Wrapped setCurrentView that calls the optional callback
+  // Wrapped setCurrentView that manages history and calls the optional callback
   const setCurrentView = React.useCallback((view: string) => {
+    setViewHistory(prev => [...prev, view]);
     setCurrentViewInternal(view);
     if ('views' in props && 'onViewChange' in props) {
       props.onViewChange?.(view);
     }
   }, [props]);
 
-  // Resolve ribbon (either ReactNode or render function)
-  const ribbonContent = React.useMemo(() => {
-    const ribbon = 'ribbon' in props ? props.ribbon : null;
-    if (typeof ribbon === 'function') {
-      return ribbon(currentView, setCurrentView);
+  // Go back to previous view (for detail views)
+  const goBack = React.useCallback(() => {
+    if (viewHistory.length > 1) {
+      // Remove current view from history
+      const newHistory = [...viewHistory];
+      newHistory.pop();
+      const previousView = newHistory[newHistory.length - 1];
+      
+      setViewHistory(newHistory);
+      setCurrentViewInternal(previousView);
+      
+      if ('views' in props && 'onViewChange' in props) {
+        props.onViewChange?.(previousView);
+      }
     }
-    return ribbon;
-  }, [props, currentView, setCurrentView]);
-
-  // Resolve notification (either ReactNode or render function)
-  const notificationContent = React.useMemo(() => {
-    const notification = 'notification' in props ? props.notification : undefined;
-    if (typeof notification === 'function') {
-      return notification(currentView);
-    }
-    return notification;
-  }, [props, currentView]);
+  }, [viewHistory, props]);
 
   // Resolve views (either array or factory function)
   const resolvedViews = React.useMemo((): RegisteredView[] => {
@@ -218,6 +290,39 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
     }
     return [];
   }, [props, setCurrentView]);
+
+  // Check if current view is a detail view
+  const isDetailView = React.useMemo(() => {
+    const view = resolvedViews.find((v: RegisteredView) => v.name === currentView);
+    return view?.isDetailView === true;
+  }, [resolvedViews, currentView]);
+
+  // Build view context for ribbon
+  const viewContext: ViewContext = React.useMemo(() => ({
+    currentView,
+    setCurrentView,
+    isDetailView,
+    goBack,
+    viewHistory
+  }), [currentView, setCurrentView, isDetailView, goBack, viewHistory]);
+
+  // Resolve ribbon (either ReactNode or render function with ViewContext)
+  const ribbonContent = React.useMemo(() => {
+    const ribbon = 'ribbon' in props ? props.ribbon : null;
+    if (typeof ribbon === 'function') {
+      return ribbon(viewContext);
+    }
+    return ribbon;
+  }, [props, viewContext]);
+
+  // Resolve notification (either ReactNode or render function)
+  const notificationContent = React.useMemo(() => {
+    const notification = 'notification' in props ? props.notification : undefined;
+    if (typeof notification === 'function') {
+      return notification(currentView);
+    }
+    return notification;
+  }, [props, currentView]);
 
   // Determine which mode we're in and get the content
   const content = React.useMemo(() => {
