@@ -23,7 +23,6 @@ export function HelloWorldItemEditor(props: PageProps) {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
-  const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
 
   const { pathname } = useLocation();
@@ -53,7 +52,6 @@ export function HelloWorldItemEditor(props: PageProps) {
         }
 
         setItem(LoadedItem);
-        setCurrentView(!LoadedItem?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED);
 
       } catch (error) {
         setItem(undefined);
@@ -66,16 +64,11 @@ export function HelloWorldItemEditor(props: PageProps) {
 
   useEffect(() => {
     setHasBeenSaved(false);
-  }, [currentView, item?.id]);
+  }, [item?.id]);
 
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
-
-
-  const navigateToGettingStarted = () => {
-    setCurrentView(VIEW_TYPES.GETTING_STARTED);
-  };
 
   const handleOpenSettings = async () => {
     if (item) {
@@ -93,7 +86,7 @@ export function HelloWorldItemEditor(props: PageProps) {
       workloadClient,
       item.id,
       {
-        state: VIEW_TYPES.GETTING_STARTED
+        state: new Date().toISOString()
       });
     const wasSaved = Boolean(successResult);
     setHasBeenSaved(wasSaved);
@@ -106,26 +99,19 @@ export function HelloWorldItemEditor(props: PageProps) {
     );
   }
 
-  const isSaveEnabled = () => {
+  const isSaveEnabled = (currentView: string) => {
     if (currentView === VIEW_TYPES.EMPTY) {
       return false;
-    }
-
-    if (currentView === VIEW_TYPES.GETTING_STARTED) {
+    } else {
       if (hasBeenSaved) {
         return false;
       }
-
       if (!item?.definition?.state) {
         return true;
       }
-
       return false;
     }
-
-    return false;
   };
-
 
   // Show loading state
   if (isLoading) {
@@ -136,20 +122,21 @@ export function HelloWorldItemEditor(props: PageProps) {
     );
   }
 
-  // Render appropriate view based on state
+  // Render with view registration
+  // BaseItemEditor manages the view state internally
   return (
     <BaseItemEditor
-      ribbon={
+      ribbon={(currentView, setCurrentView) => (
         <HelloWorldItemRibbon
           {...props}
-          isSaveButtonEnabled={isSaveEnabled()}
-          currentView={currentView}
+          isSaveButtonEnabled={isSaveEnabled(currentView)}
+          currentView={currentView as CurrentView}
           saveItemCallback={SaveItem}
           openSettingsCallback={handleOpenSettings}
-          navigateToGettingStartedCallback={navigateToGettingStarted}
+          navigateToGettingStartedCallback={() => setCurrentView(VIEW_TYPES.GETTING_STARTED)}
         />
-      }
-      notification={
+      )}
+      notification={(currentView) => 
         currentView === VIEW_TYPES.GETTING_STARTED ? (
           <MessageBar intent="warning" icon={<Warning20Filled />}>
             <MessageBarBody>
@@ -158,19 +145,28 @@ export function HelloWorldItemEditor(props: PageProps) {
           </MessageBar>
         ) : undefined
       }
-    >
-      {currentView === VIEW_TYPES.EMPTY ? (
-        <HelloWorldItemEditorEmpty
-          workloadClient={workloadClient}
-          item={item}
-          onNavigateToGettingStarted={navigateToGettingStarted}
-        />
-      ) : (
-        <HelloWorldItemEditorDefault
-          workloadClient={workloadClient}
-          item={item}
-        />
-      )}
-    </BaseItemEditor>
+      views={(setCurrentView) => [
+        {
+          name: VIEW_TYPES.EMPTY,
+          component: (
+            <HelloWorldItemEditorEmpty
+              workloadClient={workloadClient}
+              item={item}
+              onNavigateToGettingStarted={() => setCurrentView(VIEW_TYPES.GETTING_STARTED)}
+            />
+          )
+        },
+        {
+          name: VIEW_TYPES.GETTING_STARTED,
+          component: (
+            <HelloWorldItemEditorDefault
+              workloadClient={workloadClient}
+              item={item}
+            />
+          )
+        }
+      ]}
+      initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED}
+    />
   );
 }

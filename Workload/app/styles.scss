@@ -249,7 +249,7 @@
 
 .ribbon-container .toolbarContainer {
     // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
-    min-height: 40px;
+    max-height: 45px;
     height: auto; // Allow flexible height for content
     border-radius: var(--borderRadiusMedium, 4px); // Use Fabric design tokens
     background: var(--colorNeutralBackground1, #ffffff);
@@ -259,28 +259,28 @@
     display: flex;
     align-items: center;
     gap: 4px; // Spacing between toolbar items
+
 }
 
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
     padding: 8px 12px;
     min-height: 32px; // Ensure minimum touch target size
+    max-height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 // ============================================================================
-// Empty State Styles - Used in BaseItemEditorEmpty component
+// Empty State Styles - Used in BaseItemEditorEmptyView component
 // ============================================================================
+// Note: Background, box-shadow, and border-radius are handled by BaseItemEditorView
+// This component only provides content layout and centering
 
-.item-editor-empty-state-container {
+.item-editor-view-empty {
   width: 100%;
   height: 100%;
-  background: var(--colorNeutralBackground1, #ffffff);
-  box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
-  overflow: hidden;
-  border-radius: var(--borderRadiusMedium, 4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -342,7 +342,7 @@
 
 // Responsive adjustments for empty state
 @media (max-width: 768px) {
-  .item-editor-empty-state-container {
+  .item-editor-view-empty {
     padding: var(--spacingVerticalL, 16px);
 
     .empty-state-content {
@@ -366,6 +366,192 @@
           }
         }
       }
+    }
+  }
+}
+
+// ============================================================================
+// View Layout Styles - Used in BaseItemEditorView component
+// ============================================================================
+
+/**
+ * BaseItemEditorView Layout System
+ * 
+ * Provides a flexible two-column layout with optional left panel and required center content.
+ * Follows Fabric UX System guidelines for editor layouts.
+ * 
+ * ## Layout Structure
+ * - Optional left panel (navigation, tree view, file list)
+ * - Required center content (main workspace/canvas)
+ * - Collapsible left panel support
+ * - Responsive overflow handling
+ * 
+ * ## Usage
+ * This is used by the BaseItemEditorView component, which is placed inside
+ * BaseItemEditor's content area (after the ribbon).
+ */
+.item-editor-view {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  gap: var(--spacingHorizontalM, 12px);
+  position: relative;
+
+  // Left Panel (Optional)
+  &__left {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--colorNeutralBackground1, #ffffff);
+    border-radius: var(--borderRadiusMedium, 4px);
+    box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
+    overflow: hidden;
+    position: relative;
+
+    // Content area with scrolling
+    &-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: var(--spacingVerticalM, 12px);
+
+      // Custom scrollbar styling - Fabric UX guideline
+      &::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--colorNeutralStroke1, #d1d1d1);
+        border-radius: var(--borderRadiusMedium, 4px);
+        
+        &:hover {
+          background: var(--colorNeutralStroke1Hover, #b3b3b3);
+        }
+      }
+    }
+
+    // Collapse toggle button (when panel is expanded)
+    &-toggle {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%) translateX(50%);
+      width: 24px;
+      height: 48px;
+      background: var(--colorNeutralBackground1, #ffffff);
+      border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
+      border-radius: 0 var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--colorNeutralForeground2, #424242);
+      font-size: 12px;
+      z-index: 2;
+      transition: background-color 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        background: var(--colorNeutralBackground1Hover, #f5f5f5);
+        color: var(--colorNeutralForeground1, #242424);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--colorCompoundBrandStroke, #0078d4);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  // Collapsed state toggle button (when panel is collapsed)
+  &__left-toggle-collapsed {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 48px;
+    background: var(--colorNeutralBackground1, #ffffff);
+    border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
+    border-radius: var(--borderRadiusMedium, 4px) 0 0 var(--borderRadiusMedium, 4px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--colorNeutralForeground2, #424242);
+    font-size: 12px;
+    z-index: 2;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
+
+    &:hover {
+      background: var(--colorNeutralBackground1Hover, #f5f5f5);
+      color: var(--colorNeutralForeground1, #242424);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--colorCompoundBrandStroke, #0078d4);
+      outline-offset: 2px;
+    }
+  }
+
+  // Center Content Area (Required)
+  &__center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--colorNeutralBackground1, #ffffff);
+    border-radius: var(--borderRadiusMedium, 4px);
+    box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
+    overflow: hidden;
+    padding: var(--spacingVerticalM, 12px);
+    min-width: 0; // Prevent flex item from overflowing
+
+    // Allow content to scroll if needed
+    > * {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+}
+
+// Responsive adjustments for view layout
+@media (max-width: 768px) {
+  .item-editor-view {
+    flex-direction: column;
+    gap: var(--spacingVerticalM, 12px);
+
+    &__left {
+      width: 100% !important; // Override inline width on mobile
+      max-height: 40vh;
+    }
+
+    &__left-toggle,
+    &__left-toggle-collapsed {
+      display: none; // Hide collapse functionality on mobile
+    }
+
+    &__center {
+      padding: var(--spacingVerticalS, 8px);
+    }
+  }
+}
+
+// High contrast mode support for view
+@media (prefers-contrast: high) {
+  .item-editor-view {
+    &__left,
+    &__center {
+      border: 1px solid transparent; // Will be visible in high contrast mode
+    }
+
+    &__left-toggle,
+    &__left-toggle-collapsed {
+      border: 2px solid transparent;
     }
   }
 }

@@ -147,42 +147,88 @@ GitHub Copilot understands:
 - `fabric.notify` → Expands to callNotificationOpen with proper typing
 - `fabric.action` → Creates custom RibbonAction object
 
-### Editor Template Expansion (MANDATORY PATTERN)
-When typing `fabric.editor`, GitHub Copilot expands to:
+### Editor Template Expansion (MANDATORY PATTERN - View Registration)
+When typing `fabric.editor`, GitHub Copilot expands to the NEW view registration pattern:
+
 ```typescript
-// 🚨 CORRECT: BaseItemEditor with standard components
+// 🚨 CORRECT: BaseItemEditor with view registration system
 return (
   <BaseItemEditor
-    ribbon={
+    ribbon={(currentView, setCurrentView) => (
       <[ItemName]ItemRibbon
         {...props}
-        isSaveButtonEnabled={isSaveEnabled()}
+        isSaveButtonEnabled={isSaveEnabled(currentView)}
+        currentView={currentView}
         saveItemCallback={SaveItem}
         openSettingsCallback={handleOpenSettings}
+        onViewChange={setCurrentView}
       />
-    }
-    notification={
-      showNotification ? (
+    )}
+    notification={(currentView) => 
+      currentView === VIEW_TYPES.MAIN ? (
         <MessageBar intent="warning" icon={<Warning20Filled />}>
           <MessageBarBody>{t('[ItemName]_Warning')}</MessageBarBody>
         </MessageBar>
       ) : undefined
     }
-  >
-    {currentView === VIEW_TYPES.EMPTY ? <Empty /> : <Default />}
-  </BaseItemEditor>
+    views={(setCurrentView) => [
+      {
+        name: VIEW_TYPES.EMPTY,
+        component: (
+          <[ItemName]ItemEditorEmpty
+            workloadClient={workloadClient}
+            item={item}
+            onStart={() => setCurrentView(VIEW_TYPES.MAIN)}
+          />
+        )
+      },
+      {
+        name: VIEW_TYPES.MAIN,
+        component: (
+          <[ItemName]ItemEditorMain
+            workloadClient={workloadClient}
+            item={item}
+            onShowDetail={(id) => setCurrentView(`detail-${id}`)}
+          />
+        )
+      }
+      // Add detail views here using BaseItemEditorDetailView
+    ]}
+    initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}
+  />
 );
 ```
 
-**❌ NEVER generate this OLD pattern**:
+**Key Concepts**:
+1. **BaseItemEditor manages view state internally** - no need for parent useState
+2. **Ribbon receives** `(currentView, setCurrentView)` - can switch views and show view-specific actions
+3. **Notification receives** `(currentView)` - can show view-specific notifications
+4. **Views receives** `(setCurrentView)` - views can navigate (e.g., empty → main, main → detail)
+5. **initialView** - simple expression determining starting view based on data
+
+**❌ NEVER generate these OLD patterns**:
 ```typescript
-// ❌ WRONG: Custom layout without BaseItemEditor
+// ❌ WRONG 1: Custom layout without BaseItemEditor
 return (
   <Stack className="editor">
     <[ItemName]ItemRibbon {...props} />
     <Stack className="main">{content}</Stack>
   </Stack>
 );
+
+// ❌ WRONG 2: Manual view switching with if/else
+const [currentView, setCurrentView] = useState('empty');
+return (
+  <BaseItemEditor ribbon={<Ribbon />}>
+    {currentView === 'empty' ? <Empty /> : <Main />}
+  </BaseItemEditor>
+);
+
+// ❌ WRONG 3: Static views array without setCurrentView access
+const views = [
+  { name: 'empty', component: <Empty /> },  // ❌ Can't navigate
+  { name: 'main', component: <Main /> }
+];
 ```
 
 ### Ribbon Template Expansion (MANDATORY PATTERN)
@@ -280,11 +326,19 @@ When creating components, GitHub Copilot expands to MANDATORY patterns:
 Before generating any item code, GitHub Copilot should verify:
 
 **Architecture Compliance** (MANDATORY):
-- [ ] Editor uses `<BaseItemEditor>` container
+- [ ] Editor uses `<BaseItemEditor>` container with view registration
+- [ ] View registration pattern: `views={(setCurrentView) => [...]}`
+- [ ] Ribbon render prop: `ribbon={(currentView, setCurrentView) => ...}`
+- [ ] Notification render prop: `notification={(currentView) => ...}`
+- [ ] Initial view expression: `initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}`
+- [ ] Detail views use `<BaseItemEditorDetailView>` component
+- [ ] Detail views define `DetailViewAction[]` for ribbon
+- [ ] Back navigation provided in detail views
 - [ ] Ribbon uses `<BaseRibbon>` + `<BaseRibbonToolbar>`
 - [ ] Standard action factories used (`createSaveAction`, `createSettingsAction`)
 - [ ] No custom Stack/div layouts for editor container
 - [ ] No manual Tooltip + ToolbarButton wrapping
+- [ ] No manual view state management (useState for currentView) in parent
 
 **Styling Compliance** (VERIFIED BY TEAM):
 - [ ] `[ItemName]Item.scss` file created in item folder
@@ -295,17 +349,21 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] No modifications to `Workload/app/styles.scss`
 
 **File Structure** (REQUIRED):
-- [ ] `[ItemName]ItemModel.ts` - Data model with VIEW_TYPES
-- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor
-- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component
+- [ ] `[ItemName]ItemModel.ts` - Data model with VIEW_TYPES enum
+- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor + view registration
+- [ ] `[ItemName]ItemEditorEmpty.tsx` - Empty state component (onboarding)
+- [ ] `[ItemName]ItemEditorMain.tsx` - Main/default view component
+- [ ] `[ItemName]ItemEditorDetail.tsx` - Detail view(s) using BaseItemEditorDetailView (if needed)
 - [ ] `[ItemName]ItemRibbon.tsx` - Ribbon with standard components
 - [ ] `[ItemName]Item.scss` - Item-specific style overrides
 
 **Import Verification**:
-- [ ] `import { BaseItemEditor } from "../../controls";`
-- [ ] `import { BaseRibbon, BaseRibbonToolbar, ... } from '../../controls/Ribbon';`
+- [ ] `import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";`
+- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";` (for detail views)
+- [ ] `import { BaseRibbon, BaseRibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/Ribbon';`
 - [ ] `import "../../styles.scss";`
 - [ ] `import "./[ItemName]Item.scss";`
+- [ ] No import of `RegisteredView` type (not needed, inline definition sufficient)
 
 ## 🎯 Workspace Intelligence
 
@@ -340,46 +398,314 @@ GitHub Copilot detects:
 
 **Reference**: For complete step-by-step instructions, always consult `.ai/commands/item/createItem.md` first, then apply these Copilot-specific enhancements.
 
-## 🚨 MANDATORY: Step 3 Editor Implementation Pattern
+## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (View Registration System)
 
 **Purpose**:
 - Create main editor component with BaseItemEditor
-- MUST use BaseItemEditor as container
-- MUST pass ribbon via ribbon prop
-- Content goes in children (scrollable area)
+- MUST use view registration system (NOT manual if/else switching)
+- BaseItemEditor manages view state internally
+- Views, ribbon, and notifications can access and change current view
 
-**🚨 CRITICAL**: GitHub Copilot MUST generate this pattern:
+**🚨 CRITICAL**: GitHub Copilot MUST generate the NEW pattern with view registration:
 
 ```typescript
-// 🚨 CORRECT: BaseItemEditor with standard architecture
+// 🚨 CORRECT: BaseItemEditor with view registration
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { HelloWorldItemDefinition, VIEW_TYPES, CurrentView } from "./[ItemName]ItemModel";
+
 export function [ItemName]ItemEditor(props: PageProps) {
-  // ... state management, loading logic, handlers ...
+  const { workloadClient } = props;
+  const [isLoading, setIsLoading] = useState(true);
+  const [item, setItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>();
+  const [hasBeenSaved, setHasBeenSaved] = useState(false);
+  
+  // Load item data
+  useEffect(() => {
+    async function loadItem() {
+      const loadedItem = await getWorkloadItem<[ItemName]ItemDefinition>(
+        workloadClient, 
+        itemObjectId
+      );
+      setItem(loadedItem);
+      setIsLoading(false);
+    }
+    loadItem();
+  }, [itemObjectId]);
+  
+  // Handlers
+  const handleSave = async () => {
+    await saveItemDefinition(workloadClient, item.id, { state: 'saved' });
+    setHasBeenSaved(true);
+  };
+  
+  const isSaveEnabled = (currentView: string) => {
+    return currentView !== VIEW_TYPES.EMPTY && !hasBeenSaved;
+  };
   
   if (isLoading) {
     return <ItemEditorLoadingProgressBar message={t("Loading...")} />;
   }
   
+  // BaseItemEditor with view registration
   return (
     <BaseItemEditor
-      ribbon={<[ItemName]ItemRibbon {...ribbonProps} />}
-      notification={showWarning ? <MessageBar>...</MessageBar> : undefined}
-    >
-      {currentView === VIEW_TYPES.EMPTY ? <Empty /> : <Default />}
-    </BaseItemEditor>
+      // Ribbon receives currentView and setCurrentView
+      ribbon={(currentView, setCurrentView) => (
+        <[ItemName]ItemRibbon
+          {...props}
+          isSaveButtonEnabled={isSaveEnabled(currentView)}
+          currentView={currentView}
+          saveItemCallback={handleSave}
+          onViewChange={setCurrentView}  // Pass setCurrentView down
+        />
+      )}
+      
+      // Notification receives currentView
+      notification={(currentView) => 
+        currentView === VIEW_TYPES.MAIN ? (
+          <MessageBar intent="warning" icon={<Warning20Filled />}>
+            <MessageBarBody>{t('[ItemName]_Warning')}</MessageBarBody>
+          </MessageBar>
+        ) : undefined
+      }
+      
+      // Views receives setCurrentView - allows navigation
+      views={(setCurrentView) => [
+        {
+          name: VIEW_TYPES.EMPTY,
+          component: (
+            <[ItemName]ItemEditorEmpty
+              workloadClient={workloadClient}
+              item={item}
+              onStart={() => setCurrentView(VIEW_TYPES.MAIN)}
+            />
+          )
+        },
+        {
+          name: VIEW_TYPES.MAIN,
+          component: (
+            <[ItemName]ItemEditorMain
+              workloadClient={workloadClient}
+              item={item}
+            />
+          )
+        }
+      ]}
+      
+      // Initial view determined from item data
+      initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.MAIN}
+    />
   );
 }
 ```
 
-**❌ NEVER generate**:
+**❌ NEVER generate these OLD patterns**:
 ```typescript
-// ❌ WRONG: Custom layout
+// ❌ WRONG 1: Custom layout
 return (
   <Stack className="editor">
     <[ItemName]ItemRibbon />
     <Stack className="main">{content}</Stack>
   </Stack>
 );
+
+// ❌ WRONG 2: Manual view state in parent
+const [currentView, setCurrentView] = useState('empty');
+return (
+  <BaseItemEditor ribbon={<Ribbon currentView={currentView} />}>
+    {currentView === 'empty' ? <Empty /> : <Main />}
+  </BaseItemEditor>
+);
+
+// ❌ WRONG 3: Static views without navigation
+const views = [
+  { name: 'empty', component: <Empty onStart={...} /> }  // ❌ onStart can't navigate
+];
 ```
+
+**Key Architecture Points**:
+1. **No view state in parent** - BaseItemEditor manages it
+2. **Render prop pattern** - `ribbon`, `notification`, `views` receive functions
+3. **Navigation from anywhere** - Views, ribbon, notifications can call `setCurrentView`
+4. **Simple initial view** - Just an expression, not state
+
+---
+
+## 🚨 MANDATORY: Step 3.5 Detail Views (L2/Level 2 Pages) Pattern
+
+**Purpose**:
+- Create detail/drill-down pages for specific records or sub-sections
+- MUST use BaseItemEditorDetailView as foundation
+- Detail views have their own ribbon actions (context-specific)
+- Back button navigation built-in
+
+**When to Use Detail Views**:
+- Viewing/editing individual records from a list
+- Drill-down into specific configurations
+- Multi-step workflows requiring focused views
+- Any "Level 2" (L2) page accessed from main view
+
+**🚨 CRITICAL**: Detail views MUST be based on BaseItemEditorDetailView:
+
+```typescript
+// 🚨 CORRECT: Detail view using BaseItemEditorDetailView
+import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";
+
+interface [ItemName]ItemDetailViewProps {
+  workloadClient: WorkloadClientAPI;
+  item: ItemWithDefinition<[ItemName]ItemDefinition>;
+  recordId: string;
+  onBack: () => void;  // Navigation back to main view
+}
+
+export function [ItemName]ItemDetailView({
+  workloadClient,
+  item,
+  recordId,
+  onBack
+}: [ItemName]ItemDetailViewProps) {
+  const { t } = useTranslation();
+  const [record, setRecord] = useState<RecordType>();
+  const [actions, setActions] = useState<DetailViewAction[]>([]);
+  
+  // Load record data
+  useEffect(() => {
+    async function loadRecord() {
+      const data = await fetchRecord(recordId);
+      setRecord(data);
+    }
+    loadRecord();
+  }, [recordId]);
+  
+  // Define detail view specific actions
+  useEffect(() => {
+    const detailActions: DetailViewAction[] = [
+      {
+        id: 'back',
+        label: t('Back'),
+        icon: <ArrowLeft24Regular />,
+        onClick: onBack,
+        appearance: 'subtle',
+        testId: 'back-btn'
+      },
+      {
+        id: 'save-detail',
+        label: t('Save'),
+        icon: <Save24Regular />,
+        onClick: handleSaveDetail,
+        appearance: 'primary',
+        testId: 'save-detail-btn'
+      },
+      {
+        id: 'delete',
+        label: t('Delete'),
+        icon: <Delete24Regular />,
+        onClick: handleDelete,
+        appearance: 'subtle',
+        testId: 'delete-btn'
+      }
+    ];
+    setActions(detailActions);
+  }, [record, onBack]);
+  
+  // Detail view content
+  const detailContent = (
+    <Stack tokens={{ childrenGap: 16 }} style={{ padding: '24px' }}>
+      <Text size={500} weight="semibold">{record?.name}</Text>
+      <TextField label={t('Name')} value={record?.name} onChange={...} />
+      <TextField label={t('Description')} value={record?.description} onChange={...} />
+      {/* More detail fields */}
+    </Stack>
+  );
+  
+  return (
+    <BaseItemEditorDetailView
+      center={detailContent}
+      actions={actions}
+      onActionsChange={setActions}  // Propagates to ribbon
+    />
+  );
+}
+```
+
+**Integrating Detail Views with View Registration**:
+
+```typescript
+// In [ItemName]ItemEditor.tsx
+views={(setCurrentView) => [
+  {
+    name: VIEW_TYPES.EMPTY,
+    component: <[ItemName]ItemEditorEmpty onStart={() => setCurrentView(VIEW_TYPES.MAIN)} />
+  },
+  {
+    name: VIEW_TYPES.MAIN,
+    component: (
+      <[ItemName]ItemEditorMain
+        workloadClient={workloadClient}
+        item={item}
+        // Navigate to detail view
+        onShowDetail={(recordId) => setCurrentView(`detail-${recordId}`)}
+      />
+    )
+  },
+  // Dynamic detail views
+  ...(selectedRecordId ? [{
+    name: `detail-${selectedRecordId}`,
+    component: (
+      <[ItemName]ItemDetailView
+        workloadClient={workloadClient}
+        item={item}
+        recordId={selectedRecordId}
+        // Navigate back to main
+        onBack={() => setCurrentView(VIEW_TYPES.MAIN)}
+      />
+    )
+  }] : [])
+]}
+```
+
+**Detail View Ribbon Actions**:
+
+```typescript
+// Ribbon automatically receives actions from BaseItemEditorDetailView
+ribbon={(currentView, setCurrentView) => {
+  // Detail views expose their actions via DetailViewAction[]
+  const isDetailView = currentView.startsWith('detail-');
+  
+  return (
+    <[ItemName]ItemRibbon
+      currentView={currentView}
+      onViewChange={setCurrentView}
+      // Ribbon shows different actions based on view
+      showDetailActions={isDetailView}
+    />
+  );
+}}
+```
+
+**Key Detail View Concepts**:
+1. **BaseItemEditorDetailView** - Foundation for all detail pages
+2. **DetailViewAction** - Context-specific actions (save, delete, back)
+3. **onActionsChange** - Propagates actions to ribbon automatically
+4. **Back navigation** - Always provide way back to parent view
+5. **Dynamic views** - Generate detail views based on selected record
+
+**❌ NEVER create detail views without BaseItemEditorDetailView**:
+```typescript
+// ❌ WRONG: Custom detail view without standard foundation
+export function DetailView() {
+  return (
+    <Stack>
+      <div className="custom-header">
+        <Button onClick={onBack}>Back</Button>
+      </div>
+      <div className="custom-content">{content}</div>
+    </Stack>
+  );
+}
+```
+
+---
 
 ## 🚨 MANDATORY: Step 5 Ribbon Implementation Pattern
 

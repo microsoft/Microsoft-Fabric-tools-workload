@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { Stack, IStackTokens } from "@fluentui/react";
 import { Button, Text } from "@fluentui/react-components";
+import { BaseItemEditorView } from "./BaseItemEditorView";
 import "../styles.scss";
 
 /**
@@ -22,9 +23,9 @@ export interface EmptyStateTask {
 }
 
 /**
- * BaseItemEditorEmpty Props Interface
+ * BaseItemEditorEmptyView Props Interface
  */
-export interface BaseItemEditorEmptyProps {
+export interface BaseItemEditorEmptyViewProps {
   /** Title displayed in the empty state */
   title: string;
   /** Description text below the title */
@@ -44,10 +45,14 @@ export interface BaseItemEditorEmptyProps {
 }
 
 /**
- * BaseItemEditorEmpty Component
+ * BaseItemEditorEmptyView Component
  * 
  * A reusable empty state component following Microsoft Fabric UX System guidelines.
  * Provides a consistent onboarding experience with customizable tasks.
+ * 
+ * **Built on BaseItemEditorView**: This component uses BaseItemEditorView internally,
+ * displaying the empty state content in the center panel. This ensures consistent
+ * layout and styling with other view components.
  * 
  * ## Design Principles
  * - Clear visual hierarchy with title, description, and actions
@@ -55,11 +60,12 @@ export interface BaseItemEditorEmptyProps {
  * - Task-based onboarding with clear call-to-actions
  * - Responsive design with proper spacing tokens
  * - Accessibility-first with proper ARIA labels and semantic HTML
+ * - Consistent layout using BaseItemEditorView architecture
  * 
  * ## Usage Example
  * 
  * ```tsx
- * import { BaseItemEditorEmpty } from "../../controls";
+ * import { BaseItemEditorEmptyView } from "../../controls";
  * 
  * const tasks = [
  *   {
@@ -77,7 +83,7 @@ export interface BaseItemEditorEmptyProps {
  *   }
  * ];
  * 
- * <BaseItemEditorEmpty
+ * <BaseItemEditorEmptyView
  *   title="Welcome to MyItem!"
  *   description="Get started by completing the tasks below"
  *   imageSrc="/assets/items/MyItem/empty.svg"
@@ -95,7 +101,7 @@ export interface BaseItemEditorEmptyProps {
  * 
  * @see {@link https://react.fluentui.dev/} Fluent UI v9 Documentation
  */
-export function BaseItemEditorEmpty({
+export function BaseItemEditorEmptyView({
   title,
   description,
   imageSrc,
@@ -104,16 +110,17 @@ export function BaseItemEditorEmpty({
   customContent,
   className = "",
   maxWidth = 600
-}: BaseItemEditorEmptyProps) {
+}: BaseItemEditorEmptyViewProps) {
   
   // Stack tokens for consistent spacing using Fabric design tokens
   const containerTokens: IStackTokens = { childrenGap: 24 };
   const headerTokens: IStackTokens = { childrenGap: 8 };
   const tasksTokens: IStackTokens = { childrenGap: 12 };
 
-  return (
+  // Build the empty state content
+  const emptyStateContent = (
     <Stack 
-      className={`item-editor-empty-state-container ${className}`.trim()}
+      className={`item-editor-view-empty ${className}`.trim()}
       horizontalAlign="center" 
       verticalAlign="center"
       role="main"
@@ -190,6 +197,13 @@ export function BaseItemEditorEmpty({
       </Stack>
     </Stack>
   );
+
+  // Use BaseItemEditorView with empty state in the center
+  return (
+    <BaseItemEditorView
+      center={emptyStateContent}
+    />
+  );
 }
 
-export default BaseItemEditorEmpty;
+export default BaseItemEditorEmptyView;

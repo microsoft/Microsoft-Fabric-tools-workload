@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
-import { BaseItemEditorEmpty, EmptyStateTask } from "../../controls";
+import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
 
 interface HelloWorldItemEditorEmptyProps {
   workloadClient: WorkloadClientAPI;
@@ -19,7 +19,7 @@ interface HelloWorldItemEditorEmptyProps {
  * To skip this page, modify HelloWorldItemEditor.tsx line 25,55
  * to always set currentView to 'getting-started'
  * 
- * This component now uses the BaseItemEditorEmpty control for consistency
+ * This component now uses the BaseItemEditorEmptyView control for consistency
  * across all item types.
  */
 export function HelloWorldItemEditorEmpty({
@@ -41,7 +41,7 @@ export function HelloWorldItemEditorEmpty({
   ];
 
   return (
-    <BaseItemEditorEmpty
+    <BaseItemEditorEmptyView
       title={t('HelloWorldItemEditorEmpty_Title', 'Welcome to HelloWorld!')}
       description={t('HelloWorldItemEditorEmpty_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
       imageSrc="/assets/items/HelloWorldItem/EditorEmpty.svg"
