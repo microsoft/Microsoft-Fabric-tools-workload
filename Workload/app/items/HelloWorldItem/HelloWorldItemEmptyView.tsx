@@ -6,7 +6,7 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
 
-interface HelloWorldItemEditorEmptyProps {
+interface HelloWorldItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
   item?: ItemWithDefinition<HelloWorldItemDefinition>;
   onNavigateToGettingStarted: () => void;
@@ -22,19 +22,19 @@ interface HelloWorldItemEditorEmptyProps {
  * This component now uses the BaseItemEditorEmptyView control for consistency
  * across all item types.
  */
-export function HelloWorldItemEditorEmpty({
+export function HelloWorldItemEmptyView({
   workloadClient,
   item,
   onNavigateToGettingStarted
-}: HelloWorldItemEditorEmptyProps) {
+}: HelloWorldItemEmptyViewProps) {
   const { t } = useTranslation();
 
   // Define onboarding tasks
   const tasks: EmptyStateTask[] = [
     {
       id: 'getting-started',
-      label: t('HelloWorldItemEditorEmpty_StartButton', 'Getting Started'),
-      description: t('HelloWorldItemEditorEmpty_StartDescription', 'Learn how to use this item'),
+      label: t('HelloWorldItemEmptyView_StartButton', 'Getting Started'),
+      description: t('HelloWorldItemEmptyView_StartDescription', 'Learn how to use this item'),
       onClick: onNavigateToGettingStarted,
       appearance: 'primary'
     }
@@ -42,8 +42,8 @@ export function HelloWorldItemEditorEmpty({
 
   return (
     <BaseItemEditorEmptyView
-      title={t('HelloWorldItemEditorEmpty_Title', 'Welcome to HelloWorld!')}
-      description={t('HelloWorldItemEditorEmpty_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
+      title={t('HelloWorldItemEmptyView_Title', 'Welcome to HelloWorld!')}
+      description={t('HelloWorldItemEmptyView_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
       imageSrc="/assets/items/HelloWorldItem/EditorEmpty.svg"
       imageAlt="Empty state illustration"
       tasks={tasks}

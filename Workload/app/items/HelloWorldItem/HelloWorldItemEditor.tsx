@@ -8,11 +8,19 @@ import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } 
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
-import { HelloWorldItemDefinition, VIEW_TYPES, CurrentView } from "./HelloWorldItemModel";
-import { HelloWorldItemEditorEmpty } from "./HelloWorldItemEditorEmpty";
-import { HelloWorldItemEditorDefault } from "./HelloWorldItemEditorDefault";
+import { HelloWorldItemDefinition} from "./HelloWorldItemModel";
+import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
+import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
 import "../../styles.scss";
+
+/**
+ * Different views that are available for the HelloWorld item
+ */
+export const EDITOR_VIEW_TYPES = {
+  EMPTY: 'empty',
+  DEFAULT: 'default',
+} as const;
 
 
 export function HelloWorldItemEditor(props: PageProps) {
@@ -100,7 +108,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   }
 
   const isSaveEnabled = (currentView: string) => {
-    if (currentView === VIEW_TYPES.EMPTY) {
+    if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
     } else {
       if (hasBeenSaved) {
@@ -126,18 +134,17 @@ export function HelloWorldItemEditor(props: PageProps) {
   // BaseItemEditor manages the view state internally
   return (
     <BaseItemEditor
-      ribbon={(currentView, setCurrentView) => (
+      ribbon={(context) => (
         <HelloWorldItemRibbon
           {...props}
-          isSaveButtonEnabled={isSaveEnabled(currentView)}
-          currentView={currentView as CurrentView}
+          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
+          viewContext={context}
           saveItemCallback={SaveItem}
           openSettingsCallback={handleOpenSettings}
-          navigateToGettingStartedCallback={() => setCurrentView(VIEW_TYPES.GETTING_STARTED)}
         />
       )}
       notification={(currentView) => 
-        currentView === VIEW_TYPES.GETTING_STARTED ? (
+        currentView === EDITOR_VIEW_TYPES.DEFAULT ? (
           <MessageBar intent="warning" icon={<Warning20Filled />}>
             <MessageBarBody>
               {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
@@ -147,26 +154,26 @@ export function HelloWorldItemEditor(props: PageProps) {
       }
       views={(setCurrentView) => [
         {
-          name: VIEW_TYPES.EMPTY,
+          name: EDITOR_VIEW_TYPES.EMPTY,
           component: (
-            <HelloWorldItemEditorEmpty
+            <HelloWorldItemEmptyView
               workloadClient={workloadClient}
               item={item}
-              onNavigateToGettingStarted={() => setCurrentView(VIEW_TYPES.GETTING_STARTED)}
+              onNavigateToGettingStarted={() => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT)}
             />
           )
         },
         {
-          name: VIEW_TYPES.GETTING_STARTED,
+          name: EDITOR_VIEW_TYPES.DEFAULT,
           component: (
-            <HelloWorldItemEditorDefault
+            <HelloWorldItemDefaultView
               workloadClient={workloadClient}
               item={item}
             />
           )
         }
       ]}
-      initialView={!item?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED}
+      initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
     />
   );
 }

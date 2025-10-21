@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import '../../styles.scss'; // Import generic settings panel styles
 import './HelloWorldItem.scss'; // Import HelloWorld-specific overrides
 
-export function HelloWorldItemEditorSettingsPage(props: PageProps) {
+export function HelloWorldItemSettingsView(props: PageProps) {
   const { t } = useTranslation();
-  console.log("HelloWorldItemEditorSettingsPage rendered with props:", props);
+  console.log("HelloWorldItemSettingsView rendered with props:", props);
   
   return (
     <div className="item-settings-panel-container hello-world-settings-panel-container">
@@ -19,4 +19,4 @@ export function HelloWorldItemEditorSettingsPage(props: PageProps) {
   );
 }
 
-export default HelloWorldItemEditorSettingsPage;
+export default HelloWorldItemSettingsView;

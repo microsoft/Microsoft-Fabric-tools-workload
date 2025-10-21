@@ -77,7 +77,7 @@ export async function initialize(params: InitParams) {
                         displayName: t('Item_About_Label'),
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
-                            route: `/${itemTypeName}Item-about-page/${createdItem.objectId}`,
+                            route: `/${itemTypeName}Item-about/${createdItem.objectId}`,
                         },
                         workloadIframeHeight: '1000px'
                     },
@@ -89,7 +89,7 @@ export async function initialize(params: InitParams) {
                         },
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
-                            route: `/${itemTypeName}Item-settings-page/${createdItem.objectId}`,
+                            route: `/${itemTypeName}Item-settings/${createdItem.objectId}`,
                         },
                         workloadIframeHeight: '1000px'
                     }

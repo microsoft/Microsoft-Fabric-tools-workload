@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import { Tab, TabList } from '@fluentui/react-tabs';
 import { Button, Tooltip } from '@fluentui/react-components';
 import { ArrowLeft24Regular } from '@fluentui/react-icons';
+import { ViewContext } from '../';
 import '../../styles.scss';
 
 /**
@@ -35,20 +36,10 @@ export interface BaseRibbonProps {
   className?: string;
   
   /**
-   * Whether this is a detail view (shows back button instead of tabs)
+   * Optional view context for automatic back button handling
+   * When provided and isDetailView is true, shows back button instead of tabs
    */
-  isDetailView?: boolean;
-  
-  /**
-   * Callback when back button is clicked (required if isDetailView is true)
-   */
-  onBack?: () => void;
-  
-  /**
-   * Optional label for the back button
-   * @default "Back"
-   */
-  backButtonLabel?: string;
+  viewContext?: ViewContext;
 }
 
 /**
@@ -83,7 +74,7 @@ export interface RibbonTab {
  * - Consistent ribbon structure across all item editors
  * - Mandatory Home tab as default selected
  * - Optional tab navigation
- * - Automatic back button for detail views
+ * - Automatic back button for detail views when ViewContext is provided
  * - Proper styling and shadow effects
  * - Accessibility support
  * 
@@ -94,8 +85,8 @@ export interface RibbonTab {
  *   <BaseRibbonToolbar actions={actions} />
  * </BaseRibbon>
  * 
- * // Detail view with back button
- * <BaseRibbon isDetailView={true} onBack={handleBack} backButtonLabel={t('Back')}>
+ * // With ViewContext - automatically handles detail view back button
+ * <BaseRibbon tabs={tabs} viewContext={context}>
  *   <BaseRibbonToolbar actions={actions} />
  * </BaseRibbon>
  * ```
@@ -106,24 +97,25 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
   defaultSelectedTab = 'home',
   showTabs = true,
   className = '',
-  isDetailView = false,
-  onBack,
-  backButtonLabel = 'Back'
+  viewContext
 }) => {
+  // Determine if we should show back button based on ViewContext
+  const isDetailView = viewContext?.isDetailView || false;
+  
   return (
     <div className={`ribbon-container ${className}`.trim()}>
       {/* Back Button for Detail Views - Replaces tab navigation */}
       {isDetailView ? (
         <div className="ribbon-back-button-container">
-          <Tooltip content={backButtonLabel} relationship="label">
+          <Tooltip content="Back" relationship="label">
             <Button
               appearance="subtle"
               icon={<ArrowLeft24Regular />}
-              onClick={onBack}
+              onClick={viewContext?.goBack}
               data-testid="ribbon-back-btn"
-              aria-label={backButtonLabel}
+              aria-label="Back"
             >
-              {backButtonLabel}
+              Back
             </Button>
           </Tooltip>
         </div>

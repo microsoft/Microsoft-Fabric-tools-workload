@@ -1,6 +1,5 @@
 import React from "react";
 import { PageProps } from '../../App';
-import { CurrentView, VIEW_TYPES } from "./HelloWorldItemModel";
 import { useTranslation } from "react-i18next";
 import { 
   BaseRibbon, 
@@ -10,7 +9,7 @@ import {
   createSettingsAction,
   createRibbonTabs
 } from '../../controls/Ribbon';
-import { Rocket24Regular } from '@fluentui/react-icons';
+import { ViewContext } from '../../controls';
 import '../../styles.scss';
 
 /**
@@ -18,10 +17,9 @@ import '../../styles.scss';
  */
 export interface HelloWorldItemRibbonProps extends PageProps {
   isSaveButtonEnabled?: boolean;
-  currentView: CurrentView;
+  viewContext: ViewContext;
   saveItemCallback: () => Promise<void>;
   openSettingsCallback: () => Promise<void>;
-  navigateToGettingStartedCallback: () => void;
 }
 
 /**
@@ -42,9 +40,11 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  */
 export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   const { t } = useTranslation();
+  const { viewContext } = props;
   
   // Define ribbon tabs - Home tab is mandatory, additional tabs can be added
   // Using createRibbonTabs ensures Home tab is always present
+  // Tabs are hidden automatically when in detail view mode
   const tabs = createRibbonTabs(
     t("ItemEditor_Ribbon_Home_Label")
     // Additional tabs can be added here as second parameter:
@@ -69,21 +69,21 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
       t("ItemEditor_Ribbon_Settings_Label")
     ),
     
-    // CUSTOM ACTION EXAMPLE: Getting Started
-    // This demonstrates how to create custom actions that are specific to your item editor
-    // Custom actions should be defined inline rather than in StandardRibbonActions
-    {
+    // CUSTOM ACTION EXAMPLE: Getting Started navigation
+    // This demonstrates how to create custom actions for view navigation
+    // Uses viewContext.setCurrentView for navigation
+    /*{
       key: 'getting-started',
       icon: Rocket24Regular,
       label: t("ItemEditor_Ribbon_GettingStarted_Label", "Getting Started"),
-      onClick: props.navigateToGettingStartedCallback,
+      onClick: () => viewContext.setCurrentView(VIEW_TYPES.DEFAULT),
       testId: 'ribbon-getting-started-btn',
-      hidden: props.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
-    }
+      hidden: viewContext.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
+    }*/
   ];
   
   return (
-    <BaseRibbon tabs={tabs}>
+    <BaseRibbon tabs={tabs} viewContext={viewContext}>
       <BaseRibbonToolbar actions={actions} />
     </BaseRibbon>
   );

@@ -4,8 +4,8 @@ import { ClientSDKStore } from "./playground/ClientSDKPlayground/Store/Store";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import CustomItemSettings from "./items/HelloWorldItem/HelloWorldItemEditorSettingsPage";
-import CustomAbout from "./items/HelloWorldItem/HelloWorldItemEditorAboutPage";
+import CustomItemSettings from "./items/HelloWorldItem/HelloWorldItemSettingsView";
+import CustomAbout from "./items/HelloWorldItem/HelloWorldItemAboutView";
 import { SamplePage, ClientSDKPlayground } from "./playground/ClientSDKPlayground/ClientSDKPlayground";
 import { DataPlayground } from "./playground/DataPlayground/DataPlayground";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem/HelloWorldItemEditor";
@@ -54,14 +54,14 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} data-testid="HelloWorldItem-editor" />
             </Route>
             
-            <Route path="/HelloWorldItem-settings-page/:itemObjectId">
+            <Route path="/HelloWorldItem-settings/:itemObjectId">
                 <CustomItemSettings 
                     workloadClient={workloadClient}
-                        data-testid="HelloWorldItem-settings-page" />
+                        data-testid="HelloWorldItem-settings" />
             </Route>
-            <Route path="/HelloWorldItem-about-page/:itemObjectId">
+            <Route path="/HelloWorldItem-about/:itemObjectId">
                 <CustomAbout  workloadClient={workloadClient} 
-                    data-testid="HelloWorldItem-about-page" />
+                    data-testid="HelloWorldItem-about" />
             </Route>
 
              {/* Playground routes  can be deleted if not needed */}

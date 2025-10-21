@@ -15,7 +15,7 @@ import { callNavigationOpenInNewBrowserTab } from "../../controller/NavigationCo
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import "./HelloWorldItem.scss";
 
-interface HelloWorldItemEditorDefaultProps {
+interface HelloWorldItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
   item?: ItemWithDefinition<HelloWorldItemDefinition>;
 }
@@ -24,10 +24,10 @@ interface HelloWorldItemEditorDefaultProps {
  * Getting Started component - shows helpful resources
  * Demonstrates various Fabric APIs and navigation patterns
  */
-export function HelloWorldItemEditorDefault({
+export function HelloWorldItemDefaultView({
   workloadClient,
   item,
-}: HelloWorldItemEditorDefaultProps) {
+}: HelloWorldItemDefaultViewProps) {
   const { t } = useTranslation();
   const [expandedItemDetails, setExpandedItemDetails] = useState(true);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
