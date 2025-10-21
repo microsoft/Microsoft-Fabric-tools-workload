@@ -62,13 +62,49 @@ export interface LeftPanelConfig {
 }
 
 /**
+ * Central Panel Configuration Interface
+ * 
+ * Defines the configuration for the required center content area in BaseItemEditorView.
+ * The center panel is the main workspace area for content editing, forms, canvases, and primary user interactions.
+ * 
+ * ## Design Principles
+ * - **Main Content**: Always visible and takes remaining space after left panel
+ * - **Flexible**: Adapts to various content types (editors, forms, canvases, etc.)
+ * - **Scrollable**: Handles overflow with proper scroll behavior
+ * - **Accessible**: Uses proper ARIA roles and semantic HTML
+ * 
+ * @example
+ * ```tsx
+ * // Basic center content
+ * const centerConfig: CentralPanelConfig = {
+ *   content: <MyMainEditor />
+ * };
+ * 
+ * // Center content with custom styling and accessibility
+ * const centerConfig: CentralPanelConfig = {
+ *   content: <DesignCanvas />,
+ *   className: "custom-canvas-area",
+ *   ariaLabel: "Design canvas workspace"
+ * };
+ * ```
+ */
+export interface CentralPanelConfig {
+  /** Main content area (e.g., editor, form, canvas, workspace) */
+  content: ReactNode;
+  /** Optional className for custom styling */
+  className?: string;
+  /** Optional ARIA label for accessibility (default: "Main content") */
+  ariaLabel?: string;
+}
+
+/**
  * BaseItemEditorView Props Interface
  */
 export interface BaseItemEditorViewProps {
   /** Optional left panel configuration */
   left?: LeftPanelConfig;
-  /** Required center content area (main canvas/workspace) */
-  center: ReactNode;
+  /** Required center content area configuration */
+  center: CentralPanelConfig;
   /** Optional className for custom styling */
   className?: string;
 }
@@ -119,7 +155,9 @@ export interface BaseItemEditorViewProps {
  * 
  * <BaseItemEditor ribbon={<MyRibbon />}>
  *   <BaseItemEditorView
- *     center={<MyMainContent />}
+ *     center={{
+ *       content: <MyMainContent />
+ *     }}
  *   />
  * </BaseItemEditor>
  * ```
@@ -132,7 +170,9 @@ export interface BaseItemEditorViewProps {
  *       content: <NavigationTree items={navItems} />,
  *       title: "Navigation"
  *     }}
- *     center={<DetailView selectedItem={selectedItem} />}
+ *     center={{
+ *       content: <DetailView selectedItem={selectedItem} />
+ *     }}
  *   />
  * </BaseItemEditor>
  * ```
@@ -147,7 +187,9 @@ export interface BaseItemEditorViewProps {
  *       width: 320,
  *       minWidth: 240
  *     }}
- *     center={<CodeEditor file={currentFile} />}
+ *     center={{
+ *       content: <CodeEditor file={currentFile} />
+ *     }}
  *   />
  * </BaseItemEditor>
  * ```
@@ -163,7 +205,9 @@ export interface BaseItemEditorViewProps {
  *       collapsed: false, // Initial state
  *       onCollapseChange: (collapsed) => console.log('Panel collapsed:', collapsed)
  *     }}
- *     center={<DesignCanvas elements={elements} />}
+ *     center={{
+ *       content: <DesignCanvas elements={elements} />
+ *     }}
  *   />
  * </BaseItemEditor>
  * ```
@@ -178,7 +222,9 @@ export interface BaseItemEditorViewProps {
  *       collapsible: true
  *       // collapsed defaults to false, state managed internally
  *     }}
- *     center={<DesignCanvas elements={elements} />}
+ *     center={{
+ *       content: <DesignCanvas elements={elements} />
+ *     }}
  *   />
  * </BaseItemEditor>
  * ```
@@ -205,6 +251,10 @@ export function BaseItemEditorView({
   const isLeftPanelCollapsible = left?.collapsible ?? false;
   const onLeftPanelCollapseChange = left?.onCollapseChange;
   const leftPanelTitle = left?.title ?? "Panel";
+
+  // Extract center panel configuration with defaults
+  const centerClassName = center.className ?? "";
+  const centerAriaLabel = center.ariaLabel ?? "Main content";
 
   // Internal state for collapse - always managed internally
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = React.useState(left?.collapsed ?? false);
@@ -285,12 +335,12 @@ export function BaseItemEditorView({
 
       {/* Center Content Area (Required) */}
       <main 
-        className="item-editor-view__center"
+        className={`item-editor-view__center ${centerClassName}`.trim()}
         role="main"
-        aria-label="Main content"
+        aria-label={centerAriaLabel}
         data-testid="item-editor-view-center"
       >
-        {center}
+        {center.content}
       </main>
     </div>
   );

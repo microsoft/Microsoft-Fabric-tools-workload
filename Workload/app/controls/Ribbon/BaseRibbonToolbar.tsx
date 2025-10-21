@@ -37,6 +37,11 @@ export interface RibbonAction {
   testId?: string;
   
   /**
+   * Optional tooltip text for the button (defaults to label)
+   */
+  tooltip?: string;
+  
+  /**
    * Optional appearance variant
    */
   appearance?: 'primary' | 'subtle' | 'transparent';
@@ -76,16 +81,41 @@ export interface BaseRibbonToolbarProps {
  * BaseRibbonToolbar - Reusable toolbar component for ribbons
  * 
  * This component provides:
- * - Consistent action rendering
+ * - Consistent action rendering with full tooltip support
  * - Support for dividers between action groups
  * - Conditional action visibility
  * - Proper spacing and alignment
+ * - Integration with RibbonAction interface
+ * 
+ * ## Action Configuration
+ * 
+ * Actions support comprehensive configuration:
+ * - **Tooltip Support**: Both `tooltip` and `label` properties
+ * - **Appearance**: 'primary', 'subtle', 'transparent'
+ * - **Accessibility**: Automatic aria-label and tooltip mapping
+ * - **Dividers**: Optional separators between action groups
+ * - **Visibility**: Hide/show actions conditionally
  * 
  * @example
  * ```tsx
  * const actions: RibbonAction[] = [
- *   createSaveAction(handleSave, !hasChanges, t('Save')),
- *   createSettingsAction(handleSettings, t('Settings'))
+ *   {
+ *     key: 'save',
+ *     label: 'Save',
+ *     icon: Save24Regular,
+ *     tooltip: 'Save your current changes',
+ *     onClick: handleSave,
+ *     disabled: !hasChanges,
+ *     appearance: 'primary'
+ *   },
+ *   {
+ *     key: 'settings',
+ *     label: 'Settings',
+ *     icon: Settings24Regular,
+ *     tooltip: 'Open application settings',
+ *     onClick: handleSettings,
+ *     showDividerAfter: true
+ *   }
  * ];
  * 
  * <BaseRibbonToolbar actions={actions} />
@@ -105,6 +135,7 @@ export const BaseRibbonToolbar: React.FC<BaseRibbonToolbarProps> = ({
           <RibbonButton
             icon={action.icon}
             label={action.label}
+            tooltip={action.tooltip}
             onClick={action.onClick}
             disabled={action.disabled}
             testId={action.testId}

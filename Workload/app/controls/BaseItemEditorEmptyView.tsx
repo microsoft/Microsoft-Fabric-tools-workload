@@ -201,7 +201,9 @@ export function BaseItemEditorEmptyView({
   // Use BaseItemEditorView with empty state in the center
   return (
     <BaseItemEditorView
-      center={emptyStateContent}
+      center={{
+        content: emptyStateContent
+      }}
     />
   );
 }

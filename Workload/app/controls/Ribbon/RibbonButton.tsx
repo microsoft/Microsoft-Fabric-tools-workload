@@ -21,6 +21,11 @@ export interface RibbonButtonProps {
   label: string;
   
   /**
+   * Optional tooltip text (defaults to label)
+   */
+  tooltip?: string;
+  
+  /**
    * Click handler for the button
    */
   onClick: () => void | Promise<void>;
@@ -51,27 +56,44 @@ export interface RibbonButtonProps {
  * 
  * This component provides:
  * - Consistent Tooltip + ToolbarButton pattern (mandatory for accessibility)
+ * - Comprehensive tooltip support with fallback to label
  * - Proper icon sizing (24px Regular icons)
  * - Accessibility attributes
  * - Standardized styling with 'subtle' appearance (neutral colors, not brand colors)
+ * - Error handling for async operations
+ * 
+ * ## Tooltip Behavior
+ * - **Primary**: Uses `tooltip` prop if provided
+ * - **Fallback**: Falls back to `label` if no tooltip specified
+ * - **Accessibility**: Proper relationship between tooltip and button
  * 
  * Fabric UX Guideline: Toolbar buttons should use 'subtle' appearance for neutral styling.
  * Never use 'primary' appearance in toolbars - that's reserved for dialog CTAs.
  * 
  * @example
  * ```tsx
+ * // With explicit tooltip
  * <RibbonButton
  *   icon={Save24Regular}
  *   label="Save"
+ *   tooltip="Save your current changes"
  *   onClick={handleSave}
  *   disabled={!hasChanges}
  *   testId="save-btn"
+ * />
+ * 
+ * // Tooltip defaults to label
+ * <RibbonButton
+ *   icon={Settings24Regular}
+ *   label="Settings"
+ *   onClick={handleSettings}
  * />
  * ```
  */
 export const RibbonButton: React.FC<RibbonButtonProps> = ({
   icon,
   label,
+  tooltip,
   onClick,
   disabled = false,
   testId,
@@ -92,7 +114,7 @@ export const RibbonButton: React.FC<RibbonButtonProps> = ({
   
   return (
     <Tooltip
-      content={label}
+      content={tooltip || label}
       relationship="label"
     >
       <ToolbarButton

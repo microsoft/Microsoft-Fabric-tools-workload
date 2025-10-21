@@ -1,53 +1,25 @@
-import React, { ReactNode } from "react";
-import { BaseItemEditorView, LeftPanelConfig } from "./BaseItemEditorView";
+import React from "react";
+import { BaseItemEditorView, BaseItemEditorViewProps } from "./BaseItemEditorView";
+import { RibbonAction } from "./Ribbon";
 import "../styles.scss";
 
 /**
  * Action item for the detail view ribbon
+ * 
+ * Direct alias to RibbonAction for semantic clarity in detail view context.
+ * Since RibbonAction now has full tooltip support, no additional properties are needed.
  */
-export interface DetailViewAction {
-  /** Unique identifier for the action */
-  id: string;
-  /** Action label/button text */
-  label: string;
-  /** Click handler for the action */
-  onClick: () => void;
-  /** Icon component (Fluent UI icon) */
-  icon?: React.ReactElement;
-  /** Button appearance */
-  appearance?: "primary" | "secondary" | "outline" | "subtle" | "transparent";
-  /** Whether the action is disabled */
-  disabled?: boolean;
-  /** Tooltip text for the action */
-  tooltip?: string;
+export interface DetailViewAction extends RibbonAction {
 }
 
 /**
  * BaseItemEditorDetailView Props Interface
  */
-export interface BaseItemEditorDetailViewProps {
-  /** Optional left panel configuration (supports both ReactNode for simple usage and LeftPanelConfig for advanced) */
-  left?: ReactNode | LeftPanelConfig;
-  /** Required center content area (main detail content) */
-  center: ReactNode;
+export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
   /** Optional actions to display in the ribbon when this view is active */
   actions?: DetailViewAction[];
   /** Callback to register actions with parent ribbon */
   onActionsChange?: (actions: DetailViewAction[]) => void;
-  /** Optional className for custom styling */
-  className?: string;
-  /** @deprecated Use left.width instead - Width of the left panel in pixels (default: 280px) */
-  leftPanelWidth?: number;
-  /** @deprecated Use left.minWidth instead - Minimum width of the left panel for resizing (default: 200px) */
-  leftPanelMinWidth?: number;
-  /** @deprecated Use left.collapsible instead - Whether the left panel is collapsible (default: false) */
-  isLeftPanelCollapsible?: boolean;
-  /** @deprecated Use left.collapsed instead - Initial collapsed state of left panel (default: false) */
-  isLeftPanelCollapsed?: boolean;
-  /** @deprecated Use left.onCollapseChange instead - Callback when left panel collapse state changes */
-  onLeftPanelCollapseChange?: (isCollapsed: boolean) => void;
-  /** @deprecated Use left.title instead - Optional title for the left panel header */
-  leftPanelTitle?: string;
 }
 
 /**
@@ -79,9 +51,10 @@ export interface BaseItemEditorDetailViewProps {
  * 
  * ## Key Features
  * - **Context-Specific Actions**: Define actions that appear in the ribbon for this view
- * - **Flexible Layout**: Optional left panel + required center content
+ * - **Flexible Layout**: Optional left panel + required center content using panel config objects
  * - **Action Management**: Automatically notifies parent when actions change
  * - **Consistent Styling**: Uses BaseItemEditorView for layout consistency
+ * - **Standardized Actions**: Uses RibbonAction interface with full tooltip support
  * 
  * ## Design Principles
  * - **Action-Driven**: Surface relevant actions in the ribbon based on view context
@@ -89,6 +62,15 @@ export interface BaseItemEditorDetailViewProps {
  * - **Flexible**: Left panel optional for simple or complex layouts
  * - **Accessible**: Inherits ARIA support from BaseItemEditorView
  * - **Fabric Compliant**: Uses design tokens and standard patterns
+ * - **Type Safe**: Strong TypeScript interfaces throughout
+ * 
+ * ## Action System
+ * 
+ * DetailViewAction is a direct alias to RibbonAction, providing:
+ * - **Unified Interface**: Same properties as RibbonAction
+ * - **Tooltip Support**: Built-in tooltip with fallback to label
+ * - **No Conversion**: Direct usage without transformation
+ * - **Consistency**: Same API across all ribbon contexts
  * 
  * ## Usage Examples
  * 
@@ -99,24 +81,28 @@ export interface BaseItemEditorDetailViewProps {
  * 
  * const actions = [
  *   {
- *     id: 'save',
+ *     key: 'save',
  *     label: 'Save Changes',
- *     icon: <Save24Regular />,
+ *     icon: Save24Regular,
  *     onClick: () => handleSave(),
- *     appearance: 'primary'
+ *     appearance: 'primary',
+ *     tooltip: 'Save your current changes'
  *   },
  *   {
- *     id: 'delete',
+ *     key: 'delete',
  *     label: 'Delete',
- *     icon: <Delete24Regular />,
+ *     icon: Delete24Regular,
  *     onClick: () => handleDelete(),
- *     appearance: 'secondary',
- *     disabled: !canDelete
+ *     appearance: 'subtle',
+ *     disabled: !canDelete,
+ *     tooltip: 'Delete this item permanently'
  *   }
  * ];
  * 
  * <BaseItemEditorDetailView
- *   center={<MyDetailContent />}
+ *   center={{
+ *     content: <MyDetailContent />
+ *   }}
  *   actions={actions}
  *   onActionsChange={handleActionsChange}
  * />
@@ -125,18 +111,24 @@ export interface BaseItemEditorDetailViewProps {
  * ### Example 2: With Left Properties Panel
  * ```tsx
  * <BaseItemEditorDetailView
- *   left={<PropertiesPanel item={selectedItem} />}
- *   center={<DetailEditor item={selectedItem} />}
+ *   left={{
+ *     content: <PropertiesPanel item={selectedItem} />,
+ *     title: "Properties",
+ *     width: 300,
+ *     collapsible: true
+ *   }}
+ *   center={{
+ *     content: <DetailEditor item={selectedItem} />
+ *   }}
  *   actions={[
  *     {
- *       id: 'apply',
+ *       key: 'apply',
  *       label: 'Apply',
+ *       icon: Save24Regular, // Requires an icon
  *       onClick: () => applyChanges(),
  *       appearance: 'primary'
  *     }
  *   ]}
- *   leftPanelWidth={300}
- *   isLeftPanelCollapsible={true}
  * />
  * ```
  * 
@@ -144,34 +136,41 @@ export interface BaseItemEditorDetailViewProps {
  * ```tsx
  * const [selectedPage, setSelectedPage] = useState('overview');
  * 
+ * import { ArrowDownload24Regular, Share24Regular } from "@fluentui/react-icons";
+ * 
  * const actions = [
  *   {
- *     id: 'export',
+ *     key: 'export',
  *     label: 'Export',
- *     icon: <ArrowDownload24Regular />,
+ *     icon: ArrowDownload24Regular,
  *     onClick: () => handleExport(),
  *     tooltip: 'Export current page'
  *   },
  *   {
- *     id: 'share',
+ *     key: 'share',
  *     label: 'Share',
- *     icon: <Share24Regular />,
+ *     icon: Share24Regular,
  *     onClick: () => handleShare(),
  *     tooltip: 'Share with others'
  *   }
  * ];
  * 
  * <BaseItemEditorDetailView
- *   left={
- *     <NavigationMenu
- *       items={pages}
- *       selected={selectedPage}
- *       onSelect={setSelectedPage}
- *     />
- *   }
- *   center={<PageContent page={selectedPage} />}
+ *   left={{
+ *     content: (
+ *       <NavigationMenu
+ *         items={pages}
+ *         selected={selectedPage}
+ *         onSelect={setSelectedPage}
+ *       />
+ *     ),
+ *     title: "Navigation",
+ *     width: 240
+ *   }}
+ *   center={{
+ *     content: <PageContent page={selectedPage} />
+ *   }}
  *   actions={actions}
- *   leftPanelWidth={240}
  * />
  * ```
  * 
@@ -185,8 +184,30 @@ export interface BaseItemEditorDetailViewProps {
  * // When view changes, update ribbon actions
  * const handleActionsChange = (actions: DetailViewAction[]) => {
  *   setCurrentActions(actions);
- *   // Update ribbon to show these actions
+ *   // Actions are now directly compatible with RibbonAction - no conversion needed
+ *   updateRibbon(actions);
  * };
+ * ```
+ * 
+ * ## Integration with Ribbon System
+ * 
+ * DetailViewActions are automatically compatible with the ribbon system:
+ * 
+ * ```tsx
+ * // Define actions with full RibbonAction properties
+ * const detailActions: DetailViewAction[] = [
+ *   {
+ *     key: 'save',
+ *     label: 'Save',
+ *     icon: Save24Regular,
+ *     tooltip: 'Save your changes',
+ *     onClick: handleSave,
+ *     appearance: 'primary'
+ *   }
+ * ];
+ * 
+ * // Use directly in ribbon toolbar - no conversion needed
+ * <BaseRibbonToolbar actions={detailActions} />
  * ```
  * 
  * ## Fabric UX Compliance
@@ -203,37 +224,10 @@ export interface BaseItemEditorDetailViewProps {
 export function BaseItemEditorDetailView({
   left,
   center,
+  className,
   actions = [],
-  onActionsChange,
-  className = "",
-  leftPanelWidth = 280,
-  leftPanelMinWidth = 200,
-  isLeftPanelCollapsible = false,
-  isLeftPanelCollapsed = false,
-  onLeftPanelCollapseChange,
-  leftPanelTitle
+  onActionsChange
 }: BaseItemEditorDetailViewProps) {
-
-  // Convert legacy props to new LeftPanelConfig format
-  const leftPanelConfig = React.useMemo((): LeftPanelConfig | undefined => {
-    if (!left) return undefined;
-    
-    // If left is already a LeftPanelConfig object
-    if (typeof left === 'object' && left !== null && 'content' in left) {
-      return left as LeftPanelConfig;
-    }
-    
-    // Convert legacy ReactNode to LeftPanelConfig
-    return {
-      content: left as ReactNode,
-      title: leftPanelTitle,
-      width: leftPanelWidth,
-      minWidth: leftPanelMinWidth,
-      collapsible: isLeftPanelCollapsible,
-      collapsed: isLeftPanelCollapsed,
-      onCollapseChange: onLeftPanelCollapseChange
-    };
-  }, [left, leftPanelTitle, leftPanelWidth, leftPanelMinWidth, isLeftPanelCollapsible, isLeftPanelCollapsed, onLeftPanelCollapseChange]);
 
   // Notify parent when actions change
   React.useEffect(() => {
@@ -245,7 +239,7 @@ export function BaseItemEditorDetailView({
   // Use BaseItemEditorView for consistent layout
   return (
     <BaseItemEditorView
-      left={leftPanelConfig}
+      left={left}
       center={center}
       className={className}
     />

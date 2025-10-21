@@ -77,17 +77,54 @@ export interface RibbonTab {
  * - Automatic back button for detail views when ViewContext is provided
  * - Proper styling and shadow effects
  * - Accessibility support
+ * - Integration with standardized RibbonAction system
+ * 
+ * ## Architecture Integration
+ * 
+ * BaseRibbon works seamlessly with:
+ * - **BaseRibbonToolbar**: For action buttons with tooltip support
+ * - **DetailViewAction**: Direct alias to RibbonAction for detail views
+ * - **BaseItemEditorDetailView**: Automatic action registration and display
+ * - **ViewContext**: Smart navigation between list and detail views
+ * 
+ * ## Action System
+ * 
+ * Actions are defined using the standardized RibbonAction interface:
+ * ```typescript
+ * const actions: RibbonAction[] = [
+ *   {
+ *     key: 'save',
+ *     label: 'Save',
+ *     icon: Save24Regular,
+ *     tooltip: 'Save your changes',
+ *     onClick: () => handleSave(),
+ *     appearance: 'primary'
+ *   }
+ * ];
+ * ```
+ * 
+ * ## View Context Integration
+ * 
+ * When ViewContext is provided:
+ * - **List View**: Shows tab navigation
+ * - **Detail View**: Automatically shows back button and hides tabs
+ * - **Actions**: DetailViewActions are automatically converted and displayed
  * 
  * @example
  * ```tsx
- * // Normal view with tabs
+ * // Standard ribbon with tabs and actions
  * <BaseRibbon tabs={createRibbonTabs(t('Home'))}>
- *   <BaseRibbonToolbar actions={actions} />
+ *   <BaseRibbonToolbar actions={standardActions} />
  * </BaseRibbon>
  * 
- * // With ViewContext - automatically handles detail view back button
+ * // With ViewContext - automatically handles detail view navigation
  * <BaseRibbon tabs={tabs} viewContext={context}>
- *   <BaseRibbonToolbar actions={actions} />
+ *   <BaseRibbonToolbar actions={contextActions} />
+ * </BaseRibbon>
+ * 
+ * // Detail view with BaseItemEditorDetailView integration
+ * <BaseRibbon viewContext={detailContext}>
+ *   <BaseRibbonToolbar actions={detailActions} />
  * </BaseRibbon>
  * ```
  */

@@ -21,7 +21,7 @@ export type { BaseItemEditorEmptyViewProps, EmptyStateTask } from './BaseItemEdi
 
 // Base Item Editor View - Layout component for editor content
 export { BaseItemEditorView } from './BaseItemEditorView';
-export type { BaseItemEditorViewProps, LeftPanelConfig } from './BaseItemEditorView';
+export type { BaseItemEditorViewProps, LeftPanelConfig, CentralPanelConfig } from './BaseItemEditorView';
 
 // Base Item Editor Detail View - Detail view with ribbon actions support
 export { BaseItemEditorDetailView } from './BaseItemEditorDetailView';
