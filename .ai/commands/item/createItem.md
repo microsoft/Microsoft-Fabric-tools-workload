@@ -4,6 +4,57 @@ applyTo: "/Workload/app/items/[ItemName]Item/"
 
 # Create New Workload Item
 
+## 🚨 MANDATORY PROCESS - FOLLOW EXACTLY
+
+**CRITICAL**: This process has multiple steps that are easy to miss. Use disciplined execution:
+
+### 📋 Step 0: Create Complete TODO List (MANDATORY)
+
+Before writing ANY code, create a comprehensive todo list with `manage_todo_list`:
+
+**REQUIRED TODO ITEMS - ALL MUST BE COMPLETED:**
+1. Read both instruction files completely
+2. 🔍 **DISCOVER EXISTING COMPONENTS** - Search for Base* components before coding
+3. Create [ItemName]ItemModel.ts with proper interface
+4. Create [ItemName]ItemEditor.tsx using BaseItemEditor
+5. Create [ItemName]ItemEmptyView.tsx with proper patterns
+6. Create [ItemName]ItemDefaultView.tsx using **EXISTING BASE COMPONENTS**
+7. Create [ItemName]ItemRibbon.tsx using BaseRibbon/BaseRibbonToolbar
+8. Create [ItemName]Item.scss with ONLY overrides
+9. Add route to App.tsx
+10. Create manifest JSON and XML files
+11. Copy icon file from HelloWorld pattern
+12. Add translations to Manifest/assets/locales/en-US/translations.json
+13. Add translations to app/assets/locales/en-US/translation.json
+14. 🚨 **UPDATE PRODUCT.JSON - CRITICAL FOR ITEM VISIBILITY**
+15. Verify all files created and syntax correct
+
+### 🔍 Component Discovery Phase (Step 2)
+
+**MANDATORY**: Before coding any views, search for existing components:
+
+```bash
+# Use semantic_search to find existing patterns:
+- "BaseItemEditorView left right split layout"
+- "BaseItemEditorDetailView left center" 
+- "Base* components [your use case]"
+```
+
+**Available Components (USE THESE - DON'T REINVENT):**
+- **BaseItemEditorView**: Left/center layouts (explorer + content)
+- **BaseItemEditorDetailView**: Detail views with actions
+- **BaseItemEditorEmptyView**: Empty states with tasks
+
+### 🔄 Execution Rules (MANDATORY)
+
+1. **Mark ONE todo in-progress** before starting work
+2. **Complete that todo FULLY** - no partial work
+3. **Mark completed IMMEDIATELY** after finishing
+4. **NEVER skip Product.json** - it's required for Fabric integration
+5. **Follow HelloWorld patterns EXACTLY** - including version numbers
+
+---
+
 ## 🏗️ Architecture Overview
 
 **CRITICAL**: All item editors MUST use the standardized architecture patterns:
@@ -155,7 +206,11 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 This guide provides step-by-step instructions for AI tools to create a new item in the Microsoft Fabric Extensibility Toolkit. Creating a new item requires implementation files, manifest configuration, routing setup, and environment variable updates.
 
-**🚨 REMEMBER**: Always use BaseItemEditor and standard Ribbon components!
+**🚨 REMEMBER**: 
+- Always use BaseItemEditor and standard Ribbon components!
+- **CRITICAL**: Must update Product.json to register item in create dialogs
+- **OneLakeStorageClient**: Always use `createItemWrapper()` for item-scoped OneLake operations
+- **OneLakeItemExplorer**: Initialize with `initialItem: {id, workspaceId, displayName}` or it won't show content
 
 ### Step 1: Create Item Implementation Structure
 
@@ -637,6 +692,95 @@ export const [ItemName]ItemDefaultView: React.FC<[ItemName]ItemDefaultViewProps>
 - **Responsive Design**: Adapts to different screen sizes and container widths
 - **Error Handling**: Includes proper try/catch for save operations
 
+### Step 4.2: OneLakeStorageClient Best Practices
+
+**🚨 CRITICAL**: When working with OneLake storage in item contexts, ALWAYS use the wrapper pattern for correct path handling.
+
+#### ✅ **CORRECT Pattern** - Use createItemWrapper():
+
+```typescript
+// ✅ ALWAYS use this pattern for item-scoped OneLake operations
+const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
+const itemWrapper = oneLakeClient.createItemWrapper({
+  id: props.item.id,
+  workspaceId: props.item.workspaceId
+});
+
+// Now use wrapper methods with relative paths
+await itemWrapper.writeFileAsBase64('Files/myfile.txt', base64Content);
+const content = await itemWrapper.readFileAsText('Files/myfile.txt');
+const fullPath = itemWrapper.getPath('Files/myfile.txt'); // For storage in definitions
+```
+
+#### ❌ **WRONG Pattern** - Direct client with manual paths:
+
+```typescript
+// ❌ NEVER do this - manual path construction is error-prone
+const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
+const filePath = `${props.item.id}/Files/myfile.txt`; // Manual path construction
+await oneLakeClient.writeFileAsBase64(filePath, base64Content);
+```
+
+#### **Key Benefits of Wrapper Pattern:**
+
+- **Automatic Path Prefixing**: Handles workspace/item ID correctly
+- **Type Safety**: Ensures correct item context
+- **Cleaner API**: Relative paths instead of full OneLake paths  
+- **Error Prevention**: Can't accidentally use wrong workspace/item IDs
+- **Consistency**: All operations use the same item context
+
+### Step 4.3: OneLakeItemExplorer Initialization
+
+**🚨 CRITICAL**: When using OneLakeItemExplorerComponent, ALWAYS initialize with the current item or it won't show content.
+
+#### ✅ **CORRECT Pattern** - Initialize with current item:
+
+```typescript
+// ✅ ALWAYS include initialItem in config for content display
+<OneLakeItemExplorerComponent
+  workloadClient={props.workloadClient}
+  onFileSelected={async (fileName: string, oneLakeLink: string) => {
+    // Handle file selection
+  }}
+  onTableSelected={async (tableName: string, oneLakeLink: string) => {
+    // Handle table selection
+  }}
+  onItemChanged={handleOneLakeItemChanged}
+  config={{
+    mode: "view",
+    allowItemSelection: true,
+    allowedItemTypes: ["Lakehouse", "Warehouse", "KQLDatabase"],
+    initialItem: {
+      id: props.item.id,
+      workspaceId: props.item.workspaceId,
+      displayName: props.item.displayName
+    },
+    refreshTrigger: refreshTrigger
+  }}
+/>
+```
+
+#### ❌ **WRONG Pattern** - Missing initialItem:
+
+```typescript
+// ❌ NEVER do this - explorer will be empty without initialItem
+<OneLakeItemExplorerComponent
+  workloadClient={props.workloadClient}
+  config={{
+    mode: "view",
+    allowItemSelection: true,
+    // ❌ Missing initialItem - component won't show content
+  }}
+/>
+```
+
+#### **Key Points:**
+
+- **initialItem Required**: Component needs current item to load and display content
+- **All Properties Needed**: Must include `id`, `workspaceId`, and `displayName`
+- **Empty Without Init**: Explorer will appear empty if initialItem is not provided
+- **Refresh Support**: Use `refreshTrigger` to force re-fetch when needed
+
 ### Step 5: Implement the Ribbon (`[ItemName]ItemRibbon.tsx`)
 
 The ribbon provides toolbar actions and navigation tabs. **🚨 CRITICAL: Use standard Ribbon components!**
@@ -1005,24 +1149,41 @@ Workload/app/assets/items/
 
 #### 8.3: Add Localization Strings
 
-Update `Workload/Manifest/assets/locales/en-US/translations.json` **following the HelloWorld pattern**:
+**🚨 CRITICAL: Two Different Translation Locations**
+
+**Translation files serve different purposes and must be updated separately:**
+
+**For Manifest Files (Product.json, [ItemName]Item.json ONLY)**:
+Update `Workload/Manifest/assets/locales/en-US/translations.json`:
 
 ```json
 {
-  // Add these entries to the existing translations (follow HelloWorld pattern)
+  // Add these entries to the existing translations - ONLY for manifest references
   "[ItemName]Item_DisplayName": "Your Item Display Name",
   "[ItemName]Item_DisplayName_Plural": "Your Item Display Names",
-  "[ItemName]Item_Description": "Description of what this item does",
-  "[ItemName]ItemEditor_Title": "Your [ItemName] Editor"
+  "[ItemName]Item_Description": "Description of what this item does"
 }
 ```
 
-**Required Translation Keys**:
+**For React Components (App code with useTranslation() ONLY)**:
+Update `Workload/app/assets/locales/en-US/translation.json`:
 
-- `[ItemName]Item_DisplayName`: Display name in Fabric UI
-- `[ItemName]Item_DisplayName_Plural`: Plural form for lists
-- `[ItemName]Item_Description`: Item description
-- `[ItemName]ItemEditor_Title`: Main editor title
+```json
+{
+  // Add entries for UI components, buttons, messages, etc.
+  "[ItemName]ItemEditor_Loading": "Loading [Item Name]...",
+  "[ItemName]ItemEditor_LoadError": "Failed to load the [item name] item.",
+  "[ItemName]ItemEmptyView_Title": "Get started with [Item Name]",
+  "[ItemName]ItemEmptyView_Description": "Description for empty state",
+  "[ItemName]ItemRibbon_Save_Label": "Save",
+  "[ItemName]ItemRibbon_Settings_Label": "Settings"
+}
+```
+
+**Key Differences**:
+- **Manifest translations** (`Workload/Manifest/assets/locales/`) - ONLY for keys referenced in .json manifest files
+- **App translations** (`Workload/app/assets/locales/`) - ONLY for React components using `useTranslation()` hook
+- **Never mix these up** - Each location serves a specific build-time purpose
 
 **For Additional Locales**:
 
@@ -1303,3 +1464,57 @@ When creating a new item, ensure all these components are created:
 - **Save not working**: Verify model interface is properly defined
 - **Empty state not showing**: Check onFinishEmpty callback implementation
 - **Build errors**: Check `ITEM_NAMES` environment variable includes your item
+
+---
+
+## 🚨 FINAL VERIFICATION - NO EXCEPTIONS
+
+**MANDATORY: Before claiming ANY item creation is complete, verify EVERY item below:**
+
+### 📁 All Files Exist and Are Syntactically Correct
+```bash
+# Verify these files exist:
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemModel.ts
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemEditor.tsx  
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemEmptyView.tsx
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemDefaultView.tsx
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemRibbon.tsx
+ls Workload/app/items/[ItemName]Item/[ItemName]Item.scss
+ls Workload/Manifest/items/[ItemName]/[ItemName]Item.json
+ls Workload/Manifest/items/[ItemName]/[ItemName]Item.xml
+ls Workload/Manifest/assets/images/[ItemName]Item-icon.png
+```
+
+### 🚨 CRITICAL: Product.json Updated (MOST MISSED STEP)
+```bash
+# Verify both these entries exist in Product.json:
+grep -n "[ItemName]" Workload/Manifest/Product.json
+# Should show entries in BOTH:
+# - createExperience.cards array
+# - recommendedItemTypes array
+```
+
+### ✅ Translations in Correct Locations
+```bash
+# Manifest translations (for .json files):
+grep "[ItemName]Item_DisplayName" Workload/Manifest/assets/locales/en-US/translations.json
+
+# App translations (for React components):
+grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
+```
+
+### 🏗️ Architecture Compliance
+- **Component Discovery**: Used semantic_search to find existing Base* components before coding
+- **BaseItemEditor used**: Check editor uses `<BaseItemEditor>` not custom layout  
+- **BaseRibbon used**: Check ribbon uses `BaseRibbon` + `BaseRibbonToolbar`
+- **Existing Base Components**: Used BaseItemEditorView, BaseItemEditorDetailView etc. instead of reinventing
+- **OneLakeStorageClient Wrapper**: Used `createItemWrapper()` for all OneLake operations, no manual path construction
+- **OneLakeItemExplorer Init**: Initialized with `initialItem: {id, workspaceId, displayName}` if used
+- **Version number**: Must be "1.100" (copy from HelloWorld exactly)
+- **SCSS overrides only**: Check .scss file doesn't duplicate layout styles
+
+### 🔄 App Integration
+- **Route added**: Check `App.tsx` has route for `/[ItemName]Item-editor/:itemObjectId`
+- **Imports correct**: All import paths are valid and components exist
+
+**IF ANY VERIFICATION FAILS, THE ITEM IS INCOMPLETE. FIX IT BEFORE PROCEEDING.**

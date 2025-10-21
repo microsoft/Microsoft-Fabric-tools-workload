@@ -4,7 +4,76 @@ applyTo: "/Workload/app/items/[ItemName]Item/"
 
 # GitHub Copilot Instructions: Create New Workload Item
 
-## 🔗 Base Instructions
+## � MANDATORY PROCESS - READ THIS FIRST
+
+**BEFORE STARTING ANY ITEM CREATION:**
+
+### 1. 📋 CREATE COMPLETE TODO LIST FIRST
+Use the `manage_todo_list` tool to create a comprehensive todo list with ALL steps from the instructions:
+
+```typescript
+// REQUIRED TODO ITEMS - DO NOT SKIP ANY:
+[
+  {id: 1, title: "Read both instruction files", status: "not-started"},
+  {id: 2, title: "🔍 DISCOVER EXISTING COMPONENTS - Search for Base* components", status: "not-started"},
+  {id: 3, title: "Create [ItemName]ItemModel.ts", status: "not-started"},
+  {id: 4, title: "Create [ItemName]ItemEditor.tsx", status: "not-started"},
+  {id: 5, title: "Create [ItemName]ItemEmptyView.tsx", status: "not-started"},
+  {id: 6, title: "Create [ItemName]ItemDefaultView.tsx using Base* components", status: "not-started"},
+  {id: 7, title: "Create [ItemName]ItemRibbon.tsx", status: "not-started"},
+  {id: 8, title: "Create [ItemName]Item.scss", status: "not-started"},
+  {id: 9, title: "Add App.tsx routing", status: "not-started"},
+  {id: 10, title: "Create manifest JSON/XML files", status: "not-started"},
+  {id: 11, title: "Copy and rename icon file", status: "not-started"},
+  {id: 12, title: "Add manifest translations", status: "not-started"},
+  {id: 13, title: "Add app translations", status: "not-started"},
+  {id: 14, title: "🚨 UPDATE PRODUCT.JSON - CRITICAL", status: "not-started"},
+  {id: 15, title: "Verify all steps completed", status: "not-started"}
+]
+```
+
+### 🔍 MANDATORY COMPONENT DISCOVERY (TODO #2)
+
+**BEFORE CODING ANY VIEW COMPONENTS**, search for existing infrastructure:
+
+**Required Searches (use `semantic_search` tool):**
+- `"BaseItemEditorView left right split layout"`
+- `"BaseItemEditorDetailView left center components"`
+- `"BaseItemEditor* two column layout"`
+- `"Base* components [your specific use case]"`
+
+**Available Base Components (MUST USE - DON'T REINVENT):**
+- **BaseItemEditorView**: Left/center split layouts - PERFECT for explorer + content
+- **BaseItemEditorDetailView**: Detail views with actions  
+- **BaseItemEditorEmptyView**: Empty state with tasks
+- **BaseRibbon + BaseRibbonToolbar**: Standard ribbon
+- **createSaveAction, createSettingsAction**: Standard actions
+
+**🚨 CRITICAL RULE**: If a Base* component exists for your pattern, YOU MUST USE IT.
+
+### 2. 🔄 DISCIPLINED EXECUTION
+- **Mark ONE todo as in-progress before starting work**
+- **Complete that specific todo fully**
+- **Mark it completed IMMEDIATELY after finishing**
+- **Move to next todo - NO SKIPPING**
+
+### 3. 🚨 CRITICAL STEP VERIFICATION
+Before marking ANY todo as completed, verify:
+- ✅ File exists and is syntactically correct
+- ✅ Follows exact patterns from HelloWorld example
+- ✅ Uses mandatory architecture components
+- ✅ Product.json is updated (Step 13 is MANDATORY)
+
+### 4. 🚫 ANTI-PATTERNS TO AVOID
+- ❌ Rushing through "boring" configuration steps
+- ❌ Marking todos completed before actually finishing them
+- ❌ Skipping Product.json thinking "I'll do it later"
+- ❌ Assuming patterns instead of copying exactly
+- ❌ Creating files without following HelloWorld version numbers
+
+---
+
+## �🔗 Base Instructions
 
 **REQUIRED**: First read the complete generic instructions at `.ai/commands/item/createItem.md` before proceeding.
 
@@ -997,7 +1066,9 @@ Create an icon file: `Workload/Manifest/assets/images/[ItemName]Item-icon.png`
 
 **🚨 CRITICAL: Two Different Translation Locations**
 
-**For Manifest Files (Product.json, [ItemName]Item.json)**:
+**Translation files serve different purposes and must be updated separately:**
+
+**For Manifest Files (Product.json, [ItemName]Item.json ONLY)**:
 Update `Workload/Manifest/assets/locales/en-US/translations.json`:
 
 ```json
@@ -1009,7 +1080,7 @@ Update `Workload/Manifest/assets/locales/en-US/translations.json`:
 }
 ```
 
-**For React Components (App code)**:
+**For React Components (App code with useTranslation() ONLY)**:
 Update `Workload/app/assets/locales/en-US/translation.json`:
 
 ```json
@@ -1023,8 +1094,9 @@ Update `Workload/app/assets/locales/en-US/translation.json`:
 ```
 
 **Key Differences**:
-- **Manifest translations** (`Workload/Manifest/assets/locales/`) - Used by Product.json, ItemName.json
-- **App translations** (`Workload/app/assets/locales/`) - Used by React components with `useTranslation()`
+- **Manifest translations** (`Workload/Manifest/assets/locales/`) - ONLY for keys referenced in .json manifest files
+- **App translations** (`Workload/app/assets/locales/`) - ONLY for React components using `useTranslation()` hook
+- **Never mix these up** - Each location serves a specific build-time purpose
 
 **For Additional Locales**:
 - Add corresponding entries in other locale files (e.g., `es/translations.json`)
@@ -1364,3 +1436,44 @@ When creating a new item, ensure all these components are created:
 - **Localization missing**: Check translation keys in all locale files
 - **Save not working**: Verify model interface is properly defined
 - **Empty state not showing**: Check onFinishEmpty callback implementation
+
+---
+
+## 🚨 FINAL VERIFICATION CHECKLIST
+
+**BEFORE CLAIMING COMPLETION - VERIFY ALL:**
+
+### 📁 Files Created (ALL REQUIRED)
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemModel.ts`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemEditor.tsx`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemEmptyView.tsx`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemDefaultView.tsx`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemRibbon.tsx`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]Item.scss`
+- [ ] `Workload/Manifest/items/[ItemName]/[ItemName]Item.json`
+- [ ] `Workload/Manifest/items/[ItemName]/[ItemName]Item.xml`
+- [ ] `Workload/Manifest/assets/images/[ItemName]Item-icon.png`
+
+### 🔧 Configuration Updated (CRITICAL)
+- [ ] **Product.json updated with item in createExperience.cards**
+- [ ] **Product.json updated with item in recommendedItemTypes**
+- [ ] App.tsx route added for `/[ItemName]Item-editor/:itemObjectId`
+- [ ] Manifest translations added to `Manifest/assets/locales/en-US/translations.json`
+- [ ] App translations added to `app/assets/locales/en-US/translation.json`
+
+### ✅ Architecture Compliance
+- [ ] **Component Discovery Performed**: Searched for existing Base* components before coding
+- [ ] **BaseItemEditorView used**: For left/right split layouts (don't create custom flex layouts)
+- [ ] Uses BaseItemEditor (not custom layout)
+- [ ] Uses BaseRibbon + BaseRibbonToolbar  
+- [ ] SCSS file contains ONLY overrides (no duplicated layout)
+- [ ] Version number matches HelloWorld ("1.100")
+- [ ] All imports use correct paths
+
+### 🎯 Functionality Complete
+- [ ] Empty state displays and allows progression to default view
+- [ ] Default view loads and displays content properly
+- [ ] Save functionality works (if applicable)
+- [ ] All strings use translation keys (no hardcoded text)
+
+**If ANY checkbox is unchecked, the item is NOT complete. Go back and finish that step.**
