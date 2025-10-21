@@ -425,6 +425,71 @@
     overflow: hidden;
     position: relative;
 
+    // Collapsed state styling
+    &.collapsed {
+      width: auto !important;
+      min-width: auto !important;
+    }
+
+    // Header with title and toggle button
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
+      border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
+      min-height: 32px;
+
+      &.collapsed {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: var(--spacingVerticalS, 8px);
+        border-bottom: none;
+        width: 40px;
+        height: 100%;
+        gap: var(--spacingVerticalS, 8px);
+        overflow: visible;
+      }
+    }
+
+    // Vertical title styling for collapsed state
+    &-title-vertical {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      white-space: nowrap;
+      font-size: 16px !important;
+      line-height: 1.2;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      color: var(--colorNeutralForeground1) !important;
+      font-weight: 600 !important;
+      padding: var(--spacingVerticalS, 8px) 0;
+    }
+
+    // Horizontal title styling for expanded state
+    &-title-horizontal {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+
+    // Expand button styling for collapsed state
+    &-expand-button {
+      flex-shrink: 0;
+      margin-bottom: 0;
+      align-self: center;
+    }
+
+    // Collapse button styling for expanded state
+    &-collapse-button {
+      flex-shrink: 0;
+    }
+
     // Content area with scrolling
     &-content {
       flex: 1;
@@ -449,69 +514,6 @@
           background: var(--colorNeutralStroke1Hover, #b3b3b3);
         }
       }
-    }
-
-    // Collapse toggle button (when panel is expanded)
-    &-toggle {
-      position: absolute;
-      top: 50%;
-      right: 0;
-      transform: translateY(-50%) translateX(50%);
-      width: 24px;
-      height: 48px;
-      background: var(--colorNeutralBackground1, #ffffff);
-      border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
-      border-radius: 0 var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--colorNeutralForeground2, #424242);
-      font-size: 12px;
-      z-index: 2;
-      transition: background-color 0.2s ease, color 0.2s ease;
-
-      &:hover {
-        background: var(--colorNeutralBackground1Hover, #f5f5f5);
-        color: var(--colorNeutralForeground1, #242424);
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--colorCompoundBrandStroke, #0078d4);
-        outline-offset: 2px;
-      }
-    }
-  }
-
-  // Collapsed state toggle button (when panel is collapsed)
-  &__left-toggle-collapsed {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 48px;
-    background: var(--colorNeutralBackground1, #ffffff);
-    border: 1px solid var(--colorNeutralStroke1, #d1d1d1);
-    border-radius: var(--borderRadiusMedium, 4px) 0 0 var(--borderRadiusMedium, 4px);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--colorNeutralForeground2, #424242);
-    font-size: 12px;
-    z-index: 2;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
-
-    &:hover {
-      background: var(--colorNeutralBackground1Hover, #f5f5f5);
-      color: var(--colorNeutralForeground1, #242424);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--colorCompoundBrandStroke, #0078d4);
-      outline-offset: 2px;
     }
   }
 
@@ -544,11 +546,13 @@
     &__left {
       width: 100% !important; // Override inline width on mobile
       max-height: 40vh;
-    }
 
-    &__left-toggle,
-    &__left-toggle-collapsed {
-      display: none; // Hide collapse functionality on mobile
+      &-header.collapsed {
+        writing-mode: initial;
+        text-orientation: initial;
+        width: 100%;
+        justify-content: space-between;
+      }
     }
 
     &__center {
@@ -565,9 +569,8 @@
       border: 1px solid transparent; // Will be visible in high contrast mode
     }
 
-    &__left-toggle,
-    &__left-toggle-collapsed {
-      border: 2px solid transparent;
+    &__left-header {
+      border-bottom: 1px solid transparent;
     }
   }
 }

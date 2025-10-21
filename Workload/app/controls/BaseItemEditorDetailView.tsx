@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { BaseItemEditorView } from "./BaseItemEditorView";
+import { BaseItemEditorView, LeftPanelConfig } from "./BaseItemEditorView";
 import "../styles.scss";
 
 /**
@@ -26,8 +26,8 @@ export interface DetailViewAction {
  * BaseItemEditorDetailView Props Interface
  */
 export interface BaseItemEditorDetailViewProps {
-  /** Optional left panel content (e.g., navigation, properties panel) */
-  left?: ReactNode;
+  /** Optional left panel configuration (supports both ReactNode for simple usage and LeftPanelConfig for advanced) */
+  left?: ReactNode | LeftPanelConfig;
   /** Required center content area (main detail content) */
   center: ReactNode;
   /** Optional actions to display in the ribbon when this view is active */
@@ -36,16 +36,18 @@ export interface BaseItemEditorDetailViewProps {
   onActionsChange?: (actions: DetailViewAction[]) => void;
   /** Optional className for custom styling */
   className?: string;
-  /** Width of the left panel in pixels (default: 280px) */
+  /** @deprecated Use left.width instead - Width of the left panel in pixels (default: 280px) */
   leftPanelWidth?: number;
-  /** Minimum width of the left panel for resizing (default: 200px) */
+  /** @deprecated Use left.minWidth instead - Minimum width of the left panel for resizing (default: 200px) */
   leftPanelMinWidth?: number;
-  /** Whether the left panel is collapsible (default: false) */
+  /** @deprecated Use left.collapsible instead - Whether the left panel is collapsible (default: false) */
   isLeftPanelCollapsible?: boolean;
-  /** Initial collapsed state of left panel (default: false) */
+  /** @deprecated Use left.collapsed instead - Initial collapsed state of left panel (default: false) */
   isLeftPanelCollapsed?: boolean;
-  /** Callback when left panel collapse state changes */
+  /** @deprecated Use left.onCollapseChange instead - Callback when left panel collapse state changes */
   onLeftPanelCollapseChange?: (isCollapsed: boolean) => void;
+  /** @deprecated Use left.title instead - Optional title for the left panel header */
+  leftPanelTitle?: string;
 }
 
 /**
@@ -208,8 +210,30 @@ export function BaseItemEditorDetailView({
   leftPanelMinWidth = 200,
   isLeftPanelCollapsible = false,
   isLeftPanelCollapsed = false,
-  onLeftPanelCollapseChange
+  onLeftPanelCollapseChange,
+  leftPanelTitle
 }: BaseItemEditorDetailViewProps) {
+
+  // Convert legacy props to new LeftPanelConfig format
+  const leftPanelConfig = React.useMemo((): LeftPanelConfig | undefined => {
+    if (!left) return undefined;
+    
+    // If left is already a LeftPanelConfig object
+    if (typeof left === 'object' && left !== null && 'content' in left) {
+      return left as LeftPanelConfig;
+    }
+    
+    // Convert legacy ReactNode to LeftPanelConfig
+    return {
+      content: left as ReactNode,
+      title: leftPanelTitle,
+      width: leftPanelWidth,
+      minWidth: leftPanelMinWidth,
+      collapsible: isLeftPanelCollapsible,
+      collapsed: isLeftPanelCollapsed,
+      onCollapseChange: onLeftPanelCollapseChange
+    };
+  }, [left, leftPanelTitle, leftPanelWidth, leftPanelMinWidth, isLeftPanelCollapsible, isLeftPanelCollapsed, onLeftPanelCollapseChange]);
 
   // Notify parent when actions change
   React.useEffect(() => {
@@ -221,14 +245,9 @@ export function BaseItemEditorDetailView({
   // Use BaseItemEditorView for consistent layout
   return (
     <BaseItemEditorView
-      left={left}
+      left={leftPanelConfig}
       center={center}
       className={className}
-      leftPanelWidth={leftPanelWidth}
-      leftPanelMinWidth={leftPanelMinWidth}
-      isLeftPanelCollapsible={isLeftPanelCollapsible}
-      isLeftPanelCollapsed={isLeftPanelCollapsed}
-      onLeftPanelCollapseChange={onLeftPanelCollapseChange}
     />
   );
 }
