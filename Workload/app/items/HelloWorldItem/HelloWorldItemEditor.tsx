@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { MessageBar, MessageBarBody } from "@fluentui/react-components";
-import { Warning20Filled } from "@fluentui/react-icons";
+import { MessageBar, MessageBarBody, MessageBarActions, Button } from "@fluentui/react-components";
+import { Warning20Filled, Dismiss20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
-import { HelloWorldItemDefinition} from "./HelloWorldItemModel";
+import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
@@ -32,6 +32,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
+  const [showWarning, setShowWarning] = useState(true);
 
   const { pathname } = useLocation();
 
@@ -143,12 +144,22 @@ export function HelloWorldItemEditor(props: PageProps) {
           openSettingsCallback={handleOpenSettings}
         />
       )}
-      notification={(currentView) => 
-        currentView === EDITOR_VIEW_TYPES.DEFAULT ? (
+      notification={(currentView) =>
+        currentView === EDITOR_VIEW_TYPES.DEFAULT && showWarning ? (
           <MessageBar intent="warning" icon={<Warning20Filled />}>
             <MessageBarBody>
               {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
             </MessageBarBody>
+            <MessageBarActions
+              containerAction={
+                <Button
+                  appearance="transparent"
+                  icon={<Dismiss20Regular />}
+                  aria-label={t('MessageBar_Dismiss', 'Dismiss')}
+                  onClick={() => setShowWarning(false)}
+                />
+              }
+            />
           </MessageBar>
         ) : undefined
       }

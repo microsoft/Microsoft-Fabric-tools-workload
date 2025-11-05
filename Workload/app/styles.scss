@@ -183,6 +183,7 @@
     overflow-x: hidden; // Prevent horizontal scroll
     padding: var(--spacingVerticalS, 8px);
     background: var(--colorNeutralBackground2, #f3f2f1);
+    border-radius: var(--borderRadiusMedium, 8px);
 
     // Custom scrollbar styling - Fabric UX guideline
     &::-webkit-scrollbar {
@@ -249,12 +250,12 @@
 
 .ribbon-container .toolbarContainer {
     // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
-    max-height: 45px;
+    max-height: 32px;
     height: auto; // Allow flexible height for content
-    border-radius: var(--borderRadiusMedium, 4px); // Use Fabric design tokens
+    border-radius: var(--borderRadiusMedium, 8px); // Use Fabric design tokens
     background: var(--colorNeutralBackground1, #ffffff);
     box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
-    margin: 5px 0;
+    margin: 4px 0px 8px ;
     padding: 4px 8px; // Add padding for content spacing
     display: flex;
     align-items: center;
@@ -262,9 +263,18 @@
 
 }
 
+.ribbon-container .toolbarContainer > div[role="toolbar"] {
+  padding: 0 !important;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
-    padding: 8px 12px;
+    padding: 8px;
     min-height: 32px; // Ensure minimum touch target size
     max-height: 32px;
     display: flex;
@@ -300,13 +310,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--spacingVerticalXL, 24px);
 
   .empty-state-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacingVerticalXL, 24px);
     max-width: 600px; // Default max-width, can be overridden via inline style
 
     .empty-state-image {
@@ -323,7 +331,6 @@
       align-items: center;
       gap: var(--spacingVerticalS, 8px);
       text-align: center;
-      padding: 0 var(--spacingHorizontalXL, 24px);
 
       .empty-state-header {
         display: flex;
@@ -347,9 +354,10 @@
           font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
           font-weight: var(--fontWeightRegular, 400);
           line-height: var(--lineHeightBase300, 20px);
+          text-align: center;
           margin: 0;
           padding: 0;
-          max-width: 500px;
+          max-width: 376px;
         }
       }
     }
@@ -523,7 +531,7 @@
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1, #ffffff);
-    border-radius: var(--borderRadiusMedium, 4px);
+    border-radius: var(--borderRadiusMedium, 8px);
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
     overflow: hidden;
     padding: var(--spacingVerticalM, 12px);

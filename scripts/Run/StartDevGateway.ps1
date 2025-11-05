@@ -61,7 +61,7 @@ if($IsWindows) {
     } else {
         # Use token-based authentication
         Write-Host "Starting DevGateway with token-based authentication..." -ForegroundColor Green
-        & $fileExe -LogLevel $logLevel -DevMode:UserAuthorizationToken $token -DevMode:ManifestPackageFilePath $manifestPackageFilePath -DevMode:WorkspaceGuid $devWorkspaceId -DevMode:WorkloadEndpointUrl $workloadEndpointURL
+        & $fileExe -LogLevel $logLevel -DevMode:UserAuthorizationToken $token -DevMode:ManifestPackageFilePath $manifestPackageFilePath -DevMode:WorkspaceGuid $devWorkspaceId
     }
 } else {   
     # Check if we're on ARM64 Mac and need x64 runtime

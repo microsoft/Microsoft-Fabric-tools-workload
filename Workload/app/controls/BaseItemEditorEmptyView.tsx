@@ -122,7 +122,6 @@ export function BaseItemEditorEmptyView({
     <Stack 
       className={`item-editor-view-empty ${className}`.trim()}
       horizontalAlign="center" 
-      verticalAlign="center"
       role="main"
       aria-label="Empty state"
     >

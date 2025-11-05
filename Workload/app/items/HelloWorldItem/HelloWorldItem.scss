@@ -35,12 +35,14 @@
 .hello-world-getting-started-container {
   width: 100%;
   height: 100%;
+  min-height: 100%;
   background: var(--colorNeutralBackground1);
   box-shadow: var(--shadow4);
-  border-radius: var(--borderRadiusMedium);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: var(--borderRadiusMedium, 8px);
 }
 
 // ============================================================================
@@ -50,6 +52,10 @@
 .hello-world-content-wrapper {
   display: flex;
   flex-direction: row;
+  min-height: 100%;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: stretch;
 }
 
 // ============================================================================
@@ -64,6 +70,7 @@
   padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXXL);
   background: var(--colorBrandBackground2);
   border-radius: 0;
+  flex-shrink: 0;
 }
 
 .hello-world-hero-content {
@@ -155,6 +162,7 @@
   border-radius: var(--borderRadiusMedium);
   background: var(--colorNeutralBackground1);
   overflow: hidden;
+  width: 66.666%;
 }
 
 .hello-world-expand-button {
@@ -211,9 +219,9 @@
 
 .hello-world-detail-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: var(--spacingVerticalS) 0;
-  border-bottom: 1px solid var(--colorNeutralStroke2);
+  gap: var(--spacingHorizontalXS);
 }
 
 .hello-world-detail-label {
@@ -221,6 +229,10 @@
   font-weight: var(--fontWeightSemibold);
   color: var(--colorNeutralForeground2);
   font-family: var(--fontFamilyBase);
+
+  &::after {
+    content: ':';
+  }
 }
 
 .hello-world-detail-value {

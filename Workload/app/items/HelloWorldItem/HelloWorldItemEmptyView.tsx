@@ -34,7 +34,6 @@ export function HelloWorldItemEmptyView({
     {
       id: 'getting-started',
       label: t('HelloWorldItemEmptyView_StartButton', 'Getting Started'),
-      description: t('HelloWorldItemEmptyView_StartDescription', 'Learn how to use this item'),
       onClick: onNavigateToGettingStarted,
       appearance: 'primary'
     }
