@@ -157,14 +157,17 @@
   flex-direction: column;
   width: 100%;
   height: 100vh; // Fill entire viewport/iframe height
-  background: var(--colorNeutralBackground2, #f3f2f1);
+  background: var(--colorNeutralBackground3); //colorNeutralBackground3
+  //border-radius: var(--borderRadiusMedium, 8px);
   overflow: hidden; // Prevent outer scroll
 
   // Ribbon Container - Fixed at the top
   &__ribbon {
     flex-shrink: 0; // Don't shrink the ribbon
     padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px) 0 var(--spacingHorizontalS, 8px);
-    background: var(--colorNeutralBackground2, #f3f2f1);
+    //background: var(--colorNeutralBackground2, #f3f2f1);
+    background: var(--colorNeutralBackground3);
+    //border-radius: var(--borderRadiusMedium, 8px);
     z-index: 1; // Keep ribbon above content during scroll
   }
 
@@ -172,7 +175,9 @@
   &__notification {
     flex-shrink: 0; // Don't shrink the notification area
     padding: 0 var(--spacingHorizontalS, 8px);
-    background: var(--colorNeutralBackground2, #f3f2f1);
+    background: var(--colorNeutralBackground3);
+    //border-radius: var(--borderRadiusMedium, 8px);
+    //background: var(--colorNeutralBackground2, #f3f2f1);
     z-index: 1; // Keep notification above content during scroll
   }
 
@@ -182,8 +187,9 @@
     overflow-y: auto; // Allow vertical scrolling
     overflow-x: hidden; // Prevent horizontal scroll
     padding: var(--spacingVerticalS, 8px);
-    background: var(--colorNeutralBackground2, #f3f2f1);
-    border-radius: var(--borderRadiusMedium, 8px);
+    //background: var(--colorNeutralBackground2, #f3f2f1);
+    background: var(--colorNeutralBackground3);
+    //border-radius: var(--borderRadiusMedium, 8px);
 
     // Custom scrollbar styling - Fabric UX guideline
     &::-webkit-scrollbar {

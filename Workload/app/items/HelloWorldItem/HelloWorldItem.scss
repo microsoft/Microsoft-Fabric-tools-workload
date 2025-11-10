@@ -144,6 +144,20 @@
   margin: 0;
 }
 
+.hello-world-hero-list {
+  margin: 0;
+  padding-left: var(--spacingHorizontalXL);
+  list-style-position: outside;
+  list-style-type: decimal; // 1, 2, 3...
+}
+
+.hello-world-hero-list-item {
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--colorNeutralForegroundStatic);
+  margin-bottom: var(--spacingVerticalM);
+}
+
 .hello-world-section-subtitle {
   color: var(--colorNeutralForeground1);
   font-size: var(--fontSizeBase400);

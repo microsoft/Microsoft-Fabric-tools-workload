@@ -50,9 +50,13 @@ export function HelloWorldItemDefaultView({
           <div className="hello-world-hero-content">
             <div className="hello-world-hero-text">
               <h1 className="hello-world-hero-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
-              <p className="hello-world-hero-subtitle">
+              <ol className="hello-world-hero-list">
+                      <li className="hello-world-hero-list-item">{t('GettingStarted_Card1_Bullet1', 'Save the item to save state')}</li>
+                      <li className="hello-world-hero-list-item">{t('GettingStarted_Card1_Bullet2', 'Use the resources on the right in order to get started.')}</li>
+                    </ol>
+              {/* <p className="hello-world-hero-subtitle">
                 {t('GettingStarted_Subtitle', 'Your new item is ready to use. Use the resources here to customize it and get started.')}
-              </p>
+              </p> */}
             </div>
           </div>
         </div>
@@ -157,8 +161,8 @@ export function HelloWorldItemDefaultView({
                   </div>
                   <div className="hello-world-card-body">
                     <ul className="hello-world-card-list">
-                      <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet1', 'Explore workload interaction in the sample calculator.')}</li>
-                      <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet2', 'Test UI components in the Workload Playground.')}</li>
+                      <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet1', 'Explore other workloads.')}</li>
+                      <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet2', 'Test UI components in the Workload.')}</li>
                       <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet3', 'Clone the repo to run and explore the sample workload.')}</li>
                     </ul>
                   </div>
