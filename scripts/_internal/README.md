@@ -57,8 +57,8 @@ Automates the release process for publishing changes from the staging repository
 
 2. **Preparation**
    - Creates temporary working directory
-   - Clones public repository
-   - Creates feature branch (`release/v{VERSION}`)
+   - Clones public repository (default: `https://github.com/microsoft/fabric-extensibility-toolkit.git`)
+   - Creates or checks out feature branch (`dev/release/v{VERSION}`)
 
 3. **Synchronization**
    - Copies files from staging repository
@@ -68,7 +68,7 @@ Automates the release process for publishing changes from the staging repository
 4. **Publication**
    - Commits changes with release message
    - Pushes feature branch to public repository
-   - Creates Pull Request (if GitHub CLI available)
+   - Creates Pull Request targeting main branch (direct commits to main not allowed)
    - Updates main README.md with latest release link
    - Creates and pushes version tag
 
@@ -147,6 +147,24 @@ Brief description of the release.
 ## 🔄 Migration Guide
 Step-by-step upgrade instructions.
 ```
+
+#### Branch Handling
+
+The script uses `dev/release/{VERSION}` branch naming convention and follows a PR-only workflow for the target repository:
+
+**Target Branch Setup**: Always ensures the release branch is created from the latest target branch (usually `main`)
+
+**New Branch**: Creates `dev/release/{VERSION}` from the target branch with latest changes
+
+**Existing Local Branch**: Switches to it and merges latest changes from target branch
+
+**Existing Remote Branch**: Checks out locally and merges latest changes from target branch
+
+**PR-Only Workflow**: Creates Pull Request targeting main branch (direct commits to main are not allowed)
+
+**Safe Updates**: Uses `--force-with-lease` when pushing to protect against overwrites
+
+**Tag Management**: Creates version tags after successful branch creation (tags are created in both repositories)
 
 #### Error Handling
 

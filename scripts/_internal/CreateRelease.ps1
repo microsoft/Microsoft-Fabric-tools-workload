@@ -6,16 +6,17 @@
     This script automates the release process for the Microsoft Fabric Extensibility Toolkit:
     1. Validates the version number format
     2. Checks for corresponding release notes
-    3. Syncs changes to public repository (with exclusions)
-    4. Creates a Pull Request
-    5. Updates README.md with latest release information
-    6. Tags the version
+    3. Creates/updates release branch from target branch (dev/release/{VERSION})
+    4. Syncs changes to public repository (with exclusions)
+    5. Creates a Pull Request (target repository requires PR-only workflow)
+    6. Updates README.md with latest release information
+    7. Tags the version
 
 .PARAMETER Version
     The version number in format YYYY.MM.P (e.g., 2025.11.1)
 
 .PARAMETER PublicRepoUrl
-    The URL of the public GitHub repository (default: detected from git remote)
+    The URL of the public GitHub repository (default: https://github.com/microsoft/fabric-extensibility-toolkit.git)
 
 .PARAMETER PublicRepoOwner
     The owner of the public repository (default: microsoft)
@@ -27,7 +28,7 @@
     The source branch to sync from (default: main)
 
 .PARAMETER TargetBranch
-    The target branch in public repo (default: main)
+    The target branch for the Pull Request (default: main) - direct commits not allowed
 
 .PARAMETER Force
     Skip confirmation prompts
@@ -36,14 +37,16 @@
     Perform a dry run - show what would be done without making changes (alias: WhatIf)
 
 .EXAMPLE
-    .\CreateRelease.ps1 -Version "2025.11.1"
+    .\CreateRelease.ps1 -Version "2025.11"
+    Creates release branch dev/release/2025.11 for the November 2025 release
 
 .EXAMPLE
-    .\CreateRelease.ps1 -Version "2025.11.1" -DryRun
+    .\CreateRelease.ps1 -Version "2025.11" -DryRun
     Shows what would be done for the release without making changes
 
 .EXAMPLE
-    .\CreateRelease.ps1 -Version "2025.11.1" -PublicRepoUrl "https://github.com/microsoft/fabric-extensibility-toolkit.git" -Force
+    .\CreateRelease.ps1 -Version "2025.11.1" -Force
+    Creates a patch release with confirmation prompts skipped
 
 #>
 
@@ -53,7 +56,7 @@ param(
     [string]$Version,
     
     [Parameter()]
-    [string]$PublicRepoUrl = "",
+    [string]$PublicRepoUrl = "https://github.com/microsoft/fabric-extensibility-toolkit.git",
     
     [Parameter()]
     [string]$PublicRepoOwner = "microsoft",
@@ -261,6 +264,151 @@ function Test-GitHubCLI {
     }
 }
 
+function New-ReleaseBranch {
+    param(
+        [string]$Version,
+        [string]$WorkingDirectory,
+        [string]$TargetBranch = "main"
+    )
+    
+    $branchName = "dev/release/$Version"
+    
+    try {
+        Push-Location $WorkingDirectory
+        
+        # First, ensure we're on the target branch and it's up to date
+        try {
+            Invoke-GitCommand "checkout $TargetBranch" -WorkingDirectory $WorkingDirectory
+            Invoke-GitCommand "pull origin $TargetBranch" -WorkingDirectory $WorkingDirectory
+            Write-StepSuccess "Updated $TargetBranch branch"
+        }
+        catch {
+            Write-StepWarning "Could not update $TargetBranch branch: $_"
+        }
+        
+        # Check if branch already exists locally
+        $localBranchExists = (git branch --list $branchName) -ne ""
+        
+        # Check if branch exists on remote
+        $remoteBranchExists = $false
+        try {
+            git ls-remote --heads origin $branchName | Out-Null
+            $remoteBranchExists = $LASTEXITCODE -eq 0
+        }
+        catch {
+            $remoteBranchExists = $false
+        }
+        
+        if ($localBranchExists) {
+            # Switch to existing local branch
+            Invoke-GitCommand "checkout $branchName" -WorkingDirectory $WorkingDirectory
+            Write-StepSuccess "Switched to existing branch: $branchName"
+            
+            if ($remoteBranchExists) {
+                # Pull latest changes from remote
+                try {
+                    Invoke-GitCommand "pull origin $branchName" -WorkingDirectory $WorkingDirectory
+                    Write-StepSuccess "Updated branch with latest changes from remote"
+                }
+                catch {
+                    Write-StepWarning "Could not pull from remote branch, continuing with local version"
+                }
+            }
+            
+            # Merge latest changes from target branch
+            try {
+                Invoke-GitCommand "merge origin/$TargetBranch" -WorkingDirectory $WorkingDirectory
+                Write-StepSuccess "Merged latest changes from $TargetBranch"
+            }
+            catch {
+                Write-StepWarning "Could not merge from $TargetBranch, continuing with current state"
+            }
+        }
+        elseif ($remoteBranchExists) {
+            # Checkout remote branch
+            Invoke-GitCommand "checkout -b $branchName origin/$branchName" -WorkingDirectory $WorkingDirectory
+            Write-StepSuccess "Checked out existing remote branch: $branchName"
+            
+            # Merge latest changes from target branch
+            try {
+                Invoke-GitCommand "merge origin/$TargetBranch" -WorkingDirectory $WorkingDirectory
+                Write-StepSuccess "Merged latest changes from $TargetBranch"
+            }
+            catch {
+                Write-StepWarning "Could not merge from $TargetBranch, continuing with current state"
+            }
+        }
+        else {
+            # Create new branch from target branch
+            Invoke-GitCommand "checkout -b $branchName origin/$TargetBranch" -WorkingDirectory $WorkingDirectory
+            Write-StepSuccess "Created new feature branch: $branchName from $TargetBranch"
+        }
+        
+        return $branchName
+    }
+    catch {
+        throw "Failed to create/checkout release branch: $_"
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Update-GitTag {
+    param(
+        [string]$Version,
+        [string]$WorkingDirectory,
+        [string]$TagMessage
+    )
+    
+    $tagName = "v$Version"
+    
+    try {
+        Push-Location $WorkingDirectory
+        
+        # Check if tag already exists locally
+        $localTagExists = (git tag -l $tagName) -ne ""
+        
+        # Check if tag exists on remote
+        $remoteTagExists = $false
+        try {
+            git ls-remote --tags origin $tagName | Out-Null
+            $remoteTagExists = $LASTEXITCODE -eq 0
+        }
+        catch {
+            $remoteTagExists = $false
+        }
+        
+        if ($localTagExists) {
+            # Delete existing local tag
+            git tag -d $tagName | Out-Null
+            Write-StepSuccess "Removed existing local tag: $tagName"
+        }
+        
+        if ($remoteTagExists) {
+            # Delete existing remote tag
+            git push --delete origin $tagName | Out-Null
+            Write-StepSuccess "Removed existing remote tag: $tagName"
+        }
+        
+        # Create new tag
+        Invoke-GitCommand "tag -a $tagName -m `"$TagMessage`"" -WorkingDirectory $WorkingDirectory
+        Write-StepSuccess "Created new tag: $tagName"
+        
+        # Push the tag
+        Invoke-GitCommand "push origin $tagName" -WorkingDirectory $WorkingDirectory
+        Write-StepSuccess "Pushed tag to remote: $tagName"
+        
+        return $tagName
+    }
+    catch {
+        throw "Failed to update git tag: $_"
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 function Update-ReadmeLatestRelease {
     param(
         [string]$Version,
@@ -368,7 +516,7 @@ try {
         Write-Information "✓ Version: $Version"
         Write-Information "✓ Release notes: $releaseNotesPath"
         Write-Information "✓ Public repo URL: $PublicRepoUrl"
-        Write-Information "✓ Feature branch: release/v$Version"
+        Write-Information "✓ Feature branch: dev/release/$Version"
         Write-Information "✓ Target branch: $TargetBranch"
         Write-Information "✓ Would sync files from: $ProjectRoot"
         Write-Information "✓ Would exclude patterns: $($ExcludePatterns -join ', ')"
@@ -409,10 +557,8 @@ try {
     Invoke-GitCommand "clone $PublicRepoUrl `"$publicRepoDir`"" -WorkingDirectory $TempDir
     Write-StepSuccess "Cloned public repository"
     
-    # Create feature branch
-    $featureBranch = "release/v$Version"
-    Invoke-GitCommand "checkout -b $featureBranch" -WorkingDirectory $publicRepoDir
-    Write-StepSuccess "Created feature branch: $featureBranch"
+    # Create or checkout feature branch
+    $featureBranch = New-ReleaseBranch -Version $Version -WorkingDirectory $publicRepoDir -TargetBranch $TargetBranch
     
     # Step 4: Sync changes
     Write-StepHeader "Step 4: Syncing Changes"
@@ -438,8 +584,22 @@ try {
     # Step 6: Push branch
     Write-StepHeader "Step 6: Pushing Feature Branch"
     
-    Invoke-GitCommand "push origin $featureBranch" -WorkingDirectory $publicRepoDir
-    Write-StepSuccess "Pushed feature branch to remote"
+    try {
+        # Use --force-with-lease to safely update existing branches
+        Invoke-GitCommand "push origin $featureBranch --force-with-lease" -WorkingDirectory $publicRepoDir
+        Write-StepSuccess "Pushed feature branch to remote"
+    }
+    catch {
+        try {
+            # Fallback to regular push for new branches
+            Invoke-GitCommand "push origin $featureBranch" -WorkingDirectory $publicRepoDir
+            Write-StepSuccess "Pushed new feature branch to remote"
+        }
+        catch {
+            Write-StepError "Failed to push feature branch: $_"
+            throw
+        }
+    }
     
     # Step 7: Create Pull Request
     Write-StepHeader "Step 7: Creating Pull Request"
@@ -478,6 +638,9 @@ $releaseNotes
             $prTitle = "Release v$Version"
             gh pr create --title $prTitle --body $prBody --base $TargetBranch --head $featureBranch
             Write-StepSuccess "Pull Request created successfully"
+            Write-Information "✓ Release branch: $featureBranch"
+            Write-Information "✓ Target for merge: $TargetBranch"
+            Write-Information "✓ PR must be reviewed and merged to complete release"
         }
         catch {
             Write-StepError "Failed to create PR: $_"
@@ -520,15 +683,23 @@ $releaseNotes
     Write-StepHeader "Step 9: Creating Git Tag"
     
     try {
-        # Tag in the public repository
+        # Update tag in the public repository (handles existing tags)
         $tagMessage = "Release version $Version"
-        Invoke-GitCommand "tag -a v$Version -m `"$tagMessage`"" -WorkingDirectory $publicRepoDir
-        Invoke-GitCommand "push origin v$Version" -WorkingDirectory $publicRepoDir
-        Write-StepSuccess "Created and pushed tag: v$Version"
+        Update-GitTag -Version $Version -WorkingDirectory $publicRepoDir -TagMessage $tagMessage
         
         # Also tag in the source repository
-        Invoke-GitCommand "tag -a v$Version -m `"$tagMessage`"" -WorkingDirectory $ProjectRoot
-        Write-StepSuccess "Created tag in source repository: v$Version"
+        try {
+            $sourceTagExists = (git tag -l "v$Version") -ne ""
+            if ($sourceTagExists) {
+                git tag -d "v$Version" | Out-Null
+                Write-StepSuccess "Removed existing source tag: v$Version"
+            }
+            Invoke-GitCommand "tag -a v$Version -m `"$tagMessage`"" -WorkingDirectory $ProjectRoot
+            Write-StepSuccess "Created tag in source repository: v$Version"
+        }
+        catch {
+            Write-StepWarning "Could not tag source repository: $_"
+        }
     }
     catch {
         Write-StepError "Failed to create tag: $_"
@@ -550,9 +721,11 @@ $releaseNotes
     Write-Information "Public Repository: $PublicRepoUrl"
     
     if (-not $skipPR) {
-        Write-Information "Pull Request: Created automatically"
+        Write-Information "Pull Request: Created automatically and ready for review"
+        Write-Information "⚠️  NEXT STEPS: Review and merge the PR to complete the release"
     } else {
         Write-Information "Pull Request: Manual creation required"
+        Write-Information "⚠️  NEXT STEPS: Create PR manually and merge to complete the release"
     }
     
 }
