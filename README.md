@@ -18,6 +18,7 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 - [Microsoft Fabric Extensibility Toolkit](#microsoft-fabric-extensibility-toolkit)
   - [Trademarks](#trademarks)
   - [Table of contents](#table-of-contents)
+  - [Latest Release](#latest-release)
 - [Introduction](#introduction)
   - [What is Fabric](#what-is-fabric)
   - [What is a Fabric Workload](#what-is-a-fabric-workload)
@@ -26,6 +27,12 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 - [Build Your Own Workload](#build-your-own-workload)
   - [Prerequisites](#prerequisites)
   - [Setting things up](#setting-things-up)
+
+## Latest Release
+
+📋 **[v2025.11 - Standardized Base Controls](docs/ReleaseNotes/2025/v2025.11.md)**
+
+This release introduces comprehensive standardized base controls, SCSS architecture improvements, and enhanced HelloWorld reference implementation. [View all release notes →](docs/ReleaseNotes/)
 
 ## Introduction
 
