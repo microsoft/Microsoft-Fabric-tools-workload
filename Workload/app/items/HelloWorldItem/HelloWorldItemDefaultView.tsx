@@ -51,7 +51,7 @@ export function HelloWorldItemDefaultView({
             <div className="hello-world-hero-text">
               <h1 className="hello-world-hero-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
               <ol className="hello-world-hero-list">
-                      <li className="hello-world-hero-list-item">{t('GettingStarted_Card1_Bullet1', 'Save the item to save state')}</li>
+                      <li className="hello-world-hero-list-item">{t('GettingStarted_Card1_Bullet1', 'Save the item to store the state.')}</li>
                       <li className="hello-world-hero-list-item">{t('GettingStarted_Card1_Bullet2', 'Use the resources on the right in order to get started.')}</li>
                     </ol>
               {/* <p className="hello-world-hero-subtitle">
