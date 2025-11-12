@@ -56,7 +56,6 @@ export function ClientSDKPlayground(props: TabContentProps) {
         <Tab value="dataHub">Data Hub</Tab>
         <Tab value="uiComponents">UI Components</Tab>
         <Tab value="authenticationFrontend">Frontend Authentication</Tab>
-        <Tab value="publicJSCrud">Public Definition JS API</Tab>
         <Tab value="sparkTerminal">Spark Terminal</Tab>
       </TabList>
 
