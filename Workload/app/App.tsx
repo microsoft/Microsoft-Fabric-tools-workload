@@ -8,6 +8,8 @@ import CustomItemSettings from "./items/HelloWorldItem/HelloWorldItemSettingsVie
 import CustomAbout from "./items/HelloWorldItem/HelloWorldItemAboutView";
 import { SamplePage, ClientSDKPlayground } from "./playground/ClientSDKPlayground/ClientSDKPlayground";
 import { DataPlayground } from "./playground/DataPlayground/DataPlayground";
+import {PlaygroundPanel} from "./playground/ClientSDKPlayground/PlaygroungPanel";
+import PlaygroundSharedStatePage from "./playground/ClientSDKPlayground/playgroundSharedStatePage";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem/HelloWorldItemEditor";
 
 /*
@@ -76,6 +78,14 @@ export function App({ history, workloadClient }: AppProps) {
 
             <Route path="/sample-page">
                 <SamplePage workloadClient={workloadClient} />
+            </Route>
+
+            <Route path="/playground-shared-state-page">
+                <PlaygroundSharedStatePage workloadClient={workloadClient} />
+            </Route>
+
+            <Route path="/playground-panel">
+                <PlaygroundPanel workloadClient={workloadClient} />
             </Route>
         </Switch>
     </Router>;
