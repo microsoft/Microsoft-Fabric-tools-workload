@@ -25,7 +25,7 @@ export function ApiPanelSettings(props: TabContentProps) {
         callPanelOpen(
             workloadClient,
             sampleWorkloadName,
-            "/panel",
+            "/playground-panel",
             apiPanelIsLightDismiss
         );
     }
