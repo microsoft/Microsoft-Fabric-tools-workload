@@ -250,7 +250,7 @@ export function buildPublicAPIPayloadWithParts(
 ): UpdateItemDefinitionPayload {
     const itemDefinitionParts: ItemDefinitionPart[] = parts.map(({ payloadPath, payloadData }) => ({
         path: payloadPath,
-        payload: btoa(JSON.stringify(payloadData)),
+        payload: btoa(JSON.stringify(payloadData, null, 2)),
         payloadType: PayloadType.InlineBase64
     }));
     return {
