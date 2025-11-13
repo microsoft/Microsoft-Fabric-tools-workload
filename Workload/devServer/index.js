@@ -4,7 +4,6 @@
  */
 
 const manifestApi = require('./manifestApi');
-const schemaApi = require('./schemaApi')
 
 /**
  * Register all dev server APIs with an Express application
@@ -16,7 +15,16 @@ function registerDevServerApis(app) {
   app.use('/', schemaApi);
 }
 
+function registerDevServerComponents() {
+  console.log('*** Mounting Dev Server Components ***');
+
+  // Tell the user about the Playground URL
+  const workloadName = process.env.WORKLOAD_NAME || 'your-workload';
+  console.log(`🎮 Playground available at: https://fabric.microsoft.com/workloads/${workloadName}/playground-client-sdk`);
+}
+
 module.exports = {
   manifestApi,
-  registerDevServerApis
+  registerDevServerApis,
+  registerDevServerComponents
 };

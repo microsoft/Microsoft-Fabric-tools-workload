@@ -67,16 +67,16 @@ export function App({ history, workloadClient }: AppProps) {
             </Route>
 
              {/* Playground routes  can be deleted if not needed */}
-            <Route path="/client-sdk-playground">
+            <Route path="/playground-client-sdk">
                 <Provider store={ClientSDKStore}>
                     <ClientSDKPlayground workloadClient={workloadClient} />
                 </Provider>
             </Route>
-            <Route path="/data-playground">
+            <Route path="/playground-data">
                 <DataPlayground workloadClient={workloadClient} />
             </Route>
 
-            <Route path="/sample-page">
+            <Route path="/playground-sample-page">
                 <SamplePage workloadClient={workloadClient} />
             </Route>
 

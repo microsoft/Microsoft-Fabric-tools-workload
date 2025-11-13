@@ -101,14 +101,14 @@ export async function initialize(params: InitParams) {
                 return workloadClient.page.open({
                     workloadName: sampleWorkloadName,
                     route: {
-                        path: `/client-sdk-playground`,
+                        path: `/playground-client-sdk`,
                     },
                 });
             case 'open.DataApiSamplePage':
                 return workloadClient.page.open({
                     workloadName: sampleWorkloadName,
                     route: {
-                        path: `/data-playground`,
+                        path: `/playground-data`,
                     },
                 });
             default:
