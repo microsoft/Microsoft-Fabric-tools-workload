@@ -1,16 +1,11 @@
 import React from "react";
-import { Provider } from "react-redux";
-import { ClientSDKStore } from "./playground/ClientSDKPlayground/Store/Store";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import CustomItemSettings from "./items/HelloWorldItem/HelloWorldItemSettingsView";
 import CustomAbout from "./items/HelloWorldItem/HelloWorldItemAboutView";
-import { SamplePage, ClientSDKPlayground } from "./playground/ClientSDKPlayground/ClientSDKPlayground";
-import { DataPlayground } from "./playground/DataPlayground/DataPlayground";
-import {PlaygroundPanel} from "./playground/ClientSDKPlayground/PlaygroungPanel";
-import PlaygroundSharedStatePage from "./playground/ClientSDKPlayground/playgroundSharedStatePage";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem/HelloWorldItemEditor";
+import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -66,27 +61,8 @@ export function App({ history, workloadClient }: AppProps) {
                     data-testid="HelloWorldItem-about" />
             </Route>
 
-             {/* Playground routes  can be deleted if not needed */}
-            <Route path="/playground-client-sdk">
-                <Provider store={ClientSDKStore}>
-                    <ClientSDKPlayground workloadClient={workloadClient} />
-                </Provider>
-            </Route>
-            <Route path="/playground-data">
-                <DataPlayground workloadClient={workloadClient} />
-            </Route>
-
-            <Route path="/playground-sample-page">
-                <SamplePage workloadClient={workloadClient} />
-            </Route>
-
-            <Route path="/playground-shared-state-page">
-                <PlaygroundSharedStatePage workloadClient={workloadClient} />
-            </Route>
-
-            <Route path="/playground-panel">
-                <PlaygroundPanel workloadClient={workloadClient} />
-            </Route>
+            {/* Conditionally loaded playground routes (only in development) */}
+            <ConditionalPlaygroundRoutes workloadClient={workloadClient} />
         </Switch>
     </Router>;
 }

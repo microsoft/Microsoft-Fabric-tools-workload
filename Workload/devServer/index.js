@@ -12,15 +12,16 @@ const manifestApi = require('./manifestApi');
 function registerDevServerApis(app) {
   console.log('*** Mounting Manifest API ***');
   app.use('/', manifestApi);
-  app.use('/', schemaApi);
 }
 
 function registerDevServerComponents() {
   console.log('*** Mounting Dev Server Components ***');
 
-  // Tell the user about the Playground URL
-  const workloadName = process.env.WORKLOAD_NAME || 'your-workload';
-  console.log(`🎮 Playground available at: https://fabric.microsoft.com/workloads/${workloadName}/playground-client-sdk`);
+  // Log playground availability
+  console.log('\x1b[32m🎮 Following playgrounds are enabled in development mode:\x1b[0m'); // Green
+  const workloadName = process.env.WORKLOAD_NAME || 'unknown-workload';
+  console.log(`\x1b[32m🌐 Client-SDK Playground:\x1b[0m \x1b[34mhttps://app.fabric.microsoft.com/workloads/${workloadName}/playground-client-sdk\x1b[0m`); // Blue
+  console.log(`\x1b[32m🌐 Data Playground:\x1b[0m \x1b[34mhttps://app.fabric.microsoft.com/workloads/${workloadName}/playground-data\x1b[0m`); // Blue
 }
 
 module.exports = {

@@ -2,7 +2,7 @@ const { merge } = require('webpack-merge');
 const baseConfig = require('../webpack.config.js');
 const express = require("express");
 const Webpack = require("webpack");
-const { registerDevServerApis } = require('.'); // Import our manifest API
+const { registerDevServerApis, registerDevServerComponents } = require('.'); // Import our dev server functions
 
 
 // making sure the dev configuration is set correctly!
@@ -68,6 +68,9 @@ module.exports = merge(baseConfig, {
             
             // Register the manifest API from our extracted implementation
             registerDevServerApis(devServer.app);
+            
+            // Register dev server components and log playground availability
+            registerDevServerComponents();
 
             return middlewares;
         },
