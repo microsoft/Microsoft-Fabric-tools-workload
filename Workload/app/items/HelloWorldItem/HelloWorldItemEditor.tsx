@@ -32,6 +32,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
+  const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
   const [showWarning, setShowWarning] = useState(true);
 
   const { pathname } = useLocation();
@@ -52,7 +53,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           LoadedItem = {
             ...LoadedItem,
             definition: {
-              state: undefined,
+              message: undefined,
             }
           };
         }
@@ -61,6 +62,9 @@ export function HelloWorldItemEditor(props: PageProps) {
         }
 
         setItem(LoadedItem);
+        
+        // Initialize current definition
+        setCurrentDefinition(LoadedItem.definition || {});
 
       } catch (error) {
         setItem(undefined);
@@ -95,7 +99,8 @@ export function HelloWorldItemEditor(props: PageProps) {
       workloadClient,
       item.id,
       {
-        state: new Date().toISOString()
+        ...currentDefinition,
+        message: currentDefinition.message || new Date().toISOString()
       });
     const wasSaved = Boolean(successResult);
     setHasBeenSaved(wasSaved);
@@ -115,10 +120,10 @@ export function HelloWorldItemEditor(props: PageProps) {
       if (hasBeenSaved) {
         return false;
       }
-      if (!item?.definition?.state) {
-        return true;
-      }
-      return false;
+      // Enable save if message has changed or if no message exists yet
+      const originalMessage = item?.definition?.message || "";
+      const currentMessage = currentDefinition.message || "";
+      return originalMessage !== currentMessage || !item?.definition?.message;
     }
   };
 
@@ -170,7 +175,11 @@ export function HelloWorldItemEditor(props: PageProps) {
             <HelloWorldItemEmptyView
               workloadClient={workloadClient}
               item={item}
-              onNavigateToGettingStarted={() => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT)}
+              onNavigateToGettingStarted={() => {
+                setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
+                setHasBeenSaved(false);
+                setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+              }}
             />
           )
         },
@@ -180,11 +189,16 @@ export function HelloWorldItemEditor(props: PageProps) {
             <HelloWorldItemDefaultView
               workloadClient={workloadClient}
               item={item}
+              messageValue={currentDefinition.message}
+              onMessageChange={(newValue) => {
+                setCurrentDefinition(prev => ({ ...prev, message: newValue }));
+                setHasBeenSaved(false);
+              }}
             />
           )
         }
       ]}
-      initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
+      initialView={!item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
     />
   );
 }

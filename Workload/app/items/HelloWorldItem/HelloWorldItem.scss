@@ -257,6 +257,18 @@
   word-break: break-all;
 }
 
+.hello-world-detail-input {
+  flex: 1;
+  font-size: var(--fontSizeBase300);
+  font-family: var(--fontFamilyBase);
+  
+  // Ensure input field uses available space
+  .fui-Input__input {
+    font-size: var(--fontSizeBase300);
+    font-family: var(--fontFamilyBase);
+  }
+}
+
 // ============================================================================
 // Recommended Section - Standard section pattern
 // ============================================================================

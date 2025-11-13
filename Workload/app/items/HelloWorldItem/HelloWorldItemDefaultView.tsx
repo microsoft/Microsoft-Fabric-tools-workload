@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardHeader,
+  Input,
   Text,
 } from "@fluentui/react-components";
 import {
@@ -18,6 +19,8 @@ import "./HelloWorldItem.scss";
 interface HelloWorldItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
   item?: ItemWithDefinition<HelloWorldItemDefinition>;
+  messageValue?: string;
+  onMessageChange?: (newValue: string) => void;
 }
 
 /**
@@ -27,6 +30,8 @@ interface HelloWorldItemDefaultViewProps {
 export function HelloWorldItemDefaultView({
   workloadClient,
   item,
+  messageValue,
+  onMessageChange,
 }: HelloWorldItemDefaultViewProps) {
   const { t } = useTranslation();
   const [expandedItemDetails, setExpandedItemDetails] = useState(true);
@@ -101,6 +106,16 @@ export function HelloWorldItemDefaultView({
                     <div className="hello-world-detail-row">
                       <span className="hello-world-detail-label">{t('GettingStarted_WorkspaceType', 'Item Type')}</span>
                       <span className="hello-world-detail-value">{item.type}</span>
+                    </div>
+                    <div className="hello-world-detail-row">
+                      <span className="hello-world-detail-label">{t('Item_Message_Label', 'Item Definition')}</span>
+                      <div className="hello-world-detail-input">
+                        <Input
+                          value={messageValue || item?.definition?.message || ""}
+                          onChange={(e, data) => onMessageChange?.(data.value)}
+                          placeholder={t('Item_Message_Placeholder', 'Enter a message...')}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
