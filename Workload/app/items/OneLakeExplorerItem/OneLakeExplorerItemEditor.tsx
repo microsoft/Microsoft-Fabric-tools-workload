@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Text, TabValue, Tab, TabList } from "@fluentui/react-components";
-import { Editor } from "@monaco-editor/react";
+import { Text, TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { ContextProps, PageProps } from "../../App";
 import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
@@ -8,30 +7,40 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
-import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDatahubOpen } from "../../controller/DataHubController";
-import { OneLakeItemExplorerComponent } from "../../samples/views/SampleOneLakeItemExplorer/SampleOneLakeItemExplorer";
-import { Stack } from "@fluentui/react";
-import { OneLakeExplorerItemEditorRibbon } from "./OneLakeExplorerItemEditorRibbon";
-import { OneLakeExplorerItemEditorEmpty } from "./OneLakeExplorerItemEditorEmpty";
+import { OneLakeExplorerItemRibbon } from "./OneLakeExplorerItemRibbon";
+import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
+import { BaseItemEditor } from "../../controls/BaseItemEditor";
+import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
 
 
 const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
 
+/**
+ * Different views that are available for the OneLakeExplorer item
+ */
+export const EDITOR_VIEW_TYPES = {
+  EXPLORER: "explorer",
+  EMPTY: "empty"
+} as const;
+
 
 export function OneLakeExplorerItemEditor(props: PageProps) {
+  const { workloadClient } = props;
   const pageContext = useParams<ContextProps>();
   const { pathname } = useLocation();
-  const { workloadClient } = props;
+  
+  // State management following HelloWorldItem pattern
+  const [isLoading, setIsLoading] = useState(true);
+  const [item, setItem] = useState<ItemWithDefinition<OneLakeExplorerItemDefinition>>();
   const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-  const [editorItem, setEditorItem] = useState<ItemWithDefinition<OneLakeExplorerItemDefinition>>(undefined);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
+  
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const ALLOWED_ITEM_TYPES = ["Lakehouse", ...getConfiguredWorkloadItemTypes()];
 
   // Default editor settings
@@ -42,8 +51,8 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     lineNumbers: true
   };
 
-  // Current editor state
-  const definition = editorItem?.definition;
+  // Current editor state derived from item
+  const definition = item?.definition;
   const openFiles = definition?.openFiles || [];
   const activeFileIndex = definition?.activeFileIndex || 0;
   const currentFile = openFiles[activeFileIndex];
@@ -57,17 +66,17 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         workspaceId: definition.itemReference.workspaceId,
         displayName: definition.itemReference.displayName || definition.itemReference.type
       };
-    } else if (editorItem) {
+    } else if (item) {
       return {
-        ...editorItem
+        ...item
       };
     }
     return undefined;
-  }, [definition?.itemReference?.id, definition?.itemReference?.workspaceId, definition?.itemReference?.displayName, definition?.itemReference?.type, editorItem?.id, editorItem?.workspaceId, editorItem?.displayName]);
+  }, [definition?.itemReference?.id, definition?.itemReference?.workspaceId, definition?.itemReference?.displayName, definition?.itemReference?.type, item?.id, item?.workspaceId, item?.displayName]);
 
   // Helper function to update item definition immutably
   const updateItemDefinition = useCallback((updates: Partial<OneLakeExplorerItemDefinition>) => {
-    setEditorItem(prevItem => {
+    setItem(prevItem => {
       if (!prevItem) return prevItem;
       
       return {
@@ -83,7 +92,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
 
   // Helper function to update item definition without marking as unsaved (for file selection)
   const updateItemDefinitionSilently = useCallback((updates: Partial<OneLakeExplorerItemDefinition>) => {
-    setEditorItem(prevItem => {
+    setItem(prevItem => {
       if (!prevItem) return prevItem;
       
       return {
@@ -134,121 +143,54 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
 
-  async function SaveItem() {
-    setIsSavingFiles(true);
-    
-    // First, save any dirty files back to OneLake
-    if (editorItem?.definition?.openFiles) {
-
-      const savePromises = editorItem.definition.openFiles
-        .filter(file => file.isDirty)
-        .map(async (file) => {
-          try {
-            let oneLakeLink = file.onelakeLink;
-            const oneLakeClient = new OneLakeStorageClient(workloadClient)
-            await oneLakeClient.writeFileAsText(oneLakeLink, file.content);
-              // Mark file as clean
-              file.isDirty = false;
-              return { success: true, fileName: file.fileName };
-          } catch (error) {
-            return { success: false, fileName: file.fileName, error };
-          }
-        });
-
-      if (savePromises.length > 0) {
-        const results = await Promise.all(savePromises);
-        const failures = results.filter(r => !r.success);
-        
-        if (failures.length > 0) {
-          callNotificationOpen(
-            workloadClient,
-            "Partial Save Failed",
-            `Failed to save ${failures.length} file(s) to OneLake: ${failures.map(f => f.fileName).join(', ')}`,
-            undefined,
-            undefined
-          );
-        } else {
-          callNotificationOpen(
-            workloadClient,
-            "Files Saved",
-            `Successfully saved ${results.length} file(s) to OneLake`,
-            undefined,
-            undefined
-          );
-          // Refresh the explorer to show updated files
-          refreshItemExplorer();
-        }
-      }
-    }
-
-    // Then save the item definition
-    const successResult = await saveItemDefinition<OneLakeExplorerItemDefinition>(
-      workloadClient,
-      editorItem.id,
-      editorItem.definition
-    );
-    setIsUnsaved(!successResult);
-    
-    if (successResult) {
-      callNotificationOpen(
-        workloadClient,
-        "OneLake Explorer Saved",
-        `Your files have been saved successfully.`,
-        undefined,
-        undefined
-      );
-    }
-    
-    setIsSavingFiles(false);
-  }
-
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
-    setIsLoadingData(true);
-    let item: ItemWithDefinition<OneLakeExplorerItemDefinition> = undefined;
+    setIsLoading(true);
+    let LoadedItem: ItemWithDefinition<OneLakeExplorerItemDefinition> = undefined;
     
     if (pageContext.itemObjectId) {
       try {
-        item = await getWorkloadItem<OneLakeExplorerItemDefinition>(
+        LoadedItem = await getWorkloadItem<OneLakeExplorerItemDefinition>(
           workloadClient,
           pageContext.itemObjectId
         );
         
         // Initialize empty definition if needed
-        if (!item.definition) {
-          item = {
-            ...item,
+        if (!LoadedItem.definition) {
+          LoadedItem = {
+            ...LoadedItem,
             definition: {
               openFiles: [],
               activeFileIndex: 0,
               theme: currentTheme,
               editorSettings: defaultEditorSettings,
               itemReference: {
-                id: item.id,
-                workspaceId: item.workspaceId,
-                displayName: item.displayName,
-                type: item.type,
-                description: item.description
+                id: LoadedItem.id,
+                workspaceId: LoadedItem.workspaceId,
+                displayName: LoadedItem.displayName,
+                type: LoadedItem.type,
+                description: LoadedItem.description
               }
             }
           };
-        } else if (!item.definition.itemReference) {
+        } else if (!LoadedItem.definition.itemReference) {
           // Add itemReference if it doesn't exist
-          item.definition.itemReference = {
-            id: item.id,
-            workspaceId: item.workspaceId,
-            displayName: item.displayName,
-            type: item.type,
-            description: item.description
+          LoadedItem.definition.itemReference = {
+            id: LoadedItem.id,
+            workspaceId: LoadedItem.workspaceId,
+            displayName: LoadedItem.displayName,
+            type: LoadedItem.type,
+            description: LoadedItem.description
           };
         }
-        
-        setEditorItem(item);
+
+        setItem(LoadedItem);
       } catch (error) {
-        setEditorItem(undefined);
+        setItem(undefined);
       }
+    } else {
+      console.log(`non-editor context. Current Path: ${pathname}`);
     }
-   
-    setIsLoadingData(false);
+    setIsLoading(false);
   }
 
   // Function to refresh the OneLake item explorer
@@ -263,7 +205,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     let oneLakeLink = "";
     
     // Use itemReference if available, otherwise fall back to editorItem
-    const targetItem = definition?.itemReference || editorItem;
+    const targetItem = definition?.itemReference || item;
     
     // If we have workspace and item info, create OneLake path
     if (targetItem?.workspaceId && targetItem?.id) {
@@ -287,12 +229,12 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       activeFileIndex: updatedFiles.length - 1
     });
     refreshItemExplorer();
-  }, [definition?.itemReference, editorItem, openFiles, updateItemDefinition, workloadClient, detectLanguage, refreshItemExplorer]);
+  }, [definition?.itemReference, item, openFiles, updateItemDefinition, workloadClient, detectLanguage, refreshItemExplorer]);
 
   // File operations
   const handleCreateNewFile = useCallback(async () => {
     const fileName = `untitled-${Date.now()}.txt`;
-    writeToItemOneLakeFolder(fileName, "// Welcome to OneLake Explorer\n// Start typing your code here...\n");
+    await writeToItemOneLakeFolder(fileName, "// Welcome to OneLake Explorer\n// Start typing your code here...\n");
   }, [writeToItemOneLakeFolder]);
 
   const handleItemChanged = useCallback(async (item: any) => {
@@ -350,25 +292,37 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   }, [workloadClient, handleItemChanged]);
 
   const handleUploadFile = useCallback(async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = FILETYPES_ACCEPT;
-    
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target?.result as string;
-          writeToItemOneLakeFolder(file.name, content);
-        };
-        reader.readAsText(file);
-      }
-    };
-    
-    input.click();
+    return new Promise<void>((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = FILETYPES_ACCEPT;
+      
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const content = e.target?.result as string;
+              await writeToItemOneLakeFolder(file.name, content);
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsText(file);
+        } else {
+          resolve(); // User cancelled file selection
+        }
+      };
+      
+      // Handle case where user cancels the file dialog
+      input.addEventListener('cancel', () => resolve());
+      
+      input.click();
+    });
   }, [writeToItemOneLakeFolder]);
-
 
   const handleEditorChange = useCallback((value: string | undefined) => {
     if (value !== undefined && currentFile) {
@@ -475,132 +429,159 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         undefined
       );
     }
-  }, [openFiles, updateItemDefinitionSilently, workloadClient, detectLanguage]);
+  }, [openFiles, updateItemDefinitionSilently, workloadClient, detectLanguage, definition?.itemReference]);
 
   const handleTableExplorerSelection = useCallback(async (tableName: string, oneLakeLink: string) => {
     // We don't handle table selection in the file editor, so this is a no-op
     console.log("Table selected:", tableName, oneLakeLink);
   }, []);
 
-  if (isLoadingData) {
-    return <ItemEditorLoadingProgressBar message="Loading OneLake Explorer..." />;
-  }
+  async function SaveItem() {
+    setIsSavingFiles(true);
+    
+    // First, save any dirty files back to OneLake
+    if (item?.definition?.openFiles) {
 
-  if (!editorItem) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Text size={400}>Failed to load OneLake Explorer item.</Text>
-      </div>
+      const savePromises = item.definition.openFiles
+        .filter(file => file.isDirty)
+        .map(async (file) => {
+          try {
+            let oneLakeLink = file.onelakeLink;
+            const oneLakeClient = new OneLakeStorageClient(workloadClient)
+            await oneLakeClient.writeFileAsText(oneLakeLink, file.content);
+              // Mark file as clean
+              file.isDirty = false;
+              return { success: true, fileName: file.fileName };
+          } catch (error) {
+            return { success: false, fileName: file.fileName, error };
+          }
+        });
+
+      if (savePromises.length > 0) {
+        const results = await Promise.all(savePromises);
+        const failures = results.filter(r => !r.success);
+        
+        if (failures.length > 0) {
+          callNotificationOpen(
+            workloadClient,
+            "Partial Save Failed",
+            `Failed to save ${failures.length} file(s) to OneLake: ${failures.map(f => f.fileName).join(', ')}`,
+            undefined,
+            undefined
+          );
+        } else {
+          callNotificationOpen(
+            workloadClient,
+            "Files Saved",
+            `Successfully saved ${results.length} file(s) to OneLake`,
+            undefined,
+            undefined
+          );
+          // Refresh the explorer to show updated files
+          refreshItemExplorer();
+        }
+      }
+    }
+
+    // Then save the item definition
+    const successResult = await saveItemDefinition<OneLakeExplorerItemDefinition>(
+      workloadClient,
+      item.id,
+      item.definition
     );
+    setIsUnsaved(!successResult);
+    
+    if (successResult) {
+      callNotificationOpen(
+        workloadClient,
+        "OneLake Explorer Saved",
+        `Your files have been saved successfully.`,
+        undefined,
+        undefined
+      );
+    }
+    
+    setIsSavingFiles(false);
   }
 
+  const isSaveEnabled = (currentView: string) => {
+    return isUnsaved || isSavingFiles;
+  };
+
+  // Render with view registration following HelloWorldItem pattern and built-in loading support
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <OneLakeExplorerItemEditorRibbon
-        {...props}
-        onNewFile={handleCreateNewFile}
-        onOpenItem={handleOpenItem}
-        onUploadFile={handleUploadFile}
-        saveItemCallback={SaveItem}
-        isSaveButtonEnabled={isUnsaved || isSavingFiles}
-        selectedTab="home"
-        onTabChange={() => {}}
-      />
-
-      <Stack className="main" style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
-        <span style={{ height: "100%", overflow: "auto", padding: "16px" }}>
-          <div style={{ height: "100%", display: "flex", flex: 1 }}>
-            {/* Left panel - File Explorer */}
-            <div className="explorer" style={{
-              height: "100%",
-              margin: 0,
-              borderRadius: 0,
-              borderRight: "1px solid #e1dfdd",
-              boxShadow: "none"
-            }}>
-              <div style={{ height: "calc(100% - 60px)", overflow: "hidden" }}>
-                <OneLakeItemExplorerComponent
-                  workloadClient={workloadClient}
-                  onFileSelected={handleFileExplorerSelection}
-                  onTableSelected={handleTableExplorerSelection}
-                  onItemChanged={handleItemChanged}
-                  config={{
-                    allowedItemTypes: ALLOWED_ITEM_TYPES,
-                    allowItemSelection: true,
-                    refreshTrigger: lastRefreshTime,
-                    initialItem: explorerInitialItem
-                  }}
-                />
-              </div>
+    <BaseItemEditor
+      isLoading={isLoading}
+      loadingMessage="Loading OneLake Explorer..."
+      ribbon={(context) => (
+        <OneLakeExplorerItemRibbon
+          {...props}
+          viewContext={context}
+          onNewFile={handleCreateNewFile}
+          onOpenItem={handleOpenItem}
+          onUploadFile={handleUploadFile}
+          saveItemCallback={SaveItem}
+          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
+        />
+      )}
+      notification={(currentView) => {
+        // Show error message if failed to load item
+        if (!item && !isLoading) {
+          return (
+            <div style={{ padding: "20px" }}>
+              <Text size={400}>Failed to load OneLake Explorer item.</Text>
             </div>
-
-            {/* Right panel - Editor */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              {openFiles.length > 0 && (
-                <div style={{ borderBottom: "1px solid #e1dfdd" }}>
-                  {/* Tab list for open files */}
-                  <TabList onTabSelect={handleTabChange} >
-                    {openFiles.map((file: OneLakeFileReference, index: number) => (
-                      <Tab 
-                        key={index} 
-                        value={index.toString()}
-                        style={{ position: 'relative' }}
-                      >
-                        {file.fileName}
-                        {file.isDirty ? ' •' : ''}                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCloseFile(index);
-                          }}
-                          style={{
-                            marginLeft: '8px',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            color: '#666'
-                          }}
-                        >
-                          ×
-                        </button>
-                      </Tab>
-                    ))}
-                  </TabList>
-                </div>
-              )}
-              {editorItem.definition?.openFiles?.length > 0 ? (
-                <div style={{ flex: 1, overflow: "hidden" }}>
-                  <Editor
-                    height="100%"
-                    language={currentFile?.language || "plaintext"}
-                    value={currentFile?.content || ""}
-                    theme={currentTheme}
-                    onChange={handleEditorChange}
-                    onMount={handleEditorDidMount}
-                    options={{
-                      automaticLayout: true,
-                      scrollBeyondLastLine: false,
-                      renderWhitespace: 'selection',
-                      tabSize: 2,
-                      insertSpaces: true,
-                      wordWrap: 'on',
-                      minimap: { enabled: true },
-                      lineNumbers: 'on'
-                    }}
-                  />
-                </div>
-                ) : (
-                  <OneLakeExplorerItemEditorEmpty
-                    onCreateNewFile={handleCreateNewFile}
-                    onUploadFile={handleUploadFile}
-                    onOpenItem={handleOpenItem}
-                  />                
-                )}
-              </div>
-          </div>
-        </span>
-      </Stack>
-    </div>
+          );
+        }
+        return undefined;
+      }}
+      views={(setCurrentView) => [
+        {
+          name: EDITOR_VIEW_TYPES.EMPTY,
+          component: (
+            <OneLakeExplorerItemEmptyView
+              onCreateNewFile={async () => {
+                await handleCreateNewFile();
+                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+              }}
+              onUploadFile={async () => {
+                await handleUploadFile();
+                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+              }}
+              onOpenItem={async () => {
+                await handleOpenItem();
+                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+              }}
+            />
+          )
+        },
+        {
+          name: EDITOR_VIEW_TYPES.EXPLORER,
+          component: (
+            <OneLakeExplorerItemDefaultView
+              {...props}
+              item={item}
+              openFiles={openFiles}
+              currentFile={currentFile}
+              currentTheme={currentTheme}
+              explorerInitialItem={explorerInitialItem}
+              lastRefreshTime={lastRefreshTime}
+              allowedItemTypes={ALLOWED_ITEM_TYPES}
+              onFileExplorerSelection={handleFileExplorerSelection}
+              onTableExplorerSelection={handleTableExplorerSelection}
+              onItemChanged={handleItemChanged}
+              onTabChange={handleTabChange}
+              onCloseFile={handleCloseFile}
+              onEditorChange={handleEditorChange}
+              onEditorDidMount={handleEditorDidMount}
+              onCreateNewFile={handleCreateNewFile}
+              onUploadFile={handleUploadFile}
+              onOpenItem={handleOpenItem}
+            />
+          )
+        }
+      ]}
+      initialView={!item?.definition?.itemReference && !item?.definition?.openFiles?.length ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.EXPLORER}
+    />
   );
 }

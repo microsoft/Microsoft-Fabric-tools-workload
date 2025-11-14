@@ -4,13 +4,13 @@ import { Button } from "@fluentui/react-components";
 import { DocumentAdd24Regular, Code24Regular, FolderOpen24Regular } from "@fluentui/react-icons";
 import "../../styles.scss";
 
-interface OneLakeExplorerItemEmptyProps {
+interface OneLakeExplorerItemEmptyViewProps {
   onCreateNewFile: () => Promise<void>;
   onUploadFile: () => Promise<void>;
   onOpenItem: () => Promise<void>;
 }
 
-export function OneLakeExplorerItemEditorEmpty({ onCreateNewFile, onUploadFile, onOpenItem }: OneLakeExplorerItemEmptyProps) {
+export function OneLakeExplorerItemEmptyView({ onCreateNewFile, onUploadFile, onOpenItem }: OneLakeExplorerItemEmptyViewProps) {
   return (
     <div className="itemEditorEmpty">
       <Stack 
