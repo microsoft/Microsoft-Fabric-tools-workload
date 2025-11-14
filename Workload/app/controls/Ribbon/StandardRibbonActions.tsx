@@ -44,17 +44,19 @@ export const createSaveAction = (
  * Creates a standard Settings action
  * @param onClick - Settings handler
  * @param label - Custom label (defaults to "Settings")
+ * @param showDividerAfter - Whether to show a divider after this action (defaults to true)
  */
 export const createSettingsAction = (
   onClick: () => void | Promise<void>,
-  label: string = "Settings"
+  label: string = "Settings",
+  showDividerAfter: boolean = true
 ): RibbonAction => ({
   key: 'settings',
   icon: Settings24Regular,
   label,
   onClick,
   testId: 'ribbon-settings-btn',
-  showDividerAfter: true
+  showDividerAfter
 });
 
 /**
