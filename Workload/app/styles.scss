@@ -477,12 +477,13 @@
 
     // Vertical title styling for collapsed state
     &-title-vertical {
-      writing-mode: vertical-rl;
+      writing-mode: vertical-lr;
       text-orientation: mixed;
+      transform: rotate(180deg);
       white-space: nowrap;
       font-size: 16px !important;
       line-height: 1.2;
-      flex: 1;
+      flex: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -490,6 +491,8 @@
       color: var(--colorNeutralForeground1) !important;
       font-weight: 600 !important;
       padding: var(--spacingVerticalS, 8px) 0;
+      padding-left: 8px;
+      align-self: center;
     }
 
     // Horizontal title styling for expanded state
