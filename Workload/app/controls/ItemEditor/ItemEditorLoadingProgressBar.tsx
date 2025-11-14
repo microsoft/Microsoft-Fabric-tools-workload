@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles.scss';
+import '../../styles.scss';
 
 /**
  * Props for the ItemEditorLoadingProgressBar component

@@ -7,7 +7,7 @@ Quick reference guide for using the `BaseItemEditor` control in Microsoft Fabric
 ### Basic Pattern (View Registration)
 
 ```tsx
-import { BaseItemEditor, RegisteredView } from "../../controls";
+import { BaseItemEditor, RegisteredView } from "../../controls/ItemEditor";
 
 export function MyItemEditor(props: PageProps) {
   const views: RegisteredView[] = [
@@ -30,9 +30,9 @@ export function MyItemEditor(props: PageProps) {
 ## 📦 Import Statement
 
 ```tsx
-import { BaseItemEditor } from "../../controls";
+import { BaseItemEditor } from "../../controls/ItemEditor";
 // or
-import { BaseItemEditor, BaseItemEditorProps } from "../../controls";
+import { BaseItemEditor, BaseItemEditorProps } from "../../controls/ItemEditor";
 ```
 
 ## 🎯 Props
@@ -234,7 +234,7 @@ const views = [
 
 ```tsx
 import React, { useState, useEffect } from "react";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmpty } from "./MyItemEmpty";
 import { MyItemDefault } from "./MyItemDefault";

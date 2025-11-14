@@ -19,7 +19,7 @@ The `BaseItemEditorEmptyView` component provides a standardized empty state expe
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
+import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 export function MyItemEmptyView() {
   const tasks: EmptyStateTask[] = [

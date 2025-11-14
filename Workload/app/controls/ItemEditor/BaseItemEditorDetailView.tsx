@@ -1,8 +1,9 @@
 import React from "react";
+import { ArrowLeft20Regular } from "@fluentui/react-icons";
 import { BaseItemEditorView, BaseItemEditorViewProps } from "./BaseItemEditorView";
-import { RibbonAction } from "./Ribbon";
+import { RibbonAction } from "./BaseRibbonToolbar";
 import { DetailViewActionsContext } from "./BaseItemEditor";
-import "../styles.scss";
+import "../../styles.scss";
 
 /**
  * Action item for the detail view ribbon
@@ -19,6 +20,12 @@ export interface DetailViewAction extends RibbonAction {
 export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
   /** Optional additional actions to display in the ribbon */
   actions?: DetailViewAction[];
+  /** Callback for the back action (if not provided, uses automatic ViewContext.goBack) */
+  onBack?: () => void;
+  /** Custom label for the back button (defaults to "Back") */
+  backLabel?: string;
+  /** Custom tooltip for the back button */
+  backTooltip?: string;
 }
 
 /**
@@ -76,7 +83,7 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  * 
  * ### Example 1: Simple Detail View with Actions
  * ```tsx
- * import { BaseItemEditorDetailView } from "../../controls";
+ * import { BaseItemEditorDetailView } from "../../controls/ItemEditor";
  * import { Save24Regular, Delete24Regular } from "@fluentui/react-icons";
  * 
  * const actions = [
@@ -234,18 +241,35 @@ export function BaseItemEditorDetailView({
   left,
   center,
   className,
-  actions = []
+  actions = [],
+  onBack,
+  backLabel = "Back",
+  backTooltip = "Return to previous view"
 }: BaseItemEditorDetailViewProps) {
 
   // Get the context to register actions with BaseItemEditor
   const detailViewActionsContext = React.useContext(DetailViewActionsContext);
 
+  // Create the back action for the detail view actions (separate from BaseRibbon's back button)
+  const backAction: DetailViewAction = {
+    key: 'back',
+    label: backLabel,
+    icon: ArrowLeft20Regular,
+    onClick: onBack || (() => {}),
+    appearance: 'subtle',
+    disabled: !onBack,
+    tooltip: backTooltip
+  };
+
+  // Combine back action with additional actions (only if onBack is provided)
+  const allActions = onBack ? [backAction, ...actions] : actions;
+
   // Register actions with BaseItemEditor through context
   React.useEffect(() => {
     if (detailViewActionsContext) {
-      // Only pass the custom actions (not back action) to the toolbar
-      // The back action is handled separately by the BaseRibbon
-      detailViewActionsContext.setDetailViewActions(actions);
+      // Register all actions including back action if provided
+      // BaseRibbon will handle the automatic back button, but this allows for custom back actions too
+      detailViewActionsContext.setDetailViewActions(allActions);
     }
     
     // Cleanup: clear actions when component unmounts
@@ -254,7 +278,7 @@ export function BaseItemEditorDetailView({
         detailViewActionsContext.setDetailViewActions([]);
       }
     };
-  }, [detailViewActionsContext, actions]);
+  }, [detailViewActionsContext, allActions]);
 
   // Use BaseItemEditorView for consistent layout
   return (

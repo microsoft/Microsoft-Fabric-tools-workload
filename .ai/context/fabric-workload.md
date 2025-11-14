@@ -51,7 +51,7 @@ The toolkit provides a standardized BaseRibbon component with a clean API for co
 
 ```typescript
 // Recommended pattern - mandatory homeActions, optional additionalTabs
-import { BaseRibbon, createSaveAction, createSettingsAction } from '../../controls/Ribbon';
+import { BaseRibbon, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';
 
 export function MyItemRibbon(props: RibbonProps) {
   const { t } = useTranslation();
@@ -113,7 +113,7 @@ Key Benefits:
 1. **Follow Naming Conventions**: Use PascalCase for item names, maintain consistency
 2. **Implement Error Handling**: Provide user-friendly error messages and recovery options
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design
-4. **Ribbon Pattern**: Use BaseRibbon with `homeActions` (mandatory) and optional `additionalTabs`. Import action factories from controls/Ribbon
+4. **Ribbon Pattern**: Use BaseRibbon with `homeActions` (mandatory) and optional `additionalTabs`. Import action factories from controls/ItemEditor
 5. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
 6. **State Management**: Use Redux Toolkit patterns for complex state management
 7. **Performance**: Implement lazy loading and code splitting for large applications

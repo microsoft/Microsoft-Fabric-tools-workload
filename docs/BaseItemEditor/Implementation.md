@@ -9,7 +9,7 @@ The `BaseItemEditor` control has been successfully created and integrated into t
 ### 1. Core Components
 
 #### `BaseItemEditor.tsx`
-**Location**: `Workload/app/controls/BaseItemEditor.tsx`
+**Location**: `Workload/app/controls/ItemEditor/BaseItemEditor.tsx`
 
 **Purpose**: Main component providing the editor layout structure
 
@@ -35,7 +35,7 @@ interface BaseItemEditorPropsWithViews {
 ```
 
 #### `BaseItemEditor.scss`
-**Location**: `Workload/app/controls/BaseItemEditor.scss`
+**Location**: `Workload/app/controls/ItemEditor/BaseItemEditor.scss`
 
 **Purpose**: Styling for the BaseItemEditor layout
 
@@ -301,7 +301,7 @@ export function MyItemEditor() {
 
 ### After (New Pattern)
 ```tsx
-import { BaseItemEditor } from "../../controls";
+import { BaseItemEditor } from "../../controls/ItemEditor";
 
 export function MyItemEditor() {
   return (
@@ -373,7 +373,7 @@ docs/BaseItemEditor/
 1. **Start Here**: [QuickReference.md](./QuickReference.md)
 2. **Deep Dive**: [README.md](./README.md)
 3. **See It In Action**: `Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx` (sample)
-4. **Understand Styling**: `Workload/app/controls/BaseItemEditor.scss`
+4. **Understand Styling**: `Workload/app/controls/ItemEditor/BaseItemEditor.scss`
 
 ## 🛠️ Customization Examples
 

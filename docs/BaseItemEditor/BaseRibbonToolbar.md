@@ -19,7 +19,7 @@ The `BaseRibbonToolbar` component provides a standardized toolbar interface for 
 ### Basic Usage
 
 ```tsx
-import { BaseRibbonToolbar, RibbonAction } from "../../controls";
+import { BaseRibbonToolbar, RibbonAction } from "../../controls/ItemEditor";
 
 export function MyToolbar() {
   const actions: RibbonAction[] = [
@@ -45,7 +45,7 @@ export function MyToolbar() {
 ### In BaseRibbon
 
 ```tsx
-import { BaseRibbon, BaseRibbonToolbar } from "../../controls";
+import { BaseRibbon, BaseRibbonToolbar } from "../../controls/ItemEditor";
 
 export function MyItemRibbon({ viewContext }) {
   const actions: RibbonAction[] = [
@@ -389,4 +389,4 @@ export function MyItemRibbon({ viewContext }) {
 
 For complete examples, see:
 - [HelloWorldItemRibbon.tsx](../../Workload/app/items/HelloWorldItem/HelloWorldItemRibbon.tsx) - Reference implementation
-- [StandardRibbonActions.ts](../../Workload/app/controls/Ribbon/StandardRibbonActions.ts) - Standard action patterns
+- [StandardRibbonActions.ts](../../Workload/app/controls/ItemEditor/StandardRibbonActions.ts) - Standard action patterns

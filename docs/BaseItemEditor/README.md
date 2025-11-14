@@ -254,7 +254,7 @@ BaseRibbon automatically handles detail view navigation:
 
 ```tsx
 import React from "react";
-import { BaseItemEditor } from "../../controls";
+import { BaseItemEditor } from "../../controls/ItemEditor";
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmpty } from "./MyItemEmpty";
 import { MyItemDefaultView } from "./MyItemDefaultView";
@@ -579,7 +579,7 @@ var(--colorNeutralStroke1Hover) // Thumb hover
 
 ```tsx
 import React, { useEffect, useState } from "react";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmptyView } from "./MyItemEmptyView";
 import { MyItemDefaultView } from "./MyItemDefaultView";

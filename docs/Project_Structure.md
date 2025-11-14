@@ -199,7 +199,7 @@ import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
 ### BaseRibbon & BaseItemEditor
 
 - **Purpose**: Standard ribbon and item editing patterns
-- **Location**: `controls/Ribbon/` and `controls/`
+- **Location**: `controls/ItemEditor/` and `controls/`
 - **Documentation**: [BaseRibbon.md](BaseItemEditor/BaseRibbon.md)
 
 ## 🎯 Key Benefits

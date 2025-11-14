@@ -19,7 +19,7 @@ The `BaseItemEditorDetailView` component provides a standardized layout for deta
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorDetailView } from "../../controls";
+import { BaseItemEditorDetailView } from "../../controls/ItemEditor";
 
 export function MyItemDetailView({ itemId }: { itemId: string }) {
   return (
@@ -39,7 +39,7 @@ export function MyItemDetailView({ itemId }: { itemId: string }) {
 ### With Actions
 
 ```tsx
-import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";
+import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 
 export function MyItemDetailView({ item }: { item: MyItem }) {
   const actions: DetailViewAction[] = [

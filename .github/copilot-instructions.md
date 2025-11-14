@@ -59,7 +59,7 @@ Beyond the generic `.ai/context/` files, GitHub Copilot provides:
 - **File Creation**: When creating items, automatically suggests the 4-file pattern structure
 - **Import Resolution**: Auto-imports Fabric platform types and client libraries
 - Prefer components from `@fluentui/react-components` (v9) over `@fluentui/react` (v8). Replace imports like `import { DefaultButton } from '@fluentui/react'` with `import { Button } from '@fluentui/react-components'`. Verify API and prop differences (appearance, tokens, and shorthands) when migrating components.
-- **BaseRibbon Pattern**: ALWAYS suggests `homeActions` (mandatory) + optional `additionalTabs` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/Ribbon
+- **BaseRibbon Pattern**: ALWAYS suggests `homeActions` (mandatory) + optional `additionalTabs` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/ItemEditor
 - **Toolbar Components**: ALWAYS suggests `Tooltip` + `ToolbarButton` pattern for toolbar actions. Auto-imports both from `@fluentui/react-components` and wraps ToolbarButtons in Tooltips with proper accessibility attributes
 - **OneLakeStorageClient**: ALWAYS use `createItemWrapper()` when working with OneLake storage in an item context. Never use direct OneLakeStorageClient methods with manual path construction
 - **OneLakeItemExplorer**: ALWAYS use control from `controls/OneLakeItemExplorer`, not sample code. Initialize with `initialItem` config for content display

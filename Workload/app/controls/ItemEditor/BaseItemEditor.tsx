@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { ItemEditorLoadingProgressBar } from "./ItemEditorLoadingProgressBar";
-import { RibbonAction } from './Ribbon';
-import "../styles.scss";
+import { RibbonAction } from './BaseRibbonToolbar';
+import "../../styles.scss";
 
 /**
  * Context for detail views to register their actions
@@ -126,7 +126,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * ## Usage Example
  * 
  * ```tsx
- * import { BaseItemEditor, RegisteredView, ViewContext } from "../../controls";
+ * import { BaseItemEditor, RegisteredView, ViewContext } from "../../controls/ItemEditor";
  * 
  * // Define views with detail view flag
  * const views = (setCurrentView: (view: string) => void): RegisteredView[] => [

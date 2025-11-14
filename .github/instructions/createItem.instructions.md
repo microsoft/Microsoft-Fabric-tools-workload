@@ -87,7 +87,7 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
 
 1. **BaseItemEditor Component** (MANDATORY):
    - Container for ALL item editors
-   - Import: `import { BaseItemEditor } from "../../controls";`
+   - Import: `import { BaseItemEditor } from "../../controls/ItemEditor";`
    - Provides fixed ribbon + scrollable content layout
    - DO NOT create custom layouts with Stack or div
 
@@ -97,7 +97,7 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
    - `createRibbonTabs`: Tab creation helper
    - `createSaveAction`: Standard Save button
    - `createSettingsAction`: Standard Settings button
-   - Import: `import { BaseRibbon, BaseRibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/Ribbon';`
+   - Import: `import { BaseRibbon, BaseRibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/ItemEditor';`
 
 3. **Item-Specific SCSS File** (MANDATORY - VERIFIED):
    - Create `[ItemName]Item.scss` in item folder
@@ -123,7 +123,7 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 2. Using inline styles instead of SCSS file
 3. Duplicating layout styles from generic patterns
 4. Creating custom ribbon/editor container styles
-5. Overriding BaseItemEditor/BaseRibbon structural styles
+5. Overriding ItemEditor/BaseRibbon structural styles
 6. Not creating separate `[ItemName]Item.scss` file
 
 **Example - Correct Pattern**:
@@ -434,9 +434,9 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] `[ItemName]Item.scss` - Item-specific style overrides
 
 **Import Verification**:
-- [ ] `import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";`
-- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";` (for detail views only)
-- [ ] `import { BaseRibbon, BaseRibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/Ribbon';`
+- [ ] `import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";`
+- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";` (for detail views only)
+- [ ] `import { BaseRibbon, BaseRibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';`
 - [ ] `import "../../styles.scss";`
 - [ ] `import "./[ItemName]Item.scss";`
 - [ ] No import of `RegisteredView` type (not needed, inline definition sufficient)
@@ -489,7 +489,7 @@ GitHub Copilot detects:
 
 ```typescript
 // 🚨 CORRECT: BaseItemEditor with view registration
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 
 /**
@@ -635,7 +635,7 @@ const views = [
 
 ```typescript
 // 🚨 CORRECT: Detail view using BaseItemEditorDetailView
-import { BaseItemEditorDetailView, DetailViewAction } from "../../controls";
+import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 
 interface [ItemName]ItemDetailViewProps {
   workloadClient: WorkloadClientAPI;
@@ -819,7 +819,7 @@ import {
   createSaveAction,
   createSettingsAction,
   createRibbonTabs
-} from '../../controls/Ribbon';
+} from '../../controls/ItemEditor';
 
 export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
   const { t } = useTranslation();
@@ -863,7 +863,7 @@ return (
 ```
 
 **Key Requirements**:
-- Import from `'../../controls/Ribbon'`
+- Import from `'../../controls/ItemEditor'`
 - Use `createRibbonTabs()` for tabs
 - Use `createSaveAction()` and `createSettingsAction()` for standard actions
 - Define custom actions inline as `RibbonAction` objects

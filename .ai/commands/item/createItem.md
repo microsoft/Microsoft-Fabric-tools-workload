@@ -113,14 +113,14 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 
 ### Required Base Components
 
-1. **BaseItemEditor** (`Workload/app/controls/BaseItemEditor.tsx`)
+1. **BaseItemEditor** (`Workload/app/controls/ItemEditor/BaseItemEditor.tsx`)
    - 🚨 **MANDATORY**: ALL item editors must use BaseItemEditor as the container
    - Provides consistent layout: Fixed ribbon + scrollable content
    - Handles full-height iframe rendering
    - Ensures proper scroll behavior (ribbon stays fixed, content scrolls)
    - **DO NOT create custom layout patterns** - use BaseItemEditor
 
-2. **Ribbon Components** (`Workload/app/controls/Ribbon/`)
+2. **Ribbon Components** (`Workload/app/controls/ItemEditor/`)
    - 🚨 **MANDATORY**: Use the standardized Ribbon pattern
    - **BaseRibbon**: Standard ribbon structure with tabs
    - **BaseRibbonToolbar**: Renders action buttons with proper spacing
@@ -316,7 +316,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { BaseItemEditor, ItemEditorLoadingProgressBar, BaseItemEditorEmptyView } from "../../controls";
+import { BaseItemEditor, ItemEditorLoadingProgressBar, BaseItemEditorEmptyView } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
@@ -572,7 +572,7 @@ import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
+import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 interface [ItemName]ItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
@@ -909,7 +909,7 @@ import {
   createSaveAction,
   createSettingsAction,
   createRibbonTabs
-} from '../../controls/Ribbon';
+} from '../../controls/ItemEditor';
 import { Rocket24Regular } from '@fluentui/react-icons';
 import '../../styles.scss';
 
@@ -1015,7 +1015,7 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
 4. **Standard Action Factories** (REQUIRED for common actions):
    - `createSaveAction()`: Save button with standard behavior
    - `createSettingsAction()`: Settings button with standard behavior
-   - Import from `'../../controls/Ribbon'`
+   - Import from `'../../controls/ItemEditor'`
 
 5. **Custom Actions** (when needed):
    - Define inline as `RibbonAction` objects

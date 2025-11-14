@@ -6,7 +6,7 @@ import {
   RibbonAction,
   createSaveAction,
   createSettingsAction
-} from '../../controls/Ribbon';
+} from '../../controls/ItemEditor';
 import { ViewContext } from '../../controls';
 import '../../styles.scss';
 

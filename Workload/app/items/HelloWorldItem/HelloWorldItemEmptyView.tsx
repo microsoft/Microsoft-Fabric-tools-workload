@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls";
+import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 interface HelloWorldItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;

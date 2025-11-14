@@ -2,7 +2,7 @@ import React from "react";
 import { Tab, TabList } from '@fluentui/react-tabs';
 import { Button, Tooltip } from '@fluentui/react-components';
 import { ArrowLeft24Regular } from '@fluentui/react-icons';
-import { ViewContext } from '../';
+import { ViewContext } from './BaseItemEditor';
 import { BaseRibbonToolbar, RibbonAction } from './BaseRibbonToolbar';
 import '../../styles.scss';
 

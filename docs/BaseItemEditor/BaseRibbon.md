@@ -19,8 +19,8 @@ The `BaseRibbon` component provides a consistent ribbon interface for Microsoft 
 ### Simple Pattern (Recommended)
 
 ```tsx
-import { BaseRibbon, createSaveAction, createSettingsAction } from "../../controls/Ribbon";
-import { ViewContext } from "../../controls";
+import { BaseRibbon, createSaveAction, createSettingsAction } from "../../controls/ItemEditor";
+import { ViewContext } from "../../controls/ItemEditor";
 
 export function MyItemRibbon({ viewContext, saveItemCallback, openSettingsCallback, isSaveButtonEnabled }) {
   const { t } = useTranslation();

@@ -19,7 +19,7 @@ The `BaseItemEditorView` component provides a standardized layout for default/ma
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorView } from "../../controls";
+import { BaseItemEditorView } from "../../controls/ItemEditor";
 
 export function MyItemDefaultView() {
   return (
@@ -36,7 +36,7 @@ export function MyItemDefaultView() {
 ### With Cards
 
 ```tsx
-import { BaseItemEditorView } from "../../controls";
+import { BaseItemEditorView } from "../../controls/ItemEditor";
 import { Card, CardHeader, CardBody } from "@fluentui/react-components";
 
 export function MyItemDefaultView() {

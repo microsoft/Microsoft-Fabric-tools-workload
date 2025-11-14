@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { Button, Text } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular } from "@fluentui/react-icons";
-import "../styles.scss";
+import "../../styles.scss";
 
 /**
  * Left Panel Configuration Interface
@@ -150,8 +150,7 @@ export interface BaseItemEditorViewProps {
  * 
  * ### Example 1: Center Content Only (No Left Panel)
  * ```tsx
- * import { BaseItemEditor } from "../../controls";
- * import { BaseItemEditorView } from "../../controls";
+ * import { BaseItemEditor, BaseItemEditorView } from "../../controls/ItemEditor";
  * 
  * <BaseItemEditor ribbon={<MyRibbon />}>
  *   <BaseItemEditorView
