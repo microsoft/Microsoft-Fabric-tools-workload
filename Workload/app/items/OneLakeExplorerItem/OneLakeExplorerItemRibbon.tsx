@@ -38,8 +38,8 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
   const { t } = useTranslation();
   const { viewContext } = props;
   
-  // Define home actions - these appear on the mandatory Home tab
-  const homeActions: RibbonAction[] = [
+  // Define home toolbar actions - these appear on the mandatory Home toolbar
+  const homeToolbarActions: RibbonAction[] = [
     // Standard Save action - disabled unless explicitly enabled
     createSaveAction(
       props.saveItemCallback,
@@ -84,7 +84,7 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
   
   return (
     <BaseRibbon 
-      homeActions={homeActions} 
+      homeToolbarActions={homeToolbarActions} 
       viewContext={viewContext} 
     />
   );

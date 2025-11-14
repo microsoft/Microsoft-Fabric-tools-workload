@@ -120,19 +120,15 @@ export function PackageInstallerItemDefaultView({
                     </TableCell>
                     <TableCell className="actions-cell">
                       <div className="deployment-actions">
-                        {deployment.status === DeploymentStatus.Pending ? (
-                          <Button
+                        <Button
                             icon={<PlayRegular />}
                             appearance="subtle"
                             size="small"
-                            disabled={isDeploymentInProgress && deploymentProgress?.deploymentId === deployment.id}
+                            disabled={isDeploymentInProgress || deployment.status !== DeploymentStatus.Pending}
                             onClick={(e: React.MouseEvent) => onStartDeployment(deployment, e)}
                             aria-label={t('PackageInstallerTable_StartDeployment', 'Start deployment')}
                             title={t('PackageInstallerTable_StartDeployment', 'Start deployment')}
-                          />
-                        ) : (
-                          <div style={{ width: '32px' }} /> // Placeholder to maintain consistent spacing
-                        )}
+                        />
                         <Button
                           icon={<DeleteRegular />}
                           appearance="subtle"

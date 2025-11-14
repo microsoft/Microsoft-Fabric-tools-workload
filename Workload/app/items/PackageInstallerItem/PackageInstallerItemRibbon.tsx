@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { 
   BaseRibbon, 
   RibbonAction,
+  RibbonToolbar,
   createSaveAction,
   createSettingsAction
 } from '../../controls/ItemEditor';
@@ -13,6 +14,7 @@ import {
   ArrowSync24Regular,
   DocumentAdd24Regular,
   BoxMultiple24Regular,
+  Settings24Regular,
 } from "@fluentui/react-icons";
 import '../../styles.scss';
 import "./PackageInstallerItem.scss";
@@ -49,8 +51,8 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
     openSettingsCallback: typeof props.openSettingsCallback
   });
   
-  // Define home actions - these appear on the mandatory Home tab
-  const homeActions: RibbonAction[] = [
+  // Define home toolbar actions - these appear on the mandatory Home toolbar
+  const homeToolbarActions: RibbonAction[] = [
     // Standard Save action - disabled unless explicitly enabled
     createSaveAction(
       props.saveItemCallback,
@@ -106,10 +108,31 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
       disabled: props.isDeploymentInProgress
     }
   ];
+
+
+  // Define additional tabs
+  const additionalToolbars: RibbonToolbar[] = [
+    {
+      key: 'test',
+      label: t("Test", "Test"),
+      actions: [
+                {
+                  key: 'test-settings',
+                  icon: Settings24Regular,
+                  label: t("Open Settings", "Open Settings"),
+                  onClick: props.openSettingsCallback,
+                  testId: 'test-settings-btn',
+                  disabled: props.isDeploymentInProgress
+                }
+              ],
+      testId: 'test-tab'
+    }
+  ];
   
   return (
     <BaseRibbon 
-      homeActions={homeActions} 
+      homeToolbarActions={homeToolbarActions}
+      additionalToolbars={additionalToolbars}
       viewContext={viewContext} 
     />
   );
