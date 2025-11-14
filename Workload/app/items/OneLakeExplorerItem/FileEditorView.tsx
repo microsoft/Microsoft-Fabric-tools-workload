@@ -5,8 +5,9 @@ import { editor } from "monaco-editor";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
 import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
+import "./OneLakeExplorerItem.scss";
 
-interface OneLakeExplorerItemFileEditorComponentProps {
+interface FileEditorViewProps {
   item: ItemWithDefinition<OneLakeExplorerItemDefinition>;
   openFiles: OneLakeFileReference[];
   currentFile: OneLakeFileReference | undefined;
@@ -21,7 +22,7 @@ interface OneLakeExplorerItemFileEditorComponentProps {
 }
 
 /**
- * OneLakeExplorerItemFileEditorComponent
+ * FileEditorView
  * 
  * A dedicated component for handling the file editor workspace within the OneLake Explorer.
  * This component manages:
@@ -30,7 +31,7 @@ interface OneLakeExplorerItemFileEditorComponentProps {
  * - Empty state when no files are open
  * - File operations (create, upload, open)
  */
-export function OneLakeExplorerItemFileEditorComponent({
+export function FileEditorView({
   item,
   openFiles,
   currentFile,
@@ -42,19 +43,19 @@ export function OneLakeExplorerItemFileEditorComponent({
   onCreateNewFile,
   onUploadFile,
   onOpenItem
-}: OneLakeExplorerItemFileEditorComponentProps) {
+}: FileEditorViewProps) {
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div className="file-editor-view">
       {/* File Tabs Section */}
       {openFiles.length > 0 && (
-        <div style={{ borderBottom: "1px solid #e1dfdd" }}>
+        <div className="file-tabs-section">
           <TabList onTabSelect={onTabChange}>
             {openFiles.map((file: OneLakeFileReference, index: number) => (
               <Tab 
                 key={index} 
                 value={index.toString()}
-                style={{ position: 'relative' }}
+                className="file-tab"
               >
                 {file.fileName}
                 {file.isDirty ? ' •' : ''}                        
@@ -63,14 +64,7 @@ export function OneLakeExplorerItemFileEditorComponent({
                     e.stopPropagation();
                     onCloseFile(index);
                   }}
-                  style={{
-                    marginLeft: '8px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    color: '#666'
-                  }}
+                  className="close-button"
                   aria-label={`Close ${file.fileName}`}
                   title={`Close ${file.fileName}`}
                 >
@@ -84,7 +78,7 @@ export function OneLakeExplorerItemFileEditorComponent({
 
       {/* Editor or Empty State Section */}
       {item.definition?.openFiles?.length > 0 ? (
-        <div style={{ flex: 1, overflow: "hidden" }}>
+        <div className="editor-section">
           <Editor
             height="100%"
             language={currentFile?.language || "plaintext"}
@@ -115,4 +109,4 @@ export function OneLakeExplorerItemFileEditorComponent({
   );
 }
 
-export default OneLakeExplorerItemFileEditorComponent;
+export default FileEditorView;

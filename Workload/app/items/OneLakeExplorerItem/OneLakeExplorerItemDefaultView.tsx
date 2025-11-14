@@ -3,10 +3,12 @@ import { TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
 import { OneLakeItemExplorer } from "../../controls/OneLakeItemExplorer";
-import { OneLakeExplorerItemFileEditorComponent } from "./OneLakeExplorerItemFileEditorComponent";
+import { FileEditorView } from "./FileEditorView";
+import { TableEditorView } from "./TableEditorView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { PageProps } from "../../App";
-import { BaseItemEditorDetailView } from "../../controls/BaseItemEditorDetailView";
+import { BaseItemEditorDetailView } from "../../controls/ItemEditor";
+import "./OneLakeExplorerItem.scss";
 
 interface OneLakeExplorerItemDefaultViewProps extends PageProps {
   item: ItemWithDefinition<OneLakeExplorerItemDefinition>;
@@ -71,9 +73,20 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
     </div>
   );
 
-  // Create the editor content for the center panel
-  const editorContent = (
-    <OneLakeExplorerItemFileEditorComponent
+  // Create the editor content for the center panel based on view mode
+  const viewMode = item.definition?.viewMode || 'file';
+  const editorContent = viewMode === 'table' ? (
+    <TableEditorView
+      item={item}
+      tableName={item.definition?.selectedTable?.tableName}
+      oneLakeLink={item.definition?.selectedTable?.oneLakeLink}
+      currentTheme={currentTheme}
+      onCreateNewFile={onCreateNewFile}
+      onUploadFile={onUploadFile}
+      onOpenItem={onOpenItem}
+    />
+  ) : (
+    <FileEditorView
       item={item}
       openFiles={openFiles}
       currentFile={currentFile}
@@ -99,7 +112,7 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
       }}
       center={{
         content: editorContent,
-        ariaLabel: "Code editor workspace"
+        ariaLabel: viewMode === 'table' ? "Table viewer workspace" : "Code editor workspace"
       }}
     />
   );

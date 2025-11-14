@@ -1,42 +1,36 @@
-import { Stack } from "@fluentui/react";
-import {
-  TabValue,
-  Table,
-  TableHeader,
-  TableRow,
-  TableHeaderCell,
-  TableBody,
-  TableCell,
-  Text,
-  Button,
-  ProgressBar,
-} from "@fluentui/react-components";
-import { DeleteRegular, PlayRegular } from "@fluentui/react-icons";
 import React, { useEffect, useState, useCallback } from "react";
+import { Text, ProgressBar } from "@fluentui/react-components";
 import { ContextProps, PageProps } from "../../App";
-import { PackageInstallerItemEditorRibbon } from "./PackageInstallerItemEditorRibbon";
+import { PackageInstallerItemRibbon } from "./PackageInstallerItemRibbon";
 import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
-import "./../../styles.scss";
+import "../../styles.scss";
+import "./PackageInstallerItem.scss";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus } from "./PackageInstallerItemModel";
-import { PackageInstallerItemEditorEmpty } from "./PackageInstallerItemEditorEmpty";
-import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
+import { PackageInstallerItemEmptyView } from "./PackageInstallerItemEmptyView";
+import { PackageInstallerItemDefaultView } from "./PackageInstallerItemDefaultView";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { DeploymentDetailView } from "./DeploymentDetailView";
 import { DeploymentStrategyFactory } from "./deployment/DeploymentStrategyFactory";
-import { WorkspaceDisplayNameCell } from "./components/WorkspaceDisplayName";
-import { FolderDisplayNameCell } from "./components/FolderDisplayName";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { PackageDisplayNameCell } from "./components/PackageDisplayName";
 import { PackageInstallerDeployResult } from "./components/PackageInstallerDeployDialog";
 import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
-import { t } from "i18next";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
+import { BaseItemEditor } from "../../controls/ItemEditor";
+
+/**
+ * Different views that are available for the PackageInstaller item
+ */
+export const EDITOR_VIEW_TYPES = {
+  DEFAULT: "default",
+  EMPTY: "empty",
+  DEPLOYMENT: "deployment"
+} as const;
 
 
 export function PackageInstallerItemEditor(props: PageProps) {
@@ -44,11 +38,12 @@ export function PackageInstallerItemEditor(props: PageProps) {
   const { pathname } = useLocation();
   const { t } = useTranslation();
   const { workloadClient } = props;
-  const [isUnsaved, setIsUnsaved] = useState<boolean>(true);
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-  const [editorItem, setEditorItem] = useState<ItemWithDefinition<PackageInstallerItemDefinition>>(undefined);
-  const [selectedTab, setSelectedTab] = useState<TabValue>("");
-  const [selectedSolution, setSelectedDeployment] = useState<PackageDeployment | undefined>(undefined);
+  
+  // State management following HelloWorldItem pattern
+  const [isLoading, setIsLoading] = useState(true);
+  const [item, setItem] = useState<ItemWithDefinition<PackageInstallerItemDefinition>>();
+  const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
+  const [selectedDeployment, setSelectedDeployment] = useState<PackageDeployment | undefined>(undefined);
   const [context, setContext] = useState<PackageInstallerContext>(new PackageInstallerContext(workloadClient));
   const [isDeploymentInProgress, setIsDeploymentInProgress] = useState<boolean>(false);
   const [deploymentProgress, setDeploymentProgress] = useState<{
@@ -57,10 +52,11 @@ export function PackageInstallerItemEditor(props: PageProps) {
     currentStep: string;
     progress: number;
   } | null>(null);
+  const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
 
   // Helper function to update item definition immutably
   const updateItemDefinition = useCallback((updates: Partial<PackageInstallerItemDefinition>) => {
-    setEditorItem(prevItem => {
+    setItem(prevItem => {
       if (!prevItem) return prevItem;
       
       return {
@@ -75,8 +71,22 @@ export function PackageInstallerItemEditor(props: PageProps) {
   }, []);
 
   useEffect(() => {
-      loadDataFromUrl(pageContext, pathname);
-    }, [pageContext, pathname]);
+    loadDataFromUrl(pageContext, pathname);
+  }, [pageContext, pathname]);
+
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && currentViewSetter) {
+      // Only set view if we don't have a current view (initial load)
+      // Don't override the current view if user is already navigated somewhere
+      const hasDeployments = item.definition?.deployments?.length > 0;
+      const correctInitialView = hasDeployments ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY;
+      
+      // Only set the view if we're coming from initial load (when no view is set yet)
+      // This preserves detail views and prevents unwanted navigation during item updates
+      currentViewSetter(correctInitialView);
+    }
+  }, [isLoading, currentViewSetter]); // Removed 'item' dependency to prevent navigation on item updates
 
   // Prevent navigation when deployment is in progress
   useEffect(() => {
@@ -109,50 +119,59 @@ export function PackageInstallerItemEditor(props: PageProps) {
   }, [isDeploymentInProgress]);
 
   async function openSettings() {
-    if (editorItem) {
+    if (item) {
       //TODO: this needs to be updated to use the Item instead of Itemv2
-      const item = await callGetItem(workloadClient, editorItem.id);
-      await callOpenSettings(workloadClient, item.item, 'About');
+      const itemDetails = await callGetItem(workloadClient, item.id);
+      await callOpenSettings(workloadClient, itemDetails.item, 'About');
     }
   }
 
   async function saveItemWithSuccessDialog(definition?: PackageInstallerItemDefinition) {
-    const successResult = await SaveItem(definition);
-    if (successResult) {
-       callNotificationOpen(
-            workloadClient,
-            t("ItemEditor_Saved_Notification_Title"),
-            t("ItemEditor_Saved_Notification_Text", { itemName: editorItem.displayName }),
-            undefined,
-            undefined
-        );
-      }
+    console.log('PackageInstallerItemEditor: saveItemWithSuccessDialog called', { definition, item });
+    try {
+      const successResult = await SaveItem(definition);
+      console.log('PackageInstallerItemEditor: Save result:', successResult);
+      if (successResult) {
+          callNotificationOpen(
+              workloadClient,
+              t("ItemEditor_Saved_Notification_Title"),
+              t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
+              undefined,
+              undefined
+          );
+          console.log('PackageInstallerItemEditor: Success notification sent');
+        } else {
+          console.warn('PackageInstallerItemEditor: Save failed');
+        }
+    } catch (error) {
+      console.error('PackageInstallerItemEditor: Error saving item:', error);
+    }
   }
 
   async function SaveItem(definition?: PackageInstallerItemDefinition) {
     var successResult = await saveItemDefinition<PackageInstallerItemDefinition>(
       workloadClient,
-      editorItem.id,
-      definition || editorItem.definition);
+      item.id,
+      definition || item.definition);
     setIsUnsaved(!successResult); 
     return successResult;  
   }
 
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
-    setIsLoadingData(true);
-    var item: ItemWithDefinition<PackageInstallerItemDefinition> = undefined;    
+    setIsLoading(true);
+    var loadedItem: ItemWithDefinition<PackageInstallerItemDefinition> = undefined;    
     if (pageContext.itemObjectId) {
       // for Edit scenario we get the itemObjectId and then load the item via the workloadClient SDK
       try {
-        item = await getWorkloadItem<PackageInstallerItemDefinition>(
+        loadedItem = await getWorkloadItem<PackageInstallerItemDefinition>(
           workloadClient,
           pageContext.itemObjectId,          
         );
         
         // Ensure item definition is properly initialized without mutation
-        if (!item.definition) {
-          item = {
-            ...item,
+        if (!loadedItem.definition) {
+          loadedItem = {
+            ...loadedItem,
             definition: {
               deployments: []
             }
@@ -160,10 +179,10 @@ export function PackageInstallerItemEditor(props: PageProps) {
         }
         const context = new PackageInstallerContext(workloadClient);
         await context.packageRegistry.loadFromAssets();
-        if(item.definition?.oneLakePackages) {
-          item.definition.oneLakePackages.forEach(async oneLakePath => {
+        if(loadedItem.definition?.oneLakePackages) {
+          loadedItem.definition.oneLakePackages.forEach(async oneLakePath => {
             try {
-              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(loadedItem);
               const packJson = await oneLakeClient.readFileAsText(oneLakePath);
               const pack = JSON.parse(packJson);
               context.packageRegistry.addPackage(pack);
@@ -173,254 +192,25 @@ export function PackageInstallerItemEditor(props: PageProps) {
           });
         }
         setContext(context);
-        setEditorItem(item);        
+        setItem(loadedItem);        
       } catch (error) {
-        setEditorItem(undefined);        
+        setItem(undefined);        
       } 
     } else {
-      console.log(`non-editor context. Current Path: ${pathname}`);
     }
     setIsUnsaved(false);
-    if(item?.definition?.deployments?.length > 0) {
-      setSelectedTab("home");
-    } else {
-      setSelectedTab("empty");
-    }
-    setIsLoadingData(false);
+    setIsLoading(false);
   }
 
-  /**
-   * Add a new configuration to the list
-   */
-  function addInstallation() {
-    setSelectedTab("empty");
-  }
-
-  /**
-   * Handle package JSON file upload to OneLake and add to package registry
-   */
-  async function uploadPackageJson() {
-    try {
-      // Create file input element
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.style.display = 'none';
-      
-      // Handle file selection
-      input.onchange = async (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        const file = target.files?.[0];
-        
-        if (!file) {
-          return;
-        }
-
-        if (!file.name.toLowerCase().endsWith('.json')) {
-          callNotificationOpen(
-            workloadClient,
-            "Invalid File Type",
-            "Please select a JSON file.",
-            NotificationType.Error,
-            undefined
-          );
-          return;
-        }
-
-        try {
-          // Read file content
-          const fileContent = await file.text();
-
-          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(
-            PackageCreationStrategyType.Standard,
-            context,
-            editorItem
-          );
-          const packageResult = await packageCreationStrategy.createPackageFromJson(
-            {
-              displayName: undefined,
-              description: undefined, 
-              deploymentLocation: undefined
-            },
-            fileContent);
-
-
-          // Add to additional packages list
-          const currentAdditionalPackages = editorItem?.definition?.oneLakePackages || [];
-          const newItemDefinition: PackageInstallerItemDefinition = {
-            ...editorItem?.definition,
-            oneLakePackages: [...currentAdditionalPackages, packageResult.oneLakeLocation]
-          };
-          
-          // Update item definition
-          updateItemDefinition(newItemDefinition);
-          await SaveItem(newItemDefinition);
-          
-          // Add to package registry
-          context.packageRegistry.addPackage(packageResult.package);
-          
-          callNotificationOpen(
-            workloadClient,
-            "Package Uploaded",
-            `Package "${packageResult.package.displayName}" has been uploaded and added to the registry.`,
-            NotificationType.Success,
-            undefined
-          );
-          
-        } catch (error) {
-          console.error('Error uploading package:', error);
-          callNotificationOpen(
-            workloadClient,
-            "Upload Failed",
-            `Failed to upload package: ${error.message || error}`,
-            NotificationType.Error,
-            undefined
-          );
-        } finally {
-          // Clean up
-          document.body.removeChild(input);
-        }
-      };
-      
-      // Trigger file selection
-      document.body.appendChild(input);
-      input.click();
-      
-    } catch (error) {
-      console.error('Error setting up file upload:', error);
-      callNotificationOpen(
-        workloadClient,
-        "Upload Error",
-        "Failed to set up file upload.",
-        NotificationType.Error,
-        undefined
-      );
-    }
-  }
-
-  /**
-   * Handle creating a new package using the PackageInstallerPackagingDialog
-   */
-  async function createPackage() {
-    try {
-      const dialogResult = await callDialogOpen(
-        workloadClient,
-        process.env.WORKLOAD_NAME,
-        `/PackageInstallerItem-packaging-dialog/${editorItem.id}`,
-        900, 700,
-        true
-      );
-
-      if (dialogResult && dialogResult.value) {
-        const result = dialogResult.value as { 
-          state: 'package' | 'cancel'; 
-          selectedItems?: any[]; 
-          workspaceId?: string;
-          packageDisplayName?: string;
-          packageDescription?: string;
-          deploymentLocation?: any;
-          updateItemReferences?: boolean;
-        };
-        
-        if (result.state === 'package' && result.selectedItems && result.selectedItems.length > 0) {
-          const selectedItems = result.selectedItems;
-          
-          try {
-            // Create the package strategy
-            const packageStrategy = PackageCreationStrategyFactory.createStrategy(
-              PackageCreationStrategyType.Standard,
-              context, 
-              editorItem,
-            );
-            
-            // Use the provided display name and description from the wizard
-            const packageDisplayName = result.packageDisplayName || `Custom Package ${new Date().toLocaleDateString()}`;
-            const packageDescription = result.packageDescription || `Package created from ${selectedItems.length} selected items`;
-            
-            // Create the package
-            const createdPackageItem = await packageStrategy.createPackageFromItems(           
-              {
-                originalWorkspaceId: result.workspaceId,
-                displayName: packageDisplayName,
-                description: packageDescription,
-                deploymentLocation: result.deploymentLocation,
-                updateItemReferences: result.updateItemReferences
-              },
-              selectedItems
-            );
-            
-
-            // Add the package to the itemOneLake packages list
-            const currentItemOneLakePackages = editorItem?.definition?.oneLakePackages || [];
-            const newItemDefinition: PackageInstallerItemDefinition = {
-              ...editorItem?.definition,
-              oneLakePackages: [...currentItemOneLakePackages, createdPackageItem.oneLakeLocation]
-            };
-            
-            // Update item definition and save
-            updateItemDefinition(newItemDefinition);
-            await SaveItem(newItemDefinition);
-            
-            // Add the created package to the package registry using the actual package data
-            context.packageRegistry.addPackage(createdPackageItem.package);
-
-            callNotificationOpen(
-              workloadClient,
-              "Package Created Successfully",
-              `Package "${packageDisplayName}" has been created with ${selectedItems.length} item(s) and added to the registry.`,
-              NotificationType.Success,
-              undefined
-            );
-            
-          } catch (error) {
-            console.error('Error during package creation:', error);
-            callNotificationOpen(
-              workloadClient,
-              "Package Creation Failed",
-              `Failed to create package: ${error.message || error}`,
-              NotificationType.Error,
-              undefined
-            );
-          }
-          
-        } else if (result.state === 'cancel') {
-          console.log("Package creation dialog was cancelled");
-        } else {
-          callNotificationOpen(
-            workloadClient,
-            "No Items Selected",
-            "Please select at least one item to create a package.",
-            NotificationType.Warning,
-            undefined
-          );
-        }
-      } else {
-        console.log("Package creation dialog was cancelled or failed");
-      }
-    } catch (error) {
-      console.error('Error creating package:', error);
-      callNotificationOpen(
-        workloadClient,
-        "Package Creation Error",
-        `Failed to create package: ${error.message || error}`,
-        NotificationType.Error,
-        undefined
-      );
-    }
-  }
-  
-
-  /**
-   * Refresh deployment statuses for all deployments
-   */
-  async function handleRefreshDeployments() {
-    if (!editorItem?.definition?.deployments || !workloadClient) {
+  // Helper functions that need to be implemented
+  const handleRefreshDeployments = useCallback(async () => {
+    if (!item?.definition?.deployments || !workloadClient) {
       return;
     }
 
     try {
       // Process all deployments that have job IDs (indicating they have been started)
-      const deploymentsToUpdate = editorItem.definition.deployments.filter(
+      const deploymentsToUpdate = item.definition.deployments.filter(
         deployment => deployment.job && deployment.status !== DeploymentStatus.Succeeded && deployment.status !== DeploymentStatus.Failed && deployment.status !== DeploymentStatus.Cancelled
       );
 
@@ -429,7 +219,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           workloadClient,
           "No Updates Available",
           "No deployments require status updates.",
-          undefined,
+          NotificationType.Info,
           undefined
         );
         return;
@@ -447,7 +237,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           // Create the deployment strategy and update status
           const strategy = DeploymentStrategyFactory.createStrategy(
             context,
-            editorItem,
+            item,
             pack,
             deployment
           );
@@ -469,13 +259,13 @@ export function PackageInstallerItemEditor(props: PageProps) {
 
       if (validUpdates.length > 0) {
         // Update the deployments array with the new statuses
-        const updatedDeploymentsArray = editorItem.definition.deployments.map(deployment => {
+        const updatedDeploymentsArray = item.definition.deployments.map(deployment => {
           const updatedDeployment = validUpdates.find(updated => updated.id === deployment.id);
           return updatedDeployment || deployment;
         });
 
         const newItemDefinition: PackageInstallerItemDefinition = {
-          ...editorItem.definition,
+          ...item.definition,
           deployments: updatedDeploymentsArray
         };
 
@@ -483,21 +273,11 @@ export function PackageInstallerItemEditor(props: PageProps) {
         updateItemDefinition(newItemDefinition);
         await SaveItem(newItemDefinition);
 
-        // Update selectedSolution if it was one of the updated deployments
-        if (selectedSolution) {
-          const updatedSelectedSolution = validUpdates.find(
-            updated => updated.id === selectedSolution.id
-          );
-          if (updatedSelectedSolution) {
-            setSelectedDeployment(updatedSelectedSolution);
-          }
-        }
-
         callNotificationOpen(
           workloadClient,
           "Deployments Refreshed",
           `Successfully updated ${validUpdates.length} deployment(s).`,
-          undefined,
+          NotificationType.Success,
           undefined
         );
       } else {
@@ -505,7 +285,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           workloadClient,
           "No Changes",
           "All deployments are up to date.",
-          undefined,
+          NotificationType.Info,
           undefined
         );
       }
@@ -515,30 +295,236 @@ export function PackageInstallerItemEditor(props: PageProps) {
         workloadClient,
         "Refresh Error",
         `Failed to refresh deployment statuses: ${error.message || error}`,
-        undefined,
+        NotificationType.Error,
         undefined
       );
     }
-  }
+  }, [item, workloadClient, context, updateItemDefinition, SaveItem]);
 
-  /**
-   * Remove a deployment from the list
-   */
-  function handleRemoveDeployment(deploymentId: string) {
-    if (editorItem?.definition?.deployments) {
-      const filteredDeployments = editorItem.definition.deployments.filter(
-        (deployment) => deployment.id !== deploymentId
+  const uploadPackageJson = useCallback(async () => {
+    try {
+      // Use the HTML file input to get the file
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = async (event: any) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+          const fileContent = await file.text();
+          
+          const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(
+            PackageCreationStrategyType.Standard,
+            context,
+            item
+          );
+          const packageResult = await packageCreationStrategy.createPackageFromJson(
+            {
+              displayName: undefined,
+              description: undefined, 
+              deploymentLocation: undefined
+            },
+            fileContent);
+
+          // Add to additional packages list
+          const currentAdditionalPackages = item?.definition?.oneLakePackages || [];
+          const newItemDefinition: PackageInstallerItemDefinition = {
+            ...item?.definition,
+            oneLakePackages: [...currentAdditionalPackages, packageResult.oneLakeLocation]
+          };
+          
+          // Update item definition
+          updateItemDefinition(newItemDefinition);
+          await SaveItem(newItemDefinition);
+          
+          // Add to package registry
+          const packageJson = JSON.parse(fileContent);
+          context.packageRegistry.addPackage(packageJson);
+          
+          callNotificationOpen(
+            workloadClient,
+            "Package Uploaded",
+            `Successfully uploaded package: ${packageJson.displayName || packageJson.name}`,
+            NotificationType.Success,
+            undefined
+          );
+        } catch (error) {
+          console.error('Error uploading package:', error);
+          callNotificationOpen(
+            workloadClient,
+            "Upload Error",
+            `Failed to upload package: ${error.message || error}`,
+            NotificationType.Error,
+            undefined
+          );
+        }
+      };
+      
+      input.click();
+    } catch (error) {
+      callNotificationOpen(
+        workloadClient,
+        "Upload Error",
+        "Failed to set up file upload.",
+        NotificationType.Error,
+        undefined
+      );
+    }
+  }, [item, context, updateItemDefinition, SaveItem, workloadClient]);
+
+  const createPackage = useCallback(async () => {
+    try {
+      const dialogResult = await callDialogOpen(
+        workloadClient,
+        process.env.WORKLOAD_NAME,
+        `/PackageInstallerItem-packaging-dialog/${item.id}`,
+        900, 700,
+        true
+      );
+
+      if (dialogResult && dialogResult.value) {
+        const result = dialogResult.value as { 
+          state: 'package' | 'cancel'; 
+          selectedItems?: any[]; 
+          workspaceId?: string;
+          packageDisplayName?: string;
+          packageDescription?: string;
+          deploymentLocation?: any;
+          updateItemReferences?: boolean;
+        };
+        
+        if (result.state === 'package' && result.selectedItems && result.selectedItems.length > 0) {
+          const selectedItems = result.selectedItems;
+          
+          try {
+            // Create the package strategy
+            const packageCreationStrategy = PackageCreationStrategyFactory.createStrategy(
+              PackageCreationStrategyType.Standard,
+              context,
+              item
+            );
+            
+            const packageResult = await packageCreationStrategy.createPackageFromItems(
+              {
+                displayName: result.packageDisplayName,
+                description: result.packageDescription,
+                deploymentLocation: result.deploymentLocation
+              },
+              selectedItems
+            );
+
+            // Add to additional packages list
+            const currentAdditionalPackages = item?.definition?.oneLakePackages || [];
+            const newItemDefinition: PackageInstallerItemDefinition = {
+              ...item?.definition,
+              oneLakePackages: [...currentAdditionalPackages, packageResult.oneLakeLocation]
+            };
+            
+            // Update item definition and save
+            updateItemDefinition(newItemDefinition);
+            await SaveItem(newItemDefinition);
+            
+            callNotificationOpen(
+              workloadClient,
+              "Package Created",
+              `Successfully created package: ${result.packageDisplayName}`,
+              NotificationType.Success,
+              undefined
+            );
+          } catch (error) {
+            console.error('Error creating package:', error);
+            callNotificationOpen(
+              workloadClient,
+              "Package Creation Error", 
+              `Failed to create package: ${error.message || error}`,
+              NotificationType.Error,
+              undefined
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error opening package creation dialog:', error);
+      callNotificationOpen(
+        workloadClient,
+        "Dialog Error",
+        "Failed to open package creation dialog.",
+        NotificationType.Error,
+        undefined
+      );
+    }
+  }, [item, context, updateItemDefinition, SaveItem, workloadClient]);
+
+  // Helper function for generating unique IDs
+  const generateUniqueId = useCallback(() => {
+    // Generate a shorter ID (9 characters) like before
+    return Math.random().toString(36).substr(2, 9);
+  }, []);
+
+  const addDeployment = useCallback(async (packageId: string) => {
+    // Find the package configuration that should be used for the deployment
+    const pack = context.getPackage(packageId);
+    if (pack) {
+      const id = generateUniqueId();
+
+      const createdDeployment: PackageDeployment = {
+        id: id,
+        status: DeploymentStatus.Pending,
+        deployedItems: [],
+        packageId: packageId,
+      };
+
+      const newItemDefinition: PackageInstallerItemDefinition = {
+        ...item?.definition,
+        deployments: Array.isArray(item?.definition?.deployments) 
+          ? [...item.definition.deployments, createdDeployment]
+          : [createdDeployment]
+      };
+      updateItemDefinition(newItemDefinition);
+      
+      // Save with the updated definition directly to avoid race condition
+      await SaveItem(newItemDefinition);
+      
+      // Switch to home view to show the new deployment in the table
+      // changeView will be available in the views function parameter    
+    } else {      
+      callNotificationOpen(
+        workloadClient,
+        "Package Not Found",
+        `Package with ID ${packageId} was not found.`,
+        NotificationType.Error,
+        undefined
+      );
+    }
+  }, [item, context, updateItemDefinition, SaveItem, workloadClient, generateUniqueId]);
+
+  // Handle deployment update function
+  const handleDeploymentUpdate = useCallback(async (updatedDeployment: PackageDeployment) => {
+    // Update the deployments in the item definition
+    if (item?.definition?.deployments) {
+      const updatedDeployments = item.definition.deployments.map(deployment =>
+        deployment.id === updatedDeployment.id ? updatedDeployment : deployment
       );
       
-      updateItemDefinition({ deployments: filteredDeployments });
+      const newItemDefinition: PackageInstallerItemDefinition = {
+        ...item.definition,
+        deployments: updatedDeployments
+      };
+      
+      // Update the item definition and save changes
+      updateItemDefinition(newItemDefinition);
+      await SaveItem(newItemDefinition);
+      
+      if (updatedDeployment.status === DeploymentStatus.Succeeded) {
+        handleRefreshDeployments();
+      }
     }
-  }
+  }, [item, updateItemDefinition, SaveItem, handleRefreshDeployments]);
 
-  /**
-   * Start deployment for a pending deployment
-   */
-  async function handleStartDeployment(deployment: PackageDeployment, event: React.MouseEvent) {
-    if(event){
+  const handleStartDeployment = useCallback(async (deployment: PackageDeployment, event?: React.MouseEvent) => {
+    if (event) {
       event.stopPropagation(); // Prevent row click from triggering
     }
     
@@ -549,145 +535,165 @@ export function PackageInstallerItemEditor(props: PageProps) {
     // Serialize package data to pass to dialog
     const packageDataParam = pack ? encodeURIComponent(JSON.stringify(pack)) : '';
     
-    const dialogResult = await callDialogOpen(
-      workloadClient,
-      process.env.WORKLOAD_NAME,
-      `/PackageInstallerItem-deploy-dialog/${editorItem.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
-      800, 600,
-      true)
-    const result = dialogResult.value as PackageInstallerDeployResult;
+    try {
+      const dialogResult = await callDialogOpen(
+        workloadClient,
+        process.env.WORKLOAD_NAME,
+        `/PackageInstallerItem-deploy-dialog/${item.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
+        800, 600,
+        true
+      );
+      
+      const result = dialogResult.value as PackageInstallerDeployResult;
+      
+      if (result && result.state === 'deploy') {
+        // If a capacity was selected, update the deployment with the capacity info
+        if (result.workspaceConfig) {
+          deployment.workspace = {
+            ...result.workspaceConfig          
+          };
+        }
 
-    if (result && result.state === 'deploy') {
-      // If a capacity was selected, update the deployment with the capacity info
-      if (result.workspaceConfig) {
-        deployment.workspace = {
-          ...result.workspaceConfig          
-        };
-      }
+        // Set deployment progress state
+        setIsDeploymentInProgress(true);
+        setDeploymentProgress({
+          deploymentId: deployment.id,
+          packageName: pack?.displayName || deployment.packageId,
+          currentStep: 'Initializing deployment...',
+          progress: 0
+        });
+      
+        // Start the specific deployment strategy
+        try {
+          // Create the deployment strategy and start the deployment
+          const strategy = DeploymentStrategyFactory.createStrategy(
+            context,
+            item,
+            pack,
+            deployment
+          );
 
-      // Set deployment progress state
-      setIsDeploymentInProgress(true);
-      setDeploymentProgress({
-        deploymentId: deployment.id,
-        packageName: pack?.displayName || deployment.packageId,
-        currentStep: 'Initializing deployment...',
-        progress: 0
-      });
-    
-      // Start the specific deployment strategy
-      try {
-        await startDeployment(context, editorItem, deployment,           
-          handleDeploymentUpdate,
-          updateDeploymentProgress
-        );
-      } finally {
-        // Clear deployment progress state
-        setIsDeploymentInProgress(false);
-        setDeploymentProgress(null);
+          // Update deployment progress callback
+          const updateDeploymentProgress = (step: string, progress: number) => {
+            setDeploymentProgress({
+              deploymentId: deployment.id,
+              packageName: pack?.displayName || deployment.packageId,
+              currentStep: step,
+              progress: progress
+            });
+          };
+
+          // Start deployment and update status
+          const updatedDeployment = await strategy.deploy(updateDeploymentProgress);
+          await handleDeploymentUpdate(updatedDeployment);
+          
+          setIsDeploymentInProgress(false);
+          setDeploymentProgress(null);
+          
+          // Show success notification
+          if (updatedDeployment.status === DeploymentStatus.Succeeded) {
+            callNotificationOpen(
+              workloadClient,
+              "Deployment Completed",
+              `Successfully deployed package: ${pack?.displayName}`,
+              NotificationType.Success,
+              undefined
+            );
+          } else {
+            callNotificationOpen(
+              workloadClient,
+              "Deployment Warning",
+              `Deployment completed with status: ${DeploymentStatus[updatedDeployment.status]}`,
+              NotificationType.Warning,
+              undefined
+            );
+          }
+        } catch (deploymentError) {
+          console.error('Deployment execution failed:', deploymentError);
+          setIsDeploymentInProgress(false);
+          setDeploymentProgress(null);
+          
+          // Update deployment status to failed
+          const failedDeployment: PackageDeployment = {
+            ...deployment,
+            status: DeploymentStatus.Failed,
+            triggeredTime: new Date(),
+            triggeredBy: "User"
+          };
+          await handleDeploymentUpdate(failedDeployment);
+          
+          callNotificationOpen(
+            workloadClient,
+            "Deployment Failed",
+            `Deployment execution failed: ${deploymentError.message || deploymentError}`,
+            NotificationType.Error,
+            undefined
+          );
+        }
       }
-    } else {
-      console.log("Deployment dialog was cancelled");
+    } catch (error) {
+      console.error('Error starting deployment:', error);
+      setIsDeploymentInProgress(false);
+      setDeploymentProgress(null);
+      callNotificationOpen(
+        workloadClient,
+        "Deployment Error",
+        `Failed to start deployment: ${error.message || error}`,
+        NotificationType.Error,
+        undefined
+      );
     }
-  }
+  }, [context, item, workloadClient, setIsDeploymentInProgress, setDeploymentProgress, handleDeploymentUpdate]);
 
-async function addDeployment(packageId: string) {
-  // fint the package configuration that should be used for the deployment
-  //TODO: configuration needs to be added to Deployment
-  const pack = context.getPackage(packageId);
-  if (pack) {
-    const id = generateUniqueId();
-
-    const createdSolution: PackageDeployment = {
-      id: id,
-      status: DeploymentStatus.Pending,
-      deployedItems: [],
-      packageId: packageId,
-    };
-
-    const newItemDefinition: PackageInstallerItemDefinition = {
-      ...editorItem?.definition,
-        deployments: Array.isArray(editorItem?.definition?.deployments) 
-          ? [...editorItem.definition.deployments, createdSolution]
-          : [createdSolution]
-    };
-    updateItemDefinition(newItemDefinition);
-    
-    // Save with the updated definition directly to avoid race condition
-    await SaveItem(newItemDefinition);
-    
-    setSelectedDeployment(createdSolution);
-    setSelectedTab("deployment");        
-  } else {      
-    console.error(`Package with typeId ${packageId} not found`);
-    return;
-  }
-  }
-
-  /**
-   * Handle deployment update from the DeploymentDetailView component
-   * Updates the deployment in the editor item and saves the changes
-   */
-  async function handleDeploymentUpdate(updatedDeployment: PackageDeployment) {
-    // Update the selectedSolution state
-    setSelectedDeployment(updatedDeployment);
-
-    // Update the deployments in the editorItem.definition.deployments array
-    if (editorItem?.definition?.deployments) {
-      const updatedSolutions = editorItem.definition.deployments.map(deployment =>
-        deployment.id === updatedDeployment.id ? updatedDeployment : deployment
+  const handleRemoveDeployment = useCallback((deploymentId: string) => {
+    if (item?.definition?.deployments) {
+      const filteredDeployments = item.definition.deployments.filter(
+        (deployment) => deployment.id !== deploymentId
       );
       
       const newItemDefinition: PackageInstallerItemDefinition = {
-        ...editorItem.definition,
-        deployments: updatedSolutions
+        ...item.definition,
+        deployments: filteredDeployments
       };
       
-      // Update the item definition and save changes
       updateItemDefinition(newItemDefinition);
-      await SaveItem(newItemDefinition);
-      if(updatedDeployment.status === DeploymentStatus.Succeeded){
-        handleRefreshDeployments();
-      }
+      SaveItem(newItemDefinition);
     }
-  }
+  }, [item, updateItemDefinition, SaveItem]);
 
   /**
-   * Update deployment progress callback
+   * Add a new configuration to the list
    */
-  function updateDeploymentProgress(step: string, progress: number) {
-    setDeploymentProgress(prev => prev ? {
-      ...prev,
-      currentStep: step,
-      progress: Math.max(0, Math.min(100, progress))
-    } : null);
-  }
+  const addInstallation = useCallback((setCurrentView?: (view: string) => void) => {
+    // Switch to empty view to allow package selection
+    if (setCurrentView) {
+      setCurrentView(EDITOR_VIEW_TYPES.EMPTY);
+    } else {
+    }
+  }, []);
 
-  if (isLoadingData) {
-    //making sure we show a loding indicator while the itme is loading
-    return (<ItemEditorLoadingProgressBar 
-      message={`Loading Installer item ...`} />);
-  }
-  else {
-    return (
-      <Stack className="editor" data-testid="item-editor-inner">
-        <PackageInstallerItemEditorRibbon
-            {...props}      
-            saveItemCallback={saveItemWithSuccessDialog}
-            openSettingsCallback={openSettings}
-            addInstallationCallback={addInstallation}
-            refreshDeploymentsCallback={handleRefreshDeployments}
-            uploadPackageCallback={uploadPackageJson}
-            createPackageCallback={createPackage}
-            isSaveButtonEnabled={isUnsaved}
-            isDeploymentInProgress={isDeploymentInProgress}      
-            selectedTab={selectedTab}
-            onTabChange={setSelectedTab}
+  return (
+    <BaseItemEditor
+      isLoading={isLoading}
+      loadingMessage="Loading Package Installer item..."
+      ribbon={(viewContext) => (
+        <PackageInstallerItemRibbon
+          {...props}      
+          saveItemCallback={() => saveItemWithSuccessDialog()}
+          openSettingsCallback={openSettings}
+          addInstallationCallback={() => addInstallation(viewContext.setCurrentView)}
+          refreshDeploymentsCallback={handleRefreshDeployments}
+          uploadPackageCallback={uploadPackageJson}
+          createPackageCallback={createPackage}
+          isSaveButtonEnabled={isUnsaved}
+          isDeploymentInProgress={isDeploymentInProgress}
+          viewContext={viewContext}
         />
-        
-        {/* Deployment Progress Bar */}
-        {deploymentProgress && (
-          <Stack style={{ padding: '12px 16px', backgroundColor: '#f3f2f1', borderBottom: '1px solid #e1dfdd' }}>
-            <Text style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+      )}
+      notification={
+        deploymentProgress && (
+          <div className="deployment-progress-container">
+            <Text className="deployment-progress-title">
               Deploying {deploymentProgress.packageName}...
             </Text>
             <ProgressBar 
@@ -695,236 +701,64 @@ async function addDeployment(packageId: string) {
               max={100}
               thickness="medium"
             />
-            <Text style={{ fontSize: '12px', color: '#605e5c', marginTop: '4px' }}>
+            <Text className="deployment-progress-status">
               {deploymentProgress.currentStep}
             </Text>
-          </Stack>
-        )}
+          </div>
+        )
+      }
+      views={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!currentViewSetter) {
+          setCurrentViewSetter(() => setCurrentView);
+        }
         
-        <Stack className="main" style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
-          <span style={{ height: "100%", overflow: "auto", padding: "16px" }}>
-            {["empty"].includes(selectedTab as string) && (
-              <PackageInstallerItemEditorEmpty
+        return [
+          {
+            name: EDITOR_VIEW_TYPES.EMPTY,
+            component: (
+              <PackageInstallerItemEmptyView
                 context={context}
-                onPackageSelected={addDeployment}
+                onPackageSelected={async (packageId) => {
+                  await addDeployment(packageId);
+                  setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+                }}
               />
-            )}
-            {["deployment"].includes(selectedTab as string) && (
+            )
+          },
+          {
+            name: EDITOR_VIEW_TYPES.DEFAULT,
+            component: (
+              <PackageInstallerItemDefaultView
+                editorItem={item}
+                context={context}
+                isDeploymentInProgress={isDeploymentInProgress}
+                deploymentProgress={deploymentProgress}
+                onDeploymentSelected={(deployment) => {
+                  setSelectedDeployment(deployment);
+                  setCurrentView(EDITOR_VIEW_TYPES.DEPLOYMENT);
+                }}
+                onStartDeployment={handleStartDeployment}
+                onRemoveDeployment={handleRemoveDeployment}
+              />
+            )
+          },
+          {
+            name: EDITOR_VIEW_TYPES.DEPLOYMENT,
+            isDetailView: true,
+            component: (
               <DeploymentDetailView
                 context={context}
-                deployment={selectedSolution}
-                item={editorItem}
-                onBackToHome={() => setSelectedTab("home")}
-                onStartDeployment={() => handleStartDeployment(selectedSolution, undefined)}
+                deployment={selectedDeployment}
+                item={item}
+                onStartDeployment={() => handleStartDeployment(selectedDeployment, undefined)}
               />
-            )}
-
-            {["home"].includes(selectedTab as string) && (
-            <span>
-                <h2>{t('Deployed packages')}</h2>
-                {editorItem?.definition?.deployments?.length > 0 ? (
-                  <div className="deployment-container">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHeaderCell>{t('Deployment Id')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Package Type')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Deployment Status')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Deployment Triggerd')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Workspace Name')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Folder Name')}</TableHeaderCell>
-                          <TableHeaderCell>{t('Actions')}</TableHeaderCell>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {editorItem.definition.deployments.map((deployment: PackageDeployment) => {
-                          return (
-                            <TableRow key={deployment.id} onClick={() => {
-                              if (!isDeploymentInProgress) {
-                                setSelectedDeployment(deployment);
-                                setSelectedTab("deployment");
-                              }
-                            }} style={{ 
-                              cursor: isDeploymentInProgress ? 'not-allowed' : 'pointer',
-                              opacity: isDeploymentInProgress && deploymentProgress?.deploymentId !== deployment.id ? 0.6 : 1
-                            }}>
-                              <TableCell>{deployment.id}</TableCell>
-                              <TableCell>
-                                <PackageDisplayNameCell
-                                  context={context}
-                                  packageId={deployment.packageId}
-                                  showIcon={true} />
-                              </TableCell>
-                              <TableCell>{DeploymentStatus[deployment.status]}</TableCell>
-                              <TableCell>
-                                {deployment.triggeredTime 
-                                  ? new Date(deployment.triggeredTime).toLocaleString() 
-                                  : t('Not started yet')}
-                              </TableCell>
-                              <TableCell>
-                                <WorkspaceDisplayNameCell
-                                  context={context}
-                                  workspaceId={deployment.workspace?.id} />
-                              </TableCell>
-                              <TableCell>
-                                <FolderDisplayNameCell
-                                    context={context}
-                                    workspaceId={deployment.workspace?.id} 
-                                    folderId={deployment.workspace?.folder?.id} />
-                              </TableCell>
-                              <TableCell>
-                                <div style={{ display: "flex", gap: "4px" }}>
-                                  {deployment.status === DeploymentStatus.Pending && (
-                                    <Button
-                                      icon={<PlayRegular />}
-                                      appearance="subtle"
-                                      disabled={isDeploymentInProgress && deploymentProgress?.deploymentId === deployment.id}
-                                      onClick={(e: React.MouseEvent) => handleStartDeployment(deployment, e)}
-                                      aria-label={t('Start deployment')}
-                                      title={t('Start deployment')}
-                                    />
-                                  )}
-                                  <Button
-                                    icon={<DeleteRegular />}
-                                    appearance="subtle"
-                                    disabled={isDeploymentInProgress || (deployment.status !== DeploymentStatus.Pending 
-                                      && deployment.status !== DeploymentStatus.Failed)}                                   
-                                    onClick={(e: any) => {
-                                      e.stopPropagation(); // Prevent row click from triggering
-                                      handleRemoveDeployment(deployment.id);
-                                    }}
-                                    aria-label={t('Remove deployment')}
-                                  />
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="no-deployments">
-                    <Text size={300} italic>
-                      {t('No Packages have been deployed yet')}
-                    </Text>
-                  </div>
-                )}
-            </span>
-            )}
-          </span>
-        </Stack>
-      </Stack>
-    );
-  }
-}
-
-function generateUniqueId(): string {
-  // Generate a random unique ID for deployment
-  return '' + Math.random().toString(36).substring(2, 9);
-}
-
-async function startDeployment(context: PackageInstallerContext, 
-          item: ItemWithDefinition<PackageInstallerItemDefinition>, 
-          deployment: PackageDeployment, 
-          onDeploymentUpdate?:(updatedPackage: PackageDeployment) => void, 
-          updateDeploymentProgress?: (step: string, progress: number) => void) {
-  console.log(`Starting deployment for package: ${deployment.id}`);
-
-  updateDeploymentProgress?.("Starting deployment", 0);
-  // Create a new deployment object to avoid modifying the original
-  var newDeployment:PackageDeployment = {
-    ...deployment,
-    triggeredTime: new Date(),
-    triggeredBy: "TODO",
-    workspace: {
-      ...deployment.workspace,
-    }
-  }; 
-
-  try {
-    // This allows us to track the deployment status without affecting the original deployment object
-    updateDeploymentProgress?.("Validating config...", 10);
-    if (!newDeployment.workspace) {
-      throw new Error("Deployment workspace is not defined");
-    }
-
-    //Get the package from the context
-    const pack = context.getPackage(newDeployment.packageId);
-    if (!pack) {
-      throw new Error(`Package with typeId ${newDeployment.packageId} not found`);
-    }
-
-    //updating the deployment to InProgress
-    newDeployment.status = DeploymentStatus.InProgress
-    if (onDeploymentUpdate) {
-      onDeploymentUpdate(newDeployment);
-    }
-
-    // Create the deployment strategy based on the package type
-    const strategy = DeploymentStrategyFactory.createStrategy(
-              context,
-              item,
-              pack,
-              newDeployment,              
-    );
-    //set the updated deployment object
-    updateDeploymentProgress?.("Starting deployment...", 20);
-    newDeployment = await strategy.deploy(updateDeploymentProgress);
-
-    switch (newDeployment.status) {
-      case DeploymentStatus.Succeeded:
-        callNotificationOpen(
-            context.workloadClientAPI,
-            t("Deployment finished"),
-            t(`Deployment has successfully started ${newDeployment.job.id}.`),
-            NotificationType.Success,
-            undefined
-          );
-        break;
-      case DeploymentStatus.Failed:
-          callNotificationOpen(
-            context.workloadClientAPI,
-            t("Deployment failed"),
-            t(`Deployment has failed.`),
-            NotificationType.Error,
-            undefined
-          );
-        break;
-      case DeploymentStatus.InProgress:
-          callNotificationOpen(
-            context.workloadClientAPI,
-            t("Deployment started"),
-            t(`Deployment has successfully started ${newDeployment.job.id}.`),
-            NotificationType.Info,
-            undefined
-          );
-        break;
-      case DeploymentStatus.Pending:
-        break;
-      case DeploymentStatus.Cancelled:
-        break;
-      default:
-        console.warn(`Unknown deployment status: ${newDeployment.status}`);
-        break;
-    }
-  }
-  catch (error) {
-    console.error(`Error on Deployment: ${error}`);
-    callNotificationOpen(
-      context.workloadClientAPI,
-      "Deployment failed",
-      `Failed to deploy the package: ${error.message || error}`,
-      NotificationType.Error,
-      undefined
-    );
-    // Create a failed deployment copy and update via callback
-    newDeployment.status = DeploymentStatus.Failed
-  }
-  finally {
-    if (onDeploymentUpdate) {
-      onDeploymentUpdate(newDeployment);
-    }
-  }
+            )
+          }
+        ];
+      }}
+      initialView={EDITOR_VIEW_TYPES.EMPTY}
+    />
+  );
 }
 

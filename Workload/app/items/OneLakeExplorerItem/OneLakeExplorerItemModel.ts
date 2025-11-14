@@ -33,6 +33,15 @@ export interface OneLakeExplorerItemDefinition {
 
   /** Reference to the selected OneLake item in the explorer */
   itemReference?: Item;
+
+  /** Current selected table information */
+  selectedTable?: {
+    tableName: string;
+    oneLakeLink: string;
+  };
+
+  /** Current view mode - 'file' for file editor, 'table' for table viewer */
+  viewMode?: 'file' | 'table';
 }
 
 /** Represents a file reference that must be stored in OneLake */

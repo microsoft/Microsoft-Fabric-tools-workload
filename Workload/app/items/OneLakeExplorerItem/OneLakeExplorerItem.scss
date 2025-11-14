@@ -1,0 +1,215 @@
+/* OneLake Explorer Item Styles */
+
+/* Table Editor View */
+.table-editor-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.table-editor-header {
+  margin-bottom: 16px;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .table-icon {
+      font-size: 20px;
+      color: #0078d4;
+    }
+  }
+
+  .table-path {
+    color: #666;
+  }
+}
+
+.table-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.table-editor-error {
+  margin: 16px;
+  padding: 16px;
+  background-color: #fef2f2;
+
+  .error-header {
+    color: #dc2626;
+  }
+
+  .error-message {
+    color: #dc2626;
+  }
+
+  .error-actions {
+    margin-top: 12px;
+  }
+}
+
+.storage-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 4px;
+
+  &.theme-dark {
+    background-color: #2d2d30;
+  }
+
+  &.theme-light {
+    background-color: #f8f9fa;
+  }
+
+  .storage-stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+}
+
+.file-type-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.delta-files-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .files-table-container {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid #e1dfdd;
+    border-radius: 4px;
+
+    .files-table-header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+
+      &.theme-dark {
+        background-color: #2d2d30;
+      }
+
+      &.theme-light {
+        background-color: #ffffff;
+      }
+    }
+
+    .file-type-cell {
+      width: 40px;
+
+      .file-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .file-name-cell {
+      .file-name {
+        font-size: 12px;
+        font-family: monospace;
+      }
+    }
+
+    .file-size-cell {
+      width: 120px;
+
+      .file-size {
+        font-size: 12px;
+      }
+    }
+
+    .file-date-cell {
+      width: 160px;
+
+      .file-date {
+        font-size: 12px;
+      }
+    }
+
+    .file-partition-cell {
+      .partition-info {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+}
+
+/* File Editor View */
+.file-editor-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .file-tabs-section {
+    border-bottom: 1px solid #e1dfdd;
+
+    .file-tab {
+      position: relative;
+
+      .close-button {
+        margin-left: 8px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+
+  .editor-section {
+    flex: 1;
+    overflow: hidden;
+  }
+}
+
+/* File Type Icons */
+.file-icon {
+  &.parquet {
+    color: #0078d4;
+  }
+
+  &.json, &.log {
+    color: #107c10;
+  }
+
+  &.checkpoint {
+    color: #ca5010;
+  }
+
+  &.default {
+    color: #666;
+  }
+}

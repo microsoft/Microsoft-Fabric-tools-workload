@@ -2,11 +2,12 @@ import React from "react";
 import { PageProps } from '../../App';
 import { useTranslation } from "react-i18next";
 import { 
+  ViewContext,
   BaseRibbon, 
   RibbonAction,
-  createSaveAction
-} from '../../controls/Ribbon';
-import { ViewContext } from '../../controls';
+  createSaveAction,
+  createSettingsAction
+} from '../../controls/ItemEditor';
 import { 
   DocumentAdd24Regular,
   Open24Regular,
@@ -21,6 +22,7 @@ export interface OneLakeExplorerItemRibbonProps extends PageProps {
   isSaveButtonEnabled?: boolean;
   viewContext: ViewContext;
   saveItemCallback: () => Promise<void>;
+  openSettingsCallback: () => Promise<void>;
   onNewFile: () => Promise<void>;
   onOpenItem: () => Promise<void>;
   onUploadFile: () => Promise<void>;
@@ -44,6 +46,12 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
       !props.isSaveButtonEnabled,
       t("ItemEditor_Ribbon_Save_Label")
     ),
+
+    // Standard Settings action
+    createSettingsAction(
+      props.openSettingsCallback,
+      t("ItemEditor_Ribbon_Settings_Label")
+    ),
     
     // Custom action: Open Item
     {
@@ -51,7 +59,8 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
       icon: Open24Regular,
       label: t("Open Item", "Open Item"),
       onClick: props.onOpenItem,
-      testId: 'ribbon-open-item-btn'
+      testId: 'ribbon-open-item-btn',
+      showDividerAfter: true
     },
 
     // Custom action: Create New File

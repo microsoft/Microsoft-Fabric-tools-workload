@@ -4,22 +4,23 @@ import { useTranslation } from "react-i18next";
 import { 
   BaseRibbon, 
   RibbonAction,
-  createSaveAction
-} from '../../controls';
+  createSaveAction,
+  createSettingsAction
+} from '../../controls/ItemEditor';
 import { ViewContext } from '../../controls';
 import { 
   Add24Regular,
   ArrowSync24Regular,
   DocumentAdd24Regular,
-  Settings24Regular,
   BoxMultiple24Regular,
 } from "@fluentui/react-icons";
 import '../../styles.scss';
+import "./PackageInstallerItem.scss";
 
 /**
  * Props interface for the PackageInstallerItem Ribbon component
  */
-export interface PackageInstallerItemEditorRibbonProps extends PageProps {
+export interface PackageInstallerItemRibbonProps extends PageProps {
   isSaveButtonEnabled?: boolean;
   isDeploymentInProgress?: boolean;
   viewContext: ViewContext;
@@ -32,14 +33,21 @@ export interface PackageInstallerItemEditorRibbonProps extends PageProps {
 }
 
 /**
- * PackageInstallerItemEditorRibbon - Ribbon for Package Installer functionality
+ * PackageInstallerItemRibbon - Ribbon for Package Installer functionality
  * 
  * This follows the recommended pattern for creating consistent ribbons
  * using the simplified BaseRibbon API with homeActions.
  */
-export function PackageInstallerItemEditorRibbon(props: PackageInstallerItemEditorRibbonProps) {
+export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProps) {
   const { t } = useTranslation();
   const { viewContext } = props;
+  
+  console.log('PackageInstallerItemRibbon: Rendering with props:', {
+    isSaveButtonEnabled: props.isSaveButtonEnabled,
+    isDeploymentInProgress: props.isDeploymentInProgress,
+    saveItemCallback: typeof props.saveItemCallback,
+    openSettingsCallback: typeof props.openSettingsCallback
+  });
   
   // Define home actions - these appear on the mandatory Home tab
   const homeActions: RibbonAction[] = [
@@ -50,15 +58,12 @@ export function PackageInstallerItemEditorRibbon(props: PackageInstallerItemEdit
       t("ItemEditor_Ribbon_Save_Label")
     ),
     
-    // Settings action
-    {
-      key: 'settings',
-      icon: Settings24Regular,
-      label: t("ItemEditor_Ribbon_Settings_Label"),
-      onClick: props.openSettingsCallback,
-      testId: 'item-editor-settings-btn',
-      disabled: props.isDeploymentInProgress
-    },
+    // Standard Settings action - disabled during deployment
+    createSettingsAction(
+      props.openSettingsCallback,
+      t("ItemEditor_Ribbon_Settings_Label"),
+      props.isDeploymentInProgress
+    ),
     
     // Refresh deployments action
     {
@@ -77,7 +82,8 @@ export function PackageInstallerItemEditorRibbon(props: PackageInstallerItemEdit
       label: t("Create Installation", "Create Installation"),
       onClick: props.addInstallationCallback,
       testId: 'item-editor-add-package-btn',
-      disabled: props.isDeploymentInProgress
+      disabled: props.isDeploymentInProgress,
+      showDividerAfter: true
     },
     
     // Create package action
@@ -94,7 +100,7 @@ export function PackageInstallerItemEditorRibbon(props: PackageInstallerItemEdit
     {
       key: 'upload-package',
       icon: DocumentAdd24Regular,
-      label: t("Upload Package JSON", "Upload Package JSON"),
+      label: t("Upload JSON Package", "Upload JSON Package"),
       onClick: props.uploadPackageCallback,
       testId: 'item-editor-upload-package-btn',
       disabled: props.isDeploymentInProgress

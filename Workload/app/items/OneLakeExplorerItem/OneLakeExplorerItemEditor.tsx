@@ -2,18 +2,19 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { Text, TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { ContextProps, PageProps } from "../../App";
-import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { getWorkloadItem, saveItemDefinition, callGetItem } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
 import "../../styles.scss";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
 import { callNotificationOpen } from "../../controller/NotificationController";
+import { callOpenSettings } from "../../controller/SettingsController";
 import { callDatahubOpen } from "../../controller/DataHubController";
 import { OneLakeExplorerItemRibbon } from "./OneLakeExplorerItemRibbon";
 import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
-import { BaseItemEditor } from "../../controls/BaseItemEditor";
+import { BaseItemEditor } from "../../controls/ItemEditor";
 import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
 
 
@@ -39,6 +40,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
   const [isSavingFiles, setIsSavingFiles] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
+  const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
   
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const ALLOWED_ITEM_TYPES = ["Lakehouse", ...getConfiguredWorkloadItemTypes()];
@@ -143,6 +145,15 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
 
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && currentViewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item.definition?.itemReference ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.EXPLORER;
+      currentViewSetter(correctView);
+    }
+  }, [isLoading, item, currentViewSetter]);
+
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
     setIsLoading(true);
     let LoadedItem: ItemWithDefinition<OneLakeExplorerItemDefinition> = undefined;
@@ -187,10 +198,16 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       } catch (error) {
         setItem(undefined);
       }
-    } else {
-      console.log(`non-editor context. Current Path: ${pathname}`);
     }
     setIsLoading(false);
+  }
+
+  async function openSettings() {
+    if (item) {
+      //TODO: this needs to be updated to use the Item instead of Itemv2
+      const itemDetails = await callGetItem(workloadClient, item.id);
+      await callOpenSettings(workloadClient, itemDetails.item, 'About');
+    }
   }
 
   // Function to refresh the OneLake item explorer
@@ -251,8 +268,6 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       
       // Refresh the explorer to load files from the new item
       refreshItemExplorer();
-      
-      console.log("Item changed and stored:", item);
     }
   }, [updateItemDefinition, refreshItemExplorer]);
 
@@ -387,7 +402,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       const acceptedTypes = FILETYPES_ACCEPT.split(',');
       
       if (!acceptedTypes.includes(fileExtension)) {
-        console.log(`File type not supported: ${fileName} (extension: ${fileExtension}). Supported types: ${FILETYPES_ACCEPT}`);
+        // File type not supported - could add user notification here if needed
         return;
       }
 
@@ -396,7 +411,11 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       
       if (existingFileIndex !== -1) {
         // File is already open, just switch to it (no need to mark as unsaved)
-        updateItemDefinitionSilently({ activeFileIndex: existingFileIndex });
+        // Also switch to file view mode
+        updateItemDefinitionSilently({ 
+          activeFileIndex: existingFileIndex,
+          viewMode: 'file'
+        });
         return;
       }
 
@@ -416,9 +435,11 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
 
       const updatedFiles = [...openFiles, newFile];
       // Opening a clean file from OneLake shouldn't mark the item as unsaved
+      // Switch to file view mode when a file is selected
       updateItemDefinitionSilently({
         openFiles: updatedFiles,
-        activeFileIndex: updatedFiles.length - 1
+        activeFileIndex: updatedFiles.length - 1,
+        viewMode: 'file'
       });
     } catch (error) {
       callNotificationOpen(
@@ -432,9 +453,17 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   }, [openFiles, updateItemDefinitionSilently, workloadClient, detectLanguage, definition?.itemReference]);
 
   const handleTableExplorerSelection = useCallback(async (tableName: string, oneLakeLink: string) => {
-    // We don't handle table selection in the file editor, so this is a no-op
+    // Update item definition to show table view and store selected table information
     console.log("Table selected:", tableName, oneLakeLink);
-  }, []);
+    
+    updateItemDefinition({
+      viewMode: 'table',
+      selectedTable: {
+        tableName,
+        oneLakeLink
+      }
+    });
+  }, [updateItemDefinition]);
 
   async function SaveItem() {
     setIsSavingFiles(true);
@@ -517,10 +546,20 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         <OneLakeExplorerItemRibbon
           {...props}
           viewContext={context}
-          onNewFile={handleCreateNewFile}
-          onOpenItem={handleOpenItem}
-          onUploadFile={handleUploadFile}
+          onNewFile={async () => {
+            await handleCreateNewFile();
+            context.setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+          }}
+          onOpenItem={async () => {
+            await handleOpenItem();
+            context.setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+          }}
+          onUploadFile={async () => {
+            await handleUploadFile();
+            context.setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+          }}
           saveItemCallback={SaveItem}
+          openSettingsCallback={openSettings}
           isSaveButtonEnabled={isSaveEnabled(context.currentView)}
         />
       )}
@@ -535,53 +574,60 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         }
         return undefined;
       }}
-      views={(setCurrentView) => [
-        {
-          name: EDITOR_VIEW_TYPES.EMPTY,
-          component: (
-            <OneLakeExplorerItemEmptyView
-              onCreateNewFile={async () => {
-                await handleCreateNewFile();
-                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
-              }}
-              onUploadFile={async () => {
-                await handleUploadFile();
-                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
-              }}
-              onOpenItem={async () => {
-                await handleOpenItem();
-                setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
-              }}
-            />
-          )
-        },
-        {
-          name: EDITOR_VIEW_TYPES.EXPLORER,
-          component: (
-            <OneLakeExplorerItemDefaultView
-              {...props}
-              item={item}
-              openFiles={openFiles}
-              currentFile={currentFile}
-              currentTheme={currentTheme}
-              explorerInitialItem={explorerInitialItem}
-              lastRefreshTime={lastRefreshTime}
-              allowedItemTypes={ALLOWED_ITEM_TYPES}
-              onFileExplorerSelection={handleFileExplorerSelection}
-              onTableExplorerSelection={handleTableExplorerSelection}
-              onItemChanged={handleItemChanged}
-              onTabChange={handleTabChange}
-              onCloseFile={handleCloseFile}
-              onEditorChange={handleEditorChange}
-              onEditorDidMount={handleEditorDidMount}
-              onCreateNewFile={handleCreateNewFile}
-              onUploadFile={handleUploadFile}
-              onOpenItem={handleOpenItem}
-            />
-          )
+      views={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!currentViewSetter) {
+          setCurrentViewSetter(() => setCurrentView);
         }
-      ]}
-      initialView={!item?.definition?.itemReference && !item?.definition?.openFiles?.length ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.EXPLORER}
+        
+        return [
+          {
+            name: EDITOR_VIEW_TYPES.EMPTY,
+            component: (
+              <OneLakeExplorerItemEmptyView
+                onCreateNewFile={async () => {
+                  await handleCreateNewFile();
+                  setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+                }}
+                onUploadFile={async () => {
+                  await handleUploadFile();
+                  setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+                }}
+                onOpenItem={async () => {
+                  await handleOpenItem();
+                  setCurrentView(EDITOR_VIEW_TYPES.EXPLORER);
+                }}
+              />
+            )
+          },
+          {
+            name: EDITOR_VIEW_TYPES.EXPLORER,
+            component: (
+              <OneLakeExplorerItemDefaultView
+                {...props}
+                item={item}
+                openFiles={openFiles}
+                currentFile={currentFile}
+                currentTheme={currentTheme}
+                explorerInitialItem={explorerInitialItem}
+                lastRefreshTime={lastRefreshTime}
+                allowedItemTypes={ALLOWED_ITEM_TYPES}
+                onFileExplorerSelection={handleFileExplorerSelection}
+                onTableExplorerSelection={handleTableExplorerSelection}
+                onItemChanged={handleItemChanged}
+                onTabChange={handleTabChange}
+                onCloseFile={handleCloseFile}
+                onEditorChange={handleEditorChange}
+                onEditorDidMount={handleEditorDidMount}
+                onCreateNewFile={handleCreateNewFile}
+                onUploadFile={handleUploadFile}
+                onOpenItem={handleOpenItem}
+              />
+            )
+          }
+        ];
+      }}
+      initialView={EDITOR_VIEW_TYPES.EMPTY}
     />
   );
 }

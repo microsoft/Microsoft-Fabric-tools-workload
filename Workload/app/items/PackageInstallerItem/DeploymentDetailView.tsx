@@ -1,14 +1,11 @@
 import React from "react";
 import { 
-  Card,
-  CardHeader,
-  Text,
-  Button,
-  Badge,
   Divider,
   Body1,
-  Caption1
+  Caption1,
+  Button
 } from "@fluentui/react-components";
+import { Play20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, DeploymentStatus, PackageInstallerItemDefinition, DeployedItem } from "./PackageInstallerItemModel";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
@@ -18,328 +15,310 @@ import { FolderDisplayNameLabel } from "./components/FolderDisplayName";
 import { DeploymentJobLabel } from "./components/DeploymentJob";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { navigateToItem } from "../../controller/NavigationController";
+import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+import "../../styles.scss";
+import "./PackageInstallerItem.scss";
 
 // Props for the PackageDetailCard component
 export interface DeploymentDetailViewProps {
   context: PackageInstallerContext;
   deployment: PackageDeployment;
   item: ItemWithDefinition<PackageInstallerItemDefinition>;
-  onBackToHome: () => void;
   onStartDeployment?: () => void; // Callback when package is updated
 }
 
 /**
- * Component that displays details of a package and provides 
- * a button to start deployment if the package is in Pending status.
+ * Component that displays details of a deployment and provides 
+ * actions to manage the deployment lifecycle.
+ * Now follows the BaseItemEditorDetailView pattern for consistency.
  */
 export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({ 
   context,
   deployment,
   item,
-  onBackToHome,
   onStartDeployment
 }) => {
   const { t } = useTranslation();
   const pack = context.packageRegistry.getPackage(deployment.packageId);
- 
 
-  // Function to get status badge color based on deployment status
-  const getStatusBadgeColor = (status: DeploymentStatus) => {
-    switch (status) {
-      case DeploymentStatus.Succeeded:
-        return "success";
-      case DeploymentStatus.Failed:
-        return "danger";
-      case DeploymentStatus.InProgress:
-        return "informative";
-      case DeploymentStatus.Pending:
-      default:
-        return "subtle";
+  // Define detail view actions (deploy button only - back action provided by BaseItemEditorDetailView)
+  const actions: DetailViewAction[] = [
+    {
+      key: 'deploy',
+      label: deployment.status === DeploymentStatus.Pending 
+        ? t('PackageInstallerDetailView_StartDeployment', 'Start Deployment')
+        : t('PackageInstallerDetailView_DeploymentStarted', 'Deployment Started'),
+      icon: Play20Regular,
+      onClick: onStartDeployment || (() => {}),
+      appearance: 'subtle', // Use 'subtle' appearance for toolbar buttons per Fabric guidelines
+      disabled: deployment.status !== DeploymentStatus.Pending || !onStartDeployment,
+      tooltip: deployment.status === DeploymentStatus.Pending
+        ? t('PackageInstallerDetailView_StartDeploymentTooltip', 'Start the deployment process')
+        : t('PackageInstallerDetailView_DeploymentNotPendingTooltip', 'Deployment is not in pending status')
     }
-  };
+  ];
 
-  return (
-    <Card className="package-detail-card">
-      <CardHeader
-        image={          
-          <img 
-            src={pack?.icon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
-            alt={pack?.displayName}
-            style={{ width: "32px", height: "32px", objectFit: "contain" }}
-          />          
-        }
-        header={
-          <Text weight="semibold" size={500}>
-            {pack?.displayName}
-          </Text>
-        }
-        description={
-          <Badge 
-            appearance="filled"
-            color={getStatusBadgeColor(deployment.status)}
-            style={{ marginTop: "4px" }}
-          >
-            {DeploymentStatus[deployment.status]}
-          </Badge>
-        }
-        action={
-          <div style={{ display: "flex", gap: "8px" }}>
-            <Button 
-              appearance="secondary"
-              onClick={() => onBackToHome()}
-            >
-              {t("Back to Home")}
-            </Button>
-            {(deployment.status === DeploymentStatus.Pending  || 
-              deployment.status === DeploymentStatus.Failed ) && (
-              <Button 
-                appearance="primary"
-                onClick={() => onStartDeployment()}
+  // Main detail content
+  const detailContent = (
+    <div className="package-installer-detail-container">
+      {/* Header section with package info and status */}
+      <div className="package-detail-header-section">
+        <div className="package-header-content">
+          <div className="package-icon-container">
+            <img 
+              src={pack?.icon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"} 
+              alt={pack?.displayName}
+              className="package-icon"
+            />
+          </div>
+          <div className="package-header-text">
+            <h2 className="package-title">
+              {pack?.displayName}
+            </h2>
+          </div>
+          <div className="package-status-container">
+            <div className={`status-indicator ${DeploymentStatus[deployment.status].toLowerCase()}`}>
+              {DeploymentStatus[deployment.status]}
+            </div>
+            <div className="deployment-action-container">
+              <Button
+                appearance="subtle"
+                size="medium"
+                icon={<Play20Regular />}
+                disabled={deployment.status !== DeploymentStatus.Pending || !onStartDeployment}
+                onClick={onStartDeployment}
               >
-                {t("Start Deployment")}
+                {deployment.status === DeploymentStatus.Pending 
+                  ? t('PackageInstallerDetailView_StartDeployment', 'Start Deployment')
+                  : t('PackageInstallerDetailView_DeploymentStarted', 'Deployment Started')
+                }
               </Button>
-            )}
-          </div>
-        }
-      />
-
-      <div className="deployment-info" style={{ padding: "0 16px" }}>
-        <div className="deployment-detail-row">
-          <Caption1>{t("Deployment ID")}:</Caption1>
-          <Body1>{deployment.id}</Body1>
-        </div>
-        <div className="deployment-detail-row">
-          <Caption1>{t("Package Name")}:</Caption1>
-          <Body1>{pack?.displayName}</Body1>
-        </div>    
-        <div className="deployment-detail-row">
-          <Caption1>{t("Deployment Type")}:</Caption1>
-          <Body1>{pack.deploymentConfig.location}</Body1>
-        </div>  
-
-        <div className="deployment-detail-row">
-          <Caption1>{t("Workspace Name")}:</Caption1>
-          <WorkspaceDisplayNameLabel
-            context={context}
-            workspaceId={deployment.workspace?.id} />
-        </div>
-        <div className="deployment-detail-row">
-          <Caption1>{t("Folder Name")}:</Caption1>
-          <FolderDisplayNameLabel
-            context={context}
-            workspaceId={deployment.workspace?.id}
-            folderId={deployment.workspace?.folder?.id} />
-        </div>
-        <div className="deployment-detail-row">
-          <Caption1>{t("Deployment Job")}:</Caption1>
-          <DeploymentJobLabel
-            context={context}
-            jobInfo={deployment.job} />
-        </div>
-
-        <Divider style={{ margin: "12px 0" }} />
-        
-        {deployment.status !== DeploymentStatus.Succeeded && (
-          <div className="deployment-items">
-            <h2>{t("Configured Items")}:</h2>
-            <Caption1>{t("Shows a list of all items that will be create as part of the deployment.")}</Caption1>
-            {pack?.items && pack.items.length > 0 ? (
-              <ul className="items-list" style={{ margin: "8px 0", paddingLeft: "20px" }}>
-                {pack.items.map((item, index) => (
-                  <li key={index} style={{ display: "flex", alignItems: "flex-start", marginBottom: "8px" }}>
-                    <div style={{ marginRight: "8px", marginTop: "2px" }}>
-                      {getItemTypeIcon(item.type)}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <Body1>{item.displayName}</Body1>
-                      <div style={{ marginLeft: "0px" }}>
-                        <Caption1>{item.description}</Caption1>
-                      </div>
-                      {item.data?.files && item.data.files.length > 0 && (
-                        <div style={{ marginLeft: "0px", marginTop: "4px" }}>
-                          <Caption1><strong>{t("Data Files")} ({item.data.files.length}):</strong></Caption1>
-                          <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
-                            {item.data.files.map((dataFile, dataIndex) => (
-                              <li key={dataIndex} style={{ marginBottom: "2px" }}>
-                                <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
-                                  {dataFile.path}
-                                </Caption1>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {item.schedules && item.schedules.length > 0 && (
-                        <div style={{ marginLeft: "0px", marginTop: "4px" }}>
-                          <Caption1><strong>{t("Schedules")} ({item.schedules.length}):</strong></Caption1>
-                          <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
-                            {item.schedules.map((schedule, scheduleIndex) => {
-                              const config = schedule.configuration;
-                              let scheduleDetails = "";
-                              
-                              if (config.type === 'Daily' && 'times' in config && Array.isArray(config.times)) {
-                                scheduleDetails = ` at ${config.times.join(", ")}`;
-                              } else if (config.type === 'Weekly' && 'weekdays' in config && 'times' in config && Array.isArray(config.weekdays) && Array.isArray(config.times)) {
-                                scheduleDetails = ` on ${config.weekdays.join(", ")} at ${config.times.join(", ")}`;
-                              } else if (config.type === 'Cron' && 'interval' in config) {
-                                scheduleDetails = ` every ${config.interval} minutes`;
-                              }
-                              
-                              return (
-                                <li key={scheduleIndex} style={{ marginBottom: "2px" }}>
-                                  <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
-                                    {schedule.jobType} - {config.type}
-                                    {scheduleDetails}
-                                    {!schedule.enabled && " (Disabled)"}
-                                  </Caption1>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div style={{ marginLeft: "8px" }}>
-                <Body1 italic>{t("No items defined for this deployment")}</Body1>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {deployment.status !== DeploymentStatus.Succeeded && <Divider style={{ margin: "12px 0" }} />}
-        
-        {deployment.status === DeploymentStatus.Succeeded && (
-          <div className="created-items">
-            <h2>{t("Created Items")}:</h2>
-            <Caption1>{t("Shows a list of all items that have been created by this deployment.")}</Caption1>
-            {deployment.deployedItems && deployment.deployedItems.length > 0 ? (
-              <ul className="items-list" style={{ margin: "8px 0", paddingLeft: "20px" }}>
-                {deployment.deployedItems.map((item: DeployedItem) => (
-                  <li key={item.id} style={{ display: "flex", alignItems: "flex-start", marginBottom: "8px" }}>
-                    <div style={{ marginRight: "8px", marginTop: "2px" }}>
-                      {getItemTypeIcon(item.type)}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <Body1 
-                        style={{ 
-                          cursor: "pointer", 
-                          color: "#0078d4",
-                          textDecoration: "underline"
-                        }}
-                        onClick={() => navigateToItem(context.workloadClientAPI, item)}
-                        title={`Click to open ${item.displayName || item.id}`}
-                      >
-                        {item.displayName || item.id}
-                      </Body1>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div style={{ marginLeft: "8px" }}>
-                <Body1 italic>{t("No items created yet")}</Body1>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Show package-level data files if any exist */}
-        {pack?.data && pack.data.length > 0 && (
-          <>
-            <Divider style={{ margin: "12px 0" }} />
-            <div className="package-data">
-              <h2>{t("Package Data")}:</h2>
-              <Caption1>{t("Shows data files that are part of the package deployment.")}</Caption1>
-              {pack.data.map((dataItem, dataIndex) => (
-                <div key={dataIndex} style={{ marginTop: "8px" }}>
-                  {dataItem.files && dataItem.files.length > 0 && (
-                    <div style={{ marginLeft: "8px" }}>
-                      <Caption1><strong>{t("Data Files")} ({dataItem.files.length}):</strong></Caption1>
-                      <ul style={{ margin: "4px 0", paddingLeft: "16px" }}>
-                        {dataItem.files.map((dataFile, fileIndex) => (
-                          <li key={fileIndex} style={{ marginBottom: "2px" }}>
-                            <Caption1 style={{ fontSize: "11px", color: "#605e5c" }}>
-                              {dataFile.path}
-                            </Caption1>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
             </div>
-          </>
-        )}
-        
-        {/* Show onFinishJobs if any exist */}
-        {pack?.deploymentConfig?.onFinishJobs && pack.deploymentConfig.onFinishJobs.length > 0 && (
-          <>
-            <Divider style={{ margin: "12px 0" }} />
-            <div className="on-finish-jobs">
-              <h2>{t("On Finish Jobs")}:</h2>
-              <Caption1>{t("Shows jobs that will be executed after the deployment completes.")}</Caption1>
-              <ul className="jobs-list" style={{ margin: "8px 0", paddingLeft: "20px" }}>
-                {pack.deploymentConfig.onFinishJobs.map((job, jobIndex) => (
-                  <li key={jobIndex} style={{ display: "flex", alignItems: "flex-start", marginBottom: "8px" }}>
-                    <div style={{ flex: 1 }}>
-                      <Body1>{job.jobType || "Job"}</Body1>
-                      <div style={{ marginLeft: "0px" }}>
-                        <Caption1>Workspace ID: {job.workspaceId}</Caption1>
-                      </div>
-                      <div style={{ marginLeft: "0px" }}>
-                        <Caption1>Item ID: {job.itemId}</Caption1>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
 
-    </Card>
+        <div className="deployment-info">
+          {/* Deployment Details Section */}
+          <div className="deployment-details-section">
+            <div className="deployment-details-header">
+              <h3>{t('PackageInstallerDetailView_DeploymentDetails', 'Deployment Details')}</h3>
+            </div>
+            <Caption1>{t('PackageInstallerDetailView_DeploymentDetailsDescription', 'Configuration and information about this deployment.')}</Caption1>
+          </div>
+
+          <div className="deployment-details-box">
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_DeploymentId', 'Deployment ID')}</span>
+              <span className="value">{deployment.id}</span>
+            </div>
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_PackageName', 'Package Name')}</span>
+              <span className="value">{pack?.displayName}</span>
+            </div>    
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_DeploymentType', 'Deployment Type')}</span>
+              <span className="value">{pack?.deploymentConfig?.location}</span>
+            </div>  
+
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_WorkspaceName', 'Workspace Name')}</span>
+              <div className="value">
+                <WorkspaceDisplayNameLabel
+                  context={context}
+                  workspaceId={deployment.workspace?.id} />
+              </div>
+            </div>
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_FolderName', 'Folder Name')}</span>
+              <div className="value">
+                <FolderDisplayNameLabel
+                  context={context}
+                  workspaceId={deployment.workspace?.id}
+                  folderId={deployment.workspace?.folder?.id} />
+              </div>
+            </div>
+            <div className="deployment-detail-row">
+              <span className="label">{t('PackageInstallerDetailView_DeploymentJob', 'Deployment Job')}</span>
+              <div className="value">
+                <DeploymentJobLabel
+                  context={context}
+                  jobInfo={deployment.job} />
+              </div>
+            </div>
+          </div>
+
+          <Divider className="deployment-divider" />
+          
+          {deployment.status !== DeploymentStatus.Succeeded && (
+            <div className="deployment-items">
+              <h3>{t('PackageInstallerDetailView_ConfiguredItems', 'Configured Items')}</h3>
+              <Caption1>{t('PackageInstallerDetailView_ConfiguredItemsDescription', 'Items that will be created as part of the deployment.')}</Caption1>
+              {pack?.items && pack.items.length > 0 ? (
+                <ul className="items-list">
+                  {pack.items.map((item, index) => (
+                    <li key={index} className="item-entry">
+                      <div className="item-icon">
+                        {getItemTypeIcon(item.type)}
+                      </div>
+                      <div className="item-content">
+                        <Body1 className="item-name">{item.displayName}</Body1>
+                        <div className="item-details">
+                          <Caption1>{item.description}</Caption1>
+                        </div>
+                        {item.data?.files && item.data.files.length > 0 && (
+                          <div className="item-details">
+                            <Caption1><strong>{t('PackageInstallerDetailView_DataFiles', 'Data Files')} ({item.data.files.length}):</strong></Caption1>
+                            <ul className="data-files-list">
+                              {item.data.files.map((dataFile, dataIndex) => (
+                                <li key={dataIndex}>
+                                  <Caption1 className="file-path">
+                                    {dataFile.path}
+                                  </Caption1>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {item.schedules && item.schedules.length > 0 && (
+                          <div className="item-details">
+                            <Caption1><strong>{t('PackageInstallerDetailView_Schedules', 'Schedules')} ({item.schedules.length}):</strong></Caption1>
+                            <ul className="schedules-list">{item.schedules.map((schedule, scheduleIndex) => {
+                                const config = schedule.configuration;
+                                let scheduleDetails = "";
+                                
+                                if (config.type === 'Daily' && 'times' in config && Array.isArray(config.times)) {
+                                  scheduleDetails = ` at ${config.times.join(", ")}`;
+                                } else if (config.type === 'Weekly' && 'weekdays' in config && 'times' in config && Array.isArray(config.weekdays) && Array.isArray(config.times)) {
+                                  scheduleDetails = ` on ${config.weekdays.join(", ")} at ${config.times.join(", ")}`;
+                                } else if (config.type === 'Cron' && 'interval' in config) {
+                                  scheduleDetails = ` every ${config.interval} minutes`;
+                                }
+                                
+                                return (
+                                  <li key={scheduleIndex}>
+                                    <Caption1 className="schedule-details">
+                                      {schedule.jobType} - {config.type}
+                                      {scheduleDetails}
+                                      {!schedule.enabled && " (Disabled)"}
+                                    </Caption1>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="no-items-message">
+                  <Body1>{t('PackageInstallerDetailView_NoItemsConfigured', 'No items defined for this deployment')}</Body1>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {deployment.status !== DeploymentStatus.Succeeded && <Divider className="deployment-divider" />}
+          
+          {deployment.status === DeploymentStatus.Succeeded && (
+            <div className="created-items">
+              <h3>{t('PackageInstallerDetailView_CreatedItems', 'Created Items')}</h3>
+              <Caption1>{t('PackageInstallerDetailView_CreatedItemsDescription', 'Items that have been created by this deployment.')}</Caption1>
+              {deployment.deployedItems && deployment.deployedItems.length > 0 ? (
+                <ul className="items-list">
+                  {deployment.deployedItems.map((item: DeployedItem) => (
+                    <li key={item.id} className="item-entry">
+                      <div className="item-icon">
+                        {getItemTypeIcon(item.type)}
+                      </div>
+                      <div className="item-content">
+                        <Body1 
+                          className="item-name clickable"
+                          onClick={() => navigateToItem(context.workloadClientAPI, item)}
+                          title={`Click to open ${item.displayName || item.id}`}
+                        >
+                          {item.displayName || item.id}
+                        </Body1>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="no-items-message">
+                  <Body1>{t('PackageInstallerDetailView_NoItemsCreated', 'No items created yet')}</Body1>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Show package-level data files if any exist */}
+          {pack?.data && pack.data.length > 0 && (
+            <>
+              <Divider className="deployment-divider" />
+              <div className="package-data">
+                <h3>{t('PackageInstallerDetailView_PackageData', 'Package Data')}</h3>
+                <Caption1>{t('PackageInstallerDetailView_PackageDataDescription', 'Data files that are part of the package deployment.')}</Caption1>
+                {pack.data.map((dataItem, dataIndex) => (
+                  <div key={dataIndex} className="package-data-item">
+                    {dataItem.files && dataItem.files.length > 0 && (
+                      <div className="package-data-files">
+                        <Caption1><strong>{t('PackageInstallerDetailView_DataFiles', 'Data Files')} ({dataItem.files.length}):</strong></Caption1>
+                        <ul className="data-files-list">
+                          {dataItem.files.map((dataFile, fileIndex) => (
+                            <li key={fileIndex}>
+                              <Caption1 className="file-path">
+                                {dataFile.path}
+                              </Caption1>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          
+          {/* Show onFinishJobs if any exist */}
+          {pack?.deploymentConfig?.onFinishJobs && pack.deploymentConfig.onFinishJobs.length > 0 && (
+            <>
+              <Divider className="deployment-divider" />
+              <div className="on-finish-jobs">
+                <h3>{t('PackageInstallerDetailView_OnFinishJobs', 'On Finish Jobs')}</h3>
+                <Caption1>{t('PackageInstallerDetailView_OnFinishJobsDescription', 'Jobs that will be executed after the deployment completes.')}</Caption1>
+                <ul className="jobs-list">
+                  {pack.deploymentConfig.onFinishJobs.map((job, jobIndex) => (
+                    <li key={jobIndex} className="item-entry">
+                      <div className="item-content">
+                        <Body1 className="item-name">{job.jobType || "Job"}</Body1>
+                        <div className="item-details">
+                          <Caption1>Workspace ID: {job.workspaceId}</Caption1>
+                        </div>
+                        <div className="item-details">
+                          <Caption1>Item ID: {job.itemId}</Caption1>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+    </div>
+  );
+
+  return (
+    <BaseItemEditorDetailView
+      center={{
+        content: detailContent,
+        className: "package-installer-detail-view-center",
+        ariaLabel: "Package deployment details"
+      }}
+      actions={actions}
+    />
   );
 };
-
-// Add some basic styles to improve the component's appearance
-export const styles = `
-.deployment-detail-card {
-  margin-bottom: 16px;
-  width: 100%;
-  max-width: 600px;
-}
-
-.deployment-info {
-  padding: 0 16px 16px;
-}
-
-.deployment-detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin: 6px 0;
-}
-
-.created-items {
-  margin-top: 8px;
-}
-
-.items-list {
-  margin: 8px 0;
-  padding-left: 20px;
-}
-
-.items-list li {
-  margin: 4px 0;
-}
-
-.items-list li span[style*="cursor: pointer"]:hover {
-  color: #106ebe !important;
-  text-decoration: underline !important;
-}
-`;
