@@ -1,0 +1,195 @@
+/**
+ * ============================================================================
+ * OneLake Item Explorer Control - Core Tree Styles
+ * ============================================================================
+ * 
+ * This file contains styles specific to the OneLake Item Explorer control.
+ * These styles focus on the tree functionality and should not include
+ * header, layout, or collapsible container styles.
+ * 
+ * ## Usage
+ * Import this file in OneLakeItemExplorer.tsx:
+ * ```typescript
+ * import "./OneLakeItemExplorer.scss";
+ * ```
+ * 
+ * ## Design Principles
+ * - Uses Fabric UX design tokens exclusively
+ * - Follows Microsoft Fabric UX System guidelines
+ * - Component-specific naming (no global pollution)
+ * - Focuses on tree functionality only
+ * 
+ * ## References
+ * - Fabric Design Tokens: https://aka.ms/fabric-tokens
+ * - Fluent UI v9: https://react.fluentui.dev/
+ */
+
+// ============================================================================
+// Core Tree Container Styles
+// ============================================================================
+
+.onelake-explorer__tree {
+  --spacingHorizontalXXL: var(--spacingHorizontalL, 16px);
+  display: flex;
+  align-items: start;
+  overflow: hidden;
+  flex: 1; // Take remaining space
+
+  // Selected item highlighting
+  .selected {
+    background-color: var(--colorNeutralBackground1Selected, #f5f5f5);
+    border-radius: var(--borderRadiusSmall, 2px);
+  }
+}
+
+.onelake-explorer__tree-container {
+  width: 100%;
+  overflow-y: auto;
+  padding: var(--spacingVerticalXS, 4px);
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--colorNeutralStroke1, #d1d1d1);
+    border-radius: var(--borderRadiusMedium, 4px);
+    
+    &:hover {
+      background: var(--colorNeutralStroke1Hover, #b3b3b3);
+    }
+  }
+}
+
+.onelake-explorer__subtree {
+  --spacingHorizontalXXL: var(--spacingHorizontalL, 16px);
+  
+  // Selected item highlighting
+  .selected {
+    background-color: var(--colorNeutralBackground1Selected, #f5f5f5);
+    border-radius: var(--borderRadiusSmall, 2px);
+  }
+}
+
+// ============================================================================
+// Tree Item Styles
+// ============================================================================
+
+// Individual tree items
+.onelake-explorer__tree-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+// Fluent UI TreeItemLayout truncation
+.onelake-explorer__tree .fui-TreeItemLayout__main {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+// ============================================================================
+// State Styles
+// ============================================================================
+
+// Empty state
+.onelake-explorer__empty {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
+  padding: var(--spacingVerticalXL, 24px);
+  color: var(--colorNeutralForeground2, #616161);
+  
+  p {
+    margin: 0;
+    font-size: var(--fontSizeBase300, 14px);
+  }
+
+  .add {
+    font-size: var(--fontSizeBase300, 14px);
+    font-weight: var(--fontWeightSemibold, 600);
+    color: var(--colorNeutralForeground1, #323130);
+  }
+
+  .add-button {
+    margin-top: var(--spacingVerticalS, 8px);
+  }
+}
+
+// Loading state
+.onelake-explorer__loading {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacingVerticalXL, 24px);
+}
+
+// Error state
+.onelake-explorer__error {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
+  padding: var(--spacingVerticalXL, 24px);
+  color: var(--colorPaletteRedForeground1, #d13438);
+  
+  p {
+    margin: 0;
+    font-size: var(--fontSizeBase300, 14px);
+    color: var(--colorNeutralForeground2, #616161);
+  }
+}
+
+// ============================================================================
+// High Contrast Mode Support
+// ============================================================================
+
+@media (prefers-contrast: high) {
+  .onelake-explorer__tree {
+    .selected {
+      outline: 2px solid transparent;
+      outline-offset: -2px;
+    }
+  }
+  
+  .onelake-explorer__subtree {
+    .selected {
+      outline: 2px solid transparent;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 768px) {
+  .onelake-explorer__tree-container {
+    padding: var(--spacingVerticalXXS, 2px);
+  }
+  
+  .onelake-explorer__empty,
+  .onelake-explorer__loading,
+  .onelake-explorer__error {
+    padding: var(--spacingVerticalL, 16px);
+    
+    p {
+      font-size: var(--fontSizeBase200, 12px);
+    }
+  }
+}

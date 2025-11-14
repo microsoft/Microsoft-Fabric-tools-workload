@@ -1,8 +1,7 @@
 import React from "react";
-import { TableMetadata, OneLakeItemExplorerTablesTreeProps } from "./SampleOneLakeItemExplorerModel";
+import { TableMetadata, OneLakeItemExplorerTablesTreeProps } from "./OneLakeItemExplorerModel";
 import { ArrowCircleDownSplitRegular, Table20Regular } from "@fluentui/react-icons";
 import { Tree, TreeItem, TreeItemLayout, Tooltip } from "@fluentui/react-components";
-
 
 export function TableTreeWithSchema(props: OneLakeItemExplorerTablesTreeProps) {
     const {allTablesInItem: allTablesInOneLake, selectedTablePath, onSelectTableCallback} = props;
@@ -52,4 +51,3 @@ export function TableTreeWithSchema(props: OneLakeItemExplorerTablesTreeProps) {
         </>
     );
 }
-

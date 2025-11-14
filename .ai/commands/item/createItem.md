@@ -210,7 +210,7 @@ This guide provides step-by-step instructions for AI tools to create a new item 
 - Always use BaseItemEditor and standard Ribbon components!
 - **CRITICAL**: Must update Product.json to register item in create dialogs
 - **OneLakeStorageClient**: Always use `createItemWrapper()` for item-scoped OneLake operations
-- **OneLakeItemExplorer**: Initialize with `initialItem: {id, workspaceId, displayName}` or it won't show content
+- **OneLakeItemExplorer**: Use the control from `controls/OneLakeItemExplorer`, NOT the sample code
 
 ### Step 1: Create Item Implementation Structure
 
@@ -729,25 +729,21 @@ await oneLakeClient.writeFileAsBase64(filePath, base64Content);
 - **Error Prevention**: Can't accidentally use wrong workspace/item IDs
 - **Consistency**: All operations use the same item context
 
-### Step 4.3: OneLakeItemExplorer Initialization
+### Step 4.3: OneLakeItemExplorer Control Usage
 
-**🚨 CRITICAL**: When using OneLakeItemExplorerComponent, ALWAYS initialize with the current item or it won't show content.
+**🚨 CRITICAL**: Use the new OneLakeItemExplorer control for OneLake browsing functionality. Do NOT copy code from the sample.
 
-#### ✅ **CORRECT Pattern** - Initialize with current item:
+#### ✅ **CORRECT Pattern** - Use the reusable control:
 
 ```typescript
-// ✅ ALWAYS include initialItem in config for content display
-<OneLakeItemExplorerComponent
+// ✅ Import the OneLakeItemExplorer control
+import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
+
+// ✅ Use the control with proper configuration
+<OneLakeItemExplorer
   workloadClient={props.workloadClient}
-  onFileSelected={async (fileName: string, oneLakeLink: string) => {
-    // Handle file selection
-  }}
-  onTableSelected={async (tableName: string, oneLakeLink: string) => {
-    // Handle table selection
-  }}
-  onItemChanged={handleOneLakeItemChanged}
   config={{
-    mode: "view",
+    mode: "edit", // or "view" for read-only
     allowItemSelection: true,
     allowedItemTypes: ["Lakehouse", "Warehouse", "KQLDatabase"],
     initialItem: {
@@ -757,29 +753,54 @@ await oneLakeClient.writeFileAsBase64(filePath, base64Content);
     },
     refreshTrigger: refreshTrigger
   }}
+  callbacks={{
+    onFileSelected: async (fileName: string, oneLakeLink: string) => {
+      // Handle file selection
+    },
+    onTableSelected: async (tableName: string, oneLakeLink: string) => {
+      // Handle table selection  
+    },
+    onItemChanged: async (item) => {
+      // Handle item change (e.g., user selects different item from DataHub)
+    }
+  }}
 />
 ```
 
-#### ❌ **WRONG Pattern** - Missing initialItem:
+#### ❌ **WRONG Pattern** - Don't copy from samples:
 
 ```typescript
-// ❌ NEVER do this - explorer will be empty without initialItem
-<OneLakeItemExplorerComponent
+// ❌ NEVER copy SampleOneLakeItemExplorerComponent code
+// Use the OneLakeItemExplorer control instead
+import { OneLakeItemExplorerComponent } from '../../../samples/views/SampleOneLakeItemExplorer';
+
+// ❌ This is a sample wrapper, not the reusable control
+<OneLakeItemExplorerComponent ... />
+```
+
+#### ❌ **WRONG Pattern** - Missing configuration:
+
+```typescript
+// ❌ NEVER do this - control will show empty state without initialItem
+<OneLakeItemExplorer
   workloadClient={props.workloadClient}
   config={{
     mode: "view",
     allowItemSelection: true,
-    // ❌ Missing initialItem - component won't show content
+    // ❌ Missing initialItem - control will show empty state
   }}
+  callbacks={{}}
 />
 ```
 
 #### **Key Points:**
 
-- **initialItem Required**: Component needs current item to load and display content
-- **All Properties Needed**: Must include `id`, `workspaceId`, and `displayName`
-- **Empty Without Init**: Explorer will appear empty if initialItem is not provided
+- **Use Control Not Sample**: Import from `controls/OneLakeItemExplorer`, not samples
+- **initialItem Required**: Control needs current item to load and display content
+- **All Properties Needed**: Must include `id`, `workspaceId`, and `displayName`  
+- **Empty State Handling**: Control shows add button when no initialItem provided
 - **Refresh Support**: Use `refreshTrigger` to force re-fetch when needed
+- **Clean API**: config and callbacks are clearly separated
 
 ### Step 5: Implement the Ribbon (`[ItemName]ItemRibbon.tsx`)
 
@@ -1509,7 +1530,7 @@ grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
 - **BaseRibbon used**: Check ribbon uses `BaseRibbon` + `BaseRibbonToolbar`
 - **Existing Base Components**: Used BaseItemEditorView, BaseItemEditorDetailView etc. instead of reinventing
 - **OneLakeStorageClient Wrapper**: Used `createItemWrapper()` for all OneLake operations, no manual path construction
-- **OneLakeItemExplorer Init**: Initialized with `initialItem: {id, workspaceId, displayName}` if used
+- **OneLakeItemExplorer Control**: Used control from `controls/OneLakeItemExplorer`, not sample code
 - **Version number**: Must be "1.100" (copy from HelloWorld exactly)
 - **SCSS overrides only**: Check .scss file doesn't duplicate layout styles
 

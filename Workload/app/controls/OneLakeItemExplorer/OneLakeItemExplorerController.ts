@@ -1,9 +1,23 @@
-import { Item, OneLakeStoragePathMetadata } from "../../../clients/FabricPlatformTypes";
+import { Item, OneLakeStoragePathMetadata } from "../../clients/FabricPlatformTypes";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { FileMetadata, TableMetadata } from "./SampleOneLakeItemExplorerModel";
-import { FabricPlatformAPIClient } from "../../../clients";
-import { OneLakeStorageClient } from "../../../clients/OneLakeStorageClient";
+import { FileMetadata, TableMetadata } from "./OneLakeItemExplorerModel";
+import { FabricPlatformAPIClient } from "../../clients";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
+/**
+ * OneLakeItemExplorer Controller - Data access logic for the OneLake Item Explorer control
+ * 
+ * This module provides data access functions for retrieving tables, files, and item metadata
+ * from OneLake storage. These functions are used by the OneLakeItemExplorer control to
+ * populate the tree view with actual data.
+ * 
+ * Key Functions:
+ * - getTables: Retrieve table metadata from the Tables folder
+ * - getFiles: Retrieve file/folder metadata from the Files folder  
+ * - getShortcutContents: Get contents inside shortcut folders
+ * - getFilesInPath: Navigate into any directory path
+ * - getItem: Retrieve Fabric item metadata
+ */
 
 /**
  * Retrieves a list of tables from the specified Fabric Item.
@@ -24,13 +38,11 @@ export async function getTables(
                 (path.accountType === "ADLS" || path.accountType === "ExternalADLS"))
         )
         .map(path => {
-
             return convertToTableMetadata(path, deltaLogDirectory);
         });
 
     return tables;
 }
-
 
 function convertToTableMetadata(path: OneLakeStoragePathMetadata, deltaLogDirectory: string): TableMetadata {
     let pathName = path.name;

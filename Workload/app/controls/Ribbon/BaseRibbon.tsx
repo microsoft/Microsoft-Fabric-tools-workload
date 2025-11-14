@@ -150,7 +150,7 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
   
   // Determine if we should show back button
   const isDetailView = viewContext?.isDetailView || false;
-  const showTabs = allTabs.length > 1 && !isDetailView;
+  const showTabs = !isDetailView; // Always show tabs unless in detail view
   
   return (
     <div className={`ribbon-container ${className}`.trim()}>

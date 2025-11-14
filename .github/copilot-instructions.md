@@ -62,7 +62,7 @@ Beyond the generic `.ai/context/` files, GitHub Copilot provides:
 - **BaseRibbon Pattern**: ALWAYS suggests `homeActions` (mandatory) + optional `additionalTabs` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/Ribbon
 - **Toolbar Components**: ALWAYS suggests `Tooltip` + `ToolbarButton` pattern for toolbar actions. Auto-imports both from `@fluentui/react-components` and wraps ToolbarButtons in Tooltips with proper accessibility attributes
 - **OneLakeStorageClient**: ALWAYS use `createItemWrapper()` when working with OneLake storage in an item context. Never use direct OneLakeStorageClient methods with manual path construction
-- **OneLakeItemExplorer**: ALWAYS initialize with `initialItem: {id, workspaceId, displayName}` in config or it won't show content
+- **OneLakeItemExplorer**: ALWAYS use control from `controls/OneLakeItemExplorer`, not sample code. Initialize with `initialItem` config for content display
 - **Error Recovery**: Provides specific fixes for common Fabric authentication and manifest issues
 - **Code Completion**: Understands Fabric-specific patterns like `callNotificationOpen()` and `saveItemDefinition()`
 
@@ -106,7 +106,7 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **BaseRibbon Components**: Always creates `homeActions` array (mandatory) with `createSaveAction()`, `createSettingsAction()` factories, plus optional `additionalTabs` array for complex items
 - **Toolbar Integration**: Mandatory `Tooltip` + `ToolbarButton` patterns for all toolbar implementations
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
-- **OneLake Explorer**: Always initializes with `config: {initialItem: {id, workspaceId, displayName}}` for content display
+- **OneLake Explorer**: Always use control from `controls/OneLakeItemExplorer`, not sample code
 - **Manifest Updates**: Template processing with placeholder replacement
 - **Route Configuration**: Automatic route registration
 - **Environment Management**: .env-based configuration patterns

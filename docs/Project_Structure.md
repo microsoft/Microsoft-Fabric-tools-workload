@@ -179,6 +179,29 @@ All files in the `build/` directory are generated on-demand from templates and s
 - **Developer workspace**: Run SetupDevEnvironment.ps1 again
 - **Build artifacts**: Run build scripts to regenerate all files in build/ directory
 
+## 🧩 Reusable Controls
+
+The toolkit includes reusable controls in `Workload/app/controls/` that provide common functionality:
+
+### OneLakeItemExplorer
+
+- **Purpose**: Tree-based OneLake item browsing with files and tables
+- **Location**: `controls/OneLakeItemExplorer/`
+- **Documentation**: [OneLakeItemExplorer.md](controls/OneLakeItemExplorer.md)
+- **Usage**: Import the control, don't copy sample code
+
+```typescript
+import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
+```
+
+**⚠️ Important**: Always use the control from `controls/`, never copy code from `samples/`.
+
+### BaseRibbon & BaseItemEditor
+
+- **Purpose**: Standard ribbon and item editing patterns
+- **Location**: `controls/Ribbon/` and `controls/`
+- **Documentation**: [BaseRibbon.md](BaseItemEditor/BaseRibbon.md)
+
 ## 🎯 Key Benefits
 
 1. **Self-Contained**: All configuration lives with the application code

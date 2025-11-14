@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, Link20Regular, FolderLink20Regular } from "@fluentui/react-icons";
 import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
-import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./SampleOneLakeItemExplorerModel";
-import { getShortcutContents } from "./SampleOneLakeItemExplorerController";
+import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./OneLakeItemExplorerModel";
+import { getShortcutContents } from "./OneLakeItemExplorerController";
 
 interface TreeNode {
     metadata: FileMetadata;
