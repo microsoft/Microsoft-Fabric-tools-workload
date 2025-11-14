@@ -292,15 +292,22 @@
 .ribbon-back-button-container {
     display: flex;
     align-items: center;
-    padding: var(--spacingVerticalS, 4px) var(--spacingHorizontalM, 8px);
+    padding: 0px var(--spacingHorizontalS, 8px);
+    height: 32px;
     min-height: 32px;
+    max-height: 32px;
     
     button {
         display: flex;
         align-items: center;
         gap: var(--spacingHorizontalXS, 4px);
+        height: 32px;
         min-height: 32px;
+        max-height: 32px;
+        padding: 0px var(--spacingHorizontalS, 8px);
         font-weight: var(--fontWeightSemibold, 600);
+        // Match tab button styling for consistency
+        border-radius: var(--borderRadiusMedium, 4px);
     }
 }
 
