@@ -7,7 +7,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls";
+import { BaseItemEditor } from "../../controls";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
@@ -127,19 +127,12 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   };
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <ItemEditorLoadingProgressBar
-        message={t("HelloWorldItemEditor_Loading", "Loading item...")}
-      />
-    );
-  }
-
   // Render with view registration
-  // BaseItemEditor manages the view state internally
+  // BaseItemEditor manages the view state internally and handles loading
   return (
     <BaseItemEditor
+      isLoading={isLoading}
+      loadingMessage={t("HelloWorldItemEditor_Loading", "Loading item...")}
       ribbon={(context) => (
         <HelloWorldItemRibbon
           {...props}

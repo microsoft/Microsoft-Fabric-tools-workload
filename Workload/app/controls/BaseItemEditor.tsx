@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { ItemEditorLoadingProgressBar } from "./ItemEditorLoadingProgressBar";
 import "../styles.scss";
 
 /**
@@ -33,6 +34,10 @@ export interface BaseItemEditorPropsLegacy {
   className?: string;
   /** Optional CSS class for the scrollable content area */
   contentClassName?: string;
+  /** Whether to show loading indicator instead of content */
+  isLoading?: boolean;
+  /** Loading message to display */
+  loadingMessage?: string;
 }
 
 /**
@@ -88,6 +93,10 @@ export interface BaseItemEditorPropsWithViews {
   className?: string;
   /** Optional CSS class for the scrollable content area */
   contentClassName?: string;
+  /** Whether to show loading indicator instead of content */
+  isLoading?: boolean;
+  /** Loading message to display */
+  loadingMessage?: string;
 }
 
 /**
@@ -238,7 +247,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * @component
  */
 export function BaseItemEditor(props: BaseItemEditorProps) {
-  const { className = "", contentClassName = "" } = props;
+  const { className = "", contentClassName = "", isLoading = false, loadingMessage } = props;
 
   // Internal state for view management
   const [currentView, setCurrentViewInternal] = React.useState<string>('');
@@ -326,6 +335,11 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Determine which mode we're in and get the content
   const content = React.useMemo(() => {
+    // Show loading indicator if isLoading is true
+    if (isLoading) {
+      return <ItemEditorLoadingProgressBar message={loadingMessage || "Loading..."} />;
+    }
+    
     // View Registration Mode (both controlled and uncontrolled)
     if ('views' in props) {
       const activeView = resolvedViews.find((v: RegisteredView) => v.name === currentView);
@@ -338,7 +352,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
     }
     
     return null;
-  }, [props, resolvedViews, currentView]);
+  }, [props, resolvedViews, currentView, isLoading, loadingMessage]);
 
   return (
     <div className={`item-editor-container ${className}`.trim()} data-testid="item-editor">
