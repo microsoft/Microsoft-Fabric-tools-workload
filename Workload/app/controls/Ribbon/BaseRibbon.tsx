@@ -40,6 +40,13 @@ export interface RibbonTabToolbar {
  * Props for the BaseRibbon component
  */
 export interface BaseRibbonProps {
+
+  /**
+   * Home tab label
+   * @default "Home"
+   */
+  homeLabel?: string;
+
   /**
    * Actions for the Home tab (always present)
    */
@@ -66,12 +73,7 @@ export interface BaseRibbonProps {
    * When provided and isDetailView is true, shows back button instead of tabs
    */
   viewContext?: ViewContext;
-  
-  /**
-   * Home tab label
-   * @default "Home"
-   */
-  homeLabel?: string;
+
 }
 
 /**
@@ -142,11 +144,18 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
     return tabs;
   }, [homeLabel, homeActions, additionalTabs]);
   
-  // Get actions for currently selected tab
+  // Get actions for currently selected tab (or detail view actions if in detail view)
   const currentActions = React.useMemo(() => {
+    const isDetailView = viewContext?.isDetailView || false;
+    const detailViewActions = viewContext?.detailViewActions || [];
+    
+    if (isDetailView && detailViewActions.length > 0) {
+      return detailViewActions;
+    }
+    
     const activeTab = allTabs.find(tab => tab.key === selectedTab);
     return activeTab?.actions || homeActions;
-  }, [selectedTab, allTabs, homeActions]);
+  }, [selectedTab, allTabs, homeActions, viewContext?.isDetailView, viewContext?.detailViewActions]);
   
   // Determine if we should show back button
   const isDetailView = viewContext?.isDetailView || false;

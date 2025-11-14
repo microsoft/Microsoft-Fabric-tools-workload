@@ -44,17 +44,20 @@ export const createSaveAction = (
  * Creates a standard Settings action
  * @param onClick - Settings handler
  * @param label - Custom label (defaults to "Settings")
+ * @param disabled - Whether the settings button should be disabled
  * @param showDividerAfter - Whether to show a divider after this action (defaults to true)
  */
 export const createSettingsAction = (
   onClick: () => void | Promise<void>,
   label: string = "Settings",
+  disabled: boolean = false,
   showDividerAfter: boolean = true
 ): RibbonAction => ({
   key: 'settings',
   icon: Settings24Regular,
   label,
   onClick,
+  disabled,
   testId: 'ribbon-settings-btn',
   showDividerAfter
 });
@@ -63,14 +66,17 @@ export const createSettingsAction = (
  * Creates a standard About/Info action
  * @param onClick - About handler
  * @param label - Custom label (defaults to "About")
+ * @param disabled - Whether the about button should be disabled
  */
 export const createAboutAction = (
   onClick: () => void | Promise<void>,
-  label: string = "About"
+  label: string = "About",
+  disabled: boolean = false
 ): RibbonAction => ({
   key: 'about',
   icon: Info24Regular,
   label,
   onClick,
+  disabled,
   testId: 'ribbon-about-btn'
 });

@@ -45,6 +45,58 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 - **BaseItemEditorDetailView**: Detail views with actions
 - **BaseItemEditorEmptyView**: Empty states with tasks
 
+### 🎯 **CRITICAL: When to Use BaseItemEditorDetailView**
+
+**ALWAYS use BaseItemEditorDetailView for these scenarios:**
+
+1. **Detail/Drill-down Pages (L2 Pages)**: 
+   - Record details, configuration pages, property panels
+   - Any page you navigate TO from a main view
+   - Pages that need a "back" button
+
+2. **Settings and Configuration**:
+   - Item settings, preferences, advanced options
+   - Multi-step wizards or forms
+   - Property editing interfaces
+
+3. **Edit/View Individual Items**:
+   - File viewers, table schemas, record editors
+   - Any focused view of a single entity
+   - Content that requires dedicated actions
+
+**⚠️ DON'T create custom detail layouts** - BaseItemEditorDetailView provides:
+- ✅ Automatic back navigation (mark view as `isDetailView: true`)
+- ✅ Context-specific actions in ribbon
+- ✅ Optional left panel for properties/navigation
+- ✅ Consistent layout with other detail views
+- ✅ Built-in accessibility and responsive behavior
+
+**Example Usage Pattern:**
+```tsx
+// In your views registration
+{
+  name: 'record-detail-123',
+  component: (
+    <BaseItemEditorDetailView
+      left={{
+        content: <PropertiesPanel record={record} />,
+        title: "Properties",
+        width: 280,
+        collapsible: true
+      }}
+      center={{
+        content: <RecordEditor record={record} />
+      }}
+      actions={[
+        { key: 'save', label: 'Save', icon: Save24Regular, onClick: handleSave },
+        { key: 'delete', label: 'Delete', icon: Delete24Regular, onClick: handleDelete }
+      ]}
+    />
+  ),
+  isDetailView: true  // ⭐ This enables automatic back navigation
+}
+```
+
 ### 🔄 Execution Rules (MANDATORY)
 
 1. **Mark ONE todo in-progress** before starting work
@@ -436,6 +488,27 @@ export function [ItemName]ItemEditor(props: PageProps) {
             />
           )
         }
+        // 🎯 FOR DETAIL VIEWS (L2 Pages): Add additional views here
+        // {
+        //   name: 'settings-detail',
+        //   component: (
+        //     <BaseItemEditorDetailView
+        //       left={{
+        //         content: <SettingsNavigation />,
+        //         title: "Settings",
+        //         width: 240
+        //       }}
+        //       center={{
+        //         content: <SettingsEditor />
+        //       }}
+        //       actions={[
+        //         { key: 'save', label: 'Save', icon: Save24Regular, onClick: handleSave },
+        //         { key: 'reset', label: 'Reset', icon: ArrowReset24Regular, onClick: handleReset }
+        //       ]}
+        //     />
+        //   ),
+        //   isDetailView: true  // ⭐ CRITICAL: Enables automatic back navigation
+        // }
       ]}
       initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
     />
@@ -572,7 +645,24 @@ export function [ItemName]ItemEmptyView({
 
 ### Step 4.1: Implement the Default View (`[ItemName]ItemDefaultView.tsx`)
 
-The default view is shown when the item has content and is the main editing interface. **Use the HelloWorld pattern as template**:
+The default view is shown when the item has content and is the main editing interface.
+
+#### Architecture Decision: Choose the Right Component
+
+**For Simple Main Views** - Use standard React components with BaseItemEditor:
+
+- Dashboard-style layouts with cards and summary information
+- List views, tables, or data grids as primary content
+- Simple editing interfaces without drill-down functionality
+
+**For Detail/Drill-down Views (L2 Pages)** - Use BaseItemEditorDetailView:
+
+- Record details, settings pages, configuration panels
+- Any view that users navigate TO from another view
+- Views that need context-specific actions and back navigation
+- **Mark as `isDetailView: true` in view registration for automatic back navigation**
+
+**Use the HelloWorld pattern as template for simple main views**:
 
 ```typescript
 // Based on HelloWorldItemDefaultView.tsx - Complete functional implementation

@@ -1,6 +1,14 @@
 import React, { ReactNode } from "react";
 import { ItemEditorLoadingProgressBar } from "./ItemEditorLoadingProgressBar";
+import { RibbonAction } from './Ribbon';
 import "../styles.scss";
+
+/**
+ * Context for detail views to register their actions
+ */
+export const DetailViewActionsContext = React.createContext<{
+  setDetailViewActions: (actions: RibbonAction[]) => void;
+} | null>(null);
 
 /**
  * Registered view definition
@@ -54,6 +62,10 @@ export interface ViewContext {
   goBack: () => void;
   /** History of visited views */
   viewHistory: string[];
+  /** Actions from current detail view (empty array if not detail view) */
+  detailViewActions: RibbonAction[];
+  /** Function to set detail view actions (called by BaseItemEditorDetailView) */
+  setDetailViewActions: (actions: RibbonAction[]) => void;
 }
 
 /**
@@ -253,6 +265,8 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
   const [currentView, setCurrentViewInternal] = React.useState<string>('');
   // View history for back navigation in detail views
   const [viewHistory, setViewHistory] = React.useState<string[]>([]);
+  // Detail view actions from current view
+  const [detailViewActions, setDetailViewActions] = React.useState<RibbonAction[]>([]);
 
   // Initialize view state from initialView prop
   React.useEffect(() => {
@@ -266,6 +280,8 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
   const setCurrentView = React.useCallback((view: string) => {
     setViewHistory(prev => [...prev, view]);
     setCurrentViewInternal(view);
+    // Clear detail view actions when changing views
+    setDetailViewActions([]);
     if ('views' in props && 'onViewChange' in props) {
       props.onViewChange?.(view);
     }
@@ -281,12 +297,19 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
       
       setViewHistory(newHistory);
       setCurrentViewInternal(previousView);
+      // Clear detail view actions when going back
+      setDetailViewActions([]);
       
       if ('views' in props && 'onViewChange' in props) {
         props.onViewChange?.(previousView);
       }
     }
   }, [viewHistory, props]);
+
+  // Callback for detail views to set their actions
+  const handleSetDetailViewActions = React.useCallback((actions: RibbonAction[]) => {
+    setDetailViewActions(actions);
+  }, []);
 
   // Resolve views (either array or factory function)
   const resolvedViews = React.useMemo((): RegisteredView[] => {
@@ -312,8 +335,10 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
     setCurrentView,
     isDetailView,
     goBack,
-    viewHistory
-  }), [currentView, setCurrentView, isDetailView, goBack, viewHistory]);
+    viewHistory,
+    detailViewActions,
+    setDetailViewActions: handleSetDetailViewActions
+  }), [currentView, setCurrentView, isDetailView, goBack, viewHistory, detailViewActions, handleSetDetailViewActions]);
 
   // Resolve ribbon (either ReactNode or render function with ViewContext)
   const ribbonContent = React.useMemo(() => {
@@ -370,7 +395,9 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
       
       {/* Scrollable content area */}
       <div className={`item-editor-container__content ${contentClassName}`.trim()} data-testid="base-item-editor-content">
-        {content}
+        <DetailViewActionsContext.Provider value={{ setDetailViewActions: handleSetDetailViewActions }}>
+          {content}
+        </DetailViewActionsContext.Provider>
       </div>
     </div>
   );
