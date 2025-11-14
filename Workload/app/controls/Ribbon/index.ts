@@ -5,21 +5,18 @@
  * Microsoft Fabric design guidelines and ensure consistency across all item editors.
  * 
  * Key Components:
- * - BaseRibbon: Main ribbon container with tabs
- * - BaseRibbonToolbar: Toolbar component that renders actions
+ * - BaseRibbon: Main ribbon container with clean homeActions + additionalTabs API
+ * - BaseRibbonToolbar: Toolbar component that renders actions (internal use)
  * - RibbonButton: Standardized button with Tooltip (accessibility compliant)
  * - StandardRibbonActions: Factory functions for common actions
- * - StandardRibbonTabs: Factory functions for tab creation (MANDATORY Home tab)
  * 
- * ⚠️ IMPORTANT: All ribbons MUST include a Home tab as the first tab.
- * Use createRibbonTabs() to ensure this requirement is met automatically.
+ * ⚠️ IMPORTANT: All ribbons MUST include homeActions (mandatory Home tab).
+ * Use the new clean API pattern for consistent ribbons.
  * 
- * @example Basic Usage with Mandatory Home Tab
+ * @example Simple Pattern (Recommended for most items)
  * ```tsx
  * import { 
- *   BaseRibbon, 
- *   BaseRibbonToolbar, 
- *   createRibbonTabs,
+ *   BaseRibbon,
  *   createSaveAction, 
  *   createSettingsAction 
  * } from '../../controls/Ribbon';
@@ -27,62 +24,56 @@
  * const MyItemRibbon = (props) => {
  *   const { t } = useTranslation();
  *   
- *   // Home tab is mandatory - createRibbonTabs ensures it's always first
- *   const tabs = createRibbonTabs(t('Home'));
- *   
- *   const actions = [
+ *   // Mandatory home actions
+ *   const homeActions = [
  *     createSaveAction(handleSave, !hasChanges, t('Save')),
  *     createSettingsAction(handleSettings, t('Settings'))
  *   ];
  *   
  *   return (
- *     <BaseRibbon tabs={tabs}>
- *       <BaseRibbonToolbar actions={actions} />
- *     </BaseRibbon>
+ *     <BaseRibbon 
+ *       homeActions={homeActions}
+ *       viewContext={viewContext} 
+ *     />
  *   );
  * };
  * ```
  * 
- * @example Advanced Usage with Additional Tabs
+ * @example Complex Pattern with Additional Tabs
  * ```tsx
- * import { 
- *   BaseRibbon, 
- *   BaseRibbonToolbar, 
- *   createRibbonTabs,
- *   createDataTab,
- *   createFormatTab,
- *   RibbonAction 
- * } from '../../controls/Ribbon';
- * import { Sparkle24Regular } from '@fluentui/react-icons';
+ * import { BaseRibbon, createSaveAction, RibbonAction } from '../../controls/Ribbon';
+ * import { Share24Regular } from '@fluentui/react-icons';
  * 
- * // Home tab + additional tabs
- * const tabs = createRibbonTabs(
- *   t('Home'),
- *   [
- *     createDataTab(t('Data')),
- *     createFormatTab(t('Format'))
- *   ]
- * );
+ * const homeActions = [
+ *   createSaveAction(handleSave, !hasChanges, t('Save')),
+ *   createSettingsAction(handleSettings, t('Settings'))
+ * ];
  * 
- * const customActions: RibbonAction[] = [
+ * const additionalTabs = [
  *   {
- *     key: 'custom',
- *     icon: Sparkle24Regular,
- *     label: 'Custom Action',
- *     onClick: handleCustom,
- *     testId: 'custom-btn',
- *     showDividerAfter: true
+ *     key: 'data',
+ *     label: t('Data'),
+ *     actions: [
+ *       {
+ *         key: 'export',
+ *         icon: Share24Regular,
+ *         label: t('Export'),
+ *         onClick: handleExport
+ *       }
+ *     ]
  *   }
  * ];
  * 
- * <BaseRibbon tabs={tabs}>
- *   <BaseRibbonToolbar actions={customActions} />
- * </BaseRibbon>
+ * <BaseRibbon 
+ *   homeActions={homeActions}
+ *   additionalTabs={additionalTabs}
+ *   viewContext={viewContext} 
+ * />
  * ```
  */
 
 export { BaseRibbon } from './BaseRibbon';
-export type { BaseRibbonProps, RibbonTab } from './BaseRibbon';
+export type { BaseRibbonProps, RibbonTabToolbar } from './BaseRibbon';
 
 export { BaseRibbonToolbar } from './BaseRibbonToolbar';
 export type { BaseRibbonToolbarProps, RibbonAction } from './BaseRibbonToolbar';
@@ -95,13 +86,3 @@ export {
   createSettingsAction,
   createAboutAction
 } from './StandardRibbonActions';
-
-export {
-  createHomeTab,
-  createRibbonTabs,
-  createInsertTab,
-  createFormatTab,
-  createDataTab,
-  createViewTab,
-  createCustomTab
-} from './StandardRibbonTabs';

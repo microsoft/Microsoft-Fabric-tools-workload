@@ -1,34 +1,60 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import { Tab, TabList } from '@fluentui/react-tabs';
 import { Button, Tooltip } from '@fluentui/react-components';
 import { ArrowLeft24Regular } from '@fluentui/react-icons';
 import { ViewContext } from '../';
+import { BaseRibbonToolbar, RibbonAction } from './BaseRibbonToolbar';
 import '../../styles.scss';
+
+/**
+ * Definition for additional ribbon tabs beyond Home
+ */
+export interface RibbonTabToolbar {
+  /**
+   * Unique key for the tab
+   */
+  key: string;
+  
+  /**
+   * Display label for the tab
+   */
+  label: string;
+  
+  /**
+   * Actions for this tab
+   */
+  actions: RibbonAction[];
+  
+  /**
+   * Optional test ID
+   */
+  testId?: string;
+  
+  /**
+   * Optional disabled state
+   */
+  disabled?: boolean;
+}
 
 /**
  * Props for the BaseRibbon component
  */
 export interface BaseRibbonProps {
   /**
-   * The toolbar content to render in the ribbon
+   * Actions for the Home tab (always present)
    */
-  children: ReactNode;
+  homeActions: RibbonAction[];
   
   /**
-   * Optional tabs to display in the ribbon
+   * Optional additional tabs with their actions
    */
-  tabs?: RibbonTab[];
+  additionalTabs?: RibbonTabToolbar[];
   
   /**
-   * The default selected tab value
+   * The default selected tab key
    * @default "home"
    */
   defaultSelectedTab?: string;
-  
-  /**
-   * Whether to show tabs at all
-   */
-  showTabs?: boolean;
   
   /**
    * Additional CSS class name
@@ -40,108 +66,95 @@ export interface BaseRibbonProps {
    * When provided and isDetailView is true, shows back button instead of tabs
    */
   viewContext?: ViewContext;
+  
+  /**
+   * Home tab label
+   * @default "Home"
+   */
+  homeLabel?: string;
 }
 
 /**
- * Interface for ribbon tabs
- */
-export interface RibbonTab {
-  /**
-   * Unique identifier for the tab
-   */
-  value: string;
-  
-  /**
-   * Display label for the tab
-   */
-  label: string;
-  
-  /**
-   * Optional test ID for the tab
-   */
-  testId?: string;
-  
-  /**
-   * Optional disabled state
-   */
-  disabled?: boolean;
-}
-
-/**
- * BaseRibbon - Reusable ribbon container component following Microsoft Fabric guidelines
+ * BaseRibbon - Clean ribbon with mandatory Home tab and optional additional tabs
  * 
  * This component provides:
- * - Consistent ribbon structure across all item editors
- * - Mandatory Home tab as default selected
- * - Optional tab navigation
- * - Automatic back button for detail views when ViewContext is provided
- * - Proper styling and shadow effects
- * - Accessibility support
- * - Integration with standardized RibbonAction system
+ * - Mandatory Home tab with actions
+ * - Optional additional tabs with their own actions
+ * - Automatic tab switching and action display
+ * - Back button support for detail views
+ * - Clean API without complex configuration
  * 
- * ## Architecture Integration
+ * ## Simple Architecture
  * 
- * BaseRibbon works seamlessly with:
- * - **BaseRibbonToolbar**: For action buttons with tooltip support
- * - **DetailViewAction**: Direct alias to RibbonAction for detail views
- * - **BaseItemEditorDetailView**: Automatic action registration and display
- * - **ViewContext**: Smart navigation between list and detail views
- * 
- * ## Action System
- * 
- * Actions are defined using the standardized RibbonAction interface:
- * ```typescript
- * const actions: RibbonAction[] = [
- *   {
- *     key: 'save',
- *     label: 'Save',
- *     icon: Save24Regular,
- *     tooltip: 'Save your changes',
- *     onClick: () => handleSave(),
- *     appearance: 'primary'
- *   }
- * ];
  * ```
- * 
- * ## View Context Integration
- * 
- * When ViewContext is provided:
- * - **List View**: Shows tab navigation
- * - **Detail View**: Automatically shows back button and hides tabs
- * - **Actions**: DetailViewActions are automatically converted and displayed
+ * BaseRibbon
+ * ├── Home Tab (always present) → homeActions
+ * ├── Data Tab (optional) → additionalTabs[0].actions  
+ * ├── Format Tab (optional) → additionalTabs[1].actions
+ * └── Back Button (detail view only)
+ * ```
  * 
  * @example
  * ```tsx
- * // Standard ribbon with tabs and actions
- * <BaseRibbon tabs={createRibbonTabs(t('Home'))}>
- *   <BaseRibbonToolbar actions={standardActions} />
- * </BaseRibbon>
+ * // Simple: Just Home tab
+ * <BaseRibbon 
+ *   homeActions={[saveAction, settingsAction]}
+ * />
  * 
- * // With ViewContext - automatically handles detail view navigation
- * <BaseRibbon tabs={tabs} viewContext={context}>
- *   <BaseRibbonToolbar actions={contextActions} />
- * </BaseRibbon>
- * 
- * // Detail view with BaseItemEditorDetailView integration
- * <BaseRibbon viewContext={detailContext}>
- *   <BaseRibbonToolbar actions={detailActions} />
- * </BaseRibbon>
+ * // With additional tabs
+ * <BaseRibbon 
+ *   homeActions={[saveAction, settingsAction]}
+ *   additionalTabs={[
+ *     {
+ *       key: 'data',
+ *       label: 'Data', 
+ *       actions: [refreshAction, exportAction]
+ *     },
+ *     {
+ *       key: 'format',
+ *       label: 'Format',
+ *       actions: [fontAction, colorAction]
+ *     }
+ *   ]}
+ * />
  * ```
  */
 export const BaseRibbon: React.FC<BaseRibbonProps> = ({
-  children,
-  tabs = [],
+  homeActions,
+  additionalTabs = [],
   defaultSelectedTab = 'home',
-  showTabs = true,
   className = '',
-  viewContext
+  viewContext,
+  homeLabel = 'Home'
 }) => {
-  // Determine if we should show back button based on ViewContext
+  const [selectedTab, setSelectedTab] = React.useState<string>(defaultSelectedTab);
+  
+  // Build all available tabs
+  const allTabs = React.useMemo(() => {
+    const tabs = [
+      {
+        key: 'home',
+        label: homeLabel,
+        actions: homeActions
+      },
+      ...additionalTabs
+    ];
+    return tabs;
+  }, [homeLabel, homeActions, additionalTabs]);
+  
+  // Get actions for currently selected tab
+  const currentActions = React.useMemo(() => {
+    const activeTab = allTabs.find(tab => tab.key === selectedTab);
+    return activeTab?.actions || homeActions;
+  }, [selectedTab, allTabs, homeActions]);
+  
+  // Determine if we should show back button
   const isDetailView = viewContext?.isDetailView || false;
+  const showTabs = allTabs.length > 1 && !isDetailView;
   
   return (
     <div className={`ribbon-container ${className}`.trim()}>
-      {/* Back Button for Detail Views - Replaces tab navigation */}
+      {/* Back Button for Detail Views */}
       {isDetailView ? (
         <div className="ribbon-back-button-container">
           <Tooltip content="Back" relationship="label">
@@ -157,14 +170,17 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
           </Tooltip>
         </div>
       ) : (
-        /* Tab Navigation - Only show if tabs are provided and showTabs is true */
-        showTabs && tabs.length > 0 && (
-          <TabList defaultSelectedValue={defaultSelectedTab}>
-            {tabs.map((tab) => (
+        /* Tab Navigation */
+        showTabs && (
+          <TabList 
+            selectedValue={selectedTab}
+            onTabSelect={(_, data) => setSelectedTab(data.value as string)}
+          >
+            {allTabs.map((tab) => (
               <Tab
-                key={tab.value}
-                value={tab.value}
-                data-testid={tab.testId || `ribbon-${tab.value}-tab-btn`}
+                key={tab.key}
+                value={tab.key}
+                data-testid={tab.testId || `ribbon-${tab.key}-tab-btn`}
                 disabled={tab.disabled}
               >
                 {tab.label}
@@ -174,9 +190,9 @@ export const BaseRibbon: React.FC<BaseRibbonProps> = ({
         )
       )}
 
-      {/* Toolbar Container */}
+      {/* Current Tab Toolbar */}
       <div className="toolbarContainer">
-        {children}
+        <BaseRibbonToolbar actions={currentActions} />
       </div>
     </div>
   );

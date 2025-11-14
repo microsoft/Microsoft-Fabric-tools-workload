@@ -46,6 +46,62 @@ const workloadClient = new WorkloadClientAPI();
 const accessToken = await workloadClient.authentication.acquireAccessToken(scopes);
 ```
 
+### BaseRibbon Pattern
+The toolkit provides a standardized BaseRibbon component with a clean API for consistent ribbon experiences:
+
+```typescript
+// Recommended pattern - mandatory homeActions, optional additionalTabs
+import { BaseRibbon, createSaveAction, createSettingsAction } from '../../controls/Ribbon';
+
+export function MyItemRibbon(props: RibbonProps) {
+  const { t } = useTranslation();
+  
+  // Define mandatory Home tab actions
+  const homeActions: RibbonAction[] = [
+    createSaveAction(
+      props.saveItemCallback,
+      !props.isSaveButtonEnabled,
+      t("Save")
+    ),
+    createSettingsAction(
+      props.openSettingsCallback,
+      t("Settings")
+    )
+  ];
+  
+  // Optional: Define additional tabs for complex items
+  const additionalTabs = [
+    {
+      key: 'data',
+      label: t('Data'),
+      actions: [/* custom actions */]
+    }
+  ];
+  
+  return (
+    <BaseRibbon 
+      homeActions={homeActions}           // Mandatory
+      additionalTabs={additionalTabs}     // Optional
+      viewContext={viewContext} 
+    />
+  );
+}
+
+// Simple pattern - just home actions (like HelloWorld)
+return (
+  <BaseRibbon 
+    homeActions={homeActions}
+    viewContext={viewContext} 
+  />
+);
+```
+
+Key Benefits:
+- **Consistent API**: Every ribbon has a mandatory Home tab with `homeActions`
+- **Standard Actions**: Use `createSaveAction()`, `createSettingsAction()` factories
+- **Optional Complexity**: Add `additionalTabs` only when needed
+- **Accessibility**: Built-in Tooltip + ToolbarButton patterns
+
 ### Manifest Configuration
 - **WorkloadManifest.xml**: Defines workload metadata, capabilities, and permissions
 - **[ItemName]Item.xml**: Defines individual item types, their properties, and behaviors
@@ -57,9 +113,10 @@ const accessToken = await workloadClient.authentication.acquireAccessToken(scope
 1. **Follow Naming Conventions**: Use PascalCase for item names, maintain consistency
 2. **Implement Error Handling**: Provide user-friendly error messages and recovery options
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design
-4. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
-5. **State Management**: Use Redux Toolkit patterns for complex state management
-6. **Performance**: Implement lazy loading and code splitting for large applications
+4. **Ribbon Pattern**: Use BaseRibbon with `homeActions` (mandatory) and optional `additionalTabs`. Import action factories from controls/Ribbon
+5. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
+6. **State Management**: Use Redux Toolkit patterns for complex state management
+7. **Performance**: Implement lazy loading and code splitting for large applications
 
 ### Security Considerations
 1. **Minimal Scopes**: Request only necessary OAuth scopes for operations

@@ -42,7 +42,6 @@ export {
 
 export type { 
   BaseRibbonProps,
-  RibbonTab,
   BaseRibbonToolbarProps,
   RibbonAction,
   RibbonButtonProps,

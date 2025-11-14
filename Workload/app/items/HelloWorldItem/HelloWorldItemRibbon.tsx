@@ -3,11 +3,9 @@ import { PageProps } from '../../App';
 import { useTranslation } from "react-i18next";
 import { 
   BaseRibbon, 
-  BaseRibbonToolbar, 
   RibbonAction,
   createSaveAction,
-  createSettingsAction,
-  createRibbonTabs
+  createSettingsAction
 } from '../../controls/Ribbon';
 import { ViewContext } from '../../controls';
 import '../../styles.scss';
@@ -29,33 +27,23 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  * across all item editors in the Fabric Extensibility Toolkit.
  * 
  * Key Features:
- * - Uses BaseRibbon for consistent structure
- * - Leverages BaseRibbonToolbar for action rendering
- * - Employs standard action factories for common buttons (Save, Settings)
- * - Shows how to create CUSTOM actions (Getting Started)
- * - Maintains accessibility with Tooltip + ToolbarButton pattern
+ * - Uses BaseRibbon with clean API pattern
+ * - Defines homeActions (mandatory Home tab actions)
+ * - Uses standard action factories for Save and Settings
+ * - Demonstrates the simple pattern (most items only need Home tab)
+ * - Shows how to add custom actions (commented example)
+ * - Maintains accessibility with built-in Tooltip + ToolbarButton pattern
  * - Follows Fabric design guidelines
- * - MANDATORY Home tab using createRibbonTabs helper
- * - Supports additional custom tabs as needed
+ * 
+ * This example shows the SIMPLE PATTERN that most items should use.
+ * For complex items requiring additional tabs, see the BaseRibbon documentation.
  */
 export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   const { t } = useTranslation();
   const { viewContext } = props;
   
-  // Define ribbon tabs - Home tab is mandatory, additional tabs can be added
-  // Using createRibbonTabs ensures Home tab is always present
-  // Tabs are hidden automatically when in detail view mode
-  const tabs = createRibbonTabs(
-    t("ItemEditor_Ribbon_Home_Label")
-    // Additional tabs can be added here as second parameter:
-    // [
-    //   createDataTab(t("Data")),
-    //   createFormatTab(t("Format"))
-    // ]
-  );
-  
-  // Define ribbon actions - mix of standard and custom actions
-  const actions: RibbonAction[] = [
+  // Define home actions - these appear on the mandatory Home tab
+  const homeActions: RibbonAction[] = [
     // Standard Save action - disabled unless explicitly enabled
     createSaveAction(
       props.saveItemCallback,
@@ -67,12 +55,11 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
     createSettingsAction(
       props.openSettingsCallback,
       t("ItemEditor_Ribbon_Settings_Label")
-    ),
+    )
     
     // CUSTOM ACTION EXAMPLE: Getting Started navigation
     // This demonstrates how to create custom actions for view navigation
-    // Uses viewContext.setCurrentView for navigation
-    /*{
+    /*,{
       key: 'getting-started',
       icon: Rocket24Regular,
       label: t("ItemEditor_Ribbon_GettingStarted_Label", "Getting Started"),
@@ -83,8 +70,9 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   ];
   
   return (
-    <BaseRibbon tabs={tabs} viewContext={viewContext}>
-      <BaseRibbonToolbar actions={actions} />
-    </BaseRibbon>
+    <BaseRibbon 
+      homeActions={homeActions} 
+      viewContext={viewContext} 
+    />
   );
 }
