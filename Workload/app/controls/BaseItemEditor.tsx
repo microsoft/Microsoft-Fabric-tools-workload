@@ -23,32 +23,6 @@ export interface RegisteredView {
 }
 
 /**
- * BaseItemEditor Props Interface (Legacy Mode)
- * 
- * @property {ReactNode} ribbon - The ribbon component to display at the top (required)
- * @property {ReactNode} notification - Optional notification/message bar between ribbon and content (fixed, not scrolled)
- * @property {ReactNode} children - The content to display in the scrollable area
- * @property {string} className - Optional additional CSS class for the editor container
- * @property {string} contentClassName - Optional additional CSS class for the scrollable content area
- */
-export interface BaseItemEditorPropsLegacy {
-  /** The ribbon component that will be fixed at the top */
-  ribbon: ReactNode;
-  /** Optional notification area between ribbon and content (e.g., MessageBar for warnings) */
-  notification?: ReactNode;
-  /** The content that will scroll below the ribbon */
-  children: ReactNode;
-  /** Optional CSS class for the editor container */
-  className?: string;
-  /** Optional CSS class for the scrollable content area */
-  contentClassName?: string;
-  /** Whether to show loading indicator instead of content */
-  isLoading?: boolean;
-  /** Loading message to display */
-  loadingMessage?: string;
-}
-
-/**
  * View context information passed to ribbon
  */
 export interface ViewContext {
@@ -69,9 +43,9 @@ export interface ViewContext {
 }
 
 /**
- * BaseItemEditor Props Interface (View Registration Mode)
+ * BaseItemEditor Props Interface
  * 
- * BaseItemEditor manages the view state internally. Children can change views using setCurrentView.
+ * BaseItemEditor manages the view state internally. Components register views and can switch between them using setCurrentView.
  * 
  * ## Detail View Support (Automatic Back Navigation)
  * When a view is marked as `isDetailView: true`, BaseItemEditor AUTOMATICALLY:
@@ -112,9 +86,9 @@ export interface BaseItemEditorPropsWithViews {
 }
 
 /**
- * Union type for backward compatibility
+ * BaseItemEditor Props Interface
  */
-export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorPropsWithViews;
+export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
 
 /**
  * BaseItemEditor Component
@@ -125,13 +99,9 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * - Proper height management to fill the iframe
  * - Support for different view types (empty, default, detail pages)
  * 
- * ## Two Usage Modes
+ * ## View Registration Mode
  * 
- * ### 1. Legacy Mode (Direct Children)
- * Pass content directly as children - simple but requires manual view switching
- * 
- * ### 2. View Registration Mode (Recommended)
- * BaseItemEditor manages view state internally. Children can switch views using setCurrentView.
+ * BaseItemEditor manages view state internally. Components register views and can switch between them using setCurrentView.
  * 
  * ## Architecture
  * 
@@ -153,22 +123,8 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * └─────────────────────────────────────┘
  * ```
  * 
- * ## Usage Examples
+ * ## Usage Example
  * 
- * ### Legacy Mode (Backward Compatible)
- * ```tsx
- * import { BaseItemEditor } from "../../controls";
- * 
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   {currentView === 'empty' ? (
- *     <EmptyView />
- *   ) : (
- *     <DefaultView />
- *   )}
- * </BaseItemEditor>
- * ```
- * 
- * ### View Registration Mode (Recommended)
  * ```tsx
  * import { BaseItemEditor, RegisteredView, ViewContext } from "../../controls";
  * 
@@ -254,7 +210,6 @@ export type BaseItemEditorProps = BaseItemEditorPropsLegacy | BaseItemEditorProp
  * - **Detail View Support**: Automatic history tracking and back navigation
  * - **View Context**: Ribbon receives full context including isDetailView flag
  * - **Consistent Layout**: Enforces Fabric design guidelines
- * - **Backward Compatible**: Supports both legacy and new patterns
  * 
  * @component
  */
@@ -270,7 +225,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Initialize view state from initialView prop
   React.useEffect(() => {
-    if ('views' in props && 'initialView' in props && !currentView) {
+    if (props.initialView && !currentView) {
       setCurrentViewInternal(props.initialView);
       setViewHistory([props.initialView]);
     }
@@ -282,9 +237,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
     setCurrentViewInternal(view);
     // Clear detail view actions when changing views
     setDetailViewActions([]);
-    if ('views' in props && 'onViewChange' in props) {
-      props.onViewChange?.(view);
-    }
+    props.onViewChange?.(view);
   }, [props]);
 
   // Go back to previous view (for detail views)
@@ -300,9 +253,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
       // Clear detail view actions when going back
       setDetailViewActions([]);
       
-      if ('views' in props && 'onViewChange' in props) {
-        props.onViewChange?.(previousView);
-      }
+      props.onViewChange?.(previousView);
     }
   }, [viewHistory, props]);
 
@@ -313,14 +264,11 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Resolve views (either array or factory function)
   const resolvedViews = React.useMemo((): RegisteredView[] => {
-    if ('views' in props) {
-      const views = props.views;
-      if (typeof views === 'function') {
-        return views(setCurrentView);
-      }
-      return views;
+    const views = props.views;
+    if (typeof views === 'function') {
+      return views(setCurrentView);
     }
-    return [];
+    return views;
   }, [props, setCurrentView]);
 
   // Check if current view is a detail view
@@ -342,7 +290,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Resolve ribbon (either ReactNode or render function with ViewContext)
   const ribbonContent = React.useMemo(() => {
-    const ribbon = 'ribbon' in props ? props.ribbon : null;
+    const ribbon = props.ribbon;
     if (typeof ribbon === 'function') {
       return ribbon(viewContext);
     }
@@ -351,33 +299,24 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
 
   // Resolve notification (either ReactNode or render function)
   const notificationContent = React.useMemo(() => {
-    const notification = 'notification' in props ? props.notification : undefined;
+    const notification = props.notification;
     if (typeof notification === 'function') {
       return notification(currentView);
     }
     return notification;
   }, [props, currentView]);
 
-  // Determine which mode we're in and get the content
+  // Determine content from view registration
   const content = React.useMemo(() => {
     // Show loading indicator if isLoading is true
     if (isLoading) {
       return <ItemEditorLoadingProgressBar message={loadingMessage || "Loading..."} />;
     }
     
-    // View Registration Mode (both controlled and uncontrolled)
-    if ('views' in props) {
-      const activeView = resolvedViews.find((v: RegisteredView) => v.name === currentView);
-      return activeView?.component || null;
-    }
-    
-    // Legacy Mode
-    if ('children' in props) {
-      return props.children;
-    }
-    
-    return null;
-  }, [props, resolvedViews, currentView, isLoading, loadingMessage]);
+    // View Registration Mode
+    const activeView = resolvedViews.find((v: RegisteredView) => v.name === currentView);
+    return activeView?.component || null;
+  }, [resolvedViews, currentView, isLoading, loadingMessage]);
 
   return (
     <div className={`item-editor-container ${className}`.trim()} data-testid="item-editor">

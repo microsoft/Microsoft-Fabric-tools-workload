@@ -27,20 +27,10 @@ The `BaseItemEditor` control has been successfully created and integrated into t
 ```typescript
 interface BaseItemEditorPropsWithViews {
   views: RegisteredView[];                           // Required: View definitions
-  defaultView: string;                              // Required: Initial view name
+  initialView: string;                              // Required: Initial view name
   ribbon: (context: ViewContext) => ReactNode;     // Required: Ribbon with context
   className?: string;                               // Optional: Editor container class
   contentClassName?: string;                        // Optional: Content area class
-}
-```
-
-**Props** (Legacy - Still Supported):
-```typescript
-interface BaseItemEditorPropsLegacy {
-  ribbon: ReactNode;        // Required: Ribbon component
-  children: ReactNode;      // Required: Content to display
-  className?: string;       // Optional: Editor container class
-  contentClassName?: string; // Optional: Content area class
 }
 ```
 
@@ -75,7 +65,7 @@ export type { BaseItemEditorProps } from './BaseItemEditor';
 - **Ribbon function** receives ViewContext instead of static component
 - **ViewContext integration** for centralized navigation
 
-**Before** (Legacy Stack Pattern):
+**Before** (Manual Stack Pattern):
 ```tsx
 <Stack className="editor">
   <MyItemRibbon {...} />
@@ -98,7 +88,7 @@ const views: RegisteredView[] = [
 
 <BaseItemEditor
   views={views}
-  defaultView={item?.definition?.greeting ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY}
+  initialView={item?.definition?.greeting ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY}
   ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
 />
 ```

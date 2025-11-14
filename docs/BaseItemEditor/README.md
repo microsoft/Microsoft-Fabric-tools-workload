@@ -338,20 +338,11 @@ export function MyItemEditor(props: PageProps) {
 | `className` | `string` | ❌ No | `""` | Additional CSS class for the editor container |
 | `contentClassName` | `string` | ❌ No | `""` | Additional CSS class for the scrollable content area |
 
-### BaseItemEditorPropsLegacy (Legacy Mode)
-
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `ribbon` | `ReactNode` | ✅ Yes | - | The ribbon component to display at the top |
-| `children` | `ReactNode` | ✅ Yes | - | The content to display in the scrollable area |
-| `className` | `string` | ❌ No | `""` | Additional CSS class for the editor container |
-| `contentClassName` | `string` | ❌ No | `""` | Additional CSS class for the scrollable content area |
-
 ### Type Definitions
 
 ```typescript
-// View Registration Mode (Recommended)
-export interface BaseItemEditorPropsWithViews {
+// BaseItemEditor Interface
+export interface BaseItemEditorProps {
   /** The ribbon component - receives ViewContext automatically */
   ribbon: (context: ViewContext) => ReactNode;
   /** Optional notification area - receives currentView */
@@ -390,18 +381,6 @@ export interface ViewContext {
   goBack: () => void;
   /** History of visited views */
   viewHistory: string[];
-}
-
-// Legacy Mode
-export interface BaseItemEditorPropsLegacy {
-  /** The ribbon component that will be fixed at the top */
-  ribbon: ReactNode;
-  /** The content that will scroll below the ribbon */
-  children: ReactNode;
-  /** Optional CSS class for the editor container */
-  className?: string;
-  /** Optional CSS class for the scrollable content area */
-  contentClassName?: string;
 }
 ```
 
@@ -640,7 +619,7 @@ export function MyItemEditor(props: PageProps) {
   return (
     <BaseItemEditor
       views={views}
-      defaultView={item?.definition?.data ? VIEW_TYPES.DEFAULT : VIEW_TYPES.EMPTY}
+      initialView={item?.definition?.data ? VIEW_TYPES.DEFAULT : VIEW_TYPES.EMPTY}
       ribbon={(viewContext) => (
         <MyItemRibbon
           {...props}
@@ -685,7 +664,7 @@ export function MyItemEditor(props: PageProps) {
   return (
     <BaseItemEditor
       views={views}
-      defaultView={VIEW_TYPES.MAIN}
+      initialView={VIEW_TYPES.MAIN}
       ribbon={(viewContext) => (
         <MyItemRibbon 
           {...props}

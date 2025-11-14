@@ -13,6 +13,7 @@ import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
 import "../../styles.scss";
+import "./HelloWorldItem.scss";
 
 /**
  * Different views that are available for the HelloWorld item
@@ -34,6 +35,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
   const [showWarning, setShowWarning] = useState(true);
+  const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
 
   const { pathname } = useLocation();
 
@@ -82,6 +84,15 @@ export function HelloWorldItemEditor(props: PageProps) {
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
+
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && currentViewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
+      currentViewSetter(correctView);
+    }
+  }, [isLoading, item, currentViewSetter]);
 
   const handleOpenSettings = async () => {
     if (item) {
@@ -161,37 +172,44 @@ export function HelloWorldItemEditor(props: PageProps) {
           </MessageBar>
         ) : undefined
       }
-      views={(setCurrentView) => [
-        {
-          name: EDITOR_VIEW_TYPES.EMPTY,
-          component: (
-            <HelloWorldItemEmptyView
-              workloadClient={workloadClient}
-              item={item}
-              onNavigateToGettingStarted={() => {
-                setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
-                setHasBeenSaved(false);
-                setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
-              }}
-            />
-          )
-        },
-        {
-          name: EDITOR_VIEW_TYPES.DEFAULT,
-          component: (
-            <HelloWorldItemDefaultView
-              workloadClient={workloadClient}
-              item={item}
-              messageValue={currentDefinition.message}
-              onMessageChange={(newValue) => {
-                setCurrentDefinition(prev => ({ ...prev, message: newValue }));
-                setHasBeenSaved(false);
-              }}
-            />
-          )
+      views={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!currentViewSetter) {
+          setCurrentViewSetter(() => setCurrentView);
         }
-      ]}
-      initialView={!item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
+        
+        return [
+          {
+            name: EDITOR_VIEW_TYPES.EMPTY,
+            component: (
+              <HelloWorldItemEmptyView
+                workloadClient={workloadClient}
+                item={item}
+                onNavigateToGettingStarted={() => {
+                  setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
+                  setHasBeenSaved(false);
+                  setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+                }}
+              />
+            )
+          },
+          {
+            name: EDITOR_VIEW_TYPES.DEFAULT,
+            component: (
+              <HelloWorldItemDefaultView
+                workloadClient={workloadClient}
+                item={item}
+                messageValue={currentDefinition.message}
+                onMessageChange={(newValue) => {
+                  setCurrentDefinition(prev => ({ ...prev, message: newValue }));
+                  setHasBeenSaved(false);
+                }}
+              />
+            )
+          }
+        ];
+      }}
+      initialView={EDITOR_VIEW_TYPES.EMPTY}
     />
   );
 }

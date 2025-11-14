@@ -1,5 +1,4 @@
 import React from "react";
-import { ArrowLeft20Regular } from "@fluentui/react-icons";
 import { BaseItemEditorView, BaseItemEditorViewProps } from "./BaseItemEditorView";
 import { RibbonAction } from "./Ribbon";
 import { DetailViewActionsContext } from "./BaseItemEditor";
@@ -18,16 +17,8 @@ export interface DetailViewAction extends RibbonAction {
  * BaseItemEditorDetailView Props Interface
  */
 export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
-  /** Optional additional actions to display in the ribbon (back action is provided automatically) */
+  /** Optional additional actions to display in the ribbon */
   actions?: DetailViewAction[];
-  /** Callback to register actions with parent ribbon */
-  onActionsChange?: (actions: DetailViewAction[]) => void;
-  /** Callback for the back action */
-  onBack?: () => void;
-  /** Custom label for the back button (defaults to "Back") */
-  backLabel?: string;
-  /** Custom tooltip for the back button */
-  backTooltip?: string;
 }
 
 /**
@@ -60,7 +51,8 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  * ## Key Features
  * - **Context-Specific Actions**: Define actions that appear in the ribbon for this view
  * - **Flexible Layout**: Optional left panel + required center content using panel config objects
- * - **Action Management**: Automatically notifies parent when actions change
+ * - **Automatic Back Navigation**: Back button handled automatically when view is marked as `isDetailView: true`
+ * - **Action Management**: Automatically registers actions with parent through context
  * - **Consistent Styling**: Uses BaseItemEditorView for layout consistency
  * - **Standardized Actions**: Uses RibbonAction interface with full tooltip support
  * 
@@ -112,7 +104,6 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  *     content: <MyDetailContent />
  *   }}
  *   actions={actions}
- *   onActionsChange={handleActionsChange}  // Legacy callback support
  * />
  * ```
  * 
@@ -132,7 +123,7 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  *     {
  *       key: 'apply',
  *       label: 'Apply',
- *       icon: Save24Regular, // All actions require an icon
+ *       icon: Save24Regular, // Requires an icon
  *       onClick: () => applyChanges(),
  *       appearance: 'primary'
  *     }
@@ -140,94 +131,70 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  * />
  * ```
  * 
- * ### Example 3: With BaseItemEditor View Registration (Recommended)
+ * ### Example 3: With Navigation Panel
  * ```tsx
- * // In your item editor using the new ViewContext system
- * const views = (setCurrentView) => [
+ * const [selectedPage, setSelectedPage] = useState('overview');
+ * 
+ * import { ArrowDownload24Regular, Share24Regular } from "@fluentui/react-icons";
+ * 
+ * const actions = [
  *   {
- *     name: 'main',
- *     component: <MainView onShowDetail={(id) => setCurrentView(`detail-${id}`)} />
+ *     key: 'export',
+ *     label: 'Export',
+ *     icon: ArrowDownload24Regular,
+ *     onClick: () => handleExport(),
+ *     tooltip: 'Export current page'
  *   },
  *   {
- *     name: 'detail-123',
- *     component: (
- *       <BaseItemEditorDetailView
- *         left={{
- *           content: <NavigationMenu onSelect={setSelectedPage} />,
- *           title: "Navigation",
- *           width: 240
- *         }}
- *         center={{
- *           content: <PageContent page="overview" />
- *         }}
- *         actions={[
- *           {
- *             key: 'export',
- *             label: 'Export',
- *             icon: ArrowDownload24Regular,
- *             onClick: () => handleExport(),
- *             tooltip: 'Export current page'
- *           },
- *           {
- *             key: 'share',
- *             label: 'Share', 
- *             icon: Share24Regular,
- *             onClick: () => handleShare(),
- *             tooltip: 'Share with others'
- *           }
- *         ]}
- *       />
- *     ),
- *     isDetailView: true  // ⭐ Automatic back navigation with ViewContext
+ *     key: 'share',
+ *     label: 'Share',
+ *     icon: Share24Regular,
+ *     onClick: () => handleShare(),
+ *     tooltip: 'Share with others'
  *   }
  * ];
  * 
- * // BaseItemEditor automatically handles back navigation and action registration
- * <BaseItemEditor
- *   views={views}
- *   initialView="main"
- *   ribbon={(context) => (
- *     <BaseRibbon
- *       homeActions={context.isDetailView ? [] : homeActions}  // Empty on detail views
- *       viewContext={context}  // Provides automatic back button and action integration
- *     />
- *   )}
+ * <BaseItemEditorDetailView
+ *   left={{
+ *     content: (
+ *       <NavigationMenu
+ *         items={pages}
+ *         selected={selectedPage}
+ *         onSelect={setSelectedPage}
+ *       />
+ *     ),
+ *     title: "Navigation",
+ *     width: 240
+ *   }}
+ *   center={{
+ *     content: <PageContent page={selectedPage} />
+ *   }}
+ *   actions={actions}
  * />
  * ```
  * 
  * ## Action Management
  * 
- * The parent component (typically the item editor) should handle action updates:
+ * Actions are automatically registered with the parent BaseItemEditor through the DetailViewActionsContext.
+ * When a detail view is active, its actions appear in the ribbon toolbar automatically.
  * 
- * ### Legacy Pattern (onActionsChange callback)
  * ```tsx
- * const [currentActions, setCurrentActions] = useState<DetailViewAction[]>([]);
+ * // Just define your actions - registration is automatic
+ * const detailActions: DetailViewAction[] = [
+ *   {
+ *     key: 'save',
+ *     label: 'Save',
+ *     icon: Save24Regular,
+ *     tooltip: 'Save your changes',
+ *     onClick: handleSave,
+ *     appearance: 'primary'
+ *   }
+ * ];
  * 
- * // When view changes, update ribbon actions via callback
- * const handleActionsChange = (actions: DetailViewAction[]) => {
- *   setCurrentActions(actions);
- *   // Actions are now directly compatible with RibbonAction - no conversion needed
- *   updateRibbon(actions);
- * };
- * ```
- * 
- * ### Recommended Pattern (BaseItemEditor ViewContext)
- * ```tsx
- * // BaseItemEditor automatically manages detail view actions through ViewContext
- * // No manual action management needed - actions are automatically registered!
- * 
- * <BaseItemEditor
- *   views={views}  // Views register their own actions
- *   ribbon={(context) => (
- *     <BaseRibbon
- *       homeActions={[
- *         createSaveAction(handleSave, !canSave, 'Save'),
- *         createSettingsAction(handleSettings, 'Settings', false)  // No divider after
- *       ]}
- *       viewContext={context}  // Automatic action integration
- *       detailViewActions={context.detailViewActions}  // Actions from current detail view
- *     />
- *   )}
+ * // Actions automatically appear in ribbon when this view is active
+ * <BaseItemEditorDetailView
+ *   center={{ content: <MyContent /> }}
+ *   actions={detailActions}
  * />
  * ```
  * 
@@ -235,7 +202,6 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  * 
  * DetailViewActions are automatically compatible with the ribbon system:
  * 
- * ### Direct Compatibility with RibbonAction
  * ```tsx
  * // Define actions with full RibbonAction properties
  * const detailActions: DetailViewAction[] = [
@@ -253,45 +219,6 @@ export interface BaseItemEditorDetailViewProps extends BaseItemEditorViewProps {
  * <BaseRibbonToolbar actions={detailActions} />
  * ```
  * 
- * ### Integration with Standard Actions
- * ```tsx
- * import { createSaveAction, createSettingsAction, createAboutAction } from '../../controls/Ribbon';
- * 
- * // Combine standard and custom actions
- * const actions = [
- *   createSaveAction(handleSave, !isDirty, 'Save Changes'),
- *   createSettingsAction(handleSettings, 'Properties', true),  // Show divider after (default)
- *   createAboutAction(handleAbout, 'Info'),
- *   // Custom actions
- *   {
- *     key: 'export',
- *     label: 'Export',
- *     icon: Download24Regular,
- *     onClick: handleExport
- *   }
- * ];
- * ```
- * 
- * ### New BaseRibbon Integration (Recommended)
- * ```tsx
- * // BaseRibbon now uses homeActions + additionalTabs architecture
- * <BaseRibbon
- *   homeActions={[
- *     createSaveAction(handleSave, !isDirty),
- *     createSettingsAction(handleSettings, 'Settings', false)  // ⭐ New: optional showDividerAfter parameter
- *   ]}
- *   additionalTabs={[
- *     {
- *       key: 'data',
- *       label: 'Data',
- *       actions: [refreshAction, importAction]
- *     }
- *   ]}
- *   viewContext={context}  // ⭐ ViewContext provides automatic detail view handling
- *   detailViewActions={context.detailViewActions}  // ⭐ Actions from BaseItemEditorDetailView
- * />
- * ```
- * 
  * ## Fabric UX Compliance
  * - Uses Fabric design tokens for consistent spacing
  * - Inherits responsive behavior from BaseItemEditorView
@@ -307,36 +234,11 @@ export function BaseItemEditorDetailView({
   left,
   center,
   className,
-  actions = [],
-  onActionsChange,
-  onBack,
-  backLabel = "Back",
-  backTooltip = "Return to previous view"
+  actions = []
 }: BaseItemEditorDetailViewProps) {
 
   // Get the context to register actions with BaseItemEditor
   const detailViewActionsContext = React.useContext(DetailViewActionsContext);
-
-  // Create the back action
-  const backAction: DetailViewAction = {
-    key: 'back',
-    label: backLabel,
-    icon: ArrowLeft20Regular,
-    onClick: onBack || (() => {}),
-    appearance: 'subtle',
-    disabled: !onBack,
-    tooltip: backTooltip
-  };
-
-  // Combine back action with additional actions
-  const allActions = [backAction, ...actions];
-
-  // Notify parent when actions change (legacy onActionsChange prop)
-  React.useEffect(() => {
-    if (onActionsChange) {
-      onActionsChange(allActions);
-    }
-  }, [actions, onActionsChange, onBack, backLabel, backTooltip]);
 
   // Register actions with BaseItemEditor through context
   React.useEffect(() => {

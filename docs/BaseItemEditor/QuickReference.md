@@ -4,7 +4,7 @@ Quick reference guide for using the `BaseItemEditor` control in Microsoft Fabric
 
 ## 🚀 Quick Start
 
-### Basic Pattern (View Registration - Recommended)
+### Basic Pattern (View Registration)
 
 ```tsx
 import { BaseItemEditor, RegisteredView } from "../../controls";
@@ -20,25 +20,9 @@ export function MyItemEditor(props: PageProps) {
   return (
     <BaseItemEditor
       views={views}
-      defaultView="main"
+      initialView="main"
       ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
     />
-  );
-}
-```
-
-### Legacy Pattern (Children - Still Supported)
-
-```tsx
-import { BaseItemEditor } from "../../controls";
-
-export function MyItemEditor(props: PageProps) {
-  return (
-    <BaseItemEditor
-      ribbon={<MyItemRibbon {...props} />}
-    >
-      <MyContent />
-    </BaseItemEditor>
   );
 }
 ```
@@ -53,22 +37,13 @@ import { BaseItemEditor, BaseItemEditorProps } from "../../controls";
 
 ## 🎯 Props
 
-### BaseItemEditorPropsWithViews (Recommended)
+### BaseItemEditorProps
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | `views` | `RegisteredView[]` | ✅ | Array of view definitions |
-| `defaultView` | `string` | ✅ | Initial view name to display |
+| `initialView` | `string` | ✅ | Initial view name to display |
 | `ribbon` | `(context: ViewContext) => ReactNode` | ✅ | Ribbon with ViewContext |
-| `className` | `string` | ❌ | Additional CSS class for container |
-| `contentClassName` | `string` | ❌ | Additional CSS class for content area |
-
-### BaseItemEditorPropsLegacy (Legacy Support)
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `ribbon` | `ReactNode` | ✅ | Ribbon component (fixed at top) |
-| `children` | `ReactNode` | ✅ | Content (scrollable) |
 | `className` | `string` | ❌ | Additional CSS class for container |
 | `contentClassName` | `string` | ❌ | Additional CSS class for content area |
 
@@ -120,7 +95,7 @@ const views: RegisteredView[] = [
 
 <BaseItemEditor
   views={views}
-  defaultView={item?.id ? 'main' : 'empty'}
+  initialView={item?.id ? 'main' : 'empty'}
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
 />
 ```
@@ -135,7 +110,7 @@ if (isLoading) {
 return (
   <BaseItemEditor
     views={views}
-    defaultView="main"
+    initialView="main"
     ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
   />
 );
@@ -146,7 +121,7 @@ return (
 ```tsx
 <BaseItemEditor
   views={views}
-  defaultView="main"
+  initialView="main"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
   className="custom-editor"
   contentClassName="custom-content"
@@ -170,35 +145,9 @@ const views: RegisteredView[] = [
 
 <BaseItemEditor
   views={views}
-  defaultView="main"
+  initialView="main"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
 />
-```
-
-### Pattern 5: Legacy Children Pattern
-
-```tsx
-<BaseItemEditor
-  ribbon={<MyRibbon showBack={page === 'detail'} onBack={handleBack} />}
->
-  {page === 'main' ? <MyMainView /> : <MyDetailView />}
-</BaseItemEditor>
-      onBack={() => setPage('main')}
-    />
-  }
->
-  {page === 'main' ? (
-    <MyMainView onViewDetail={(id) => {
-      setDetailId(id);
-      setPage('detail');
-    }} />
-  ) : (
-    <MyDetailView
-      detailId={detailId}
-      onBack={() => setPage('main')}
-    />
-  )}
-</BaseItemEditor>
 ```
 
 ## 🎨 View Types
@@ -206,12 +155,23 @@ const views: RegisteredView[] = [
 ### Empty View
 
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon />}>
-  <div className="empty-state-container">
-    <h2>Welcome!</h2>
-    <Button onClick={onStart}>Get Started</Button>
-  </div>
-</BaseItemEditor>
+const views = [
+  {
+    name: 'empty',
+    component: (
+      <div className="empty-state-container">
+        <h2>Welcome!</h2>
+        <Button onClick={onStart}>Get Started</Button>
+      </div>
+    )
+  }
+];
+
+<BaseItemEditor
+  views={views}
+  initialView="empty"
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+/>
 ```
 
 **Key Classes**: `empty-state-container`  
@@ -220,14 +180,25 @@ const views: RegisteredView[] = [
 ### Default View
 
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon />}>
-  <div className="editor-default-view">
-    <div className="main">
-      <h2>My Content</h2>
-      {/* Forms, cards, etc. */}
-    </div>
-  </div>
-</BaseItemEditor>
+const views = [
+  {
+    name: 'main',
+    component: (
+      <div className="editor-default-view">
+        <div className="main">
+          <h2>My Content</h2>
+          {/* Forms, cards, etc. */}
+        </div>
+      </div>
+    )
+  }
+];
+
+<BaseItemEditor
+  views={views}
+  initialView="main"
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+/>
 ```
 
 **Key Classes**: `editor-default-view`, `main`
@@ -235,14 +206,26 @@ const views: RegisteredView[] = [
 ### Detail View
 
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon />}>
-  <div className="editor-detail-view">
-    <div className="detail-content">
-      <h2>Detail View</h2>
-      {/* Detail content */}
-    </div>
-  </div>
-</BaseItemEditor>
+const views = [
+  {
+    name: 'detail',
+    component: (
+      <div className="editor-detail-view">
+        <div className="detail-content">
+          <h2>Detail View</h2>
+          {/* Detail content */}
+        </div>
+      </div>
+    ),
+    isDetailView: true
+  }
+];
+
+<BaseItemEditor
+  views={views}
+  initialView="detail"
+  ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
+/>
 ```
 
 **Key Classes**: `editor-detail-view`, `detail-content`
@@ -259,7 +242,6 @@ import { MyItemDefault } from "./MyItemDefault";
 export function MyItemEditor(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState();
-  const [currentView, setCurrentView] = useState('empty');
 
   useEffect(() => {
     // Load item
@@ -270,28 +252,30 @@ export function MyItemEditor(props: PageProps) {
     return <ItemEditorLoadingProgressBar message="Loading..." />;
   }
 
+  const views = [
+    {
+      name: 'empty',
+      component: <MyItemEmpty onStart={() => setCurrentView('default')} />
+    },
+    {
+      name: 'default', 
+      component: <MyItemDefault item={item} onUpdate={handleUpdate} />
+    }
+  ];
+
   return (
     <BaseItemEditor
-      ribbon={
+      views={views}
+      initialView={item?.definition?.state ? 'default' : 'empty'}
+      ribbon={(viewContext) => (
         <MyItemRibbon
           {...props}
-          currentView={currentView}
+          viewContext={viewContext}
           isSaveEnabled={item?.definition?.state}
           onSave={handleSave}
         />
-      }
-    >
-      {currentView === 'empty' ? (
-        <MyItemEmpty
-          onStart={() => setCurrentView('default')}
-        />
-      ) : (
-        <MyItemDefault
-          item={item}
-          onUpdate={handleUpdate}
-        />
       )}
-    </BaseItemEditor>
+    />
   );
 }
 ```

@@ -9,7 +9,6 @@
 export { BaseItemEditor } from './BaseItemEditor';
 export type { 
   BaseItemEditorProps, 
-  BaseItemEditorPropsLegacy, 
   BaseItemEditorPropsWithViews,
   RegisteredView,
   ViewContext
