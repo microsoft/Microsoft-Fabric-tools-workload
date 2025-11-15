@@ -68,12 +68,12 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   return (
     <Ribbon 
       homeToolbarActions={homeToolbarActions} 
-      // ADDITIONAL TOOLBAR SAMPLE
+      // ADDITIONAL TOOLBAR EXAMPLE
       // This demonstrates how you can add an addtional toolbar
       /*additionalToolbars={[
         {
-          key: 'test',
-          label: "Test",
+          key: 'edit',
+          label: "Edit",
           actions: [
                     settingsAction
                   ]

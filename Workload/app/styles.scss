@@ -164,7 +164,7 @@
   // Ribbon Container - Fixed at the top
   &__ribbon {
     flex-shrink: 0; // Don't shrink the ribbon
-    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px) 0 var(--spacingHorizontalS, 8px);
+    padding: 0 var(--spacingHorizontalS, 8px) 0 var(--spacingHorizontalS, 8px);
     //background: var(--colorNeutralBackground2, #f3f2f1);
     background: var(--colorNeutralBackground3);
     //border-radius: var(--borderRadiusMedium, 8px);
@@ -186,7 +186,7 @@
     flex: 1; // Take all remaining space
     overflow-y: auto; // Allow vertical scrolling
     overflow-x: hidden; // Prevent horizontal scroll
-    padding: var(--spacingVerticalS, 8px);
+    padding: 4px var(--spacingHorizontalS, 8px) var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
     //background: var(--colorNeutralBackground2, #f3f2f1);
     background: var(--colorNeutralBackground3);
     //border-radius: var(--borderRadiusMedium, 8px);
@@ -305,7 +305,7 @@
     border-radius: var(--borderRadiusMedium, 8px); // Use Fabric design tokens
     background: var(--colorNeutralBackground1, #ffffff);
     box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
-    margin: 4px 0px 8px ;
+    margin: 4px 0px 4px ;
     padding: 4px 8px; // Add padding for content spacing
     display: flex;
     align-items: center;
@@ -344,7 +344,7 @@
     margin: 0 !important;
     padding: 0 !important;
     border-bottom: 0px solid var(--colorNeutralStroke2, #e1e1e1);
-    margin-bottom: var(--spacingVerticalS, 8px) !important;
+    margin-bottom: 0 !important;
     justify-content: flex-start !important;
     align-items: center !important;
     width: auto !important;
@@ -354,7 +354,7 @@
     display: flex !important;
     flex: 0 0 auto !important;
     margin: 0 !important;
-    margin-right: 8px !important;
+    margin-right: 0 !important;
     position: relative !important;
 }
 
@@ -368,6 +368,8 @@
 .ribbon-container .ribbon-tab-button {
     flex: 0 0 auto !important;
     margin: 0 !important;
+    margin-left: 12px !important;
+    margin-right: 12px !important;
     border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
     position: relative !important;
     min-width: auto !important;
@@ -389,9 +391,11 @@
     align-items: center !important;
     justify-content: center !important;
     padding: 8px 16px !important;
+    margin-left: 4px !important;
+    margin-right: 4px !important;
     font-family: var(--fontFamilyBase) !important;
     font-size: var(--fontSizeBase300) !important;
-    font-weight: var(--fontWeightMedium) !important;
+    font-weight: var(--fontWeightRegular) !important;
     line-height: var(--lineHeightBase300) !important;
     color: var(--colorNeutralForeground2) !important;
     transition: all 0.1s ease !important;
