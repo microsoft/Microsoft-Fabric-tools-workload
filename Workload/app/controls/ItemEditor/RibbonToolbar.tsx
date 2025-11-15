@@ -1,6 +1,12 @@
 import React from "react";
 import { Toolbar, ToolbarDivider } from '@fluentui/react-toolbar';
 import { RibbonToolbarAction, FluentIconComponent } from './RibbonToolbarAction';
+import { RibbonActionButton, DropdownMenuItem } from './RibbonActionButton';
+
+/**
+ * Configuration for a dropdown menu item (re-exported for convenience)
+ */
+export type { DropdownMenuItem } from './RibbonActionButton';
 
 /**
  * Configuration for a ribbon action button
@@ -63,13 +69,37 @@ export interface RibbonAction {
 }
 
 /**
+ * Configuration for a ribbon dropdown action button
+ * Extends RibbonAction with dropdown-specific properties
+ */
+export interface RibbonDropdownAction extends RibbonAction {
+  /**
+   * Dropdown menu items to display
+   */
+  dropdownItems: DropdownMenuItem[];
+}
+
+/**
+ * Union type for all possible ribbon actions
+ */
+export type RibbonActionType = RibbonAction | RibbonDropdownAction;
+
+/**
+ * Type guard to check if an action is a dropdown action
+ */
+export const isDropdownAction = (action: RibbonActionType): action is RibbonDropdownAction => {
+  return 'dropdownItems' in action;
+};
+
+/**
  * Props for the RibbonToolbar component
  */
 export interface RibbonToolbarProps {
   /**
    * Array of actions to display in the toolbar
+   * Can include both regular actions and dropdown actions
    */
-  actions: RibbonAction[];
+  actions: RibbonActionType[];
   
   /**
    * Additional CSS class name
@@ -85,11 +115,14 @@ export interface RibbonToolbarProps {
  * - Support for dividers between action groups
  * - Conditional action visibility
  * - Proper spacing and alignment
- * - Integration with RibbonAction interface
+ * - Integration with RibbonAction and RibbonDropdownAction interfaces
+ * - Automatic dropdown detection and rendering
  * 
  * ## Action Configuration
  * 
  * Actions support comprehensive configuration:
+ * - **Regular Actions**: Standard button actions with icon, label, and click handler
+ * - **Dropdown Actions**: Buttons with dropdown menus using RibbonDropdownAction interface
  * - **Tooltip Support**: Both `tooltip` and `label` properties
  * - **Appearance**: 'primary', 'subtle', 'transparent'
  * - **Accessibility**: Automatic aria-label and tooltip mapping
@@ -98,7 +131,8 @@ export interface RibbonToolbarProps {
  * 
  * @example
  * ```tsx
- * const actions: RibbonAction[] = [
+ * const actions: RibbonActionType[] = [
+ *   // Regular action
  *   {
  *     key: 'save',
  *     label: 'Save',
@@ -108,12 +142,17 @@ export interface RibbonToolbarProps {
  *     disabled: !hasChanges,
  *     appearance: 'primary'
  *   },
+ *   // Dropdown action
  *   {
- *     key: 'settings',
- *     label: 'Settings',
- *     icon: Settings24Regular,
- *     tooltip: 'Open application settings',
- *     onClick: handleSettings,
+ *     key: 'export',
+ *     label: 'Export',
+ *     icon: Share24Regular,
+ *     tooltip: 'Export your data',
+ *     onClick: () => {}, // Not used for dropdown
+ *     dropdownItems: [
+ *       { key: 'pdf', label: 'Export as PDF', onClick: handleExportPdf },
+ *       { key: 'excel', label: 'Export as Excel', onClick: handleExportExcel }
+ *     ],
  *     showDividerAfter: true
  *   }
  * ];
@@ -132,16 +171,35 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
     <Toolbar className={className}>
       {visibleActions.map((action, index) => (
         <React.Fragment key={action.key}>
-          <RibbonToolbarAction
-            icon={action.icon}
-            label={action.label}
-            tooltip={action.tooltip}
-            onClick={action.onClick}
-            disabled={action.disabled}
-            testId={action.testId}
-            appearance={action.appearance}
-            ariaLabel={action.ariaLabel}
-          />
+          {isDropdownAction(action) ? (
+            // Render dropdown action using RibbonActionButton
+            <RibbonActionButton
+              action={{
+                key: action.key,
+                icon: action.icon,
+                label: action.label || '',
+                onClick: action.onClick,
+                disabled: action.disabled,
+                testId: action.testId,
+                tooltip: action.tooltip,
+                appearance: action.appearance,
+                ariaLabel: action.ariaLabel,
+                dropdownItems: action.dropdownItems
+              }}
+            />
+          ) : (
+            // Render regular action using RibbonToolbarAction
+            <RibbonToolbarAction
+              icon={action.icon}
+              label={action.label}
+              tooltip={action.tooltip}
+              onClick={action.onClick}
+              disabled={action.disabled}
+              testId={action.testId}
+              appearance={action.appearance}
+              ariaLabel={action.ariaLabel}
+            />
+          )}
           
           {/* Show divider if specified and not the last item */}
           {action.showDividerAfter && index < visibleActions.length - 1 && (
