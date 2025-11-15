@@ -554,10 +554,62 @@ useEffect(() => {
 
 ## 🔧 Best Practices
 
+### 🎨 Content Styling Requirements
+
+**⚠️ IMPORTANT: Panel Content Padding**
+
+The `ItemEditorDefaultView` panels have **zero internal padding** to give maximum control to content components. **Your content components must handle their own padding/margin** for proper spacing.
+
+```tsx
+// ❌ Wrong - Content will touch panel edges
+<ItemEditorDefaultView
+  center={{
+    content: <div>Content with no padding</div>
+  }}
+/>
+
+// ✅ Correct - Content handles its own padding
+<ItemEditorDefaultView
+  center={{
+    content: (
+      <div className="my-content" style={{ padding: 'var(--spacingVerticalM, 12px)' }}>
+        Content with proper padding
+      </div>
+    )
+  }}
+/>
+
+// ✅ Better - Use a CSS class with design tokens
+<ItemEditorDefaultView
+  center={{
+    content: <div className="my-item-view">Content</div> // .my-item-view has padding: 12px
+  }}
+/>
+```
+
+**Recommended Approach:**
+- Add padding to your root content component class
+- Use Fabric design tokens: `var(--spacingVerticalM, 12px)` for consistency
+- Apply the same padding to all panels (left, center, bottom) for visual alignment
+- Test your layout with different content types and lengths
+
+**Example CSS Class:**
+```scss
+.my-item-view {
+  padding: var(--spacingVerticalM, 12px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box; /* CRITICAL: Include padding in dimensions */
+  overflow: hidden; /* Prevent content overflow */
+  // Your custom styles...
+}
+```
+
 ### ✅ Do's
 
 ✅ **Use semantic content** in panels (navigation in left, main content in center)  
 ✅ **Provide meaningful titles** for collapsible panels  
+✅ **Add proper padding** to your content components (panels have zero padding)  
 ✅ **Test resize behavior** with different content types  
 ✅ **Handle responsive breakpoints** appropriately  
 ✅ **Use proper ARIA labels** for accessibility  
@@ -567,6 +619,7 @@ useEffect(() => {
 
 ### ❌ Don'ts
 
+❌ **Don't rely on panel padding** - panels have zero padding, add it to your content  
 ❌ **Don't nest scroll containers** - let panels handle their own scrolling  
 ❌ **Don't use fixed pixel heights** for variable content  
 ❌ **Don't override resize constraints** without good reason  

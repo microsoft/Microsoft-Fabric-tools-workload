@@ -43,6 +43,9 @@
   background: var(--colorBrandBackground2);
   border-radius: 0;
   flex-shrink: 0;
+  padding: var(--spacingVerticalM, 12px);
+  box-sizing: border-box; /* Include padding in width/height calculations */
+  overflow: hidden; /* Prevent content from overflowing */
 }
 
 // Hero title - Intentionally large for visual impact (item-specific)
@@ -65,6 +68,8 @@
   gap: var(--spacingVerticalXXL);
   flex: 1;
   width: 100%;
+  box-sizing: border-box; /* Ensure consistent box model */
+  min-height: 0; /* Allow flex shrinking */
 }
 
 // ============================================================================

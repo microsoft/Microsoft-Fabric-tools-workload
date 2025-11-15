@@ -117,6 +117,35 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 4. Use CSS cascading: `className="generic-class item-specific-class"`
 5. Override only colors/fonts, not layout/structure
 6. Use design tokens: `var(--colorBrand*, --spacing*, --fontSize*)`
+7. **ADD CONTENT PADDING**: ItemEditor panels have zero padding - your content MUST handle its own padding
+
+**🎨 MANDATORY: Content Padding Requirements**
+
+ItemEditorDefaultView panels have **zero internal padding**. Your content components **MUST** add their own padding:
+
+```scss
+// [ItemName]Item.scss - REQUIRED content padding
+.[item-name]-view {
+  padding: var(--spacingVerticalM, 12px);  // ✅ REQUIRED for proper spacing
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;  // ✅ CRITICAL: Include padding in width/height
+  overflow: hidden;        // ✅ Prevent content overflow
+  // Your custom styles...
+}
+```
+
+```tsx
+// [ItemName]ItemDefaultView.tsx - Apply padding class to content
+<ItemEditorDefaultView
+  left={{
+    content: <div className="[item-name]-view">{leftContent}</div>  // ✅ Has padding
+  }}
+  center={{
+    content: <div className="[item-name]-view">{centerContent}</div>  // ✅ Has padding  
+  }}
+/>
+```
 
 **❌ PROHIBITED** (Will fail verification):
 1. Modifying `Workload/app/styles.scss` for item-specific needs
@@ -125,13 +154,15 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 4. Creating custom ribbon/editor container styles
 5. Overriding ItemEditor/Ribbon structural styles
 6. Not creating separate `[ItemName]Item.scss` file
+7. **Forgetting content padding** - content will touch panel edges
 
 **Example - Correct Pattern**:
 ```scss
 // [ItemName]Item.scss - ONLY item-specific overrides
-.item-name-settings-panel-container {
+.[item-name]-view {
+  padding: var(--spacingVerticalM, 12px);  // ✅ REQUIRED for content spacing
   background-color: var(--colorBrandBackground2);  // ✅ Override color
-  // ❌ DON'T duplicate: display: flex, padding, etc.
+  // ❌ DON'T duplicate: display: flex from generic patterns
 }
 ```
 

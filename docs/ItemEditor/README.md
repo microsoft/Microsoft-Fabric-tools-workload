@@ -641,6 +641,40 @@ var(--colorNeutralStroke1)      // Track
 var(--colorNeutralStroke1Hover) // Thumb hover
 ```
 
+### 🚨 IMPORTANT: Content Padding Requirements
+
+**ItemEditor view panels have ZERO internal padding.** Your view content components must handle their own padding:
+
+```tsx
+// ❌ Wrong - Content will touch edges
+<ItemEditorDefaultView
+  center={{ content: <div>No padding content</div> }}
+/>
+
+// ✅ Correct - Content handles its own padding  
+<ItemEditorDefaultView
+  center={{ content: <div className="my-item-view">Padded content</div> }}
+/>
+```
+
+**Required CSS Pattern:**
+```scss
+// MyItem.scss - REQUIRED for all view content
+.my-item-view {
+  padding: var(--spacingVerticalM, 12px);  // ✅ Consistent 12px padding
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;  // ✅ CRITICAL: Include padding in dimensions
+  overflow: hidden;        // ✅ Prevent content overflow
+}
+```
+
+**Why Zero Padding?**
+- Gives maximum control to content components
+- Allows custom layouts without fighting inherited padding  
+- Enables full-bleed designs when needed
+- Consistent with modern layout patterns
+
 ### Custom Scrollbar
 
 ```scss

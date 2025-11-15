@@ -167,8 +167,9 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design
 4. **Ribbon Pattern**: Use Ribbon with `homeToolbarActions` (mandatory) and optional `additionalToolbars`. Import action factories from controls/ItemEditor
 5. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
-6. **State Management**: Use Redux Toolkit patterns for complex state management
-7. **Performance**: Implement lazy loading and code splitting for large applications
+6. **Content Padding**: ItemEditor panels have ZERO padding. Your view content components MUST add `padding: var(--spacingVerticalM, 12px)` to their root CSS class for proper spacing
+7. **State Management**: Use Redux Toolkit patterns for complex state management
+8. **Performance**: Implement lazy loading and code splitting for large applications
 
 ### Security Considerations
 1. **Minimal Scopes**: Request only necessary OAuth scopes for operations
