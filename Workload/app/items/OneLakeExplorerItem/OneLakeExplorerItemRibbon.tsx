@@ -3,7 +3,7 @@ import { PageProps } from '../../App';
 import { useTranslation } from "react-i18next";
 import { 
   ViewContext,
-  BaseRibbon, 
+  Ribbon, 
   RibbonAction,
   createSaveAction,
   createSettingsAction
@@ -83,7 +83,7 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
   ];
   
   return (
-    <BaseRibbon 
+    <Ribbon 
       homeToolbarActions={homeToolbarActions} 
       viewContext={viewContext} 
     />

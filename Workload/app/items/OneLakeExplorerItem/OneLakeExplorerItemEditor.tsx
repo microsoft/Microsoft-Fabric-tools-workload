@@ -14,7 +14,7 @@ import { OneLakeExplorerItemRibbon } from "./OneLakeExplorerItemRibbon";
 import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
-import { BaseItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor";
 import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
 
 
@@ -539,7 +539,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
 
   // Render with view registration following HelloWorldItem pattern and built-in loading support
   return (
-    <BaseItemEditor
+    <ItemEditor
       isLoading={isLoading}
       loadingMessage="Loading OneLake Explorer..."
       ribbon={(context) => (

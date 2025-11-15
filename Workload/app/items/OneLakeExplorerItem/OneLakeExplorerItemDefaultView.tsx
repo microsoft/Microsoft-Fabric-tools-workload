@@ -7,7 +7,7 @@ import { FileEditorView } from "./FileEditorView";
 import { TableEditorView } from "./TableEditorView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { PageProps } from "../../App";
-import { BaseItemEditorDetailView } from "../../controls/ItemEditor";
+import { ItemEditorDetailView } from "../../controls/ItemEditor";
 import "./OneLakeExplorerItem.scss";
 
 interface OneLakeExplorerItemDefaultViewProps extends PageProps {
@@ -102,7 +102,7 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
   );
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       left={{
         content: explorerContent,
         title: "OneLake Explorer",

@@ -17,7 +17,7 @@ import { FolderDisplayNameCell } from "./components/FolderDisplayName";
 import { PackageDisplayNameCell } from "./components/PackageDisplayName";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { BaseItemEditorView } from "../../controls/ItemEditor";
+import { ItemEditorView } from "../../controls/ItemEditor";
 import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 
@@ -161,7 +161,7 @@ export function PackageInstallerItemDefaultView({
   );
 
   return (
-    <BaseItemEditorView
+    <ItemEditorView
       center={{
         content: mainContent,
         className: "package-installer-default-view-center",

@@ -21,7 +21,7 @@ import { NotificationType } from "@ms-fabric/workload-client";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { PackageCreationStrategyFactory, PackageCreationStrategyType } from "./package/PackageCreationStrategyFactory";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
-import { BaseItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor";
 
 /**
  * Different views that are available for the PackageInstaller item
@@ -673,7 +673,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
   }, []);
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       isLoading={isLoading}
       loadingMessage="Loading Package Installer item..."
       ribbon={(viewContext) => (

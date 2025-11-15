@@ -4,7 +4,7 @@ import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 import { PackageSelectionView } from "./PackageSelectionView";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { BaseItemEditorEmptyView } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView } from "../../controls/ItemEditor";
 
 interface PackageInstallerItemEmptyViewProps {
   context: PackageInstallerContext,
@@ -31,7 +31,7 @@ export function PackageInstallerItemEmptyView({
   );
   
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title={t('PackageInstallerItemEmptyView_Title', 'What do you want to create?')}
       description={t('PackageInstallerItemEmptyView_Description', 'Select a package type to get started')}
       customContent={packageSelectionContent}

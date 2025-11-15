@@ -15,7 +15,7 @@ import { FolderDisplayNameLabel } from "./components/FolderDisplayName";
 import { DeploymentJobLabel } from "./components/DeploymentJob";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { navigateToItem } from "../../controller/NavigationController";
-import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 
@@ -312,7 +312,7 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
   );
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       center={{
         content: detailContent,
         className: "package-installer-detail-view-center",
