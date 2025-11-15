@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowLeft20Regular } from "@fluentui/react-icons";
-import { ItemEditorView, ItemEditorViewProps } from "./ItemEditorView";
+import { ItemEditorDefaultView, ItemEditorDefaultViewProps } from "./ItemEditorDefaultView";
 import { RibbonAction } from "./RibbonToolbar";
 import { DetailViewActionsContext } from "./ItemEditor";
 import "../../styles.scss";
@@ -17,14 +17,14 @@ export interface DetailViewAction extends RibbonAction {
 /**
  * ItemEditorDetailView Props Interface
  */
-export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
+export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
   /** Optional additional actions to display in the ribbon */
   actions?: DetailViewAction[];
   /** Callback for the back action (if not provided, uses automatic ViewContext.goBack) */
   onBack?: () => void;
-  /** Custom label for the back button (defaults to "Back") */
+  /** Custom label for the back button (if not provided, will be handled at display level) */
   backLabel?: string;
-  /** Custom tooltip for the back button */
+  /** Custom tooltip for the back button (if not provided, will be handled at display level) */
   backTooltip?: string;
 }
 
@@ -32,7 +32,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
  * ItemEditorDetailView Component
  * 
  * A specialized view component for displaying detail pages within item editors.
- * Built on ItemEditorView with added support for context-specific ribbon actions.
+ * Built on ItemEditorDefaultView with added support for context-specific ribbon actions.
  * 
  * ## Architecture
  * 
@@ -60,14 +60,14 @@ export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
  * - **Flexible Layout**: Optional left panel + required center content using panel config objects
  * - **Automatic Back Navigation**: Back button handled automatically when view is marked as `isDetailView: true`
  * - **Action Management**: Automatically registers actions with parent through context
- * - **Consistent Styling**: Uses ItemEditorView for layout consistency
+ * - **Consistent Styling**: Uses ItemEditorDefaultView for layout consistency
  * - **Standardized Actions**: Uses RibbonAction interface with full tooltip support
  * 
  * ## Design Principles
  * - **Action-Driven**: Surface relevant actions in the ribbon based on view context
- * - **Composable**: Built on ItemEditorView for consistency
+ * - **Composable**: Built on ItemEditorDefaultView for consistency
  * - **Flexible**: Left panel optional for simple or complex layouts
- * - **Accessible**: Inherits ARIA support from ItemEditorView
+ * - **Accessible**: Inherits ARIA support from ItemEditorDefaultView
  * - **Fabric Compliant**: Uses design tokens and standard patterns
  * - **Type Safe**: Strong TypeScript interfaces throughout
  * 
@@ -89,7 +89,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
  * const actions = [
  *   {
  *     key: 'save',
- *     label: 'Save Changes',
+ *     label: 'Save Changes', // Can be omitted for translation at display level
  *     icon: Save24Regular,
  *     onClick: () => handleSave(),
  *     appearance: 'primary',
@@ -97,7 +97,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
  *   },
  *   {
  *     key: 'delete',
- *     label: 'Delete',
+ *     // label omitted - will be handled at display level for translation
  *     icon: Delete24Regular,
  *     onClick: () => handleDelete(),
  *     appearance: 'subtle',
@@ -228,23 +228,25 @@ export interface ItemEditorDetailViewProps extends ItemEditorViewProps {
  * 
  * ## Fabric UX Compliance
  * - Uses Fabric design tokens for consistent spacing
- * - Inherits responsive behavior from ItemEditorView
+ * - Inherits responsive behavior from ItemEditorDefaultView
  * - Proper action button styling and states
  * - Semantic HTML structure with ARIA landmarks
  * - High contrast mode support
  * 
  * @component
  * @see {@link https://react.fluentui.dev/} Fluent UI v9 Documentation
- * @see {@link ItemEditorView} Base layout component
+ * @see {@link ItemEditorDefaultView} Base layout component
  */
 export function ItemEditorDetailView({
   left,
   center,
+  bottom,
   className,
+  resizable,
   actions = [],
   onBack,
-  backLabel = "Back",
-  backTooltip = "Return to previous view"
+  backLabel,
+  backTooltip
 }: ItemEditorDetailViewProps) {
 
   // Get the context to register actions with ItemEditor
@@ -253,12 +255,12 @@ export function ItemEditorDetailView({
   // Create the back action for the detail view actions (separate from Ribbon's back button)
   const backAction: DetailViewAction = {
     key: 'back',
-    label: backLabel,
+    label: backLabel, // Allow undefined - will be handled at display level
     icon: ArrowLeft20Regular,
     onClick: onBack || (() => {}),
     appearance: 'subtle',
     disabled: !onBack,
-    tooltip: backTooltip
+    tooltip: backTooltip // Allow undefined - will be handled at display level
   };
 
   // Combine back action with additional actions (only if onBack is provided)
@@ -280,12 +282,14 @@ export function ItemEditorDetailView({
     };
   }, [detailViewActionsContext, allActions]);
 
-  // Use ItemEditorView for consistent layout
+  // Use ItemEditorDefaultView for consistent layout
   return (
-    <ItemEditorView
+    <ItemEditorDefaultView
       left={left}
       center={center}
+      bottom={bottom}
       className={className}
+      resizable={resizable}
     />
   );
 }

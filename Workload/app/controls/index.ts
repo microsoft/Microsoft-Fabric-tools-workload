@@ -8,7 +8,7 @@
 // Base Item Editor - Foundation for all item editors
 export { 
   ItemEditor,
-  ItemEditorView,
+  ItemEditorDefaultView,
   ItemEditorEmptyView,
   ItemEditorDetailView,
   Ribbon,
@@ -24,9 +24,10 @@ export type {
   ItemEditorProps, 
   RegisteredView,
   ViewContext,
-  ItemEditorViewProps,
+  ItemEditorDefaultViewProps,
   LeftPanelConfig,
   CentralPanelConfig,
+  BottomPanelConfig,
   ItemEditorEmptyViewProps,
   EmptyStateTask,
   ItemEditorDetailViewProps,

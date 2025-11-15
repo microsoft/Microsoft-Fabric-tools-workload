@@ -14,8 +14,8 @@ export type {
 } from './ItemEditor';
 
 // ItemEditor View components
-export { ItemEditorView } from './ItemEditorView';
-export type { ItemEditorViewProps, LeftPanelConfig, CentralPanelConfig } from './ItemEditorView';
+export { ItemEditorDefaultView } from './ItemEditorDefaultView';
+export type { ItemEditorDefaultViewProps, LeftPanelConfig, CentralPanelConfig, BottomPanelConfig } from './ItemEditorDefaultView';
 
 // ItemEditor Empty View component
 export { ItemEditorEmptyView } from './ItemEditorEmptyView';

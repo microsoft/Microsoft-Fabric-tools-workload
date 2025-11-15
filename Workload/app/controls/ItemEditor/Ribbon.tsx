@@ -197,21 +197,32 @@ export const Ribbon: React.FC<RibbonProps> = ({
           ) : (
             /* Tab Navigation */
             showTabs && (
-              <TabList 
-                selectedValue={selectedTab}
-                onTabSelect={(_, data) => setSelectedTab(data.value as string)}
-              >
-                {allTabs.map((tab) => (
-                  <Tab
-                    key={tab.key}
-                    value={tab.key}
-                    data-testid={tab.testId || `ribbon-${tab.key}-tab-btn`}
-                    disabled={tab.disabled}
-                  >
-                    {tab.label}
-                  </Tab>
-                ))}
-              </TabList>
+              <div className="ribbon-tablist-container" role="none">
+                <TabList 
+                  selectedValue={selectedTab}
+                  onTabSelect={(_, data) => setSelectedTab(data.value as string)}
+                  className="ribbon-tablist"
+                >
+                  {allTabs.map((tab) => (
+                    <div key={tab.key} className="ribbon-tab-item" role="none">
+                      <div className="ribbon-tab-wrapper" role="none">
+                        <Tab
+                          value={tab.key}
+                          data-testid={tab.testId || `ribbon-${tab.key}-tab-btn`}
+                          disabled={tab.disabled}
+                          className="ribbon-tab-button"
+                        >
+                          <span className="ribbon-tab-content">
+                            <span className="ribbon-tab-label">
+                              {tab.label}
+                            </span>
+                          </span>
+                        </Tab>
+                      </div>
+                    </div>
+                  ))}
+                </TabList>
+              </div>
             )
           )}
         </div>

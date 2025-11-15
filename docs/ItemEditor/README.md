@@ -14,7 +14,8 @@ This folder contains comprehensive documentation for the ItemEditor system and a
 
 ### View Components
 
-- **[ItemEditorView](./ItemEditorView.md)** - Default/main view layout
+- **[ItemEditorDefaultView](./ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters and bottom panel support
+- **[ItemEditorView](./ItemEditorView.md)** - Simple single-panel layout
 - **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state onboarding
 - **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail/drill-down views
 
@@ -323,6 +324,97 @@ export function MyItemEditor(props: PageProps) {
   );
 }
 ```
+
+### Layout Examples with ItemEditorDefaultView
+
+The following examples show different layout patterns using the flexible `ItemEditorDefaultView` component:
+
+#### Basic Single Panel Layout
+```tsx
+// Simple layout with only center content
+{
+  name: EDITOR_VIEW_TYPES.DEFAULT,
+  component: (
+    <ItemEditorDefaultView
+      center={{
+        content: <MyMainContent />
+      }}
+    />
+  )
+}
+```
+
+#### Multi-Panel Layout with Navigation
+```tsx
+// Left navigation panel + center content
+{
+  name: EDITOR_VIEW_TYPES.DEFAULT,
+  component: (
+    <ItemEditorDefaultView
+      left={{
+        content: <NavigationTree items={navItems} />,
+        title: "Navigation"
+      }}
+      center={{
+        content: <DetailView selectedItem={selectedItem} />
+      }}
+    />
+  )
+}
+```
+
+#### Advanced Layout with Resizable Panels and Bottom Panel
+```tsx
+// Full-featured layout with file explorer, editor, and output panel
+{
+  name: EDITOR_VIEW_TYPES.CODE_EDITOR,
+  component: (
+    <ItemEditorDefaultView
+      left={{
+        content: <FileExplorer files={files} />,
+        title: "Files",
+        width: 320,
+        minWidth: 240,
+        maxWidth: 480,
+        collapsible: true,
+        onCollapseChange: (collapsed) => console.log('Files panel:', collapsed)
+      }}
+      center={{
+        content: <CodeEditor file={currentFile} />,
+        ariaLabel: "Code editor workspace"
+      }}
+      bottom={{
+        content: <OutputConsole lines={output} />,
+        height: 150,
+        className: "output-panel"
+      }}
+      resizable={true}
+    />
+  )
+}
+```
+
+#### Properties Panel Layout
+```tsx
+// Design tool with properties panel and canvas
+{
+  name: EDITOR_VIEW_TYPES.DESIGNER,
+  component: (
+    <ItemEditorDefaultView
+      left={{
+        content: <PropertiesPanel element={selectedElement} />,
+        title: "Properties",
+        width: 300,
+        collapsible: true
+      }}
+      center={{
+        content: <DesignCanvas onElementSelect={setSelectedElement} />,
+        className: "design-workspace"
+      }}
+      resizable={true}
+    />
+  )
+}
 
 ## Props API
 
@@ -683,6 +775,10 @@ export function MyItemEditor(props: PageProps) {
 ✅ **Use Fabric design tokens** for colors and spacing  
 ✅ **Test scrolling behavior** with long content  
 ✅ **Implement keyboard navigation** for accessibility  
+✅ **Use ItemEditorDefaultView** for multi-panel layouts when appropriate  
+✅ **Test resizable panels** with different content types and screen sizes  
+✅ **Provide meaningful panel titles** for collapsible panels  
+✅ **Save panel preferences** (width, collapse state) when appropriate  
 
 ### ❌ Don'ts
 
@@ -693,6 +789,9 @@ export function MyItemEditor(props: PageProps) {
 ❌ **Don't use absolute positioning** for main content  
 ❌ **Don't forget loading states** - always show progress  
 ❌ **Don't mix old Stack patterns** with ItemEditor  
+❌ **Don't nest scroll containers** in panels - let panels handle their own scrolling  
+❌ **Don't put essential actions** in collapsible panels only  
+❌ **Don't create overly complex layouts** - keep it simple and functional  
 
 ### Common Patterns
 
@@ -727,6 +826,30 @@ ribbon={(viewContext) => (
     onAction={() => viewContext.setCurrentView(VIEW_TYPES.OTHER)}
   />
 )}
+```
+
+#### Pattern 5: Multi-Panel Layout with ItemEditorDefaultView
+```tsx
+{
+  name: VIEW_TYPES.DEFAULT,
+  component: (
+    <ItemEditorDefaultView
+      left={{
+        content: <NavigationTree />,
+        title: "Navigation",
+        collapsible: true
+      }}
+      center={{
+        content: <MainEditor />
+      }}
+      bottom={{
+        content: <StatusBar />,
+        height: 80
+      }}
+      resizable={true}
+    />
+  )
+}
 ```
 
 ## Accessibility

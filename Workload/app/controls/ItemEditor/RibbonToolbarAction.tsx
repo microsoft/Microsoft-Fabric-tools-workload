@@ -16,9 +16,9 @@ export interface RibbonToolbarActionProps {
   icon: FluentIconComponent;
   
   /**
-   * The label/tooltip text for the button
+   * The label/tooltip text for the button (optional - can be handled at display level)
    */
-  label: string;
+  label?: string;
   
   /**
    * Optional tooltip text (defaults to label)
@@ -108,17 +108,21 @@ export const RibbonToolbarAction: React.FC<RibbonToolbarActionProps> = ({
     try {
       await onClick();
     } catch (error) {
-      console.error(`Error in RibbonToolbarAction onClick handler for ${label}:`, error);
+      console.error(`Error in RibbonToolbarAction onClick handler for ${label || 'unlabeled action'}:`, error);
     }
   };
+
+  // Use tooltip, then label, then fallback for display
+  const displayTooltip = tooltip || label || 'Action';
+  const displayAriaLabel = ariaLabel || label || 'Action';
   
   return (
     <Tooltip
-      content={tooltip || label}
+      content={displayTooltip}
       relationship="label"
     >
       <ToolbarButton
-        aria-label={ariaLabel || label}
+        aria-label={displayAriaLabel}
         appearance={appearance}
         disabled={disabled}
         data-testid={testId}

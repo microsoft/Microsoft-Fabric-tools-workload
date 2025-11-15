@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { Stack, IStackTokens } from "@fluentui/react";
 import { Button, Text } from "@fluentui/react-components";
-import { ItemEditorView } from "./ItemEditorView";
+import { ItemEditorDefaultView } from "./ItemEditorDefaultView";
 import "../../styles.scss";
 
 /**
@@ -199,7 +199,7 @@ export function ItemEditorEmptyView({
 
   // Use ItemEditorView with empty state in the center
   return (
-    <ItemEditorView
+    <ItemEditorDefaultView
       center={{
         content: emptyStateContent
       }}

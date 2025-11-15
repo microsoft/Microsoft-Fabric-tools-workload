@@ -19,7 +19,7 @@ interface HelloWorldItemEmptyViewProps {
  * To skip this page, modify HelloWorldItemEditor.tsx line 25,55
  * to always set currentView to 'getting-started'
  * 
- * This component now uses the BaseItemEditorEmptyView control for consistency
+ * This component uses the ItemEditorEmptyView control for consistency
  * across all item types.
  */
 export function HelloWorldItemEmptyView({

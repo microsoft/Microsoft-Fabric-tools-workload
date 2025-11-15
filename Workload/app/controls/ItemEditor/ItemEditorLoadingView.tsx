@@ -35,7 +35,7 @@ export const ItemEditorLoadingView = ({ message, icon }: ItemEditorLoadingViewPr
         if (typeof displayIcon === 'string') {
             return (
                 <div className="item-editor-loading-icon">
-                    <img src={displayIcon} alt="" />
+                    <img src={displayIcon} alt=""  />
                 </div>
             );
         }
@@ -49,7 +49,7 @@ export const ItemEditorLoadingView = ({ message, icon }: ItemEditorLoadingViewPr
     };
     
     return (
-        <div className="item-editor-loading-container" role="progressbar" aria-label={message} aria-busy="true">
+        <div className="item-editor-loading-container" role="progressbar" aria-label={message} aria-busy="true" data-testid="item-editor-loading">
             {renderIcon()}
             <div className="item-editor-loading-text">{message}</div>
             <div className="item-editor-loading-progress">

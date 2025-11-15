@@ -100,12 +100,60 @@ return (
 ```
 
 Key Benefits:
+
 - **Consistent API**: Every ribbon has a mandatory Home tab with `homeToolbarActions`
 - **Standard Actions**: Use `createSaveAction()`, `createSettingsAction()` factories
 - **Optional Complexity**: Add `additionalToolbars` only when needed
 - **Accessibility**: Built-in Tooltip + ToolbarButton patterns
 
+### Layout Components
+
+#### ItemEditorDefaultView - Multi-Panel Layout System
+
+The toolkit provides `ItemEditorDefaultView` for flexible multi-panel layouts with advanced features:
+
+```typescript
+import { ItemEditorDefaultView } from '../../controls/ItemEditor';
+
+// Basic single-panel layout
+<ItemEditorDefaultView
+  center={{ content: <MyMainContent /> }}
+/>
+
+// Multi-panel with navigation, editor, and output
+<ItemEditorDefaultView
+  left={{
+    content: <FileExplorer />,
+    title: "Files",
+    width: 320,
+    collapsible: true,
+    onCollapseChange: (collapsed) => savePreference('collapsed', collapsed)
+  }}
+  center={{
+    content: <CodeEditor />,
+    ariaLabel: "Code editor workspace"
+  }}
+  bottom={{
+    content: <OutputConsole />,
+    height: 150,
+    className: "output-panel"
+  }}
+  resizable={true}
+/>
+```
+
+**Key Features:**
+
+- **Left Panel (Optional)**: Navigation trees, file explorers, property panels with collapsible headers
+- **Center Panel (Required)**: Main editing content, forms, canvases, detail views
+- **Bottom Panel (Optional)**: Full-width status bars, output panels, debugging tools  
+- **Resizable Splitters**: Drag-to-resize with min/max constraints and live preview
+- **Collapse Controls**: Header-based toggle following OneLakeItemExplorer patterns
+- **State Management**: Internal state management with notification callbacks
+- **Responsive Design**: Mobile-friendly with adaptive layouts
+
 ### Manifest Configuration
+
 - **WorkloadManifest.xml**: Defines workload metadata, capabilities, and permissions
 - **[ItemName]Item.xml**: Defines individual item types, their properties, and behaviors
 - **Product.json**: Frontend metadata including routes, translations, and assets
@@ -113,6 +161,7 @@ Key Benefits:
 ## Best Practices
 
 ### Development Guidelines
+
 1. **Follow Naming Conventions**: Use PascalCase for item names, maintain consistency
 2. **Implement Error Handling**: Provide user-friendly error messages and recovery options
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design

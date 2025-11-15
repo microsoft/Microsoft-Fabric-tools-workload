@@ -32,14 +32,14 @@
  * **Location**: `Workload/app/styles.scss`
  * **Purpose**: Shared styles used across ALL components and items
  * **Contains**:
- *   - BaseItemEditor layout (ribbon, notification, content) - used by ALL items
+ *   - ItemEditor layout (ribbon, notification, content) - used by ALL items
  *   - Common ribbon and toolbar styles
- *   - Empty state components (BaseItemEditorEmpty)
+ *   - Empty state components (ItemEditorEmptyView)
  *   - Settings panel containers (generic, neutral styling)
  * **When to use**: Styles that are shared by 2+ components or items
  * **Import pattern**: `import "../../styles.scss"`
  * **Examples**: 
- *   - `.item-editor-container` (used by BaseItemEditor - ALL items use this)
+ *   - `.item-editor-container` (used by ItemEditor - ALL items use this)
  *   - `.ribbon-container` (standard ribbon layout)
  *   - `.item-settings-panel-container` (generic settings panel)
  * 
@@ -73,8 +73,8 @@
  * **Examples**: 
  *   - SampleOneLakeItemExplorer.scss: Complex explorer view with tree navigation
  *   - Custom data grid components with specialized layouts
- * 
- * **NOTE**: BaseItemEditor does NOT have its own SCSS file because its styles are in 
+ *
+ * **NOTE**: ItemEditor does NOT have its own SCSS file because its styles are in 
  * styles.scss (tier 1) since ALL items use it. Only create component SCSS for specialized
  * components that aren't universal.
  * 
@@ -91,7 +91,7 @@
  *    │        Examples: .hello-world-*, .my-item-*
  *    │
  *    └─ NO → Create/add to ComponentName.scss (Component-Specific - Tier 3) ← RARE
- *             Only for specialized reusable components (not BaseItemEditor)
+ *             Only for specialized reusable components (not ItemEditor)
  *             Examples: SampleOneLakeItemExplorer.scss, CustomDataGrid.scss
  * ```
  * 
@@ -99,19 +99,19 @@
  * 
  * **Every item editor MUST follow this pattern:**
  * 
- * 1. **Use BaseItemEditor component** (provides .item-editor-container layout from global styles.scss)
+ * 1. **Use ItemEditor component** (provides .item-editor-container layout from global styles.scss)
  * 2. **Create ItemName.scss** for your item-specific styling:
  *    - Item views: getting started, default, detail pages, settings
  *    - Custom colors and branding (override generic styles)
  *    - Item-specific components
  * 3. **Import ItemName.scss** in your item's view components
  * 4. **Prefix all classes** with your item name (e.g., .hello-world-getting-started)
- * 
+ *
  * **Example Structure:**
  * ```
  * items/HelloWorldItem/
  * ├── HelloWorldItem.scss              ← Item-specific styles (TIER 2 - REQUIRED)
- * ├── HelloWorldItemEditor.tsx         ← Uses BaseItemEditor (gets layout from TIER 1)
+ * ├── HelloWorldItemEditor.tsx         ← Uses ItemEditor (gets layout from TIER 1)
  * ├── HelloWorldItemEditorDefault.tsx  ← Imports HelloWorldItem.scss
  * └── HelloWorldItemEditorEmpty.tsx    ← Imports HelloWorldItem.scss
  * ```
@@ -131,7 +131,7 @@
  */
 
 // ============================================================================
-// Item Editor Layout - Used by BaseItemEditor component (shared by all items)
+// Item Editor Layout - Used by ItemEditor component (shared by all items)
 // ============================================================================
 
 /**
@@ -150,7 +150,7 @@
  * - Item-specific components and UI patterns
  * 
  * The base layout (.item-editor-container, .item-editor-container__ribbon, etc.) is provided here.
- * Import this file via BaseItemEditor component, and create your item SCSS for custom styling.
+ * Import this file via ItemEditor component, and create your item SCSS for custom styling.
  */
 .item-editor-container {
   display: flex;
@@ -276,7 +276,7 @@
     align-items: center;
     flex-shrink: 0; // Don't shrink the right buttons
     margin-left: var(--spacingHorizontalM, 12px);
-    height: 32px; // Match tab height
+    height: 28px; // Match reduced tab height
 }
 
 // Right side action buttons styling
@@ -287,15 +287,15 @@
     box-shadow: none !important; // No shadow in header
     border: 1px solid var(--colorNeutralStroke2, #e1e1e1) !important; // Subtle border
     border-radius: var(--borderRadiusMedium, 4px) !important;
-    height: 32px !important; // Match tab height exactly
-    max-height: 32px !important;
-    min-height: 32px !important;
+    height: 28px !important; // Match reduced tab height
+    max-height: 28px !important;
+    min-height: 28px !important;
 }
 
 .ribbon-container .ribbon-header__right .toolbarContainer > div[role="toolbar"] {
-    height: 28px !important; // Slightly smaller for compact look
-    min-height: 28px !important;
-    max-height: 28px !important;
+    height: 24px !important; // Slightly smaller for compact header look
+    min-height: 24px !important;
+    max-height: 24px !important;
 }
 
 .ribbon-container .toolbarContainer {
@@ -315,58 +315,168 @@
 
 .ribbon-container .toolbarContainer > div[role="toolbar"] {
   padding: 0 !important;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  height: 28px; // Match reduced tab height
+  min-height: 28px;
+  max-height: 28px;
   display: flex;
   align-items: center;
 }
 
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
-    padding: 8px;
-    min-height: 32px; // Ensure minimum touch target size
-    max-height: 32px;
+    padding: 0;
+    min-height: 28px; // Reduced from 32px for more compact ribbon
+    max-height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-// Fix for TabList spacing issues in ribbon
-.ribbon-container [role="tablist"] {
+// Fix for TabList spacing issues in ribbon with proper class structure
+.ribbon-container .ribbon-tablist-container {
     display: flex !important;
-    gap: 0 !important; // Remove any gap between tabs
-    margin: 0 !important; // Remove default margins
-    padding: 0 !important; // Remove default padding
-    border-bottom: 0px solid var(--colorNeutralStroke2, #e1e1e1);
-    margin-bottom: var(--spacingVerticalS, 8px) !important;
-    justify-content: flex-start !important; // Align tabs to the left
-    align-items: center !important;
-    width: auto !important; // Don't stretch to full width
+    width: auto !important;
 }
 
-.ribbon-container [role="tablist"] button[role="tab"] {
-    flex: 0 0 auto !important; // Don't grow or shrink, stay at natural size
-    margin: 0 !important; // Remove any margins
-    margin-right: 2px !important; // Small consistent gap between tabs
-    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0; // Rounded top corners only
+.ribbon-container .ribbon-tablist {
+    display: flex !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: 0px solid var(--colorNeutralStroke2, #e1e1e1);
+    margin-bottom: var(--spacingVerticalS, 8px) !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: auto !important;
+}
+
+.ribbon-container .ribbon-tab-item {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    margin-right: 8px !important;
+    position: relative !important;
+}
+
+.ribbon-container .ribbon-tab-wrapper {
+    text-align: center !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.ribbon-container .ribbon-tab-button {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
     position: relative !important;
     min-width: auto !important;
     max-width: none !important;
     width: auto !important;
+    padding: 0 !important;
+    min-height: 28px !important; // Reduced from 32px for more compact ribbon
+    max-height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
 }
 
-// Override any focus/selected state spacing changes
-.ribbon-container [role="tablist"] button[role="tab"]:focus,
-.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"],
-.ribbon-container [role="tablist"] button[role="tab"]:hover {
-    margin: 0 !important;
-    margin-right: 2px !important; // Keep consistent spacing
-    transform: none !important; // Prevent any transform changes
+.ribbon-container .ribbon-tab-content {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 16px !important;
+    font-family: var(--fontFamilyBase) !important;
+    font-size: var(--fontSizeBase300) !important;
+    font-weight: var(--fontWeightMedium) !important;
+    line-height: var(--lineHeightBase300) !important;
+    color: var(--colorNeutralForeground2) !important;
+    transition: all 0.1s ease !important;
+}
+
+.ribbon-container .ribbon-tab-label {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-left: 4px !important;
+    margin-right: 4px !important;
+}
+
+// Hover state for tabs
+.ribbon-container .ribbon-tab-button:hover .ribbon-tab-content {
+    background-color: var(--colorNeutralBackground1Hover) !important;
+    color: var(--colorNeutralForeground1) !important;
+    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
+}
+
+// Selected state for tabs
+.ribbon-container .ribbon-tab-button[aria-selected="true"] .ribbon-tab-content {
+    background-color: var(--colorNeutralBackground1) !important;
+    color: var(--colorNeutralForeground1) !important;
+    font-weight: var(--fontWeightSemibold) !important;
+    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
     position: relative !important;
 }
 
-// Handle dynamic span elements and pseudo-elements that cause spacing issues
+// Selection indicator - positioned to span full tab width
+.ribbon-container .ribbon-tab-button[aria-selected="true"]::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 4px !important;
+    right: 4px !important;
+    height: 2px !important;
+    background: var(--colorCompoundBrandStroke, #0078d4) !important;
+    border-radius: 1px 1px 0 0 !important;
+}
+
+// Focus state for accessibility
+.ribbon-container .ribbon-tab-button:focus-visible {
+    outline: 2px solid var(--colorCompoundBrandStroke, #0078d4) !important;
+    outline-offset: 2px !important;
+    border-radius: var(--borderRadiusMedium, 4px) !important;
+}
+
+// Disabled state
+.ribbon-container .ribbon-tab-button[aria-disabled="true"] .ribbon-tab-content {
+    color: var(--colorNeutralForegroundDisabled) !important;
+    cursor: not-allowed !important;
+}
+
+// CRITICAL FIX: Hide the Fluent UI reserved space that causes layout shifts
+.ribbon-container .fui-Tab__content--reserved-space {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+}
+
+// Hide any existing Fluent UI selection indicators that use positioning
+// BUT preserve our custom selection indicator
+.ribbon-container [role="tablist"] button[role="tab"]:not([aria-selected="true"])::after,
+.ribbon-container [role="tablist"] button[role="tab"]::before,
+.ribbon-container .ribbon-tab-button:not([aria-selected="true"])::after,
+.ribbon-container .ribbon-tab-button::before,
+.ribbon-container .ribbon-tab-wrapper::after,
+.ribbon-container .ribbon-tab-wrapper::before {
+    display: none !important;
+    content: none !important;
+}
+
+// Also target any spans that might cause spacing issues in tab content
+.ribbon-container .ribbon-tab-button span.fui-Tab__content--reserved-space {
+    display: none !important;
+}
+
+// Force consistent layout for all internal Fluent UI tab elements
 .ribbon-container [role="tablist"] button[role="tab"] span {
     display: inline !important;
     margin: 0 !important;
@@ -375,7 +485,6 @@
     flex: none !important;
 }
 
-// Target specific Fluent UI tab content classes
 .ribbon-container [role="tablist"] button[role="tab"] .fui-Tab__content {
     display: inline !important;
     margin: 0 !important;
@@ -384,77 +493,22 @@
     flex: none !important;
 }
 
-// Hide the reserved space span that causes layout shifts
-.ribbon-container [role="tablist"] button[role="tab"] .fui-Tab__content--reserved-space {
-    display: none !important; // This is the culprit - hide the reserved space
-    visibility: hidden !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: absolute !important;
-    left: -9999px !important; // Move it completely off-screen
-}
-
-// Neutralize ::after pseudo-elements on selected tabs (but restore with custom indicator)
-.ribbon-container [role="tablist"] button[role="tab"]::after {
-    display: none !important; // Hide the default Fluent UI indicator
-    content: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-// Add our own custom selection indicator to replace the hidden one
-.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"] {
-    position: relative !important;
-}
-
-.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"]::before {
-    content: "" !important;
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 8px !important;
-    right: 8px !important;
-    height: 2px !important;
-    background-color: var(--colorBrandBackground, #0078d4) !important;
-    border-radius: 1px !important;
-    z-index: 1 !important;
-}
-
-// Ensure consistent internal layout regardless of selection state
-.ribbon-container [role="tablist"] button[role="tab"] > * {
-    margin: 0 !important;
-    padding: 0 !important;
-    flex: none !important;
-}
-
-// Force consistent box model for all tab states
-.ribbon-container [role="tablist"] button[role="tab"],
-.ribbon-container [role="tablist"] button[role="tab"]:focus,
-.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"],
-.ribbon-container [role="tablist"] button[role="tab"]:hover {
-    box-sizing: border-box !important;
-    border: 0 !important; // Remove any borders that could affect spacing
-}
-
 // Back button container for detail views
 .ribbon-back-button-container {
     display: flex;
     align-items: center;
     padding: 0px var(--spacingHorizontalS, 8px);
-    height: 32px;
-    min-height: 32px;
-    max-height: 32px;
+    height: 28px; // Match reduced tab height
+    min-height: 28px;
+    max-height: 28px;
     
     button {
         display: flex;
         align-items: center;
         gap: var(--spacingHorizontalXS, 4px);
-        height: 32px;
-        min-height: 32px;
-        max-height: 32px;
+        height: 28px; // Match reduced tab height
+        min-height: 28px;
+        max-height: 28px;
         padding: 0px var(--spacingHorizontalS, 8px);
         font-weight: var(--fontWeightSemibold, 600);
         // Match tab button styling for consistency
@@ -463,9 +517,9 @@
 }
 
 // ============================================================================
-// Empty State Styles - Used in BaseItemEditorEmptyView component
+// Empty State Styles - Used in ItemEditorEmptyView component
 // ============================================================================
-// Note: Background, box-shadow, and border-radius are handled by BaseItemEditorView
+// Note: Background, box-shadow, and border-radius are handled by ItemEditorDefaultView
 // This component only provides content layout and centering
 
 .item-editor-view-empty {
@@ -559,11 +613,11 @@
 }
 
 // ============================================================================
-// View Layout Styles - Used in BaseItemEditorView component
+// View Layout Styles - Used in ItemEditorDefaultView component
 // ============================================================================
 
 /**
- * BaseItemEditorView Layout System
+ * ItemEditorDefaultView Layout System
  * 
  * Provides a flexible two-column layout with optional left panel and required center content.
  * Follows Fabric UX System guidelines for editor layouts.
@@ -575,16 +629,24 @@
  * - Responsive overflow handling
  * 
  * ## Usage
- * This is used by the BaseItemEditorView component, which is placed inside
- * BaseItemEditor's content area (after the ribbon).
+ * This is used by the ItemEditorDefaultView component, which is placed inside
+ * ItemEditor's content area (after the ribbon).
  */
 .item-editor-view {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100%;
   height: 100%;
-  gap: var(--spacingHorizontalM, 12px);
   position: relative;
+
+  // Top Section: Contains left panel and center content in a row layout
+  &__top-section {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    gap: var(--spacingHorizontalS, 6px);
+    min-height: 0; // Allow flex shrinking
+  }
 
   // Left Panel (Optional)
   &__left {
@@ -608,7 +670,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
+      padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
       border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
       min-height: 32px;
 
@@ -670,7 +732,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: var(--spacingVerticalM, 12px);
+      padding: var(--spacingVerticalS, 8px);
 
       // Custom scrollbar styling - Fabric UX guideline
       &::-webkit-scrollbar {
@@ -692,6 +754,52 @@
     }
   }
 
+  // Resize Handle (for resizable panels)
+  &__resize-handle {
+    width: 1px;
+    background: transparent;
+    cursor: col-resize;
+    position: relative;
+    flex-shrink: 0;
+    z-index: 10;
+    
+    // Hover state
+    &:hover {
+      background: var(--colorBrandBackground, #0078d4);
+    }
+    
+    // Active/resizing state
+    &.resizing {
+      background: var(--colorBrandBackground, #0078d4);
+    }
+    
+    // Add a wider hit area for easier interaction
+    &::before {
+      content: '';
+      position: absolute;
+      left: -3px;
+      right: -3px;
+      top: 0;
+      bottom: 0;
+      background: transparent;
+    }
+    
+    // Visual indicator on hover
+    &:hover::after,
+    &.resizing::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 1px;
+      height: 40px;
+      background: var(--colorNeutralBackground1, #ffffff);
+      border-radius: 1px;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    }
+  }
+
   // Center Content Area (Required)
   &__center {
     flex: 1;
@@ -710,13 +818,35 @@
       overflow-x: hidden;
     }
   }
+
+  // Bottom Panel (Optional)
+  &__bottom {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--colorNeutralBackground1, #ffffff);
+    border-radius: var(--borderRadiusMedium, 8px);
+    box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
+    overflow: hidden;
+    margin-top: var(--spacingVerticalS, 6px);
+    padding: var(--spacingVerticalM, 12px);
+    min-width: 0; // Prevent flex item from overflowing
+
+    // Allow content to scroll if needed
+    > * {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
 }
 
 // Responsive adjustments for view layout
 @media (max-width: 768px) {
   .item-editor-view {
-    flex-direction: column;
-    gap: var(--spacingVerticalM, 12px);
+    &__top-section {
+      flex-direction: column;
+      gap: var(--spacingVerticalS, 6px);
+    }
 
     &__left {
       width: 100% !important; // Override inline width on mobile
@@ -733,6 +863,10 @@
     &__center {
       padding: var(--spacingVerticalS, 8px);
     }
+
+    &__bottom {
+      max-height: 30vh;
+    }
   }
 }
 
@@ -740,7 +874,8 @@
 @media (prefers-contrast: high) {
   .item-editor-view {
     &__left,
-    &__center {
+    &__center,
+    &__bottom {
       border: 1px solid transparent; // Will be visible in high contrast mode
     }
 

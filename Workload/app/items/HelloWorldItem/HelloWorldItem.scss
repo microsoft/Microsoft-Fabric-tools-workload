@@ -29,110 +29,58 @@
  */
 
 // ============================================================================
-// Main Container - Standard card container with shadow
+// Unified View Section - Common container for both left and center panels
 // ============================================================================
 
-.hello-world-getting-started-container {
+.hello-world-view {
   width: 100%;
   height: 100%;
-  min-height: 100%;
-  background: var(--colorNeutralBackground1);
-  box-shadow: var(--shadow4);
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--borderRadiusMedium, 8px);
-}
-
-// ============================================================================
-// Two-Column Layout - Item-specific getting started pattern
-// ============================================================================
-
-.hello-world-content-wrapper {
-  display: flex;
-  flex-direction: row;
-  min-height: 100%;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: stretch;
-}
-
-// ============================================================================
-// Hero Section - Item-specific branding area
-// ============================================================================
-
-.hello-world-hero-section {
-  width: 600px;
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXXL);
+  justify-content: flex-start;
+  flex-direction: column;
+  gap: var(--spacingVerticalXL);
   background: var(--colorBrandBackground2);
   border-radius: 0;
   flex-shrink: 0;
 }
 
-.hello-world-hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacingVerticalXL);
-  width: 100%;
-}
-
-.hello-world-hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacingVerticalL);
-}
-
 // Hero title - Intentionally large for visual impact (item-specific)
-.hello-world-hero-title {
-  font-size: 68px;
+.hello-world-title {
+  font-size: 45px;
   font-weight: var(--fontWeightSemibold);
-  line-height: 92px;
-  color: var(--colorNeutralForegroundStatic);
-  margin: 0;
-  font-family: var(--fontFamilyBase);
-}
-
-.hello-world-hero-subtitle {
-  font-size: var(--fontSizeBase500);
-  font-weight: var(--fontWeightRegular);
-  line-height: var(--lineHeightBase500);
+  line-height: 60px;
   color: var(--colorNeutralForegroundStatic);
   margin: 0;
   font-family: var(--fontFamilyBase);
 }
 
 // ============================================================================
-// Main Content Area - Standard content padding
+// Content Inner - Center panel specific layout
 // ============================================================================
-
-.hello-world-main-content {
-  flex: 1;
-  padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXXL);
-  background: var(--colorNeutralBackground1);
-  display: flex;
-  flex-direction: column;
-}
 
 .hello-world-content-inner {
   display: flex;
   flex-direction: column;
   gap: var(--spacingVerticalXXL);
+  flex: 1;
+  width: 100%;
 }
 
 // ============================================================================
-// Content Header - Standard section header pattern
+// Section Header - Standard section header pattern
 // ============================================================================
 
-.hello-world-content-header {
+.hello-world-section-header {
   display: flex;
   flex-direction: column;
   gap: var(--spacingVerticalS);
   align-items: flex-start;
   width: 100%;
+}
+
+.hello-world-section-body {
+  padding-top: 6px;
 }
 
 .hello-world-section-title {
@@ -144,18 +92,70 @@
   margin: 0;
 }
 
-.hello-world-hero-list {
+.hello-world-next-list {
   margin: 0;
+  margin-left: 12px;
   padding-left: var(--spacingHorizontalXL);
   list-style-position: outside;
   list-style-type: decimal; // 1, 2, 3...
 }
 
-.hello-world-hero-list-item {
+.hello-world-next-item {
   font-size: 20px;
   line-height: 28px;
   color: var(--colorNeutralForegroundStatic);
   margin-bottom: var(--spacingVerticalM);
+}
+
+.hello-world-step-button {
+  margin-top: var(--spacingVerticalXS);
+  display: flex;
+  justify-content: flex-start;
+  
+  .fui-Button {
+    background: var(--colorNeutralBackground1) !important;
+    background-color: var(--colorNeutralBackground1) !important;
+    border-color: var(--colorNeutralStroke1) !important;
+    color: var(--colorNeutralForeground1) !important;
+    
+    &:hover {
+      background: var(--colorNeutralBackground1Hover) !important;
+      background-color: var(--colorNeutralBackground1Hover) !important;
+      border-color: var(--colorNeutralStroke1Hover) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:active {
+      background: var(--colorNeutralBackground1Pressed) !important;
+      background-color: var(--colorNeutralBackground1Pressed) !important;
+      border-color: var(--colorNeutralStroke1Pressed) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:focus {
+      background: var(--colorNeutralBackground1) !important;
+      background-color: var(--colorNeutralBackground1) !important;
+      border-color: var(--colorNeutralStroke1) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+  }
+}
+
+// Hero input container and styling
+.hello-world-hero-input {
+  margin-top: var(--spacingVerticalS);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalXS);
+  width: 100%;
+}
+
+.hello-world-input-label {
+  font-size: var(--fontSizeBase300);
+  font-weight: var(--fontWeightBold);
+  color: var(--colorNeutralForegroundStatic);
+  font-family: var(--fontFamilyBase);
+  margin: 0;
 }
 
 .hello-world-section-subtitle {
@@ -176,7 +176,7 @@
   border-radius: var(--borderRadiusMedium);
   background: var(--colorNeutralBackground1);
   overflow: hidden;
-  width: 66.666%;
+  width: 100%;
 }
 
 .hello-world-expand-button {
@@ -257,23 +257,11 @@
   word-break: break-all;
 }
 
-.hello-world-detail-input {
-  flex: 1;
-  font-size: var(--fontSizeBase300);
-  font-family: var(--fontFamilyBase);
-  
-  // Ensure input field uses available space
-  .fui-Input__input {
-    font-size: var(--fontSizeBase300);
-    font-family: var(--fontFamilyBase);
-  }
-}
-
 // ============================================================================
-// Recommended Section - Standard section pattern
+// Resources Section - Standard section pattern
 // ============================================================================
 
-.hello-world-recommended-title {
+.hello-world-resources-title {
   font-size: var(--fontSizeBase500);
   font-weight: var(--fontWeightSemibold);
   line-height: var(--lineHeightBase500);
@@ -368,11 +356,7 @@
 
   .hello-world-hero-section {
     width: 100%;
-    padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXL);
-  }
-
-  .hello-world-main-content {
-    padding: var(--spacingVerticalXL) var(--spacingHorizontalL);
+    height: auto; // Allow height to adjust on mobile
   }
 
   .hello-world-cards-grid {
@@ -381,59 +365,5 @@
 
   .hello-world-resource-card {
     max-width: 100%;
-  }
-}
-
-// ============================================================================
-// Settings Panel - Item-specific branded customization
-// ============================================================================
-
-/**
- * HelloWorld-specific settings panel customization.
- * 
- * This demonstrates how to extend the generic .item-settings-panel-container
- * from styles.scss with item-specific branding.
- * 
- * ## Approach
- * - Uses .item-settings-panel-container as the base class (from global styles.scss)
- * - Adds .hello-world-settings-panel-container to override only branded elements
- * 
- * ## What's Overridden
- * - Background: Branded green instead of neutral white
- * - Text color: Branded dark green instead of neutral gray
- * 
- * ## What's Inherited
- * - Layout structure (flex, padding, scrollbar)
- * - Border radius, shadows, responsive behavior
- * - All spacing and typography from design tokens
- * 
- * ## Usage in Component
- * ```tsx
- * <div className="item-settings-panel-container hello-world-settings-panel-container">
- *   <div className="item-settings-placeholder">
- *     <span className="item-settings-placeholder-text">...</span>
- *   </div>
- * </div>
- * ```
- * 
- * This follows the CSS cascading principle: generic styles first, then item-specific overrides.
- */
-.hello-world-settings-panel-container {
-  // Override background with branded color
-  background: var(--colorBrandBackground2);
-
-  // Override text colors with branded colors
-  .item-settings-placeholder-text {
-    color: var(--colorBrandForeground2);
-  }
-
-  // Override section headers with branded colors (if needed)
-  .item-settings-section-header {
-    color: var(--colorBrandForeground2);
-  }
-
-  // Override section descriptions with branded colors (if needed)
-  .item-settings-section-description {
-    color: var(--colorBrandForeground2);
   }
 }

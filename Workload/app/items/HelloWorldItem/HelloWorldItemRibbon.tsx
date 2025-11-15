@@ -26,16 +26,13 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  * across all item editors in the Fabric Extensibility Toolkit.
  * 
  * Key Features:
- * - Uses BaseRibbon with clean API pattern
+ * - Uses Ribbon with clean API pattern
  * - Uses action factories with automatic internationalization
  * - Defines homeToolbarActions (mandatory Home tab actions)
- * - Demonstrates the simple pattern (most items only need Home tab)
- * - Shows how to add custom actions (commented example)
+ * - Demonstrates additional toolbars with Test tab
+ * - Shows how to add custom actions
  * - Maintains accessibility with built-in Tooltip + ToolbarButton pattern
  * - Follows Fabric design guidelines
- * 
- * This example shows the SIMPLE PATTERN that most items should use.
- * For complex items requiring additional tabs, see the BaseRibbon documentation.
  */
 export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   const { viewContext } = props;
@@ -66,10 +63,22 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
       hidden: viewContext.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
     }*/
   ];
+
   
   return (
     <Ribbon 
       homeToolbarActions={homeToolbarActions} 
+      // ADDITIONAL TOOLBAR SAMPLE
+      // This demonstrates how you can add an addtional toolbar
+      /*additionalToolbars={[
+        {
+          key: 'test',
+          label: "Test",
+          actions: [
+                    settingsAction
+                  ]
+        }
+      ]}*/
       viewContext={viewContext} 
     />
   );

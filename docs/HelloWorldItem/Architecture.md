@@ -148,13 +148,50 @@ interface EmptyStateProps {
 
 ### HelloWorldItemDefaultView (Main View)
 
-**Primary content interface where users perform main tasks**
+**Primary content interface implementing a multi-panel layout using ItemEditorDefaultView**
 
-#### Extensibility Points
-- **Content Area**: Flexible content rendering
-- **Action Handlers**: Customizable user interactions
-- **State Integration**: Proper definition state binding
-- **Validation**: Input validation and error handling
+#### Architecture Implementation
+```typescript
+return (
+  <ItemEditorDefaultView
+    left={{
+      content: leftPanelContent,
+      width: 600,
+      minWidth: 350,
+      collapsible: false
+    }}
+    center={{
+      content: centerPanelContent,
+    }}
+    resizable={true}
+  />
+);
+```
+
+#### Panel Structure
+
+**Left Panel - Welcome & Getting Started**
+- **Hero Branding**: Primary "Hello, Fabric!" title with welcome messaging
+- **Action-Oriented Steps**: Numbered list guiding users through workload development
+- **Message Input**: Definition state input field with label and placeholder
+- **Progressive Guidance**: Step-by-step instructions for building Fabric workloads
+
+**Center Panel - Resources & Documentation**
+- **Section Organization**: Clear headers with titles and descriptive subtitles  
+- **Item Details**: Expandable section displaying workspace ID, item ID, item type, and display name
+- **Resource Cards**: Three-card grid layout featuring:
+  - Getting to know your workload guide
+  - Samples and playground exploration
+  - Fabric UX system documentation
+- **External Navigation**: Integrated link handling with `callNavigationOpenInNewBrowserTab` and fallback support
+
+#### Component Features
+- **Multi-Panel Layout**: Uses ItemEditorDefaultView for structured content organization
+- **Responsive Design**: Resizable panels with configurable constraints (600px default width, 350px minimum)
+- **Interactive Elements**: Expandable item details with chevron toggle indicator
+- **Hover States**: Card interactions with visual feedback on mouse events
+- **State Management**: Proper handling of expanded/collapsed states and user input
+- **Accessibility**: ARIA attributes, keyboard navigation, and semantic markup
 
 ### Data Models and State Management
 

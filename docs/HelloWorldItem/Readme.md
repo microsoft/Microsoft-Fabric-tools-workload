@@ -150,11 +150,23 @@ HelloWorldItem/
 - Easy removal or customization
 
 ### HelloWorldItemDefaultView (Main View)
+**Architecture:**
+- Uses `ItemEditorDefaultView` for structured multi-panel layout
+- Left panel: Welcome section with hero branding, getting started steps, and message input field
+- Center panel: Resource hub with expandable item details and documentation cards
+- Responsive design with configurable panel widths and resizable interface
+
 **Contains:**
-- Primary item functionality
-- Content editing interface
-- Business logic implementation
-- User interaction handling
+- Welcome messaging and workload development guidance
+- Interactive getting started steps with numbered action items
+- Resource cards linking to documentation, samples, and UX guidelines
+- Expandable item details section showing workspace context and metadata
+
+**Layout Features:**
+- Multi-panel architecture with left/center content organization
+- Resizable interface with 600px default width and 350px minimum for left panel
+- Clean, semantic HTML structure with proper accessibility attributes
+- Interactive elements including expandable sections and hover states
 
 ### HelloWorldItemModel (Data)
 **Defines:**
@@ -195,10 +207,12 @@ const EDITOR_VIEW_TYPES = {
 - **Error Handling**: Graceful error recovery and user notification
 
 ### UI/UX Patterns
-- **Fluent UI Components**: Consistent Microsoft design system
-- **Responsive Layout**: Proper layout and spacing
-- **Accessibility**: Screen reader and keyboard navigation support
-- **Theme Support**: Integration with Fabric theme system
+- **Fluent UI Components**: Consistent Microsoft design system integration
+- **Multi-Panel Layout Architecture**: Uses ItemEditorDefaultView for flexible content organization
+- **Structured Content Areas**: Left panel for welcome/getting started, center panel for resources
+- **Responsive Interface**: Resizable panels with configurable constraints and accessibility support
+- **Interactive Elements**: Expandable sections, hover states, and semantic navigation
+- **Theme Support**: Integration with Fabric theme system and design tokens
 
 ## Development Best Practices
 

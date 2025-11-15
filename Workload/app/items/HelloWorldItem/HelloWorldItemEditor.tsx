@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { MessageBar, MessageBarBody, MessageBarActions, Button } from "@fluentui/react-components";
-import { Warning20Filled, Dismiss20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
@@ -34,7 +32,6 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
-  const [showWarning, setShowWarning] = useState(true);
   const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
 
   const { pathname } = useLocation();
@@ -139,7 +136,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   };
 
   // Render with view registration
-  // BaseItemEditor manages the view state internally and handles loading
+  // ItemEditor manages the view state internally and handles loading
   return (
     <ItemEditor
       isLoading={isLoading}
@@ -153,7 +150,8 @@ export function HelloWorldItemEditor(props: PageProps) {
           openSettingsCallback={handleOpenSettings}
         />
       )}
-      notification={(currentView) =>
+      // Notifications can be added if needed
+      /*notification={(currentView) =>
         currentView === EDITOR_VIEW_TYPES.DEFAULT && showWarning ? (
           <MessageBar intent="warning" icon={<Warning20Filled />}>
             <MessageBarBody>
@@ -171,7 +169,7 @@ export function HelloWorldItemEditor(props: PageProps) {
             />
           </MessageBar>
         ) : undefined
-      }
+      }*/
       views={(setCurrentView) => {
         // Store the setCurrentView function so we can use it after loading
         if (!currentViewSetter) {

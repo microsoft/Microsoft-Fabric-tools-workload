@@ -183,7 +183,7 @@ The control includes its own SCSS styles. You can override specific parts if nee
 
 ## 📚 Related Documentation
 
-- **BaseItemEditor**: For overall item editing patterns
+- **ItemEditor**: For overall item editing patterns
 - **OneLakeStorageClient**: For direct OneLake operations
 - **DataHub Integration**: For item selection workflows
 

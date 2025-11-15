@@ -17,9 +17,9 @@ export interface RibbonAction {
   icon: FluentIconComponent;
   
   /**
-   * The label/tooltip text for the button
+   * The label/tooltip text for the button (optional - can be handled at display level)
    */
-  label: string;
+  label?: string;
   
   /**
    * Click handler for the action

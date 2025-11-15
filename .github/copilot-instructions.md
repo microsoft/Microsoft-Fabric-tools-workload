@@ -107,6 +107,8 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **Toolbar Integration**: Mandatory `Tooltip` + `ToolbarButton` patterns for all toolbar implementations
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
 - **OneLake Explorer**: Always use control from `controls/OneLakeItemExplorer`, not sample code
+- **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate
+- **Panel Configuration**: Suggests `collapsible: true`, proper panel titles, min/max width constraints, and accessibility labels for complex layouts
 - **Manifest Updates**: Template processing with placeholder replacement
 - **Route Configuration**: Automatic route registration
 - **Environment Management**: .env-based configuration patterns
