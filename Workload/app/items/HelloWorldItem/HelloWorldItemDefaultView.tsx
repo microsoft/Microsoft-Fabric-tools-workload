@@ -165,12 +165,12 @@ export function HelloWorldItemDefaultView({
                 </div>
                 <CardHeader
                   header={<Text weight="semibold">{t('GettingStarted_Card1_Title', 'Getting to know your workload')}</Text>}
-                  description={<Text >{t('GettingStarted_Card1_Description', 'See a step-by-step guide for customizing workloads.')}</Text>}
+                  description={<Text >{t('GettingStarted_Card1_Description', 'See a step-by-step guide for understanding your workload.')}</Text>}
                 />
               </div>
               <div className="hello-world-card-body">
                 <ul className="hello-world-card-list">
-                  <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet1', 'Review your workload\'s structure and file storage.')}</li>
+                  <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet1', 'Review your workload\'s structure and components.')}</li>
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet3', 'Explore adding optional features and custom settings.')}</li>
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet2', 'Learn how to configure the workload for publishing.')}</li>
                 </ul>

@@ -9,12 +9,10 @@ export function HelloWorldItemSettingsView(props: PageProps) {
   console.log("HelloWorldItemSettingsView rendered with props:", props);
   
   return (
-    <div className="item-settings-panel-container hello-world-settings-panel-container">
-      <div className="item-settings-placeholder">
-        <span className="item-settings-placeholder-text">
-          {t('Settings_PlaceholderText', 'Your content will appear here')}
-        </span>
-      </div>
+    <div className="hello-world-view">
+      <span className="hello-world-section-title">
+        {t('Settings_PlaceholderText', 'Your content will appear here')}
+      </span>
     </div>
   );
 }

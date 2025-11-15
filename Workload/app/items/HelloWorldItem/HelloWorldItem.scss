@@ -263,19 +263,6 @@
 }
 
 // ============================================================================
-// Resources Section - Standard section pattern
-// ============================================================================
-
-.hello-world-resources-title {
-  font-size: var(--fontSizeBase500);
-  font-weight: var(--fontWeightSemibold);
-  line-height: var(--lineHeightBase500);
-  color: var(--colorNeutralForeground1);
-  margin: 0 0 var(--spacingVerticalL) 0;
-  font-family: var(--fontFamilyBase);
-}
-
-// ============================================================================
 // Resource Cards - Standard grid card pattern
 // ============================================================================
 
@@ -355,15 +342,6 @@
 // ============================================================================
 
 @media (max-width: 1200px) {
-  .hello-world-content-wrapper {
-    flex-direction: column;
-  }
-
-  .hello-world-hero-section {
-    width: 100%;
-    height: auto; // Allow height to adjust on mobile
-  }
-
   .hello-world-cards-grid {
     grid-template-columns: 1fr;
   }

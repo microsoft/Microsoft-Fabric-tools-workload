@@ -8,12 +8,10 @@ export function HelloWorldItemAboutView(props: PageProps) {
     const { t } = useTranslation();
     
     return (
-        <div className="item-settings-panel-container hello-world-settings-panel-container">
-            <div className="item-settings-panel-content">
-                <span className="item-settings-placeholder-text">
+        <div className="hello-world-view">
+            <span className="hello-world-section-title">
                 {t('About_PlaceholderText', 'Your content will appear here')}
-                </span>
-            </div>
+            </span>
         </div>
     );
 }
