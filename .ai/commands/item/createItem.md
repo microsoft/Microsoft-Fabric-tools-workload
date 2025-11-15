@@ -16,10 +16,10 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 1. Read both instruction files completely
 2. 🔍 **DISCOVER EXISTING COMPONENTS** - Search for Base* components before coding
 3. Create [ItemName]ItemModel.ts with proper interface
-4. Create [ItemName]ItemEditor.tsx using BaseItemEditor
+4. Create [ItemName]ItemEditor.tsx using ItemEditor
 5. Create [ItemName]ItemEmptyView.tsx with proper patterns
 6. Create [ItemName]ItemDefaultView.tsx using **EXISTING BASE COMPONENTS**
-7. Create [ItemName]ItemRibbon.tsx using BaseRibbon/BaseRibbonToolbar
+7. Create [ItemName]ItemRibbon.tsx using RibbonToolbar
 8. Create [ItemName]Item.scss with ONLY overrides
 9. Add route to App.tsx
 10. Create manifest JSON and XML files
@@ -35,19 +35,19 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 
 ```bash
 # Use semantic_search to find existing patterns:
-- "BaseItemEditorView left right split layout"
-- "BaseItemEditorDetailView left center" 
+- "ItemEditorView left right split layout"
+- "ItemEditorDetailView left center" 
 - "Base* components [your use case]"
 ```
 
 **Available Components (USE THESE - DON'T REINVENT):**
-- **BaseItemEditorView**: Left/center layouts (explorer + content)
-- **BaseItemEditorDetailView**: Detail views with actions
-- **BaseItemEditorEmptyView**: Empty states with tasks
+- **ItemEditorView**: Left/center layouts (explorer + content)
+- **ItemEditorDetailView**: Detail views with actions
+- **ItemEditorEmptyView**: Empty states with tasks
 
-### 🎯 **CRITICAL: When to Use BaseItemEditorDetailView**
+### 🎯 **CRITICAL: When to Use ItemEditorDetailView**
 
-**ALWAYS use BaseItemEditorDetailView for these scenarios:**
+**ALWAYS use ItemEditorDetailView for these scenarios:**
 
 1. **Detail/Drill-down Pages (L2 Pages)**: 
    - Record details, configuration pages, property panels
@@ -64,7 +64,7 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
    - Any focused view of a single entity
    - Content that requires dedicated actions
 
-**⚠️ DON'T create custom detail layouts** - BaseItemEditorDetailView provides:
+**⚠️ DON'T create custom detail layouts** - ItemEditorDetailView provides:
 - ✅ Automatic back navigation (mark view as `isDetailView: true`)
 - ✅ Context-specific actions in ribbon
 - ✅ Optional left panel for properties/navigation
@@ -77,7 +77,7 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 {
   name: 'record-detail-123',
   component: (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       left={{
         content: <PropertiesPanel record={record} />,
         title: "Properties",
@@ -113,29 +113,29 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 
 ### Required Base Components
 
-1. **BaseItemEditor** (`Workload/app/controls/ItemEditor/BaseItemEditor.tsx`)
-   - 🚨 **MANDATORY**: ALL item editors must use BaseItemEditor as the container
+1. **ItemEditor** (`Workload/app/controls/ItemEditor/ItemEditor.tsx`)
+   - 🚨 **MANDATORY**: ALL item editors must use ItemEditor as the container
    - Provides consistent layout: Fixed ribbon + scrollable content
    - Handles full-height iframe rendering
    - Ensures proper scroll behavior (ribbon stays fixed, content scrolls)
-   - **DO NOT create custom layout patterns** - use BaseItemEditor
+   - **DO NOT create custom layout patterns** - use ItemEditor
 
 2. **Ribbon Components** (`Workload/app/controls/ItemEditor/`)
    - 🚨 **MANDATORY**: Use the standardized Ribbon pattern
-   - **BaseRibbon**: Standard ribbon structure with tabs
-   - **BaseRibbonToolbar**: Renders action buttons with proper spacing
+   - **Ribbon**: Standard ribbon structure with tabs
+   - **RibbonToolbar**: Renders action buttons with proper spacing
    - **Standard Action Factories**: `createSaveAction`, `createSettingsAction`, `createAboutAction`
    - **Tooltip + ToolbarButton**: ALWAYS wrap ToolbarButton in Tooltip for accessibility
 
 ### Standard Architecture Pattern
 
 ```typescript
-// CORRECT Pattern - Use BaseItemEditor + Standard Ribbon
+// CORRECT Pattern - Use ItemEditor + Standard Ribbon
 export function [ItemName]ItemEditor(props: PageProps) {
   // ... state and logic ...
   
   return (
-    <BaseItemEditor
+    <ItemEditor
       ribbon={
         <[ItemName]ItemRibbon
           saveItemCallback={handleSave}
@@ -149,7 +149,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
       ) : (
         <[ItemName]ItemDefaultView {...defaultProps} />
       )}
-    </BaseItemEditor>
+    </ItemEditor>
   );
 }
 ```
@@ -157,7 +157,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
 ### ❌ INCORRECT Patterns - DO NOT USE
 
 ```typescript
-// ❌ WRONG: Custom Stack layout without BaseItemEditor
+// ❌ WRONG: Custom Stack layout without ItemEditor
 <Stack className="editor">
   <MyCustomRibbon />
   <Stack className="main">
@@ -172,7 +172,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 // ❌ WRONG: Custom scroll handling
 <div style={{height: '100vh', overflow: 'scroll'}}>
-  {/* BaseItemEditor handles this */}
+  {/* ItemEditor handles this */}
 </div>
 ```
 
@@ -191,8 +191,8 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 1. **Base Styles** (DO NOT MODIFY):
    - `Workload/app/styles.scss` contains global styles for all items
-   - `.item-editor-container` - Base editor layout (used by BaseItemEditor)
-   - `.ribbon` - Base ribbon styling (used by BaseRibbon)
+   - `.item-editor-container` - Base editor layout (used by ItemEditor)
+   - `.ribbon` - Base ribbon styling (used by Ribbon)
    - `.item-settings-panel-container` - Generic settings panel styles
    - **DO NOT add item-specific styles to styles.scss**
 
@@ -224,8 +224,8 @@ export function [ItemName]ItemEditor(props: PageProps) {
    ```
 
 5. **Verification Checklist** (Will be checked):
-   - ✅ BaseItemEditor used (no custom editor layout)
-   - ✅ BaseRibbon + BaseRibbonToolbar used (no custom ribbon layout)
+   - ✅ ItemEditor used (no custom editor layout)
+   - ✅ Ribbon + RibbonToolbar used (no custom ribbon layout)
    - ✅ Styles in separate `[ItemName]Item.scss` file
    - ✅ No modifications to `styles.scss` for item-specific needs
    - ✅ CSS cascading pattern used (generic class + item class)
@@ -259,7 +259,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
 This guide provides step-by-step instructions for AI tools to create a new item in the Microsoft Fabric Extensibility Toolkit. Creating a new item requires implementation files, manifest configuration, routing setup, and environment variable updates.
 
 **🚨 REMEMBER**: 
-- Always use BaseItemEditor and standard Ribbon components!
+- Always use ItemEditor and standard Ribbon components!
 - **CRITICAL**: Must update Product.json to register item in create dialogs
 - **OneLakeStorageClient**: Always use `createItemWrapper()` for item-scoped OneLake operations
 - **OneLakeItemExplorer**: Use the control from `controls/OneLakeItemExplorer`, NOT the sample code
@@ -303,10 +303,10 @@ export interface [ItemName]ItemDefinition {
 
 ### Step 3: Implement the Editor (`[ItemName]ItemEditor.tsx`)
 
-The main editor component handles the item's primary interface. **🚨 CRITICAL: MUST use BaseItemEditor component!**
+The main editor component handles the item's primary interface. **🚨 CRITICAL: MUST use ItemEditor component!**
 
 ```typescript
-// Based on HelloWorldItemEditor.tsx - Complete functional implementation with BaseItemEditor
+// Based on HelloWorldItemEditor.tsx - Complete functional implementation with ItemEditor
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { MessageBar, MessageBarBody } from "@fluentui/react-components";
@@ -316,7 +316,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { BaseItemEditor, ItemEditorLoadingProgressBar, BaseItemEditorEmptyView } from "../../controls/ItemEditor";
+import { ItemEditor, ItemEditorEmptyView } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
@@ -437,18 +437,9 @@ export function [ItemName]ItemEditor(props: PageProps) {
     return false;
   };
 
-  // 🚨 CRITICAL: Show loading state BEFORE BaseItemEditor
-  if (isLoading) {
-    return (
-      <ItemEditorLoadingProgressBar
-        message={t("[ItemName]ItemEditor_Loading", "Loading item...")}
-      />
-    );
-  }
-
-  // 🚨 CRITICAL: Use BaseItemEditor as the container
+  // ItemEditor handles loading state internally
   return (
-    <BaseItemEditor
+    <ItemEditor
       ribbon={
         <[ItemName]ItemRibbon
           {...props}
@@ -463,7 +454,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
         {
           name: EDITOR_VIEW_TYPES.EMPTY,
           component: (
-            <BaseItemEditorEmptyView
+            <ItemEditorEmptyView
               title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
               description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
               imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
@@ -492,7 +483,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
         // {
         //   name: 'settings-detail',
         //   component: (
-        //     <BaseItemEditorDetailView
+        //     <ItemEditorDetailView
         //       left={{
         //         content: <SettingsNavigation />,
         //         title: "Settings",
@@ -518,8 +509,8 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 **🚨 CRITICAL Architecture Requirements**:
 
-1. **BaseItemEditor Container**:
-   - MUST use `<BaseItemEditor>` as the root container
+1. **ItemEditor Container**:
+   - MUST use `<ItemEditor>` as the root container
    - Provides fixed ribbon + scrollable content layout
    - Handles proper scroll behavior automatically
    - DO NOT create custom layout patterns
@@ -528,7 +519,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
    - Use `views={(setCurrentView) => [...]}` prop to register views
    - Each view has `name` and `component` properties
    - Use `initialView` prop to set the starting view
-   - Views are automatically managed by BaseItemEditor
+   - Views are automatically managed by ItemEditor
 
 3. **Ribbon Prop**:
    - Pass ribbon component via `ribbon={<[ItemName]ItemRibbon />}` prop
@@ -545,15 +536,16 @@ export function [ItemName]ItemEditor(props: PageProps) {
    - Call `setCurrentView(EDITOR_VIEW_TYPES.VIEWNAME)` to switch views
    - DO NOT use manual if/else statements in children
 
-5. **Loading State**:
-   - MUST return `<ItemEditorLoadingProgressBar />` before BaseItemEditor
-   - DO NOT render BaseItemEditor while loading
+5. **Automatic Loading Handling**:
+   - ItemEditor automatically handles loading states internally
+   - DO NOT manually check `isLoading` before rendering ItemEditor
+   - DO NOT import or use `ItemEditorLoadingView` - it's handled internally
 
 **Key Features**:
 
 - **Complete State Management**: Loading, saving, and updating item definitions
 - **View Switching**: Automatic transitions between empty and loaded states
-- **BaseItemEditor Integration**: Proper use of the standard layout component
+- **ItemEditor Integration**: Proper use of the standard layout component
 - **Error Handling**: Proper try/catch for async operations
 - **Immutable Updates**: Safe state updates using functional patterns
 - **Notifications**: User feedback on save operations
@@ -562,17 +554,17 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 ### Step 4: Implement the Empty State (`[ItemName]ItemEmptyView.tsx`)
 
-The empty state is shown when users first create the item. **🚨 CRITICAL: Use BaseItemEditorEmptyView component**:
+The empty state is shown when users first create the item. **🚨 CRITICAL: Use ItemEditorEmptyView component**:
 
 ```typescript
-// Based on HelloWorldItemEmptyView.tsx - Uses BaseItemEditorEmptyView component
+// Based on HelloWorldItemEmptyView.tsx - Uses ItemEditorEmptyView component
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 interface [ItemName]ItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
@@ -582,7 +574,7 @@ interface [ItemName]ItemEmptyViewProps {
 
 /**
  * Empty state component - the first screen users see
- * This component uses the BaseItemEditorEmptyView control for consistency
+ * This component uses the ItemEditorEmptyView control for consistency
  * across all item types.
  */
 export function [ItemName]ItemEmptyView({
@@ -604,7 +596,7 @@ export function [ItemName]ItemEmptyView({
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
       description={t('[ItemName]ItemEmptyView_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
       imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
@@ -617,7 +609,7 @@ export function [ItemName]ItemEmptyView({
 
 **🚨 CRITICAL Requirements**:
 
-1. **Use BaseItemEditorEmptyView** (MANDATORY):
+1. **Use ItemEditorEmptyView** (MANDATORY):
    - Import from `../../controls`
    - Provides consistent empty state UI across all items
    - DO NOT create custom empty state layouts
@@ -625,7 +617,7 @@ export function [ItemName]ItemEmptyView({
 2. **EmptyStateTask Interface** (REQUIRED):
    - Use `EmptyStateTask[]` for defining action buttons
    - Standard properties: `id`, `label`, `description`, `onClick`, `appearance`
-   - Tasks are automatically rendered as buttons by BaseItemEditorEmptyView
+   - Tasks are automatically rendered as buttons by ItemEditorEmptyView
 
 3. **Standard Props** (REQUIRED):
    - `title`: Main heading displayed to users
@@ -649,13 +641,13 @@ The default view is shown when the item has content and is the main editing inte
 
 #### Architecture Decision: Choose the Right Component
 
-**For Simple Main Views** - Use standard React components with BaseItemEditor:
+**For Simple Main Views** - Use standard React components with ItemEditor:
 
 - Dashboard-style layouts with cards and summary information
 - List views, tables, or data grids as primary content
 - Simple editing interfaces without drill-down functionality
 
-**For Detail/Drill-down Views (L2 Pages)** - Use BaseItemEditorDetailView:
+**For Detail/Drill-down Views (L2 Pages)** - Use ItemEditorDetailView:
 
 - Record details, settings pages, configuration panels
 - Any view that users navigate TO from another view
@@ -903,8 +895,8 @@ import { PageProps } from '../../App';
 import { CurrentView, EDITOR_VIEW_TYPES } from "./[ItemName]ItemModel";
 import { useTranslation } from "react-i18next";
 import { 
-  BaseRibbon, 
-  BaseRibbonToolbar, 
+  Ribbon, 
+  RibbonToolbar, 
   RibbonAction,
   createSaveAction,
   createSettingsAction,
@@ -931,8 +923,8 @@ export interface [ItemName]ItemRibbonProps extends PageProps {
  * across all item editors in the Fabric Extensibility Toolkit.
  * 
  * 🚨 REQUIRED COMPONENTS:
- * - BaseRibbon: Provides consistent ribbon structure and layout
- * - BaseRibbonToolbar: Renders actions with automatic Tooltip + ToolbarButton pattern
+ * - Ribbon: Provides consistent ribbon structure and layout
+ * - RibbonToolbar: Renders actions with automatic Tooltip + ToolbarButton pattern
  * - createRibbonTabs: Ensures Home tab is always present
  * - Standard action factories: createSaveAction, createSettingsAction
  * 
@@ -944,6 +936,9 @@ export interface [ItemName]ItemRibbonProps extends PageProps {
  */
 export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
   const { t } = useTranslation();
+  
+  // Create a translation helper function for action factories
+  const translate = (key: string, fallback?: string) => t(key, fallback);
   
   // 🚨 REQUIRED: Define ribbon tabs using createRibbonTabs
   // Home tab is mandatory, additional tabs can be added as second parameter
@@ -963,14 +958,14 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
     createSaveAction(
       props.saveItemCallback,
       !props.isSaveButtonEnabled,  // disabled when save not needed
-      t("ItemEditor_Ribbon_Save_Label")
+      translate
     ),
     
     // 🚨 STANDARD ACTION: Settings button
     // Use createSettingsAction factory for consistent behavior
     createSettingsAction(
       props.openSettingsCallback,
-      t("ItemEditor_Ribbon_Settings_Label")
+      translate
     ),
     
     // ✅ CUSTOM ACTION EXAMPLE: View navigation
@@ -985,24 +980,24 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
     }
   ];
   
-  // 🚨 REQUIRED: Use BaseRibbon + BaseRibbonToolbar pattern
+  // 🚨 REQUIRED: Use Ribbon + RibbonToolbar pattern
   return (
-    <BaseRibbon tabs={tabs}>
-      <BaseRibbonToolbar actions={actions} />
-    </BaseRibbon>
+    <Ribbon tabs={tabs}>
+      <RibbonToolbar actions={actions} />
+    </Ribbon>
   );
 }
 ```
 
 **🚨 CRITICAL Architecture Requirements**:
 
-1. **BaseRibbon Component** (MANDATORY):
-   - Use `<BaseRibbon tabs={tabs}>` as the container
+1. **Ribbon Component** (MANDATORY):
+   - Use `<Ribbon tabs={tabs}>` as the container
    - Provides consistent structure and styling
    - DO NOT create custom ribbon layouts with `<div className="ribbon">`
 
-2. **BaseRibbonToolbar Component** (MANDATORY):
-   - Use `<BaseRibbonToolbar actions={actions} />` for action rendering
+2. **RibbonToolbar Component** (MANDATORY):
+   - Use `<RibbonToolbar actions={actions} />` for action rendering
    - Automatically applies Tooltip + ToolbarButton pattern
    - Handles accessibility and styling automatically
    - DO NOT create custom `<Toolbar>` components
@@ -1058,9 +1053,9 @@ const actions = [
 ];
 
 return (
-  <BaseRibbon tabs={tabs}>
-    <BaseRibbonToolbar actions={actions} />
-  </BaseRibbon>
+  <Ribbon tabs={tabs}>
+    <RibbonToolbar actions={actions} />
+  </Ribbon>
 );
 ```
 
@@ -1135,7 +1130,7 @@ import "./[ItemName]Item.scss";       // Item-specific styles (REQUIRED)
 - Duplicate layout/structure styles from generic patterns
 - Use inline styles instead of SCSS file
 - Create custom ribbon or editor container styles
-- Override BaseItemEditor or BaseRibbon structural styles
+- Override ItemEditor or Ribbon structural styles
 
 ### Step 6: Create Manifest Configuration
 
@@ -1616,9 +1611,9 @@ grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
 
 ### 🏗️ Architecture Compliance
 - **Component Discovery**: Used semantic_search to find existing Base* components before coding
-- **BaseItemEditor used**: Check editor uses `<BaseItemEditor>` not custom layout  
-- **BaseRibbon used**: Check ribbon uses `BaseRibbon` + `BaseRibbonToolbar`
-- **Existing Base Components**: Used BaseItemEditorView, BaseItemEditorDetailView etc. instead of reinventing
+- **ItemEditor used**: Check editor uses `<ItemEditor>` not custom layout  
+- **Ribbon used**: Check ribbon uses `Ribbon` + `RibbonToolbar`
+- **Existing Base Components**: Used ItemEditorView, ItemEditorDetailView etc. instead of reinventing
 - **OneLakeStorageClient Wrapper**: Used `createItemWrapper()` for all OneLake operations, no manual path construction
 - **OneLakeItemExplorer Control**: Used control from `controls/OneLakeItemExplorer`, not sample code
 - **Version number**: Must be "1.100" (copy from HelloWorld exactly)

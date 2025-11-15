@@ -1,22 +1,22 @@
-# BaseItemEditor Control
+# ItemEditor Control
 
-The `BaseItemEditor` is a foundational control for building item editors in the Microsoft Fabric Extensibility Toolkit. It provides a view registration system with automatic navigation, fixed ribbon layout, and consistent UX patterns.
+The `ItemEditor` is a foundational control for building item editors in the Microsoft Fabric Extensibility Toolkit. It provides a view registration system with automatic navigation, fixed ribbon layout, and consistent UX patterns.
 
 ## � Component Documentation
 
-This folder contains comprehensive documentation for the BaseItemEditor system and all related components:
+This folder contains comprehensive documentation for the ItemEditor system and all related components:
 
 ### Core Components
 
-- **[BaseItemEditor](./README.md)** (this file) - Main container with view registration system
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container with automatic back navigation
-- **[BaseRibbonToolbar](./BaseRibbonToolbar.md)** - Standardized toolbar actions
+- **[ItemEditor](./README.md)** (this file) - Main container with view registration system
+- **[Ribbon](./Ribbon.md)** - Ribbon container with automatic back navigation
+- **[RibbonToolbar](./RibbonToolbar.md)** - Standardized toolbar actions
 
 ### View Components
 
-- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default/main view layout
-- **[BaseItemEditorEmptyView](./BaseItemEditorEmptyView.md)** - Empty state onboarding
-- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail/drill-down views
+- **[ItemEditorView](./ItemEditorView.md)** - Default/main view layout
+- **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state onboarding
+- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail/drill-down views
 
 ### Reference Documentation
 
@@ -43,7 +43,7 @@ This folder contains comprehensive documentation for the BaseItemEditor system a
 
 ## Overview
 
-The `BaseItemEditor` component provides a complete view management system with automatic navigation and consistent layout:
+The `ItemEditor` component provides a complete view management system with automatic navigation and consistent layout:
 
 ```
 ┌─────────────────────────────────────┐
@@ -82,7 +82,7 @@ The `BaseItemEditor` component provides a complete view management system with a
 The modern approach using view registration eliminates manual state management:
 
 ```
-BaseItemEditor (manages state internally)
+ItemEditor (manages state internally)
 ├── ViewContext (automatic)
 │   ├── currentView: string
 │   ├── setCurrentView: (view: string) => void
@@ -104,7 +104,7 @@ BaseItemEditor (manages state internally)
 ## Features
 
 ### Automatic View Management
-BaseItemEditor manages view state internally - no need for manual useState in parent components.
+ItemEditor manages view state internally - no need for manual useState in parent components.
 
 ### ViewContext Integration
 Ribbons automatically receive navigation context with current view, navigation functions, and detail view flags.
@@ -138,8 +138,8 @@ const EDITOR_VIEW_TYPES = {
   DETAILS: 'details'
 } as const;
 
-// Register views with BaseItemEditor
-<BaseItemEditor
+// Register views with ItemEditor
+<ItemEditor
   views={[
     {
       name: EDITOR_VIEW_TYPES.EMPTY,
@@ -164,7 +164,7 @@ const EDITOR_VIEW_TYPES = {
 
 ```typescript
 // Views can be generated dynamically based on conditions
-<BaseItemEditor
+<ItemEditor
   views={(setCurrentView) => [
     {
       name: EDITOR_VIEW_TYPES.EMPTY,
@@ -200,8 +200,8 @@ interface ViewContext {
 // Ribbon receives ViewContext automatically
 export function MyRibbon({ viewContext }: { viewContext: ViewContext }) {
   return (
-    <BaseRibbon viewContext={viewContext}>
-      <BaseRibbonToolbar actions={[
+    <Ribbon viewContext={viewContext}>
+      <RibbonToolbar actions={[
         {
           key: 'details',
           label: 'View Details',
@@ -209,7 +209,7 @@ export function MyRibbon({ viewContext }: { viewContext: ViewContext }) {
           hidden: viewContext.currentView === 'details'
         }
       ]} />
-    </BaseRibbon>
+    </Ribbon>
   );
 }
 ```
@@ -226,26 +226,26 @@ Detail views (L2 pages) receive automatic back navigation:
   isDetailView: true  // ⭐ This enables automatic features
 }
 
-// BaseItemEditor automatically:
+// ItemEditor automatically:
 // ✅ Tracks navigation history
 // ✅ Shows back button in ribbon instead of tabs
 // ✅ Provides goBack() function
 // ✅ Sets isDetailView flag in ViewContext
 ```
 
-### BaseRibbon Integration
+### Ribbon Integration
 
-BaseRibbon automatically handles detail view navigation:
+Ribbon automatically handles detail view navigation:
 
 ```typescript
-// BaseRibbon receives ViewContext and automatically:
+// Ribbon receives ViewContext and automatically:
 // - Shows back button when viewContext.isDetailView is true
 // - Shows tabs when viewContext.isDetailView is false
 // - Wires back button to viewContext.goBack()
 
-<BaseRibbon viewContext={viewContext}>
-  <BaseRibbonToolbar actions={actions} />
-</BaseRibbon>
+<Ribbon viewContext={viewContext}>
+  <RibbonToolbar actions={actions} />
+</Ribbon>
 ```
 
 ## Usage
@@ -254,7 +254,7 @@ BaseRibbon automatically handles detail view navigation:
 
 ```tsx
 import React from "react";
-import { BaseItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor";
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmpty } from "./MyItemEmpty";
 import { MyItemDefaultView } from "./MyItemDefaultView";
@@ -271,7 +271,7 @@ export function MyItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<MyItemDefinition>>();
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       ribbon={(context) => (
         <MyItemRibbon
           {...props}
@@ -326,7 +326,7 @@ export function MyItemEditor(props: PageProps) {
 
 ## Props API
 
-### BaseItemEditorPropsWithViews (Recommended)
+### ItemEditorPropsWithViews (Recommended)
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
@@ -341,8 +341,8 @@ export function MyItemEditor(props: PageProps) {
 ### Type Definitions
 
 ```typescript
-// BaseItemEditor Interface
-export interface BaseItemEditorProps {
+// ItemEditor Interface
+export interface ItemEditorProps {
   /** The ribbon component - receives ViewContext automatically */
   ribbon: (context: ViewContext) => ReactNode;
   /** Optional notification area - receives currentView */
@@ -422,7 +422,7 @@ export interface ViewContext {
 
 ## View Types
 
-The `BaseItemEditor` supports different view types through the view registration system:
+The `ItemEditor` supports different view types through the view registration system:
 
 ### Empty View
 First screen users see when creating a new item. Registered as a view with navigation to getting started.
@@ -524,7 +524,7 @@ const actions: RibbonAction[] = [
 
 ### CSS Architecture
 
-The BaseItemEditor uses BEM (Block Element Modifier) naming:
+The ItemEditor uses BEM (Block Element Modifier) naming:
 
 ```
 .base-item-editor              ← Block
@@ -579,7 +579,7 @@ var(--colorNeutralStroke1Hover) // Thumb hover
 
 ```tsx
 import React, { useEffect, useState } from "react";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor"; // Loading handled internally
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmptyView } from "./MyItemEmptyView";
 import { MyItemDefaultView } from "./MyItemDefaultView";
@@ -588,12 +588,7 @@ export function MyItemEditor(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<MyItemDefinition>>();
 
-  // Loading state
-  if (isLoading) {
-    return <ItemEditorLoadingProgressBar message="Loading item..." />;
-  }
-
-  // View registration system
+  // ItemEditor handles loading states internally - no manual check needed
   const views: RegisteredView[] = [
     {
       name: VIEW_TYPES.EMPTY,
@@ -617,7 +612,7 @@ export function MyItemEditor(props: PageProps) {
   ];
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       views={views}
       initialView={item?.definition?.data ? VIEW_TYPES.DEFAULT : VIEW_TYPES.EMPTY}
       ribbon={(viewContext) => (
@@ -662,7 +657,7 @@ export function MyItemEditor(props: PageProps) {
   ];
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       views={views}
       initialView={VIEW_TYPES.MAIN}
       ribbon={(viewContext) => (
@@ -680,10 +675,10 @@ export function MyItemEditor(props: PageProps) {
 
 ### ✅ Do's
 
-✅ **Always use BaseItemEditor** for item editors to ensure consistency  
+✅ **Always use ItemEditor** for item editors to ensure consistency  
 ✅ **Keep ribbon content minimal** - only essential actions  
 ✅ **Use proper view classes** - `editor-default-view`, `empty-state-container`  
-✅ **Handle loading states** before rendering BaseItemEditor  
+✅ **Handle loading states** before rendering ItemEditor  
 ✅ **Provide proper min-height** for empty states (500px minimum)  
 ✅ **Use Fabric design tokens** for colors and spacing  
 ✅ **Test scrolling behavior** with long content  
@@ -691,13 +686,13 @@ export function MyItemEditor(props: PageProps) {
 
 ### ❌ Don'ts
 
-❌ **Don't add scroll to outer container** - BaseItemEditor handles scrolling  
+❌ **Don't add scroll to outer container** - ItemEditor handles scrolling  
 ❌ **Don't use fixed heights** on content - let it flow naturally  
 ❌ **Don't put multiple ribbons** - one ribbon per editor  
 ❌ **Don't override critical CSS** like flex properties  
 ❌ **Don't use absolute positioning** for main content  
 ❌ **Don't forget loading states** - always show progress  
-❌ **Don't mix old Stack patterns** with BaseItemEditor  
+❌ **Don't mix old Stack patterns** with ItemEditor  
 
 ### Common Patterns
 
@@ -709,10 +704,10 @@ const views: RegisteredView[] = [
 ];
 ```
 
-#### Pattern 2: Loading Guard
+#### Pattern 2: Automatic Loading (Handled Internally)
 ```tsx
-if (isLoading) return <LoadingProgressBar />;
-return <BaseItemEditor views={views} ribbon={(context) => ...} />;
+// ItemEditor handles loading states automatically - no manual guard needed
+return <ItemEditor views={views} ribbon={(context) => ...} />;
 ```
 
 #### Pattern 3: Automatic Detail Navigation
@@ -783,7 +778,7 @@ Add appropriate ARIA attributes to your content:
 
 ## 💬 Support
 
-For questions or issues related to BaseItemEditor:
+For questions or issues related to ItemEditor:
 1. Review the component documentation in this folder
 2. Check the [HelloWorld sample implementation](../../Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx) for examples
 3. Consult the Fabric Extensibility team

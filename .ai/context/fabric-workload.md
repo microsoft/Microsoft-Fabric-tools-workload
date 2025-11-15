@@ -46,31 +46,34 @@ const workloadClient = new WorkloadClientAPI();
 const accessToken = await workloadClient.authentication.acquireAccessToken(scopes);
 ```
 
-### BaseRibbon Pattern
-The toolkit provides a standardized BaseRibbon component with a clean API for consistent ribbon experiences:
+### Ribbon Pattern
+The toolkit provides a standardized Ribbon component with a clean API for consistent ribbon experiences:
 
 ```typescript
-// Recommended pattern - mandatory homeActions, optional additionalTabs
-import { BaseRibbon, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';
+// Recommended pattern - mandatory homeToolbarActions, optional additionalToolbars
+import { Ribbon, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';
 
 export function MyItemRibbon(props: RibbonProps) {
   const { t } = useTranslation();
   
+  // Create a translation helper function
+  const translate = (key: string, fallback?: string) => t(key, fallback);
+  
   // Define mandatory Home tab actions
-  const homeActions: RibbonAction[] = [
+  const homeToolbarActions: RibbonAction[] = [
     createSaveAction(
       props.saveItemCallback,
       !props.isSaveButtonEnabled,
-      t("Save")
+      translate
     ),
     createSettingsAction(
       props.openSettingsCallback,
-      t("Settings")
+      translate
     )
   ];
   
   // Optional: Define additional tabs for complex items
-  const additionalTabs = [
+  const additionalToolbars = [
     {
       key: 'data',
       label: t('Data'),
@@ -79,9 +82,9 @@ export function MyItemRibbon(props: RibbonProps) {
   ];
   
   return (
-    <BaseRibbon 
-      homeActions={homeActions}           // Mandatory
-      additionalTabs={additionalTabs}     // Optional
+    <Ribbon 
+      homeToolbarActions={homeToolbarActions}           // Mandatory
+      additionalToolbars={additionalToolbars}     // Optional
       viewContext={viewContext} 
     />
   );
@@ -89,17 +92,17 @@ export function MyItemRibbon(props: RibbonProps) {
 
 // Simple pattern - just home actions (like HelloWorld)
 return (
-  <BaseRibbon 
-    homeActions={homeActions}
+  <Ribbon 
+    homeToolbarActions={homeToolbarActions}
     viewContext={viewContext} 
   />
 );
 ```
 
 Key Benefits:
-- **Consistent API**: Every ribbon has a mandatory Home tab with `homeActions`
+- **Consistent API**: Every ribbon has a mandatory Home tab with `homeToolbarActions`
 - **Standard Actions**: Use `createSaveAction()`, `createSettingsAction()` factories
-- **Optional Complexity**: Add `additionalTabs` only when needed
+- **Optional Complexity**: Add `additionalToolbars` only when needed
 - **Accessibility**: Built-in Tooltip + ToolbarButton patterns
 
 ### Manifest Configuration
@@ -113,7 +116,7 @@ Key Benefits:
 1. **Follow Naming Conventions**: Use PascalCase for item names, maintain consistency
 2. **Implement Error Handling**: Provide user-friendly error messages and recovery options
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design
-4. **Ribbon Pattern**: Use BaseRibbon with `homeActions` (mandatory) and optional `additionalTabs`. Import action factories from controls/ItemEditor
+4. **Ribbon Pattern**: Use Ribbon with `homeToolbarActions` (mandatory) and optional `additionalToolbars`. Import action factories from controls/ItemEditor
 5. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
 6. **State Management**: Use Redux Toolkit patterns for complex state management
 7. **Performance**: Implement lazy loading and code splitting for large applications

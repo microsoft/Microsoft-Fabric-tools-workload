@@ -1,13 +1,13 @@
-# BaseItemEditor Quick Reference
+# ItemEditor Quick Reference
 
-Quick reference guide for using the `BaseItemEditor` control in Microsoft Fabric workload item editors.
+Quick reference guide for using the `ItemEditor` control in Microsoft Fabric workload item editors.
 
 ## 🚀 Quick Start
 
 ### Basic Pattern (View Registration)
 
 ```tsx
-import { BaseItemEditor, RegisteredView } from "../../controls/ItemEditor";
+import { ItemEditor, RegisteredView } from "../../controls/ItemEditor";
 
 export function MyItemEditor(props: PageProps) {
   const views: RegisteredView[] = [
@@ -18,7 +18,7 @@ export function MyItemEditor(props: PageProps) {
   ];
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       views={views}
       initialView="main"
       ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
@@ -30,14 +30,14 @@ export function MyItemEditor(props: PageProps) {
 ## 📦 Import Statement
 
 ```tsx
-import { BaseItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor";
 // or
-import { BaseItemEditor, BaseItemEditorProps } from "../../controls/ItemEditor";
+import { ItemEditor, ItemEditorProps } from "../../controls/ItemEditor";
 ```
 
 ## 🎯 Props
 
-### BaseItemEditorProps
+### ItemEditorProps
 
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
@@ -93,7 +93,7 @@ const views: RegisteredView[] = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView={item?.id ? 'main' : 'empty'}
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -103,12 +103,9 @@ const views: RegisteredView[] = [
 ### Pattern 2: With Loading State
 
 ```tsx
-if (isLoading) {
-  return <ItemEditorLoadingProgressBar message="Loading..." />;
-}
-
+// ItemEditor handles loading internally - no manual loading state needed
 return (
-  <BaseItemEditor
+  <ItemEditor
     views={views}
     initialView="main"
     ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -119,7 +116,7 @@ return (
 ### Pattern 3: With Custom Classes
 
 ```tsx
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView="main"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -143,7 +140,7 @@ const views: RegisteredView[] = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView="main"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -167,7 +164,7 @@ const views = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView="empty"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -194,7 +191,7 @@ const views = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView="main"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -221,7 +218,7 @@ const views = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView="detail"
   ribbon={(viewContext) => <MyRibbon viewContext={viewContext} />}
@@ -234,7 +231,7 @@ const views = [
 
 ```tsx
 import React, { useState, useEffect } from "react";
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor"; // Loading handled internally
 import { MyItemRibbon } from "./MyItemRibbon";
 import { MyItemEmpty } from "./MyItemEmpty";
 import { MyItemDefault } from "./MyItemDefault";
@@ -245,12 +242,8 @@ export function MyItemEditor(props: PageProps) {
 
   useEffect(() => {
     // Load item
-    loadItem().then(() => setIsLoading(false));
+    loadItem(); // ItemEditor will handle loading states
   }, []);
-
-  if (isLoading) {
-    return <ItemEditorLoadingProgressBar message="Loading..." />;
-  }
 
   const views = [
     {
@@ -264,7 +257,7 @@ export function MyItemEditor(props: PageProps) {
   ];
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       views={views}
       initialView={item?.definition?.state ? 'default' : 'empty'}
       ribbon={(viewContext) => (
@@ -283,7 +276,7 @@ export function MyItemEditor(props: PageProps) {
 ## ✅ Best Practices
 
 ### Do's
-- ✅ Always use `BaseItemEditor` for item editors
+- ✅ Always use `ItemEditor` for item editors
 - ✅ Keep ribbon content minimal
 - ✅ Handle loading states before rendering
 - ✅ Use proper view classes
@@ -299,7 +292,7 @@ export function MyItemEditor(props: PageProps) {
 
 ## 🎯 CSS Classes
 
-### Applied by BaseItemEditor
+### Applied by ItemEditor
 
 ```scss
 .base-item-editor              // Main container
@@ -375,12 +368,12 @@ expect(content).toBeVisible();
 
 ## 📚 Related Documentation
 
-- **[Full BaseItemEditor Documentation](./README.md)**
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container
-- **[BaseRibbonToolbar](./BaseRibbonToolbar.md)** - Toolbar actions  
-- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default view layout
-- **[BaseItemEditorEmptyView](./BaseItemEditorEmptyView.md)** - Empty state layout
-- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail view layout
+- **[Full ItemEditor Documentation](./README.md)**
+- **[Ribbon](./Ribbon.md)** - Ribbon container
+- **[RibbonToolbar](./RibbonToolbar.md)** - Toolbar actions  
+- **[ItemEditorView](./ItemEditorView.md)** - Default view layout
+- **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state layout
+- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail view layout
 - **[HelloWorld Sample](../../Workload/app/items/HelloWorldItem/)**
 
 ## 🆘 Common Issues

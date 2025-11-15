@@ -1,8 +1,8 @@
-# BaseItemEditorView Component
+# ItemEditorView Component
 
 ## 📋 Overview
 
-The `BaseItemEditorView` component provides a standardized layout for default/main views in Microsoft Fabric item editors. It offers consistent styling, spacing, and responsive behavior that follows Fabric design guidelines.
+The `ItemEditorView` component provides a standardized layout for default/main views in Microsoft Fabric item editors. It offers consistent styling, spacing, and responsive behavior that follows Fabric design guidelines.
 
 ## ✨ Features
 
@@ -19,16 +19,16 @@ The `BaseItemEditorView` component provides a standardized layout for default/ma
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorView } from "../../controls/ItemEditor";
+import { ItemEditorView } from "../../controls/ItemEditor";
 
 export function MyItemDefaultView() {
   return (
-    <BaseItemEditorView>
+    <ItemEditorView>
       <div>
         <h2>My Item Content</h2>
         <p>Your main item editing interface goes here.</p>
       </div>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -36,12 +36,12 @@ export function MyItemDefaultView() {
 ### With Cards
 
 ```tsx
-import { BaseItemEditorView } from "../../controls/ItemEditor";
+import { ItemEditorView } from "../../controls/ItemEditor";
 import { Card, CardHeader, CardBody } from "@fluentui/react-components";
 
 export function MyItemDefaultView() {
   return (
-    <BaseItemEditorView>
+    <ItemEditorView>
       <Card>
         <CardHeader>
           <h3>Configuration</h3>
@@ -59,7 +59,7 @@ export function MyItemDefaultView() {
           <p>Data management interface...</p>
         </CardBody>
       </Card>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -67,14 +67,14 @@ export function MyItemDefaultView() {
 ### In View Registration
 
 ```tsx
-// Using with BaseItemEditor view registration
+// Using with ItemEditor view registration
 const views: RegisteredView[] = [
   {
     name: EDITOR_VIEW_TYPES.DEFAULT,
     component: (
-      <BaseItemEditorView>
+      <ItemEditorView>
         <MyItemContent />
-      </BaseItemEditorView>
+      </ItemEditorView>
     )
   }
 ];
@@ -82,7 +82,7 @@ const views: RegisteredView[] = [
 
 ## 📖 Props API
 
-### BaseItemEditorViewProps
+### ItemEditorViewProps
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -142,7 +142,7 @@ font-family: var(--fontFamilyBase);
 ### Component Structure
 
 ```
-BaseItemEditorView
+ItemEditorView
 ├── Container (scrollable)
 │   └── Children Content
 │       ├── Cards (recommended)
@@ -178,7 +178,7 @@ BaseItemEditorView
 ```tsx
 export function MyItemView() {
   return (
-    <BaseItemEditorView>
+    <ItemEditorView>
       <Card>
         <CardHeader>
           <Text variant="title3">Basic Information</Text>
@@ -202,7 +202,7 @@ export function MyItemView() {
           <Label>Enable advanced features</Label>
         </CardBody>
       </Card>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -212,7 +212,7 @@ export function MyItemView() {
 ```tsx
 export function MyItemForm() {
   return (
-    <BaseItemEditorView>
+    <ItemEditorView>
       <div className="form-section">
         <Text variant="title2">Configuration</Text>
         
@@ -236,7 +236,7 @@ export function MyItemForm() {
           </Checkbox>
         </Field>
       </div>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -246,12 +246,12 @@ export function MyItemForm() {
 ```tsx
 export function FullWidthView() {
   return (
-    <BaseItemEditorView padding="none">
+    <ItemEditorView padding="none">
       <div style={{ padding: '0 24px' }}>
         {/* Custom spacing control */}
         <MyCustomContent />
       </div>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -261,7 +261,7 @@ export function FullWidthView() {
 ```tsx
 export function SplitLayoutView() {
   return (
-    <BaseItemEditorView>
+    <ItemEditorView>
       <div style={{ display: 'flex', gap: '16px' }}>
         <div style={{ flex: 1 }}>
           <Card>
@@ -274,7 +274,7 @@ export function SplitLayoutView() {
           </Card>
         </div>
       </div>
-    </BaseItemEditorView>
+    </ItemEditorView>
   );
 }
 ```
@@ -285,7 +285,7 @@ export function SplitLayoutView() {
 
 ```tsx
 // Good - uses semantic elements
-<BaseItemEditorView>
+<ItemEditorView>
   <section>
     <h2>Configuration</h2>
     <form>
@@ -295,21 +295,21 @@ export function SplitLayoutView() {
       </fieldset>
     </form>
   </section>
-</BaseItemEditorView>
+</ItemEditorView>
 ```
 
 ### ARIA Support
 
 ```tsx
 // With proper ARIA labels
-<BaseItemEditorView>
+<ItemEditorView>
   <div role="main" aria-label="Item configuration">
     <h2 id="config-title">Configuration</h2>
     <div aria-labelledby="config-title">
       {/* configuration content */}
     </div>
   </div>
-</BaseItemEditorView>
+</ItemEditorView>
 ```
 
 ## 🎨 Styling
@@ -331,9 +331,9 @@ export function SplitLayoutView() {
 ### Custom Styling
 
 ```tsx
-<BaseItemEditorView className="my-custom-view">
+<ItemEditorView className="my-custom-view">
   <MyContent />
-</BaseItemEditorView>
+</ItemEditorView>
 ```
 
 ```scss
@@ -360,7 +360,7 @@ export function SplitLayoutView() {
 
 ### ❌ Don'ts
 
-❌ **Don't add scroll to children** - BaseItemEditorView handles scrolling  
+❌ **Don't add scroll to children** - ItemEditorView handles scrolling  
 ❌ **Don't use fixed heights** - let content flow naturally  
 ❌ **Don't override padding** unless using padding="none"  
 ❌ **Don't nest scrollable containers** - creates usability issues  
@@ -368,13 +368,13 @@ export function SplitLayoutView() {
 
 ## 🔗 Related Components
 
-- **[BaseItemEditor](./README.md)** - Main container with view registration
-- **[BaseItemEditorEmptyView](./BaseItemEditorEmptyView.md)** - Empty state layout
-- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail view layout
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container component
+- **[ItemEditor](./README.md)** - Main container with view registration
+- **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state layout
+- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail view layout
+- **[Ribbon](./Ribbon.md)** - Ribbon container component
 
 ## 📝 Examples
 
 For complete examples, see:
 - [Sample Implementation](../../Workload/app/items/HelloWorldItem/HelloWorldItemDefaultView.tsx) - HelloWorld reference implementation
-- [BaseItemEditor README](./README.md) - Integration patterns
+- [ItemEditor README](./README.md) - Integration patterns

@@ -254,6 +254,50 @@
 // Ribbon Styles - Shared across items
 // ============================================================================
 
+// Ribbon header layout with tabs/back button on left and action buttons on right
+.ribbon-container .ribbon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: var(--spacingVerticalXS, 4px);
+    min-height: 32px;
+}
+
+.ribbon-container .ribbon-header__left {
+    display: flex;
+    align-items: center;
+    flex: 1; // Take available space
+    min-width: 0; // Allow shrinking
+}
+
+.ribbon-container .ribbon-header__right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0; // Don't shrink the right buttons
+    margin-left: var(--spacingHorizontalM, 12px);
+    height: 32px; // Match tab height
+}
+
+// Right side action buttons styling
+.ribbon-container .ribbon-header__right .toolbarContainer {
+    margin: 0 !important; // Remove default margins
+    padding: 2px 4px !important; // Compact padding for header
+    background: transparent !important; // No background in header
+    box-shadow: none !important; // No shadow in header
+    border: 1px solid var(--colorNeutralStroke2, #e1e1e1) !important; // Subtle border
+    border-radius: var(--borderRadiusMedium, 4px) !important;
+    height: 32px !important; // Match tab height exactly
+    max-height: 32px !important;
+    min-height: 32px !important;
+}
+
+.ribbon-container .ribbon-header__right .toolbarContainer > div[role="toolbar"] {
+    height: 28px !important; // Slightly smaller for compact look
+    min-height: 28px !important;
+    max-height: 28px !important;
+}
+
 .ribbon-container .toolbarContainer {
     // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
     max-height: 32px;
@@ -286,6 +330,113 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+// Fix for TabList spacing issues in ribbon
+.ribbon-container [role="tablist"] {
+    display: flex !important;
+    gap: 0 !important; // Remove any gap between tabs
+    margin: 0 !important; // Remove default margins
+    padding: 0 !important; // Remove default padding
+    border-bottom: 0px solid var(--colorNeutralStroke2, #e1e1e1);
+    margin-bottom: var(--spacingVerticalS, 8px) !important;
+    justify-content: flex-start !important; // Align tabs to the left
+    align-items: center !important;
+    width: auto !important; // Don't stretch to full width
+}
+
+.ribbon-container [role="tablist"] button[role="tab"] {
+    flex: 0 0 auto !important; // Don't grow or shrink, stay at natural size
+    margin: 0 !important; // Remove any margins
+    margin-right: 2px !important; // Small consistent gap between tabs
+    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0; // Rounded top corners only
+    position: relative !important;
+    min-width: auto !important;
+    max-width: none !important;
+    width: auto !important;
+}
+
+// Override any focus/selected state spacing changes
+.ribbon-container [role="tablist"] button[role="tab"]:focus,
+.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"],
+.ribbon-container [role="tablist"] button[role="tab"]:hover {
+    margin: 0 !important;
+    margin-right: 2px !important; // Keep consistent spacing
+    transform: none !important; // Prevent any transform changes
+    position: relative !important;
+}
+
+// Handle dynamic span elements and pseudo-elements that cause spacing issues
+.ribbon-container [role="tablist"] button[role="tab"] span {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    flex: none !important;
+}
+
+// Target specific Fluent UI tab content classes
+.ribbon-container [role="tablist"] button[role="tab"] .fui-Tab__content {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    flex: none !important;
+}
+
+// Hide the reserved space span that causes layout shifts
+.ribbon-container [role="tablist"] button[role="tab"] .fui-Tab__content--reserved-space {
+    display: none !important; // This is the culprit - hide the reserved space
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important; // Move it completely off-screen
+}
+
+// Neutralize ::after pseudo-elements on selected tabs (but restore with custom indicator)
+.ribbon-container [role="tablist"] button[role="tab"]::after {
+    display: none !important; // Hide the default Fluent UI indicator
+    content: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+// Add our own custom selection indicator to replace the hidden one
+.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"] {
+    position: relative !important;
+}
+
+.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"]::before {
+    content: "" !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 8px !important;
+    right: 8px !important;
+    height: 2px !important;
+    background-color: var(--colorBrandBackground, #0078d4) !important;
+    border-radius: 1px !important;
+    z-index: 1 !important;
+}
+
+// Ensure consistent internal layout regardless of selection state
+.ribbon-container [role="tablist"] button[role="tab"] > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none !important;
+}
+
+// Force consistent box model for all tab states
+.ribbon-container [role="tablist"] button[role="tab"],
+.ribbon-container [role="tablist"] button[role="tab"]:focus,
+.ribbon-container [role="tablist"] button[role="tab"][aria-selected="true"],
+.ribbon-container [role="tablist"] button[role="tab"]:hover {
+    box-sizing: border-box !important;
+    border: 0 !important; // Remove any borders that could affect spacing
 }
 
 // Back button container for detail views
@@ -896,5 +1047,226 @@
 
   .item-editor-loading-progress-fill {
     border: 1px solid transparent;
+  }
+}
+
+// ============================================================================
+// RIBBON ACTION BUTTONS
+// ============================================================================
+
+/**
+ * Styling for ribbon action buttons - real button appearance with icon + text
+ * These are the right-side action buttons in ribbons (Trial, Share, etc.)
+ */
+
+.ribbon-action-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: var(--spacingHorizontalXS) !important; // Gap between icon and text
+  height: 28px !important; // Slightly shorter than tab height for better visual balance
+  padding: var(--spacingVerticalXXS) var(--spacingHorizontalS) !important;
+  border-radius: var(--borderRadiusMedium) !important;
+  font-size: var(--fontSizeBase200) !important;
+  font-weight: var(--fontWeightMedium) !important;
+  font-family: var(--fontFamilyBase) !important;
+  line-height: var(--lineHeightBase200) !important;
+  cursor: pointer !important;
+  transition: all var(--durationFaster) var(--curveEasyEase) !important;
+  border: 1px solid transparent !important;
+  white-space: nowrap !important;
+  
+  // Icon styling
+  svg, .ribbon-action-button__icon {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  // Text styling
+  .fui-Button__label, span:not(.ribbon-action-button__dropdown-icon) {
+    font-size: var(--fontSizeBase200) !important;
+    font-weight: var(--fontWeightMedium) !important;
+    color: inherit !important;
+  }
+
+  // Secondary appearance (default)
+  &[data-appearance="secondary"] {
+    background-color: var(--colorNeutralBackground1) !important;
+    color: var(--colorNeutralForeground1) !important;
+    border-color: var(--colorNeutralStroke1) !important;
+    
+    &:hover {
+      background-color: var(--colorNeutralBackground1Hover) !important;
+      border-color: var(--colorNeutralStroke1Hover) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:active {
+      background-color: var(--colorNeutralBackground1Pressed) !important;
+      border-color: var(--colorNeutralStroke1Pressed) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:disabled {
+      background-color: var(--colorNeutralBackgroundDisabled) !important;
+      border-color: var(--colorNeutralStrokeDisabled) !important;
+      color: var(--colorNeutralForegroundDisabled) !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  // Primary appearance
+  &[data-appearance="primary"] {
+    background-color: var(--colorBrandBackground) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+    border-color: var(--colorBrandBackground) !important;
+    
+    &:hover {
+      background-color: var(--colorBrandBackgroundHover) !important;
+      border-color: var(--colorBrandBackgroundHover) !important;
+      color: var(--colorNeutralForegroundOnBrand) !important;
+    }
+    
+    &:active {
+      background-color: var(--colorBrandBackgroundPressed) !important;
+      border-color: var(--colorBrandBackgroundPressed) !important;
+      color: var(--colorNeutralForegroundOnBrand) !important;
+    }
+    
+    &:disabled {
+      background-color: var(--colorNeutralBackgroundDisabled) !important;
+      border-color: var(--colorNeutralStrokeDisabled) !important;
+      color: var(--colorNeutralForegroundDisabled) !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  // Subtle appearance
+  &[data-appearance="subtle"] {
+    background-color: transparent !important;
+    color: var(--colorNeutralForeground1) !important;
+    border-color: transparent !important;
+    
+    &:hover {
+      background-color: var(--colorSubtleBackgroundHover) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:active {
+      background-color: var(--colorSubtleBackgroundPressed) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:disabled {
+      background-color: transparent !important;
+      color: var(--colorNeutralForegroundDisabled) !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  // Transparent appearance
+  &[data-appearance="transparent"] {
+    background-color: transparent !important;
+    color: var(--colorNeutralForeground1) !important;
+    border-color: transparent !important;
+    
+    &:hover {
+      background-color: var(--colorTransparentBackgroundHover) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:active {
+      background-color: var(--colorTransparentBackgroundPressed) !important;
+      color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &:disabled {
+      background-color: transparent !important;
+      color: var(--colorNeutralForegroundDisabled) !important;
+      cursor: not-allowed !important;
+    }
+  }
+}
+
+// Dropdown button specific styling
+.ribbon-action-button--dropdown {
+  // Dropdown icon (chevron) styling
+  .ribbon-action-button__dropdown-icon {
+    width: 16px !important;
+    height: 16px !important;
+    margin-left: var(--spacingHorizontalXXS) !important;
+    flex-shrink: 0 !important;
+    color: inherit !important;
+  }
+  
+  // Ensure proper icon positioning for dropdown buttons
+  .fui-Button__icon {
+    margin-right: 0 !important; // Remove default margin, we handle gap via flexbox
+  }
+}
+
+// Focus ring styling for action buttons
+.ribbon-action-button:focus-visible {
+  outline: 2px solid var(--colorBrandStroke1) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--borderRadiusMedium) !important;
+}
+
+// Action button container in ribbon header (right side)
+.ribbon-header__right-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacingHorizontalXS) !important;
+  
+  .ribbon-action-button {
+    margin: 0 !important; // Reset any inherited margins
+  }
+}
+
+// High contrast mode support for action buttons
+@media (prefers-contrast: high) {
+  .ribbon-action-button {
+    border-width: 2px !important;
+    
+    &[data-appearance="secondary"] {
+      border-color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &[data-appearance="primary"] {
+      border-color: var(--colorNeutralForeground1) !important;
+    }
+    
+    &[data-appearance="subtle"], 
+    &[data-appearance="transparent"] {
+      border-color: var(--colorNeutralForeground1) !important;
+      border-style: dashed !important;
+    }
+    
+    &:focus-visible {
+      outline-color: var(--colorNeutralForeground1) !important;
+      outline-width: 3px !important;
+    }
+  }
+}
+
+// Responsive adjustments for action buttons
+@media (max-width: 768px) {
+  .ribbon-action-button {
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalXS) !important;
+    font-size: var(--fontSizeBase100) !important;
+    
+    svg, .ribbon-action-button__icon {
+      width: 14px !important;
+      height: 14px !important;
+    }
+    
+    .ribbon-action-button__dropdown-icon {
+      width: 14px !important;
+      height: 14px !important;
+    }
+  }
+  
+  .ribbon-header__right-actions {
+    gap: var(--spacingHorizontalXXS) !important;
   }
 }

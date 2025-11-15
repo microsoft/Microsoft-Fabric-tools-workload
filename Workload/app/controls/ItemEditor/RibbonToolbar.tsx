@@ -1,6 +1,6 @@
 import React from "react";
 import { Toolbar, ToolbarDivider } from '@fluentui/react-toolbar';
-import { RibbonButton, FluentIconComponent } from './RibbonButton';
+import { RibbonToolbarAction, FluentIconComponent } from './RibbonToolbarAction';
 
 /**
  * Configuration for a ribbon action button
@@ -63,9 +63,9 @@ export interface RibbonAction {
 }
 
 /**
- * Props for the BaseRibbonToolbar component
+ * Props for the RibbonToolbar component
  */
-export interface BaseRibbonToolbarProps {
+export interface RibbonToolbarProps {
   /**
    * Array of actions to display in the toolbar
    */
@@ -78,7 +78,7 @@ export interface BaseRibbonToolbarProps {
 }
 
 /**
- * BaseRibbonToolbar - Reusable toolbar component for ribbons
+ * RibbonToolbar - Reusable toolbar component for ribbons
  * 
  * This component provides:
  * - Consistent action rendering with full tooltip support
@@ -118,10 +118,10 @@ export interface BaseRibbonToolbarProps {
  *   }
  * ];
  * 
- * <BaseRibbonToolbar actions={actions} />
+ * <RibbonToolbar actions={actions} />
  * ```
  */
-export const BaseRibbonToolbar: React.FC<BaseRibbonToolbarProps> = ({
+export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
   actions,
   className = ''
 }) => {
@@ -132,7 +132,7 @@ export const BaseRibbonToolbar: React.FC<BaseRibbonToolbarProps> = ({
     <Toolbar className={className}>
       {visibleActions.map((action, index) => (
         <React.Fragment key={action.key}>
-          <RibbonButton
+          <RibbonToolbarAction
             icon={action.icon}
             label={action.label}
             tooltip={action.tooltip}

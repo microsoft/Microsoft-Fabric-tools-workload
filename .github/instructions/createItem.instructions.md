@@ -37,16 +37,16 @@ Use the `manage_todo_list` tool to create a comprehensive todo list with ALL ste
 **BEFORE CODING ANY VIEW COMPONENTS**, search for existing infrastructure:
 
 **Required Searches (use `semantic_search` tool):**
-- `"BaseItemEditorView left right split layout"`
-- `"BaseItemEditorDetailView left center components"`
-- `"BaseItemEditor* two column layout"`
+- `"ItemEditorView left right split layout"`
+- `"ItemEditorDetailView left center components"`
+- `"ItemEditor* two column layout"`
 - `"Base* components [your specific use case]"`
 
 **Available Base Components (MUST USE - DON'T REINVENT):**
-- **BaseItemEditorView**: Left/center split layouts - PERFECT for explorer + content
-- **BaseItemEditorDetailView**: Detail views with actions  
-- **BaseItemEditorEmptyView**: Empty state with tasks
-- **BaseRibbon + BaseRibbonToolbar**: Standard ribbon
+- **ItemEditorView**: Left/center split layouts - PERFECT for explorer + content
+- **ItemEditorDetailView**: Detail views with actions  
+- **ItemEditorEmptyView**: Empty state with tasks
+- **Ribbon + RibbonToolbar**: Standard ribbon
 - **createSaveAction, createSettingsAction**: Standard actions
 
 **🚨 CRITICAL RULE**: If a Base* component exists for your pattern, YOU MUST USE IT.
@@ -85,19 +85,19 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
 
 **BEFORE GENERATING ANY ITEM CODE**: All item editors MUST use these standardized components:
 
-1. **BaseItemEditor Component** (MANDATORY):
+1. **ItemEditor Component** (MANDATORY):
    - Container for ALL item editors
-   - Import: `import { BaseItemEditor } from "../../controls/ItemEditor";`
+   - Import: `import { ItemEditor } from "../../controls/ItemEditor";`
    - Provides fixed ribbon + scrollable content layout
    - DO NOT create custom layouts with Stack or div
 
 2. **Standard Ribbon Components** (MANDATORY):
-   - `BaseRibbon`: Ribbon container
-   - `BaseRibbonToolbar`: Action toolbar
+   - `Ribbon`: Ribbon container
+   - `RibbonToolbar`: Action toolbar
    - `createRibbonTabs`: Tab creation helper
    - `createSaveAction`: Standard Save button
    - `createSettingsAction`: Standard Settings button
-   - Import: `import { BaseRibbon, BaseRibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/ItemEditor';`
+   - Import: `import { Ribbon, RibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/ItemEditor';`
 
 3. **Item-Specific SCSS File** (MANDATORY - VERIFIED):
    - Create `[ItemName]Item.scss` in item folder
@@ -123,7 +123,7 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 2. Using inline styles instead of SCSS file
 3. Duplicating layout styles from generic patterns
 4. Creating custom ribbon/editor container styles
-5. Overriding ItemEditor/BaseRibbon structural styles
+5. Overriding ItemEditor/Ribbon structural styles
 6. Not creating separate `[ItemName]Item.scss` file
 
 **Example - Correct Pattern**:
@@ -147,11 +147,11 @@ import "./[ItemName]Item.scss";    // ✅ Item overrides
 ### Smart Code Generation
 When creating a new item, GitHub Copilot provides:
 
-#### Auto-Complete Item Structure with BaseItemEditor
+#### Auto-Complete Item Structure with ItemEditor
 Type `fabric item create [ItemName]` to trigger:
 - Automatic 4-file structure generation in `Workload/app/items/[ItemName]Item/`
-- **Editor with BaseItemEditor container** (MANDATORY)
-- **Ribbon with standard components** (BaseRibbon + BaseRibbonToolbar)
+- **Editor with ItemEditor container** (MANDATORY)
+- **Ribbon with standard components** (Ribbon + RibbonToolbar)
 - Intelligent TypeScript interface suggestions
 - Pre-configured Fluent UI component templates
 - Smart import resolution for Fabric APIs
@@ -159,15 +159,15 @@ Type `fabric item create [ItemName]` to trigger:
 
 #### Pattern Recognition with Architecture Compliance
 GitHub Copilot learns from existing items and suggests:
-- **BaseItemEditor wrapper pattern** (core architecture requirement)
-- **Standard Ribbon pattern** (BaseRibbon + BaseRibbonToolbar architecture)
+- **ItemEditor wrapper pattern** (core architecture requirement)
+- **Standard Ribbon pattern** (Ribbon + RibbonToolbar architecture)
 - **Standard View patterns** (Empty, Default, Detail, Settings views)
 - Consistent naming conventions ([ItemName]Item pattern with View suffix)
 - Similar state management patterns
 - Matching component structures
 - Proper TypeScript type definitions
 
-**Note**: HelloWorld components serve as sample implementations of the BaseItemEditor architecture.
+**Note**: HelloWorld components serve as sample implementations of the ItemEditor architecture.
 
 ### Real-time Validation
 - **Manifest Sync Detection**: Warns when implementation doesn't match manifest templates
@@ -214,8 +214,8 @@ GitHub Copilot understands:
 ```
 
 ### Smart Completions with Standard Architecture
-- `fabric.editor` → Expands to BaseItemEditor with ribbon and children pattern
-- `fabric.ribbon` → Expands to BaseRibbon + BaseRibbonToolbar with standard actions
+- `fabric.editor` → Expands to ItemEditor with ribbon and children pattern
+- `fabric.ribbon` → Expands to Ribbon + RibbonToolbar with standard actions
 - `fabric.save` → Expands to complete saveItemDefinition pattern
 - `fabric.load` → Expands to complete getWorkloadItem pattern  
 - `fabric.notify` → Expands to callNotificationOpen with proper typing
@@ -225,9 +225,9 @@ GitHub Copilot understands:
 When typing `fabric.editor`, GitHub Copilot expands to the NEW view registration pattern:
 
 ```typescript
-// 🚨 CORRECT: BaseItemEditor with view registration system
+// 🚨 CORRECT: ItemEditor with view registration system
 return (
-  <BaseItemEditor
+  <ItemEditor
     ribbon={(currentView, setCurrentView) => (
       <[ItemName]ItemRibbon
         {...props}
@@ -242,7 +242,7 @@ return (
       {
         name: EDITOR_VIEW_TYPES.EMPTY,
         component: (
-          <BaseItemEditorEmptyView
+          <ItemEditorEmptyView
             title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
             description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
             imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
@@ -268,7 +268,7 @@ return (
           />
         )
       }
-      // Add detail views here using BaseItemEditorDetailView
+      // Add detail views here using ItemEditorDetailView
     ]}
     initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
   />
@@ -276,7 +276,7 @@ return (
 ```
 
 **Key Concepts**:
-1. **BaseItemEditor manages view state internally** - no need for parent useState
+1. **ItemEditor manages view state internally** - no need for parent useState
 2. **Ribbon receives** `(currentView, setCurrentView)` - can switch views and show view-specific actions
 3. **Notification receives** `(currentView)` - can show view-specific notifications
 4. **Views receives** `(setCurrentView)` - views can navigate (e.g., empty → main, main → detail)
@@ -284,7 +284,7 @@ return (
 
 **❌ NEVER generate these OLD patterns**:
 ```typescript
-// ❌ WRONG 1: Custom layout without BaseItemEditor
+// ❌ WRONG 1: Custom layout without ItemEditor
 return (
   <Stack className="editor">
     <[ItemName]ItemRibbon {...props} />
@@ -295,9 +295,9 @@ return (
 // ❌ WRONG 2: Manual view switching with if/else
 const [currentView, setCurrentView] = useState('empty');
 return (
-  <BaseItemEditor ribbon={<Ribbon />}>
+  <ItemEditor ribbon={<Ribbon />}>
     {currentView === 'empty' ? <Empty /> : <Main />}
-  </BaseItemEditor>
+  </ItemEditor>
 );
 
 // ❌ WRONG 3: Static views array without setCurrentView access
@@ -310,7 +310,7 @@ const views = [
 ### Ribbon Template Expansion (MANDATORY PATTERN)
 When typing `fabric.ribbon`, GitHub Copilot expands to:
 ```typescript
-// 🚨 CORRECT: BaseRibbon with standard components
+// 🚨 CORRECT: Ribbon with standard components
 const tabs = createRibbonTabs(t("ItemEditor_Ribbon_Home_Label"));
 const actions: RibbonAction[] = [
   createSaveAction(onSave, !isSaveEnabled, t("Save")),
@@ -319,9 +319,9 @@ const actions: RibbonAction[] = [
 ];
 
 return (
-  <BaseRibbon tabs={tabs}>
-    <BaseRibbonToolbar actions={actions} />
-  </BaseRibbon>
+  <Ribbon tabs={tabs}>
+    <RibbonToolbar actions={actions} />
+  </Ribbon>
 );
 ```
 
@@ -391,8 +391,8 @@ import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDCo
 
 ### Template Expansion with Standard Architecture
 When creating components, GitHub Copilot expands to MANDATORY patterns:
-- **Editor components**: BaseItemEditor container with ribbon and children
-- **Ribbon components**: BaseRibbon + BaseRibbonToolbar with standard actions
+- **Editor components**: ItemEditor container with ribbon and children
+- **Ribbon components**: Ribbon + RibbonToolbar with standard actions
 - **Empty state components**: Proper onboarding flow with navigation callback
 - **Model interfaces**: Fabric-compatible data types for persisted state only
 - **Editor view types**: EDITOR_VIEW_TYPES enum defined in the Editor component
@@ -403,15 +403,15 @@ When creating components, GitHub Copilot expands to MANDATORY patterns:
 Before generating any item code, GitHub Copilot should verify:
 
 **Architecture Compliance** (MANDATORY):
-- [ ] Editor uses `<BaseItemEditor>` container with view registration
+- [ ] Editor uses `<ItemEditor>` container with view registration
 - [ ] View registration pattern: `views={(setCurrentView) => [...]}`
 - [ ] Ribbon render prop: `ribbon={(currentView, setCurrentView) => ...}`
 - [ ] Notification render prop: `notification={(currentView) => ...}`
 - [ ] Initial view expression: `initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}`
-- [ ] Detail views use `<BaseItemEditorDetailView>` component
+- [ ] Detail views use `<ItemEditorDetailView>` component
 - [ ] Detail views define `DetailViewAction[]` for ribbon
 - [ ] Back navigation provided in detail views
-- [ ] Ribbon uses `<BaseRibbon>` + `<BaseRibbonToolbar>`
+- [ ] Ribbon uses `<Ribbon>` + `<RibbonToolbar>`
 - [ ] Standard action factories used (`createSaveAction`, `createSettingsAction`)
 - [ ] No custom Stack/div layouts for editor container
 - [ ] No manual Tooltip + ToolbarButton wrapping
@@ -427,16 +427,16 @@ Before generating any item code, GitHub Copilot should verify:
 
 **File Structure** (REQUIRED):
 - [ ] `[ItemName]ItemModel.ts` - Data model with persisted state interfaces only
-- [ ] `[ItemName]ItemEditor.tsx` - Main editor with BaseItemEditor + view registration + EDITOR_VIEW_TYPES enum
+- [ ] `[ItemName]ItemEditor.tsx` - Main editor with ItemEditor + view registration + EDITOR_VIEW_TYPES enum
 - [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component (onboarding)
 - [ ] `[ItemName]ItemDefaultView.tsx` - Main/default view component
 - [ ] `[ItemName]ItemRibbon.tsx` - Ribbon with standard components
 - [ ] `[ItemName]Item.scss` - Item-specific style overrides
 
 **Import Verification**:
-- [ ] `import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";`
-- [ ] `import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";` (for detail views only)
-- [ ] `import { BaseRibbon, BaseRibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';`
+- [ ] `import { ItemEditor } from "../../controls/ItemEditor";` (loading handled internally)
+- [ ] `import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";` (for detail views only)
+- [ ] `import { Ribbon, RibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';`
 - [ ] `import "../../styles.scss";`
 - [ ] `import "./[ItemName]Item.scss";`
 - [ ] No import of `RegisteredView` type (not needed, inline definition sufficient)
@@ -445,7 +445,7 @@ Before generating any item code, GitHub Copilot should verify:
 
 ### Context Detection
 GitHub Copilot detects:
-- **BaseItemEditor architecture** as the primary pattern (mandatory for all items)
+- **ItemEditor architecture** as the primary pattern (mandatory for all items)
 - **Standard View patterns** in HelloWorld sample implementation (Empty, Default, Detail, Settings views)
 - **Standard Ribbon pattern** in HelloWorld sample implementation as reference
 - Existing item patterns to maintain consistency
@@ -453,11 +453,11 @@ GitHub Copilot detects:
 - Component libraries already in use
 - Authentication patterns from other items
 
-**Note**: HelloWorld serves as a sample implementation of BaseItemEditor architecture - the BaseItemEditor components are the foundation.
+**Note**: HelloWorld serves as a sample implementation of ItemEditor architecture - the ItemEditor components are the foundation.
 
 ### Architecture Validation
-- **Verifies BaseItemEditor usage**: Warns if custom layouts are detected
-- **Checks Ribbon components**: Ensures BaseRibbon + BaseRibbonToolbar pattern
+- **Verifies ItemEditor usage**: Warns if custom layouts are detected
+- **Checks Ribbon components**: Ensures Ribbon + RibbonToolbar pattern
 - **Validates action factories**: Confirms use of createSaveAction, createSettingsAction
 - **Suggests manifest updates** when items are created
 - **Validates TypeScript compilation** in real-time
@@ -465,9 +465,9 @@ GitHub Copilot detects:
 - **Ensures proper export statements**
 
 ### Error Prevention with Architecture Compliance
-- **Warns about missing BaseItemEditor**: Prevents custom layout implementations
-- **Warns about manual Tooltip + ToolbarButton**: Suggests BaseRibbonToolbar instead
-- **Warns about custom ribbon layouts**: Requires BaseRibbon component
+- **Warns about missing ItemEditor**: Prevents custom layout implementations
+- **Warns about manual Tooltip + ToolbarButton**: Suggests RibbonToolbar instead
+- **Warns about custom ribbon layouts**: Requires Ribbon component
 - Warns about common Fabric integration mistakes
 - Suggests proper error handling for async operations
 - Validates component prop interfaces
@@ -480,16 +480,16 @@ GitHub Copilot detects:
 ## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (View Registration System)
 
 **Purpose**:
-- Create main editor component with BaseItemEditor
+- Create main editor component with ItemEditor
 - MUST use view registration system (NOT manual if/else switching)
-- BaseItemEditor manages view state internally
+- ItemEditor manages view state internally
 - Views, ribbon, and notifications can access and change current view
 
 **🚨 CRITICAL**: GitHub Copilot MUST generate the NEW pattern with view registration:
 
 ```typescript
-// 🚨 CORRECT: BaseItemEditor with view registration
-import { BaseItemEditor, ItemEditorLoadingProgressBar } from "../../controls/ItemEditor";
+// 🚨 CORRECT: ItemEditor with view registration (loading handled internally)
+import { ItemEditor } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 
 /**
@@ -529,13 +529,9 @@ export function [ItemName]ItemEditor(props: PageProps) {
     return currentView !== EDITOR_VIEW_TYPES.EMPTY && !hasBeenSaved;
   };
   
-  if (isLoading) {
-    return <ItemEditorLoadingProgressBar message={t("Loading...")} />;
-  }
-  
-  // BaseItemEditor with view registration
+  // ItemEditor handles loading states internally
   return (
-    <BaseItemEditor
+    <ItemEditor
       // Ribbon receives currentView and setCurrentView
       ribbon={(currentView, setCurrentView) => (
         <[ItemName]ItemRibbon
@@ -551,7 +547,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
         {
           name: EDITOR_VIEW_TYPES.EMPTY,
           component: (
-            <BaseItemEditorEmptyView
+            <ItemEditorEmptyView
               title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
               description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
               imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
@@ -598,9 +594,9 @@ return (
 // ❌ WRONG 2: Manual view state in parent
 const [currentView, setCurrentView] = useState('empty');
 return (
-  <BaseItemEditor ribbon={<Ribbon currentView={currentView} />}>
+  <ItemEditor ribbon={<Ribbon currentView={currentView} />}>
     {currentView === 'empty' ? <Empty /> : <Main />}
-  </BaseItemEditor>
+  </ItemEditor>
 );
 
 // ❌ WRONG 3: Static views without navigation
@@ -610,7 +606,7 @@ const views = [
 ```
 
 **Key Architecture Points**:
-1. **No view state in parent** - BaseItemEditor manages it
+1. **No view state in parent** - ItemEditor manages it
 2. **Render prop pattern** - `ribbon`, `notification`, `views` receive functions
 3. **Navigation from anywhere** - Views, ribbon, notifications can call `setCurrentView`
 4. **Simple initial view** - Just an expression, not state
@@ -621,7 +617,7 @@ const views = [
 
 **Purpose**:
 - Create detail/drill-down pages for specific records or sub-sections
-- MUST use BaseItemEditorDetailView as foundation
+- MUST use ItemEditorDetailView as foundation
 - Detail views have their own ribbon actions (context-specific)
 - Back button navigation built-in
 
@@ -631,11 +627,11 @@ const views = [
 - Multi-step workflows requiring focused views
 - Any "Level 2" (L2) page accessed from main view
 
-**🚨 CRITICAL**: Detail views MUST be based on BaseItemEditorDetailView:
+**🚨 CRITICAL**: Detail views MUST be based on ItemEditorDetailView:
 
 ```typescript
-// 🚨 CORRECT: Detail view using BaseItemEditorDetailView
-import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+// 🚨 CORRECT: Detail view using ItemEditorDetailView
+import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 
 interface [ItemName]ItemDetailViewProps {
   workloadClient: WorkloadClientAPI;
@@ -695,7 +691,7 @@ export function [ItemName]ItemDetailView({
   );
   
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       center={detailContent}
       actions={actions}
       onActionsChange={setActions}  // Propagates to ribbon
@@ -712,7 +708,7 @@ views={(setCurrentView) => [
   {
     name: EDITOR_VIEW_TYPES.EMPTY,
     component: (
-      <BaseItemEditorEmptyView
+      <ItemEditorEmptyView
         title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
         description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
         imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
@@ -758,7 +754,7 @@ views={(setCurrentView) => [
 **Detail View Ribbon Actions**:
 
 ```typescript
-// Ribbon automatically receives actions from BaseItemEditorDetailView
+// Ribbon automatically receives actions from ItemEditorDetailView
 ribbon={(currentView, setCurrentView) => {
   // Detail views expose their actions via DetailViewAction[]
   const isDetailView = currentView.startsWith('detail-');
@@ -775,13 +771,13 @@ ribbon={(currentView, setCurrentView) => {
 ```
 
 **Key Detail View Concepts**:
-1. **BaseItemEditorDetailView** - Foundation for all detail pages
+1. **ItemEditorDetailView** - Foundation for all detail pages
 2. **DetailViewAction** - Context-specific actions (save, delete, back)
 3. **onActionsChange** - Propagates actions to ribbon automatically
 4. **Back navigation** - Always provide way back to parent view
 5. **Dynamic views** - Generate detail views based on selected record
 
-**❌ NEVER create detail views without BaseItemEditorDetailView**:
+**❌ NEVER create detail views without ItemEditorDetailView**:
 ```typescript
 // ❌ WRONG: Custom detail view without standard foundation
 export function DetailView() {
@@ -804,17 +800,17 @@ export function DetailView() {
 
 **Purpose**:
 - Create ribbon with standard components
-- MUST use BaseRibbon as container
-- MUST use BaseRibbonToolbar for actions
+- MUST use Ribbon as container
+- MUST use RibbonToolbar for actions
 - MUST use standard action factories
 
 **🚨 CRITICAL**: GitHub Copilot MUST generate this pattern:
 
 ```typescript
-// 🚨 CORRECT: BaseRibbon with standard components
+// 🚨 CORRECT: Ribbon with standard components
 import { 
-  BaseRibbon, 
-  BaseRibbonToolbar, 
+  Ribbon, 
+  RibbonToolbar, 
   RibbonAction,
   createSaveAction,
   createSettingsAction,
@@ -840,9 +836,9 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
   ];
   
   return (
-    <BaseRibbon tabs={tabs}>
-      <BaseRibbonToolbar actions={actions} />
-    </BaseRibbon>
+    <Ribbon tabs={tabs}>
+      <RibbonToolbar actions={actions} />
+    </Ribbon>
   );
 }
 ```
@@ -867,7 +863,7 @@ return (
 - Use `createRibbonTabs()` for tabs
 - Use `createSaveAction()` and `createSettingsAction()` for standard actions
 - Define custom actions inline as `RibbonAction` objects
-- Return `<BaseRibbon><BaseRibbonToolbar /></BaseRibbon>` structure
+- Return `<Ribbon><RibbonToolbar /></Ribbon>` structure
 
 ---
 
@@ -964,13 +960,13 @@ export function [ItemName]ItemEditorRibbon(props: [ItemName]ItemEditorRibbonProp
 
 **Why This Pattern is DEPRECATED**:
 - ❌ Manual Tooltip wrapping - repetitive and error-prone
-- ❌ Custom ribbon div - not using BaseRibbon component
+- ❌ Custom ribbon div - not using Ribbon component
 - ❌ No standardization - each ribbon implements differently
 - ❌ Accessibility issues - inconsistent implementation
 - ❌ Hard to maintain - changes require updates in all ribbons
-- ❌ More code - ~80 lines vs ~30 lines with BaseRibbon pattern
+- ❌ More code - ~80 lines vs ~30 lines with Ribbon pattern
 
-**✅ USE THIS INSTEAD**: See "MANDATORY: Step 5 Ribbon Implementation Pattern" above for the correct BaseRibbon + BaseRibbonToolbar pattern with action factories.
+**✅ USE THIS INSTEAD**: See "MANDATORY: Step 5 Ribbon Implementation Pattern" above for the correct Ribbon + RibbonToolbar pattern with action factories.
 
 ---
 
@@ -1354,27 +1350,27 @@ After updating Product.json:
 The repository currently contains one fully implemented item:
 
 **Implemented Items**:
-- `HelloWorldItem` - A sample implementation demonstrating BaseItemEditor architecture and standard patterns
+- `HelloWorldItem` - A sample implementation demonstrating ItemEditor architecture and standard patterns
 
 **Core Architecture Focus**:
-The BaseItemEditor component system is the foundation. HelloWorld serves as one example of how to implement it.
+The ItemEditor component system is the foundation. HelloWorld serves as one example of how to implement it.
 
 **Repository Items Folder Structure**:
 ```
 Workload/app/items/
 └── HelloWorldItem/                    ← Sample Implementation
     ├── HelloWorldItemModel.ts         ← Data model
-    ├── HelloWorldItemEditor.tsx       ← Main editor using BaseItemEditor
+    ├── HelloWorldItemEditor.tsx       ← Main editor using ItemEditor
     ├── HelloWorldItemEmptyView.tsx    ← Empty state view
     ├── HelloWorldItemDefaultView.tsx  ← Main content view  
-    ├── HelloWorldItemRibbon.tsx       ← Ribbon using BaseRibbon
+    ├── HelloWorldItemRibbon.tsx       ← Ribbon using Ribbon
     ├── HelloWorldItemAboutView.tsx    ← About settings view
     └── HelloWorldItemSettingsView.tsx ← Settings view
 ```
 
-**Core Architecture** (BaseItemEditor components are the foundation):
-- **BaseItemEditor**: Main container component (mandatory)
-- **BaseRibbon & BaseRibbonToolbar**: Standard ribbon components
+**Core Architecture** (ItemEditor components are the foundation):
+- **ItemEditor**: Main container component (mandatory)
+- **Ribbon & RibbonToolbar**: Standard ribbon components
 - **Standard View Types**: Empty, Default, Detail, Settings patterns
 - **HelloWorld**: Sample implementation demonstrating the architecture
 
@@ -1463,9 +1459,9 @@ When creating a new item, ensure all these components are created:
 
 ### ✅ Architecture Compliance
 - [ ] **Component Discovery Performed**: Searched for existing Base* components before coding
-- [ ] **BaseItemEditorView used**: For left/right split layouts (don't create custom flex layouts)
-- [ ] Uses BaseItemEditor (not custom layout)
-- [ ] Uses BaseRibbon + BaseRibbonToolbar  
+- [ ] **ItemEditorView used**: For left/right split layouts (don't create custom flex layouts)
+- [ ] Uses ItemEditor (not custom layout)
+- [ ] Uses Ribbon + RibbonToolbar  
 - [ ] SCSS file contains ONLY overrides (no duplicated layout)
 - [ ] Version number matches HelloWorld ("1.100")
 - [ ] All imports use correct paths

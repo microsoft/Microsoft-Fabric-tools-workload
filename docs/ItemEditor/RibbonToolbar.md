@@ -1,8 +1,8 @@
-# BaseRibbonToolbar Component
+# RibbonToolbar Component
 
 ## 📋 Overview
 
-The `BaseRibbonToolbar` component provides a standardized toolbar interface for ribbon actions in Microsoft Fabric item editors. It automatically handles action layout, theming, accessibility, and integrates seamlessly with the BaseRibbon component.
+The `RibbonToolbar` component provides a standardized toolbar interface for ribbon actions in Microsoft Fabric item editors. It automatically handles action layout, theming, accessibility, and integrates seamlessly with the Ribbon component.
 
 ## ✨ Features
 
@@ -19,7 +19,7 @@ The `BaseRibbonToolbar` component provides a standardized toolbar interface for 
 ### Basic Usage
 
 ```tsx
-import { BaseRibbonToolbar, RibbonAction } from "../../controls/ItemEditor";
+import { RibbonToolbar, RibbonAction } from "../../controls/ItemEditor";
 
 export function MyToolbar() {
   const actions: RibbonAction[] = [
@@ -38,14 +38,14 @@ export function MyToolbar() {
     }
   ];
 
-  return <BaseRibbonToolbar actions={actions} />;
+  return <RibbonToolbar actions={actions} />;
 }
 ```
 
-### In BaseRibbon
+### In Ribbon
 
 ```tsx
-import { BaseRibbon, BaseRibbonToolbar } from "../../controls/ItemEditor";
+import { Ribbon, RibbonToolbar } from "../../controls/ItemEditor";
 
 export function MyItemRibbon({ viewContext }) {
   const actions: RibbonAction[] = [
@@ -60,16 +60,16 @@ export function MyItemRibbon({ viewContext }) {
   ];
 
   return (
-    <BaseRibbon viewContext={viewContext}>
-      <BaseRibbonToolbar actions={actions} />
-    </BaseRibbon>
+    <Ribbon viewContext={viewContext}>
+      <RibbonToolbar actions={actions} />
+    </Ribbon>
   );
 }
 ```
 
 ## 📖 Props API
 
-### BaseRibbonToolbarProps
+### RibbonToolbarProps
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -138,7 +138,7 @@ Less prominent actions:
 ### Component Structure
 
 ```
-BaseRibbonToolbar
+RibbonToolbar
 ├── Toolbar (Fluent UI)
 │   └── ToolbarGroup
 │       ├── Tooltip + ToolbarButton (for each action)
@@ -240,9 +240,9 @@ export function MyItemRibbon({ viewContext }) {
   };
 
   return (
-    <BaseRibbon viewContext={viewContext}>
-      <BaseRibbonToolbar actions={getActions()} />
-    </BaseRibbon>
+    <Ribbon viewContext={viewContext}>
+      <RibbonToolbar actions={getActions()} />
+    </Ribbon>
   );
 }
 ```
@@ -338,7 +338,7 @@ const action: RibbonAction = {
 
 ## 🎯 Integration Examples
 
-### With BaseItemEditor
+### With ItemEditor
 
 ```tsx
 // Complete integration example
@@ -351,7 +351,7 @@ export function MyItemEditor(props: PageProps) {
   ];
 
   return (
-    <BaseItemEditor
+    <ItemEditor
       views={views}
       defaultView="main"
       ribbon={(viewContext) => <MyItemRibbon viewContext={viewContext} />}
@@ -371,19 +371,19 @@ export function MyItemRibbon({ viewContext }) {
   ];
 
   return (
-    <BaseRibbon viewContext={viewContext}>
-      <BaseRibbonToolbar actions={actions} />
-    </BaseRibbon>
+    <Ribbon viewContext={viewContext}>
+      <RibbonToolbar actions={actions} />
+    </Ribbon>
   );
 }
 ```
 
 ## 🔗 Related Components
 
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container component
-- **[BaseItemEditor](./README.md)** - Main editor container
-- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default view layout
-- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail view layout
+- **[Ribbon](./Ribbon.md)** - Ribbon container component
+- **[ItemEditor](./README.md)** - Main editor container
+- **[ItemEditorView](./ItemEditorView.md)** - Default view layout
+- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail view layout
 
 ## 📝 Examples
 

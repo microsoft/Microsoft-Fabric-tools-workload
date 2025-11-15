@@ -7,34 +7,34 @@
 
 // Base Item Editor - Foundation for all item editors
 export { 
-  BaseItemEditor,
-  BaseItemEditorView,
-  BaseItemEditorEmptyView,
-  BaseItemEditorDetailView,
-  ItemEditorLoadingProgressBar,
-  BaseRibbon,
-  BaseRibbonToolbar,
-  RibbonButton,
+  ItemEditor,
+  ItemEditorView,
+  ItemEditorEmptyView,
+  ItemEditorDetailView,
+  Ribbon,
+  RibbonToolbar,
+  RibbonToolbarAction,
+  RibbonActionButton,
   createSaveAction,
   createSettingsAction,
   createAboutAction
 } from './ItemEditor/';
 
 export type { 
-  BaseItemEditorProps, 
+  ItemEditorProps, 
   RegisteredView,
   ViewContext,
-  BaseItemEditorViewProps,
+  ItemEditorViewProps,
   LeftPanelConfig,
   CentralPanelConfig,
-  BaseItemEditorEmptyViewProps,
+  ItemEditorEmptyViewProps,
   EmptyStateTask,
-  BaseItemEditorDetailViewProps,
+  ItemEditorDetailViewProps,
   DetailViewAction,
-  BaseRibbonProps,
-  BaseRibbonToolbarProps,
+  RibbonProps,
+  RibbonToolbarProps,
   RibbonAction,
-  RibbonButtonProps,
-  FluentIconComponent,
-  RibbonTabToolbar
+  RibbonToolbarActionProps,
+  RibbonActionButtonProps,
+  FluentIconComponent
 } from './ItemEditor/';

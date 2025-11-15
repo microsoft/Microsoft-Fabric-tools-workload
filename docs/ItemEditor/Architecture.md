@@ -1,6 +1,6 @@
-# BaseItemEditor Architecture
+# ItemEditor Architecture
 
-Visual architecture and technical design documentation for the BaseItemEditor control with view registration system.
+Visual architecture and technical design documentation for the ItemEditor control with view registration system.
 
 ## Component Architecture
 
@@ -8,7 +8,7 @@ Visual architecture and technical design documentation for the BaseItemEditor co
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                  BaseItemEditor Container                 │
+│                  ItemEditor Container                 │
 │                 (100vh, flex column)                  │
 │                                                       │
 │  ┌─────────────────────────────────────────────────┐ │
@@ -54,7 +54,7 @@ Visual architecture and technical design documentation for the BaseItemEditor co
 ## Component Hierarchy
 
 ```
-BaseItemEditor (View Registration Mode)
+ItemEditor (View Registration Mode)
 ├── Props
 │   ├── ribbon: (context: ViewContext) => ReactNode ✅ Required
 │   ├── notification?: (currentView: string) => ReactNode ❌ Optional
@@ -124,7 +124,7 @@ interface ViewContext {
 ```
 Item Editor Component
         │
-        ├─────────► BaseItemEditor (View Registration Mode)
+        ├─────────► ItemEditor (View Registration Mode)
         │              │
         │              ├─────► ribbon={(context) => <YourRibbon />}
         │              │         │
@@ -158,7 +158,7 @@ Item Editor Component
 ### Flexbox Layout Strategy
 
 ```
-BaseItemEditor {
+ItemEditor {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -242,7 +242,7 @@ Level 3: Custom Overrides (via props)
 
 ```
 1. Component Mounts
-   └─► BaseItemEditor renders
+   └─► ItemEditor renders
 
 2. Layout Initialization
    ├─► Container: 100vh height
@@ -283,7 +283,7 @@ Item Editor Component
 
           ↓ Passed to
 
-BaseItemEditor (Stateless)
+ItemEditor (Stateless)
 ├── ribbon prop
 │   └─► Receives callbacks and state
 │
@@ -296,11 +296,11 @@ BaseItemEditor (Stateless)
 ### With Ribbon System
 
 ```
-BaseItemEditor
+ItemEditor
    │
    └─► ribbon prop
         │
-        └─► BaseRibbon
+        └─► Ribbon
              ├─► Tabs (via StandardRibbonTabs)
              │   └─► Home (mandatory)
              │       Additional tabs (optional)
@@ -318,7 +318,7 @@ BaseItemEditor
 ### With View System
 
 ```
-BaseItemEditor
+ItemEditor
    │
    └─► children prop
         │
@@ -418,7 +418,7 @@ Layer 0: Background
 
 ```
 Initial Render
-├─► BaseItemEditor: O(1)
+├─► ItemEditor: O(1)
 ├─► Ribbon: O(n) where n = number of actions
 └─► Content: O(m) where m = complexity of view
 
@@ -431,7 +431,7 @@ State Updates
 ### Memory
 
 ```
-BaseItemEditor Container: ~1KB
+ItemEditor Container: ~1KB
 ├─► DOM nodes: 3 (container + ribbon + content)
 ├─► Event listeners: 0 (CSS-only scrolling)
 └─► React components: 1 + children
@@ -483,7 +483,7 @@ Scrolling Method: Native CSS (overflow-y: auto)
 
 ```
 Tab Order:
-1. Ribbon actions (via BaseRibbon)
+1. Ribbon actions (via Ribbon)
 2. Content area (focusable)
 3. Interactive elements in content
 4. Return to ribbon (cycle)
@@ -508,14 +508,14 @@ Save Action
 
 ```
 Unit Tests
-├─► BaseItemEditor renders correctly
+├─► ItemEditor renders correctly
 ├─► Props are passed correctly
 ├─► Ribbon is rendered
 ├─► Content is rendered
 └─► CSS classes applied
 
 Integration Tests
-├─► With BaseRibbon
+├─► With Ribbon
 ├─► With view components
 ├─► View switching
 └─► Scroll behavior
@@ -543,18 +543,18 @@ screen.getByTestId('base-item-editor-content')
 ## File Dependencies
 
 ```
-BaseItemEditor.tsx
+ItemEditor.tsx
 ├─► Imports
 │   └─► React
 │
 ├─► Exports
-│   ├─► BaseItemEditor (component)
-│   └─► BaseItemEditorProps (type)
+│   ├─► ItemEditor (component)
+│   └─► ItemEditorProps (type)
 │
 └─► Styles
-    └─► ./BaseItemEditor.scss
+    └─► ./ItemEditor.scss
 
-BaseItemEditor.scss
+ItemEditor.scss
 ├─► Imports
 │   └─► Fabric design tokens (CSS vars)
 │
@@ -565,8 +565,8 @@ BaseItemEditor.scss
 
 controls/index.ts
 ├─► Exports
-│   ├─► BaseItemEditor (from ./BaseItemEditor)
-│   └─► BaseItemEditorProps (from ./BaseItemEditor)
+│   ├─► ItemEditor (from ./ItemEditor)
+│   └─► ItemEditorProps (from ./ItemEditor)
 │
 └─► Re-exported by
     └─► Item editors

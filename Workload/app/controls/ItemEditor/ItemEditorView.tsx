@@ -6,12 +6,12 @@ import "../../styles.scss";
 /**
  * Left Panel Configuration Interface
  * 
- * Defines the configuration for the optional left panel in BaseItemEditorView.
+ * Defines the configuration for the optional left panel in ItemEditorView.
  * The left panel provides a consistent layout for navigation, properties, file explorers,
  * and other secondary content areas.
  * 
  * ## Collapse Behavior
- * - **State Management**: Toggle state is always managed internally by BaseItemEditorView
+ * - **State Management**: Toggle state is always managed internally by ItemEditorView
  * - **Initial State**: Use `collapsed` to set the initial collapsed state (default: false)
  * - **Notification**: Use `onCollapseChange` to receive notifications when state changes
  * - **No External Control**: External components cannot control the collapse state after initialization
@@ -64,7 +64,7 @@ export interface LeftPanelConfig {
 /**
  * Central Panel Configuration Interface
  * 
- * Defines the configuration for the required center content area in BaseItemEditorView.
+ * Defines the configuration for the required center content area in ItemEditorView.
  * The center panel is the main workspace area for content editing, forms, canvases, and primary user interactions.
  * 
  * ## Design Principles
@@ -98,9 +98,9 @@ export interface CentralPanelConfig {
 }
 
 /**
- * BaseItemEditorView Props Interface
+ * ItemEditorView Props Interface
  */
-export interface BaseItemEditorViewProps {
+export interface ItemEditorViewProps {
   /** Optional left panel configuration */
   left?: LeftPanelConfig;
   /** Required center content area configuration */
@@ -110,18 +110,18 @@ export interface BaseItemEditorViewProps {
 }
 
 /**
- * BaseItemEditorView Component
+ * ItemEditorView Component
  * 
  * A flexible layout component for item editor content areas with optional left panel and required center content.
- * This component is designed to be used WITHIN BaseItemEditor's children area.
+ * This component is designed to be used WITHIN ItemEditor's children area.
  * 
  * ## Architecture
  * 
  * ```
  * ┌────────────────────────────────────────────────────┐
- * │  BaseItemEditor (Ribbon at top)                    │
+ * │  ItemEditor (Ribbon at top)                        │
  * │  ┌──────────────────────────────────────────────┐  │
- * │  │  BaseItemEditorView                          │  │
+ * │  │  ItemEditorView                              │  │
  * │  │  ┌────────────┬───────────────────────────┐ │  │
  * │  │  │ ┌──────────┐│                           │ │  │
  * │  │  │ │Title  [⏷]││      Center Content       │ │  │
@@ -150,21 +150,21 @@ export interface BaseItemEditorViewProps {
  * 
  * ### Example 1: Center Content Only (No Left Panel)
  * ```tsx
- * import { BaseItemEditor, BaseItemEditorView } from "../../controls/ItemEditor";
+ * import { ItemEditor, ItemEditorView } from "../../controls/ItemEditor";
  * 
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   <BaseItemEditorView
+ * <ItemEditor ribbon={<MyRibbon />}>
+ *   <ItemEditorView
  *     center={{
  *       content: <MyMainContent />
  *     }}
  *   />
- * </BaseItemEditor>
+ * </ItemEditor>
  * ```
  * 
  * ### Example 2: With Left Navigation Panel
  * ```tsx
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   <BaseItemEditorView
+ * <ItemEditor ribbon={<MyRibbon />}>
+ *   <ItemEditorView
  *     left={{
  *       content: <NavigationTree items={navItems} />,
  *       title: "Navigation"
@@ -173,13 +173,13 @@ export interface BaseItemEditorViewProps {
  *       content: <DetailView selectedItem={selectedItem} />
  *     }}
  *   />
- * </BaseItemEditor>
+ * </ItemEditor>
  * ```
  * 
  * ### Example 3: With Custom Left Panel Width
  * ```tsx
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   <BaseItemEditorView
+ * <ItemEditor ribbon={<MyRibbon />}>
+ *   <ItemEditorView
  *     left={{
  *       content: <FileExplorer files={files} />,
  *       title: "Files",
@@ -190,13 +190,13 @@ export interface BaseItemEditorViewProps {
  *       content: <CodeEditor file={currentFile} />
  *     }}
  *   />
- * </BaseItemEditor>
+ * </ItemEditor>
  * ```
  * 
  * ### Example 4: With Collapsible Left Panel
  * ```tsx
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   <BaseItemEditorView
+ * <ItemEditor ribbon={<MyRibbon />}>
+ *   <ItemEditorView
  *     left={{
  *       content: <PropertiesPanel properties={props} />,
  *       title: "Properties",
@@ -208,13 +208,13 @@ export interface BaseItemEditorViewProps {
  *       content: <DesignCanvas elements={elements} />
  *     }}
  *   />
- * </BaseItemEditor>
+ * </ItemEditor>
  * ```
  * 
  * ### Example 5: With Collapsible Left Panel (No Initial State)
  * ```tsx
- * <BaseItemEditor ribbon={<MyRibbon />}>
- *   <BaseItemEditorView
+ * <ItemEditor ribbon={<MyRibbon />}>
+ *   <ItemEditorView
  *     left={{
  *       content: <PropertiesPanel properties={props} />,
  *       title: "Properties",
@@ -225,7 +225,7 @@ export interface BaseItemEditorViewProps {
  *       content: <DesignCanvas elements={elements} />
  *     }}
  *   />
- * </BaseItemEditor>
+ * </ItemEditor>
  * ```
  * 
  * ## Fabric UX Compliance
@@ -238,11 +238,11 @@ export interface BaseItemEditorViewProps {
  * @component
  * @see {@link https://react.fluentui.dev/} Fluent UI v9 Documentation
  */
-export function BaseItemEditorView({
+export function ItemEditorView({
   left,
   center,
   className = ""
-}: BaseItemEditorViewProps) {
+}: ItemEditorViewProps) {
 
   // Extract left panel configuration with defaults
   const leftPanelWidth = left?.width ?? 280;
@@ -345,4 +345,4 @@ export function BaseItemEditorView({
   );
 }
 
-export default BaseItemEditorView;
+export default ItemEditorView;

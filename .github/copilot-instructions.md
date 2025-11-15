@@ -59,7 +59,7 @@ Beyond the generic `.ai/context/` files, GitHub Copilot provides:
 - **File Creation**: When creating items, automatically suggests the 4-file pattern structure
 - **Import Resolution**: Auto-imports Fabric platform types and client libraries
 - Prefer components from `@fluentui/react-components` (v9) over `@fluentui/react` (v8). Replace imports like `import { DefaultButton } from '@fluentui/react'` with `import { Button } from '@fluentui/react-components'`. Verify API and prop differences (appearance, tokens, and shorthands) when migrating components.
-- **BaseRibbon Pattern**: ALWAYS suggests `homeActions` (mandatory) + optional `additionalTabs` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/ItemEditor
+- **Ribbon Pattern**: ALWAYS suggests `homeToolbarActions` (mandatory) + optional `additionalToolbars` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/ItemEditor
 - **Toolbar Components**: ALWAYS suggests `Tooltip` + `ToolbarButton` pattern for toolbar actions. Auto-imports both from `@fluentui/react-components` and wraps ToolbarButtons in Tooltips with proper accessibility attributes
 - **OneLakeStorageClient**: ALWAYS use `createItemWrapper()` when working with OneLake storage in an item context. Never use direct OneLakeStorageClient methods with manual path construction
 - **OneLakeItemExplorer**: ALWAYS use control from `controls/OneLakeItemExplorer`, not sample code. Initialize with `initialItem` config for content display
@@ -103,7 +103,7 @@ fabric deploy prod   # Uses .env.prod for environment-specific manifests
 GitHub Copilot recognizes Fabric patterns and suggests:
 - **API Calls**: Complete authentication and error handling
 - **Component Structure**: Fluent UI patterns with proper TypeScript
-- **BaseRibbon Components**: Always creates `homeActions` array (mandatory) with `createSaveAction()`, `createSettingsAction()` factories, plus optional `additionalTabs` array for complex items
+- **Ribbon Components**: Always creates `homeToolbarActions` array (mandatory) with `createSaveAction()`, `createSettingsAction()` factories, plus optional `additionalToolbars` array for complex items
 - **Toolbar Integration**: Mandatory `Tooltip` + `ToolbarButton` patterns for all toolbar implementations
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
 - **OneLake Explorer**: Always use control from `controls/OneLakeItemExplorer`, not sample code

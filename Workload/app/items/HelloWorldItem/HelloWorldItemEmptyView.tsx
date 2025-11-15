@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 interface HelloWorldItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
@@ -40,7 +40,7 @@ export function HelloWorldItemEmptyView({
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title={t('HelloWorldItemEmptyView_Title', 'Welcome to HelloWorld!')}
       description={t('HelloWorldItemEmptyView_Description', 'This is the first screen people will see after an item is created. Include some basic information to help them continue.')}
       imageSrc="/assets/items/HelloWorldItem/EditorEmpty.svg"

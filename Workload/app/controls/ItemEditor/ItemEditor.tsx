@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
-import { ItemEditorLoadingProgressBar } from "./ItemEditorLoadingProgressBar";
-import { RibbonAction } from './BaseRibbonToolbar';
+import { ItemEditorLoadingView } from "./ItemEditorLoadingView";
+import { RibbonAction } from './RibbonToolbar';
 import "../../styles.scss";
 
 /**
@@ -38,17 +38,17 @@ export interface ViewContext {
   viewHistory: string[];
   /** Actions from current detail view (empty array if not detail view) */
   detailViewActions: RibbonAction[];
-  /** Function to set detail view actions (called by BaseItemEditorDetailView) */
+  /** Function to set detail view actions (called by ItemEditorDetailView) */
   setDetailViewActions: (actions: RibbonAction[]) => void;
 }
 
 /**
- * BaseItemEditor Props Interface
+ * ItemEditor Props Interface
  * 
- * BaseItemEditor manages the view state internally. Components register views and can switch between them using setCurrentView.
+ * ItemEditor manages the view state internally. Components register views and can switch between them using setCurrentView.
  * 
  * ## Detail View Support (Automatic Back Navigation)
- * When a view is marked as `isDetailView: true`, BaseItemEditor AUTOMATICALLY:
+ * When a view is marked as `isDetailView: true`, ItemEditor AUTOMATICALLY:
  * - Tracks view history for back navigation (no manual implementation needed)
  * - Provides `context.goBack()` function to ribbon (navigates to previous view)
  * - Signals ribbon with `context.isDetailView` flag (show back button instead of tabs)
@@ -64,7 +64,7 @@ export interface ViewContext {
  * @property {string} className - Optional additional CSS class for the editor container
  * @property {string} contentClassName - Optional additional CSS class for the scrollable content area
  */
-export interface BaseItemEditorPropsWithViews {
+export interface ItemEditorPropsWithViews {
   /** The ribbon component - can be ReactNode or function receiving (ViewContext) */
   ribbon: ReactNode | ((context: ViewContext) => ReactNode);
   /** Optional notification area - can be ReactNode or function receiving (currentView) */
@@ -86,12 +86,12 @@ export interface BaseItemEditorPropsWithViews {
 }
 
 /**
- * BaseItemEditor Props Interface
+ * ItemEditor Props Interface
  */
-export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
+export type ItemEditorProps = ItemEditorPropsWithViews;
 
 /**
- * BaseItemEditor Component
+ * ItemEditor Component
  * 
  * A foundational editor control that provides a consistent layout for item editors:
  * - Fixed ribbon at the top (always visible)
@@ -101,7 +101,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * 
  * ## View Registration Mode
  * 
- * BaseItemEditor manages view state internally. Components register views and can switch between them using setCurrentView.
+ * ItemEditor manages view state internally. Components register views and can switch between them using setCurrentView.
  * 
  * ## Architecture
  * 
@@ -126,7 +126,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * ## Usage Example
  * 
  * ```tsx
- * import { BaseItemEditor, RegisteredView, ViewContext } from "../../controls/ItemEditor";
+ * import { ItemEditor, RegisteredView, ViewContext } from "../../controls/ItemEditor";
  * 
  * // Define views with detail view flag
  * const views = (setCurrentView: (view: string) => void): RegisteredView[] => [
@@ -145,7 +145,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  *   }
  * ];
  * 
- * <BaseItemEditor 
+ * <ItemEditor 
  *   // Ribbon receives ViewContext with AUTOMATIC back navigation support
  *   ribbon={(context: ViewContext) => (
  *     <MyRibbon 
@@ -171,7 +171,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * 2. Pass `context.goBack` to ribbon back button
  * 3. Ribbon shows back button when `context.isDetailView === true`
  * 
- * **What BaseItemEditor Does AUTOMATICALLY:**
+ * **What ItemEditor Does AUTOMATICALLY:**
  * - ✅ Tracks complete view history
  * - ✅ Provides `context.goBack()` function (no manual implementation)
  * - ✅ Navigates to previous view when goBack() is called
@@ -181,7 +181,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * {
  *   name: 'detail-record-123',
  *   component: (
- *     <BaseItemEditorDetailView
+ *     <ItemEditorDetailView
  *       center={<RecordDetails recordId="123" />}
  *       actions={[  // These actions appear in ribbon when view is active
  *         { id: 'save', label: 'Save', icon: <Save24Regular />, onClick: handleSave },
@@ -196,7 +196,7 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * ribbon={(context) => (
  *   <Ribbon
  *     showBackButton={context.isDetailView}
- *     onBack={context.goBack}  // ⭐ No manual logic - BaseItemEditor handles everything
+ *     onBack={context.goBack}  // ⭐ No manual logic - ItemEditor handles everything
  *   />
  * )}
  * ```
@@ -213,23 +213,25 @@ export type BaseItemEditorProps = BaseItemEditorPropsWithViews;
  * 
  * @component
  */
-export function BaseItemEditor(props: BaseItemEditorProps) {
+export function ItemEditor(props: ItemEditorProps) {
   const { className = "", contentClassName = "", isLoading = false, loadingMessage } = props;
 
-  // Internal state for view management
-  const [currentView, setCurrentViewInternal] = React.useState<string>('');
-  // View history for back navigation in detail views
-  const [viewHistory, setViewHistory] = React.useState<string[]>([]);
+  // Internal state for view management - Initialize with the initial view directly
+  const [currentView, setCurrentViewInternal] = React.useState<string>(props.initialView || '');
+  // View history for back navigation in detail views - Initialize with initial view
+  const [viewHistory, setViewHistory] = React.useState<string[]>(() => 
+    props.initialView ? [props.initialView] : []
+  );
   // Detail view actions from current view
   const [detailViewActions, setDetailViewActions] = React.useState<RibbonAction[]>([]);
 
-  // Initialize view state from initialView prop
+  // Update view when initialView prop changes (but avoid setState during render)
   React.useEffect(() => {
-    if (props.initialView && !currentView) {
+    if (props.initialView && props.initialView !== currentView) {
       setCurrentViewInternal(props.initialView);
       setViewHistory([props.initialView]);
     }
-  }, [props, currentView]);
+  }, [props.initialView]); // Only depend on initialView, not currentView to avoid loops
 
   // Wrapped setCurrentView that manages history and calls the optional callback
   const setCurrentView = React.useCallback((view: string) => {
@@ -310,7 +312,7 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
   const content = React.useMemo(() => {
     // Show loading indicator if isLoading is true
     if (isLoading) {
-      return <ItemEditorLoadingProgressBar message={loadingMessage || "Loading..."} />;
+      return <ItemEditorLoadingView message={loadingMessage || "Loading..."} />;
     }
     
     // View Registration Mode
@@ -327,13 +329,13 @@ export function BaseItemEditor(props: BaseItemEditorProps) {
       
       {/* Optional notification area (fixed, not scrolled) */}
       {notificationContent && (
-        <div className="item-editor-container__notification" data-testid="base-item-editor-notification">
+        <div className="item-editor-container__notification" data-testid="item-editor-notification">
           {notificationContent}
         </div>
       )}
       
       {/* Scrollable content area */}
-      <div className={`item-editor-container__content ${contentClassName}`.trim()} data-testid="base-item-editor-content">
+      <div className={`item-editor-container__content ${contentClassName}`.trim()} data-testid="item-editor-content">
         <DetailViewActionsContext.Provider value={{ setDetailViewActions: handleSetDetailViewActions }}>
           {content}
         </DetailViewActionsContext.Provider>

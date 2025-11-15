@@ -1,48 +1,51 @@
 /**
- * BaseItemEditor Components
+ * ItemEditor Components
  * 
- * This module exports all BaseItemEditor-related components and types
+ * This module exports all ItemEditor-related components and types
  * for building consistent item editors in Microsoft Fabric workloads.
  */
 
-// Core BaseItemEditor component
-export { BaseItemEditor } from './BaseItemEditor';
+// Core ItemEditor component
+export { ItemEditor } from './ItemEditor';
 export type { 
-  BaseItemEditorProps, 
+  ItemEditorProps, 
   RegisteredView,
   ViewContext
-} from './BaseItemEditor';
+} from './ItemEditor';
 
-// BaseItemEditor View components
-export { BaseItemEditorView } from './BaseItemEditorView';
-export type { BaseItemEditorViewProps, LeftPanelConfig, CentralPanelConfig } from './BaseItemEditorView';
+// ItemEditor View components
+export { ItemEditorView } from './ItemEditorView';
+export type { ItemEditorViewProps, LeftPanelConfig, CentralPanelConfig } from './ItemEditorView';
 
-// BaseItemEditor Empty View component
-export { BaseItemEditorEmptyView } from './BaseItemEditorEmptyView';
-export type { BaseItemEditorEmptyViewProps, EmptyStateTask } from './BaseItemEditorEmptyView';
+// ItemEditor Empty View component
+export { ItemEditorEmptyView } from './ItemEditorEmptyView';
+export type { ItemEditorEmptyViewProps, EmptyStateTask } from './ItemEditorEmptyView';
 
-// BaseItemEditor Detail View component  
-export { BaseItemEditorDetailView } from './BaseItemEditorDetailView';
-export type { BaseItemEditorDetailViewProps, DetailViewAction } from './BaseItemEditorDetailView';
+// ItemEditor Detail View component  
+export { ItemEditorDetailView } from './ItemEditorDetailView';
+export type { ItemEditorDetailViewProps, DetailViewAction } from './ItemEditorDetailView';
 
-// Item Editor Loading Progress Bar
-export { ItemEditorLoadingProgressBar } from './ItemEditorLoadingProgressBar';
+// Item Editor Loading View (internal use only - handled by ItemEditor)
+// export { ItemEditorLoadingView } from './ItemEditorLoadingView';
 
 // Ribbon Controls - Standardized ribbon components
-export { BaseRibbon } from './BaseRibbon';
-export type { BaseRibbonProps, RibbonTabToolbar } from './BaseRibbon';
+export { Ribbon } from './Ribbon';
+export type { RibbonProps, RibbonTab } from './Ribbon';
 
-export { BaseRibbonToolbar } from './BaseRibbonToolbar';
-export type { BaseRibbonToolbarProps, RibbonAction } from './BaseRibbonToolbar';
+export { RibbonToolbar } from './RibbonToolbar';
+export type { RibbonToolbarProps, RibbonAction } from './RibbonToolbar';
 
-export { RibbonButton } from './RibbonButton';
-export type { RibbonButtonProps, FluentIconComponent } from './RibbonButton';
+export { RibbonToolbarAction } from './RibbonToolbarAction';
+export type { RibbonToolbarActionProps, FluentIconComponent } from './RibbonToolbarAction';
+
+export { RibbonActionButton } from './RibbonActionButton';
+export type { RibbonActionButtonProps, RibbonActionButtonConfig, DropdownMenuItem } from './RibbonActionButton';
 
 export { 
   createSaveAction,
   createSettingsAction,
   createAboutAction
-} from './StandardRibbonActions';
+} from './RibbonStandardActions';
 
 // Re-export DetailViewActionsContext for consumers who need it
-export { DetailViewActionsContext } from './BaseItemEditor';
+export { DetailViewActionsContext } from './ItemEditor';

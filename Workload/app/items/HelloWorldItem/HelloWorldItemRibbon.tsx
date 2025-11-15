@@ -1,8 +1,7 @@
 import React from "react";
 import { PageProps } from '../../App';
-import { useTranslation } from "react-i18next";
 import { 
-  BaseRibbon, 
+  Ribbon, 
   RibbonAction,
   createSaveAction,
   createSettingsAction
@@ -28,8 +27,8 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  * 
  * Key Features:
  * - Uses BaseRibbon with clean API pattern
- * - Defines homeActions (mandatory Home tab actions)
- * - Uses standard action factories for Save and Settings
+ * - Uses action factories with automatic internationalization
+ * - Defines homeToolbarActions (mandatory Home tab actions)
  * - Demonstrates the simple pattern (most items only need Home tab)
  * - Shows how to add custom actions (commented example)
  * - Maintains accessibility with built-in Tooltip + ToolbarButton pattern
@@ -39,23 +38,22 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  * For complex items requiring additional tabs, see the BaseRibbon documentation.
  */
 export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
-  const { t } = useTranslation();
   const { viewContext } = props;
   
-  // Define home actions - these appear on the mandatory Home tab
-  const homeActions: RibbonAction[] = [
-    // Standard Save action - disabled unless explicitly enabled
-    createSaveAction(
-      props.saveItemCallback,
-      !props.isSaveButtonEnabled,
-      t("ItemEditor_Ribbon_Save_Label")
-    ),
-    
-    // Standard Settings action - always available
-    createSettingsAction(
-      props.openSettingsCallback,
-      t("ItemEditor_Ribbon_Settings_Label")
-    )
+  // Use the action factories for automatic translation and consistent styling
+  const saveAction = createSaveAction(
+    props.saveItemCallback,
+    !props.isSaveButtonEnabled
+  );
+  
+  const settingsAction = createSettingsAction(
+    props.openSettingsCallback
+  );
+  
+  // Define home toolbar actions - these appear on the mandatory Home toolbar
+  const homeToolbarActions: RibbonAction[] = [
+    saveAction,
+    settingsAction
     
     // CUSTOM ACTION EXAMPLE: Getting Started navigation
     // This demonstrates how to create custom actions for view navigation
@@ -70,8 +68,8 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   ];
   
   return (
-    <BaseRibbon 
-      homeActions={homeActions} 
+    <Ribbon 
+      homeToolbarActions={homeToolbarActions} 
       viewContext={viewContext} 
     />
   );

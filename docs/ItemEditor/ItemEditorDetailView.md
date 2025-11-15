@@ -1,8 +1,8 @@
-# BaseItemEditorDetailView Component
+# ItemEditorDetailView Component
 
-## 📋 Overview
+## Overview
 
-The `BaseItemEditorDetailView` component provides a standardized layout for detail/drill-down views in Microsoft Fabric item editors. It offers consistent styling, proper spacing, and integrates seamlessly with the automatic back navigation system.
+The `ItemEditorDetailView` component provides a standardized layout for detail/drill-down views in Microsoft Fabric item editors. It offers consistent styling, proper spacing, and integrates seamlessly with the automatic back navigation system.
 
 ## ✨ Features
 
@@ -19,11 +19,11 @@ The `BaseItemEditorDetailView` component provides a standardized layout for deta
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorDetailView } from "../../controls/ItemEditor";
+import { ItemEditorDetailView } from "../../controls/ItemEditor";
 
 export function MyItemDetailView({ itemId }: { itemId: string }) {
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title="Item Details"
       subtitle={`ID: ${itemId}`}
     >
@@ -31,7 +31,7 @@ export function MyItemDetailView({ itemId }: { itemId: string }) {
         <h3>Detailed Information</h3>
         <p>Your detailed view content goes here.</p>
       </div>
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -39,7 +39,7 @@ export function MyItemDetailView({ itemId }: { itemId: string }) {
 ### With Actions
 
 ```tsx
-import { BaseItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 
 export function MyItemDetailView({ item }: { item: MyItem }) {
   const actions: DetailViewAction[] = [
@@ -60,7 +60,7 @@ export function MyItemDetailView({ item }: { item: MyItem }) {
   ];
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title={item.name}
       subtitle={`Created: ${item.createdDate}`}
       actions={actions}
@@ -77,7 +77,7 @@ export function MyItemDetailView({ item }: { item: MyItem }) {
           <dd>{item.status}</dd>
         </dl>
       </div>
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -94,12 +94,12 @@ const views: RegisteredView[] = [
   {
     name: 'item-detail',
     component: (
-      <BaseItemEditorDetailView
+      <ItemEditorDetailView
         title="Item Details"
         actions={detailActions}
       >
         <MyDetailContent />
-      </BaseItemEditorDetailView>
+      </ItemEditorDetailView>
     ),
     isDetailView: true  // ⭐ Enables automatic back navigation
   }
@@ -108,7 +108,7 @@ const views: RegisteredView[] = [
 
 ## 📖 Props API
 
-### BaseItemEditorDetailViewProps
+### ItemEditorDetailViewProps
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -133,17 +133,17 @@ const views: RegisteredView[] = [
 
 ### Automatic Back Navigation
 
-When registered with `isDetailView: true`, the BaseRibbon automatically shows a back button:
+When registered with `isDetailView: true`, the Ribbon automatically shows a back button:
 
 ```tsx
 // View registration
 {
   name: 'item-detail',
-  component: <BaseItemEditorDetailView title="Details">...</BaseItemEditorDetailView>,
+  component: <ItemEditorDetailView title="Details">...</ItemEditorDetailView>,
   isDetailView: true  // ⭐ Triggers automatic back button in ribbon
 }
 
-// No manual back button needed - handled automatically by BaseRibbon
+// No manual back button needed - handled automatically by Ribbon
 ```
 
 ### Header Layout
@@ -195,7 +195,7 @@ Adapts to different screen sizes:
 ### Component Structure
 
 ```
-BaseItemEditorDetailView
+ItemEditorDetailView
 ├── Header
 │   ├── Title Section
 │   │   ├── Title (Text variant="title1")
@@ -246,7 +246,7 @@ export function UserDetailView({ userId }: { userId: string }) {
   if (!user) return <LoadingSpinner />;
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title={user.name}
       subtitle={`ID: ${user.id} • Last login: ${user.lastLogin}`}
     >
@@ -264,7 +264,7 @@ export function UserDetailView({ userId }: { userId: string }) {
           </ul>
         </section>
       </div>
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -297,7 +297,7 @@ export function ProjectDetailView({ project }: { project: Project }) {
   ];
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title={project.name}
       subtitle={`Status: ${project.status} • Owner: ${project.owner}`}
       actions={actions}
@@ -334,7 +334,7 @@ export function ProjectDetailView({ project }: { project: Project }) {
           </CardBody>
         </Card>
       </div>
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -352,7 +352,7 @@ export function TabbedDetailView({ item }: { item: DetailItem }) {
   ];
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title={item.name}
       subtitle={item.description}
     >
@@ -369,7 +369,7 @@ export function TabbedDetailView({ item }: { item: DetailItem }) {
         {selectedTab === 'settings' && <SettingsContent item={item} />}
         {selectedTab === 'history' && <HistoryContent item={item} />}
       </div>
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -391,32 +391,32 @@ export function DetailViewWithStates({ itemId }: { itemId: string }) {
 
   if (loading) {
     return (
-      <BaseItemEditorDetailView title="Loading...">
+      <ItemEditorDetailView title="Loading...">
         <LoadingSpinner />
-      </BaseItemEditorDetailView>
+      </ItemEditorDetailView>
     );
   }
 
   if (error) {
     return (
-      <BaseItemEditorDetailView title="Error">
+      <ItemEditorDetailView title="Error">
         <div className="error-state">
           <Text variant="body1">Failed to load item details: {error}</Text>
           <Button onClick={() => window.location.reload()}>
             Retry
           </Button>
         </div>
-      </BaseItemEditorDetailView>
+      </ItemEditorDetailView>
     );
   }
 
   return (
-    <BaseItemEditorDetailView
+    <ItemEditorDetailView
       title={item!.name}
       actions={getItemActions(item!)}
     >
       <ItemContent item={item!} />
-    </BaseItemEditorDetailView>
+    </ItemEditorDetailView>
   );
 }
 ```
@@ -427,7 +427,7 @@ export function DetailViewWithStates({ itemId }: { itemId: string }) {
 
 ```tsx
 // Good - uses semantic elements
-<BaseItemEditorDetailView title="Project Details">
+<ItemEditorDetailView title="Project Details">
   <article>
     <section aria-labelledby="overview-heading">
       <h3 id="overview-heading">Project Overview</h3>
@@ -439,7 +439,7 @@ export function DetailViewWithStates({ itemId }: { itemId: string }) {
       {/* team content */}
     </section>
   </article>
-</BaseItemEditorDetailView>
+</ItemEditorDetailView>
 ```
 
 ### ARIA Support
@@ -491,18 +491,18 @@ export function DetailViewWithStates({ itemId }: { itemId: string }) {
 ❌ **Don't manually add back buttons** - Use `isDetailView: true` instead  
 ❌ **Don't overcrowd actions** - Limit to 3-5 most important actions  
 ❌ **Don't forget loading states** - Always handle async operations  
-❌ **Don't use nested scrolling** - Let BaseItemEditorDetailView handle scroll  
+❌ **Don't use nested scrolling** - Let ItemEditorDetailView handle scroll  
 ❌ **Don't ignore responsive design** - Test on different screen sizes  
 
 ## 🔗 Related Components
 
-- **[BaseItemEditor](./README.md)** - Main container with view registration
-- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default view layout
-- **[BaseItemEditorEmptyView](./BaseItemEditorEmptyView.md)** - Empty state layout
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container with automatic back navigation
+- **[ItemEditor](./README.md)** - Main container with view registration
+- **[ItemEditorView](./ItemEditorView.md)** - Default view layout
+- **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state layout
+- **[Ribbon](./Ribbon.md)** - Ribbon container with automatic back navigation
 
 ## 📝 Examples
 
 For complete examples, see:
-- [BaseItemEditor README](./README.md) - Integration patterns with detail views
+- [ItemEditor README](./README.md) - Integration patterns with detail views
 - View registration examples in the main documentation

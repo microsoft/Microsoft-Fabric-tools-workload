@@ -7,9 +7,9 @@ import { ToolbarButton, Tooltip } from '@fluentui/react-components';
 export type FluentIconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 /**
- * Props for the RibbonButton component
+ * Props for the RibbonToolbarAction component
  */
-export interface RibbonButtonProps {
+export interface RibbonToolbarActionProps {
   /**
    * The icon to display in the button
    */
@@ -52,7 +52,7 @@ export interface RibbonButtonProps {
 }
 
 /**
- * RibbonButton - Standardized ribbon button component following Fabric guidelines
+ * RibbonToolbarAction - Standardized ribbon toolbar action component following Fabric guidelines
  * 
  * This component provides:
  * - Consistent Tooltip + ToolbarButton pattern (mandatory for accessibility)
@@ -73,7 +73,7 @@ export interface RibbonButtonProps {
  * @example
  * ```tsx
  * // With explicit tooltip
- * <RibbonButton
+ * <RibbonToolbarAction
  *   icon={Save24Regular}
  *   label="Save"
  *   tooltip="Save your current changes"
@@ -83,14 +83,14 @@ export interface RibbonButtonProps {
  * />
  * 
  * // Tooltip defaults to label
- * <RibbonButton
+ * <RibbonToolbarAction
  *   icon={Settings24Regular}
  *   label="Settings"
  *   onClick={handleSettings}
  * />
  * ```
  */
-export const RibbonButton: React.FC<RibbonButtonProps> = ({
+export const RibbonToolbarAction: React.FC<RibbonToolbarActionProps> = ({
   icon,
   label,
   tooltip,
@@ -108,7 +108,7 @@ export const RibbonButton: React.FC<RibbonButtonProps> = ({
     try {
       await onClick();
     } catch (error) {
-      console.error(`Error in RibbonButton onClick handler for ${label}:`, error);
+      console.error(`Error in RibbonToolbarAction onClick handler for ${label}:`, error);
     }
   };
   

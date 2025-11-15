@@ -1,15 +1,15 @@
-# BaseItemEditor Implementation Summary
+# ItemEditor Implementation Summary
 
 ## 📋 Overview
 
-The `BaseItemEditor` control has been successfully created and integrated into the Microsoft Fabric Extensibility Toolkit. It provides a foundational layout pattern for all item editors with a fixed ribbon at the top and scrollable content below.
+The `ItemEditor` control has been successfully created and integrated into the Microsoft Fabric Extensibility Toolkit. It provides a foundational layout pattern for all item editors with a fixed ribbon at the top and scrollable content below.
 
 ## ✅ What Was Created
 
 ### 1. Core Components
 
-#### `BaseItemEditor.tsx`
-**Location**: `Workload/app/controls/ItemEditor/BaseItemEditor.tsx`
+#### `ItemEditor.tsx`
+**Location**: `Workload/app/controls/ItemEditor/ItemEditor.tsx`
 
 **Purpose**: Main component providing the editor layout structure
 
@@ -25,7 +25,7 @@ The `BaseItemEditor` control has been successfully created and integrated into t
 
 **Props** (View Registration - Recommended):
 ```typescript
-interface BaseItemEditorPropsWithViews {
+interface ItemEditorPropsWithViews {
   views: RegisteredView[];                           // Required: View definitions
   initialView: string;                              // Required: Initial view name
   ribbon: (context: ViewContext) => ReactNode;     // Required: Ribbon with context
@@ -34,10 +34,10 @@ interface BaseItemEditorPropsWithViews {
 }
 ```
 
-#### `BaseItemEditor.scss`
-**Location**: `Workload/app/controls/ItemEditor/BaseItemEditor.scss`
+#### `ItemEditor.scss`
+**Location**: `Workload/app/controls/ItemEditor/ItemEditor.scss`
 
-**Purpose**: Styling for the BaseItemEditor layout
+**Purpose**: Styling for the ItemEditor layout
 
 **Key Styles**:
 - Flexbox layout with column direction
@@ -51,16 +51,16 @@ interface BaseItemEditorPropsWithViews {
 ### 2. Updated Files
 
 #### `controls/index.ts`
-**Changes**: Added BaseItemEditor exports
+**Changes**: Added ItemEditor exports
 ```typescript
-export { BaseItemEditor } from './BaseItemEditor';
-export type { BaseItemEditorProps } from './BaseItemEditor';
+export { ItemEditor } from './ItemEditor';
+export type { ItemEditorProps } from './ItemEditor';
 ```
 
 #### `MyItemEditor.tsx`
-**Changes**: Refactored to use BaseItemEditor with view registration pattern
+**Changes**: Refactored to use ItemEditor with view registration pattern
 - Removed Stack import from @fluentui/react
-- Replaced Stack container with BaseItemEditor
+- Replaced Stack container with ItemEditor
 - **Added view registration system** with RegisteredView[]
 - **Ribbon function** receives ViewContext instead of static component
 - **ViewContext integration** for centralized navigation
@@ -86,7 +86,7 @@ const views: RegisteredView[] = [
   }
 ];
 
-<BaseItemEditor
+<ItemEditor
   views={views}
   initialView={item?.definition?.greeting ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY}
   ribbon={(viewContext) => <MyItemRibbon {...props} viewContext={viewContext} />}
@@ -101,7 +101,7 @@ const views: RegisteredView[] = [
 
 ### 3. Documentation
 
-#### `docs/BaseItemEditor/README.md`
+#### `docs/ItemEditor/README.md`
 **Purpose**: Comprehensive documentation
 
 **Sections**:
@@ -118,7 +118,7 @@ const views: RegisteredView[] = [
 - Accessibility guidelines
 - Related documentation links
 
-#### `docs/BaseItemEditor/QuickReference.md`
+#### `docs/ItemEditor/QuickReference.md`
 **Purpose**: Fast lookup guide for developers
 
 **Sections**:
@@ -167,7 +167,7 @@ const views: RegisteredView[] = [
 ## 📐 Layout Architecture
 
 ```
-BaseItemEditor (100vh height, flex column)
+ItemEditor (100vh height, flex column)
 ├── base-item-editor__ribbon (flex-shrink: 0, fixed)
 │   └── [Your Ribbon Component]
 └── base-item-editor__content (flex: 1, overflow-y: auto)
@@ -210,29 +210,29 @@ BaseItemEditor (100vh height, flex column)
 
 ### Pattern 1: Basic Editor
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon />}>
+<ItemEditor ribbon={<MyRibbon />}>
   <MyContent />
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ### Pattern 2: With View Switching
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon currentView={view} />}>
+<ItemEditor ribbon={<MyRibbon currentView={view} />}>
   {view === 'empty' ? <Empty /> : <Default />}
-</BaseItemEditor>
+</ItemEditor>
 ```
 
-### Pattern 3: With Loading
+### Pattern 3: Automatic Loading (ItemEditor handles internally)
 ```tsx
-if (isLoading) return <LoadingProgressBar />;
-return <BaseItemEditor ribbon={<MyRibbon />}>...</BaseItemEditor>;
+// No manual loading state needed - ItemEditor handles this automatically
+return <ItemEditor ribbon={<MyRibbon />}>...</ItemEditor>;
 ```
 
 ### Pattern 4: With Detail Views
 ```tsx
-<BaseItemEditor ribbon={<MyRibbon showBack={isDetail} />}>
+<ItemEditor ribbon={<MyRibbon showBack={isDetail} />}>
   {isDetail ? <Detail /> : <Main />}
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ## 🎨 Supported View Types
@@ -301,19 +301,19 @@ export function MyItemEditor() {
 
 ### After (New Pattern)
 ```tsx
-import { BaseItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../controls/ItemEditor";
 
 export function MyItemEditor() {
   return (
-    <BaseItemEditor ribbon={<MyRibbon />}>
+    <ItemEditor ribbon={<MyRibbon />}>
       <MyContent />
-    </BaseItemEditor>
+    </ItemEditor>
   );
 }
 ```
 
 ### Key Changes
-1. Import `BaseItemEditor` instead of `Stack`
+1. Import `ItemEditor` instead of `Stack`
 2. Pass ribbon as `ribbon` prop (not child)
 3. Content becomes `children`
 4. Remove manual layout classes
@@ -340,10 +340,10 @@ expect(content).toBeVisible();
 
 When creating a new item editor:
 
-- [ ] Import `BaseItemEditor` from controls
+- [ ] Import `ItemEditor` from controls
 - [ ] Pass ribbon component as `ribbon` prop
 - [ ] Pass content as `children`
-- [ ] Handle loading state before rendering BaseItemEditor
+- [ ] ItemEditor handles loading states automatically (no manual loading needed)
 - [ ] Use appropriate view classes (empty-state-container, etc.)
 - [ ] Test scrolling behavior with long content
 - [ ] Verify ribbon stays fixed during scroll
@@ -352,9 +352,9 @@ When creating a new item editor:
 
 ## 🔗 Related Components
 
-### BaseItemEditor Dependencies
-- **BaseRibbon**: Ribbon component for the fixed header
-- **ItemEditorLoadingProgressBar**: Loading state before editor renders
+### ItemEditor Dependencies
+- **Ribbon**: Ribbon component for the fixed header
+- **ItemEditorLoadingView**: Loading state (handled internally by ItemEditor)
 
 ### Used By
 - **HelloWorldItemEditor**: Sample implementation
@@ -363,7 +363,7 @@ When creating a new item editor:
 ## 📚 Documentation Structure
 
 ```
-docs/BaseItemEditor/
+docs/ItemEditor/
 ├── README.md           ← Full documentation (this file)
 └── QuickReference.md   ← Quick lookup guide
 ```
@@ -373,18 +373,18 @@ docs/BaseItemEditor/
 1. **Start Here**: [QuickReference.md](./QuickReference.md)
 2. **Deep Dive**: [README.md](./README.md)
 3. **See It In Action**: `Workload/app/items/HelloWorldItem/HelloWorldItemEditor.tsx` (sample)
-4. **Understand Styling**: `Workload/app/controls/ItemEditor/BaseItemEditor.scss`
+4. **Understand Styling**: `Workload/app/controls/ItemEditor/ItemEditor.scss`
 
 ## 🛠️ Customization Examples
 
 ### Custom Editor Background
 ```tsx
-<BaseItemEditor
+<ItemEditor
   className="my-custom-editor"
   ribbon={<MyRibbon />}
 >
   <MyContent />
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ```scss
@@ -395,12 +395,12 @@ docs/BaseItemEditor/
 
 ### Custom Content Padding
 ```tsx
-<BaseItemEditor
+<ItemEditor
   contentClassName="my-custom-content"
   ribbon={<MyRibbon />}
 >
   <MyContent />
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ```scss
@@ -417,35 +417,35 @@ docs/BaseItemEditor/
 ```tsx
 // Don't add overflow to outer container
 <div style={{ overflow: 'auto' }}>
-  <BaseItemEditor ribbon={...}>...</BaseItemEditor>
+  <ItemEditor ribbon={...}>...</ItemEditor>
 </div>
 
 // Don't use fixed heights on content
-<BaseItemEditor ribbon={...}>
+<ItemEditor ribbon={...}>
   <div style={{ height: '500px' }}>...</div>
-</BaseItemEditor>
+</ItemEditor>
 
 // Don't put multiple ribbons
-<BaseItemEditor ribbon={<Ribbon1 />}>
+<ItemEditor ribbon={<Ribbon1 />}>
   <Ribbon2 />
   <Content />
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ### ✅ Do This
 ```tsx
-// Let BaseItemEditor handle scrolling
-<BaseItemEditor ribbon={...}>...</BaseItemEditor>
+// Let ItemEditor handle scrolling
+<ItemEditor ribbon={...}>...</ItemEditor>
 
 // Let content flow naturally
-<BaseItemEditor ribbon={...}>
+<ItemEditor ribbon={...}>
   <div>{/* Content flows */}</div>
-</BaseItemEditor>
+</ItemEditor>
 
 // One ribbon per editor
-<BaseItemEditor ribbon={<MyRibbon />}>
+<ItemEditor ribbon={<MyRibbon />}>
   <Content />
-</BaseItemEditor>
+</ItemEditor>
 ```
 
 ## 🚦 Status
@@ -461,8 +461,8 @@ docs/BaseItemEditor/
 
 1. Review the [QuickReference.md](./QuickReference.md) for quick usage
 2. Check the sample implementation in `HelloWorldItemEditor.tsx`
-3. Use BaseItemEditor for all new item editors
-4. Consider migrating existing editors to use BaseItemEditor
+3. Use ItemEditor for all new item editors
+4. Consider migrating existing editors to use ItemEditor
 
 ---
 

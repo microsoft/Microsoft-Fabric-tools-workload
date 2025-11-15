@@ -1,8 +1,8 @@
-# BaseItemEditorEmptyView Component
+# ItemEditorEmptyView Component
 
 ## 📋 Overview
 
-The `BaseItemEditorEmptyView` component provides a standardized empty state experience for Microsoft Fabric item editors. It offers a consistent onboarding flow with customizable tasks, illustrations, and call-to-action buttons that guide users to get started.
+The `ItemEditorEmptyView` component provides a standardized empty state experience for Microsoft Fabric item editors. It offers a consistent onboarding flow with customizable tasks, illustrations, and call-to-action buttons that guide users to get started.
 
 ## ✨ Features
 
@@ -19,7 +19,7 @@ The `BaseItemEditorEmptyView` component provides a standardized empty state expe
 ### Basic Usage
 
 ```tsx
-import { BaseItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 export function MyItemEmptyView() {
   const tasks: EmptyStateTask[] = [
@@ -33,7 +33,7 @@ export function MyItemEmptyView() {
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="Welcome to MyItem!"
       description="Get started by completing the tasks below"
       imageSrc="/assets/items/MyItem/empty.svg"
@@ -77,7 +77,7 @@ export function MyItemEmptyView() {
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="Create Your First Item"
       description="Choose how you'd like to get started"
       tasks={tasks}
@@ -89,12 +89,12 @@ export function MyItemEmptyView() {
 ### In View Registration
 
 ```tsx
-// Using with BaseItemEditor view registration
+// Using with ItemEditor view registration
 const views: RegisteredView[] = [
   {
     name: EDITOR_VIEW_TYPES.EMPTY,
     component: (
-      <BaseItemEditorEmptyView
+      <ItemEditorEmptyView
         title="Welcome!"
         description="Get started with your new item"
         tasks={onboardingTasks}
@@ -106,7 +106,7 @@ const views: RegisteredView[] = [
 
 ## 📖 Props API
 
-### BaseItemEditorEmptyViewProps
+### ItemEditorEmptyViewProps
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -189,7 +189,7 @@ Tasks are rendered as accessible buttons with proper spacing:
 ### Component Structure
 
 ```
-BaseItemEditorEmptyView
+ItemEditorEmptyView
 ├── Container (centered)
 │   ├── Image (optional)
 │   ├── Content
@@ -235,7 +235,7 @@ BaseItemEditorEmptyView
 ```tsx
 export function SimpleEmptyView() {
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="Welcome to MyItem"
       description="Click below to create your first item"
       tasks={[
@@ -281,7 +281,7 @@ export function OnboardingEmptyView() {
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="Create Your Item"
       description="Choose how you'd like to get started"
       imageSrc="/assets/create-item.svg"
@@ -297,7 +297,7 @@ export function OnboardingEmptyView() {
 ```tsx
 export function CustomEmptyView() {
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="No Data Available"
       description="Connect your data source to get started"
     >
@@ -312,7 +312,7 @@ export function CustomEmptyView() {
           Connect Data Source
         </Button>
       </div>
-    </BaseItemEditorEmptyView>
+    </ItemEditorEmptyView>
   );
 }
 ```
@@ -338,7 +338,7 @@ export function LoadingEmptyView() {
   ];
 
   return (
-    <BaseItemEditorEmptyView
+    <ItemEditorEmptyView
       title="Ready to Create"
       tasks={tasks}
     />
@@ -364,7 +364,7 @@ export function LoadingEmptyView() {
 ### Example with Enhanced Accessibility
 
 ```tsx
-<BaseItemEditorEmptyView
+<ItemEditorEmptyView
   title="Create Your Dashboard"
   description="Choose a starting point for your new dashboard"
   tasks={[
@@ -412,7 +412,7 @@ export function LoadingEmptyView() {
 ### Custom Styling
 
 ```tsx
-<BaseItemEditorEmptyView
+<ItemEditorEmptyView
   className="my-custom-empty"
   title="Custom Empty State"
   tasks={tasks}
@@ -450,13 +450,13 @@ export function LoadingEmptyView() {
 
 ## 🔗 Related Components
 
-- **[BaseItemEditor](./README.md)** - Main container with view registration
-- **[BaseItemEditorView](./BaseItemEditorView.md)** - Default view layout
-- **[BaseItemEditorDetailView](./BaseItemEditorDetailView.md)** - Detail view layout
-- **[BaseRibbon](./BaseRibbon.md)** - Ribbon container component
+- **[ItemEditor](./README.md)** - Main container with view registration
+- **[ItemEditorView](./ItemEditorView.md)** - Default view layout
+- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail view layout
+- **[Ribbon](./Ribbon.md)** - Ribbon container component
 
 ## 📝 Examples
 
 For complete examples, see:
 - [Sample Implementation](../../Workload/app/items/HelloWorldItem/HelloWorldItemEmptyView.tsx) - HelloWorld reference implementation
-- [BaseItemEditor README](./README.md) - Integration patterns
+- [ItemEditor README](./README.md) - Integration patterns

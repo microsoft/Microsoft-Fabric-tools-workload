@@ -2,9 +2,9 @@ import React from 'react';
 import '../../styles.scss';
 
 /**
- * Props for the ItemEditorLoadingProgressBar component
+ * Props for the ItemEditorLoadingView component
  */
-export interface ItemEditorLoadingProgressBarProps {
+export interface ItemEditorLoadingViewProps {
     /** The loading message to display */
     message: string;
     /** Optional icon to display above the progress indicator (can be a Fluent UI icon component or image src). Defaults to fabric-icon.png if not provided. */
@@ -12,7 +12,7 @@ export interface ItemEditorLoadingProgressBarProps {
 }
 
 /**
- * ItemEditorLoadingProgressBar - Displays an indeterminate progress indicator
+ * ItemEditorLoadingView - Displays an indeterminate progress indicator
  * 
  * Follows Fabric UX System guidelines for Progress components:
  * - Indeterminate state (duration unknown)
@@ -26,7 +26,7 @@ export interface ItemEditorLoadingProgressBarProps {
  * @param message - The loading message to display
  * @param icon - Optional icon (Fluent UI icon component or image src string). Defaults to /assets/fabric-icon.png
  */
-export const ItemEditorLoadingProgressBar = ({ message, icon }: ItemEditorLoadingProgressBarProps) => {
+export const ItemEditorLoadingView = ({ message, icon }: ItemEditorLoadingViewProps) => {
     // Default to Fabric icon if no icon is provided
     const displayIcon = icon || '/assets/fabric-icon.png';
     
@@ -59,4 +59,4 @@ export const ItemEditorLoadingProgressBar = ({ message, icon }: ItemEditorLoadin
     );
 };
 
-export default ItemEditorLoadingProgressBar;
+export default ItemEditorLoadingView;
