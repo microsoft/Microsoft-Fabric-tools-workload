@@ -108,83 +108,10 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
       disabled: props.isDeploymentInProgress
     }
   ];
-
-
-  // Define additional tabs
-  const additionalToolbars: RibbonTab[] = [
-    {
-      key: 'test',
-      label: t("Test", "Test"),
-      actions: [
-                {
-                  key: 'test-settings',
-                  icon: Settings24Regular,
-                  label: t("Open Settings", "Open Settings"),
-                  onClick: props.openSettingsCallback,
-                  testId: 'test-settings-btn',
-                  disabled: props.isDeploymentInProgress
-                }
-              ],
-      testId: 'test-tab'
-    }
-  ];
-
-  // Define right-side action buttons (always visible) - these are real buttons with text
-  const rightActionButtons: RibbonActionButtonConfig[] = [];
-  /*  {
-      key: 'trial-info',
-      icon: Info24Regular,
-      label: 'Trial Info',
-      disabled: props.isDeploymentInProgress,
-      testId: 'trial-info-btn',
-      tooltip: 'Learn about trial features and upgrade options',
-      appearance: 'secondary',
-      dropdownItems: [
-        {
-          key: 'start-trial',
-          label: 'Start Trial',
-          icon: DocumentAdd24Regular,
-          onClick: () => {
-            console.log("Start trial clicked");
-          }
-        },
-        {
-          key: 'trial-features',
-          label: 'Trial Features',
-          icon: BoxMultiple24Regular,
-          onClick: () => {
-            console.log("Trial features clicked");
-          }
-        },
-        {
-          key: 'upgrade',
-          label: 'Upgrade Now',
-          onClick: () => {
-            console.log("Upgrade clicked");
-          }
-        }
-      ]
-    },
-    {
-      key: 'share',
-      icon: Share24Regular,
-      label: 'Share',
-      onClick: () => {
-        // Placeholder for sharing functionality
-        console.log("Share clicked");
-      },
-      testId: 'share-btn',
-      tooltip: 'Share this package installer',
-      appearance: 'primary',
-      disabled: props.isDeploymentInProgress
-    }
-  ];*/
   
   return (
     <Ribbon 
       homeToolbarActions={homeToolbarActions}
-      additionalToolbars={additionalToolbars}
-      rightActionButtons={rightActionButtons}
       viewContext={viewContext} 
     />
   );
