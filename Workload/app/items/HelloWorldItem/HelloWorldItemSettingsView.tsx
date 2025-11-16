@@ -1,8 +1,7 @@
 import React from 'react';
 import { PageProps } from '../../App';
 import { useTranslation } from 'react-i18next';
-import '../../styles.scss'; // Import generic settings panel styles
-import './HelloWorldItem.scss'; // Import HelloWorld-specific overrides
+import './HelloWorldItem.scss';
 
 export function HelloWorldItemSettingsView(props: PageProps) {
   const { t } = useTranslation();

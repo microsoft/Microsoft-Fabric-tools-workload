@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { Stack, IStackTokens } from "@fluentui/react";
 import { Button, Text } from "@fluentui/react-components";
 import { ItemEditorDefaultView } from "./ItemEditorDefaultView";
-import "../../styles.scss";
+import "./ItemEditor.scss"
 
 /**
  * Task/Step interface for onboarding actions

@@ -5,6 +5,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
+import "./HelloWorldItem.scss";
 
 interface HelloWorldItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;

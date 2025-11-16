@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, useCallback } from "react";
 import { Button, Text } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular } from "@fluentui/react-icons";
-import "../../styles.scss";
+import "./ItemEditor.scss"
 
 /**
  * Left Panel Configuration Interface

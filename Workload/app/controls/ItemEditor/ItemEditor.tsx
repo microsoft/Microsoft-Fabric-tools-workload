@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { ItemEditorLoadingView } from "./ItemEditorLoadingView";
 import { RibbonAction } from './RibbonToolbar';
-import "../../styles.scss";
+import "./ItemEditor.scss";
 
 /**
  * Context for detail views to register their actions

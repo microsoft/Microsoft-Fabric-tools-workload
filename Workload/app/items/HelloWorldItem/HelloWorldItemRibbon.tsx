@@ -7,7 +7,6 @@ import {
   createSettingsAction
 } from '../../controls/ItemEditor';
 import { ViewContext } from '../../controls';
-import '../../styles.scss';
 
 /**
  * Props interface for the HelloWorld Ribbon component

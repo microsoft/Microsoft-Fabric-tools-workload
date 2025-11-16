@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../styles.scss';
+import "./ItemEditor.scss"
 
 /**
  * Props for the ItemEditorLoadingView component
@@ -21,7 +21,7 @@ export interface ItemEditorLoadingViewProps {
  * - Uses design tokens for consistent theming
  * - Optional icon display for branding (defaults to Fabric icon)
  * 
- * Styles are defined in styles.scss as part of the global Fabric UX System patterns.
+ * Styling is handled by Fluent UI components and design tokens.
  * 
  * @param message - The loading message to display
  * @param icon - Optional icon (Fluent UI icon component or image src string). Defaults to /assets/fabric-icon.png

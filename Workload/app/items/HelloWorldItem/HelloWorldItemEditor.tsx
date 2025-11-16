@@ -10,7 +10,6 @@ import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
-import "../../styles.scss";
 import "./HelloWorldItem.scss";
 
 /**

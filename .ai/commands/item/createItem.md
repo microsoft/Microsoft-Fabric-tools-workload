@@ -189,54 +189,62 @@ export function [ItemName]ItemEditor(props: PageProps) {
 
 **MANDATORY**: All styling MUST follow the standardized patterns and will be verified by the verification team:
 
-1. **Base Styles** (DO NOT MODIFY):
-   - `Workload/app/styles.scss` contains global styles for all items
-   - `.item-editor-container` - Base editor layout (used by ItemEditor)
-   - `.ribbon` - Base ribbon styling (used by Ribbon)
-   - `.item-settings-panel-container` - Generic settings panel styles
-   - **DO NOT add item-specific styles to styles.scss**
+1. **Component Styles** (🚫 STRICTLY FORBIDDEN TO MODIFY):
+   - **DO NOT EDIT**: Any files in `Workload/app/controls/` directory
+   - **DO NOT MODIFY**: `ItemEditor.scss`, `Ribbon.scss`, `OneLakeView.scss`, `Wizard.scss`, etc.
+   - **REASON**: Controls provide standardized layouts and functionality for all items
+   - **CONSEQUENCE**: Modifications to control files will fail verification and break other items
 
-2. **Item-Specific Styles** (REQUIRED):
-   - Create `[ItemName]Item.scss` in your item folder
-   - Import both global and item styles: `import "../../styles.scss"; import "./[ItemName]Item.scss";`
-   - Override ONLY item-specific branding (colors, fonts, item-specific classes)
-   - Use CSS cascading: Apply generic class + item-specific class
+2. **Item-Specific Styles** (✅ REQUIRED):
+   - Create `[ItemName]Item.scss` in your item folder (`Workload/app/items/[ItemName]/`)
+   - Import item styles: `import "./[ItemName]Item.scss";`
+   - Define ONLY item-specific branding, colors, and custom content styling
+   - Use prefixed class names: `.hello-world-*`, `.data-analyzer-*` for clear item identification
 
 3. **Styling Pattern** (HelloWorld Example):
    ```scss
-   // [ItemName]Item.scss - Override ONLY what's different
-   .hello-world-settings-panel-container {
-     background-color: var(--colorBrandBackground2);  // Item brand color
-     color: var(--colorBrandForeground2);
-     
-     .item-settings-section-header {
-       color: var(--colorBrandForeground1);  // Override header color
-     }
+   // [ItemName]Item.scss - All item-specific styles
+   .hello-world-view {
+     /* Typical views need padding to prevent content from touching edges */
+     padding: var(--spacingVerticalL, 12px);
+     /* Add other item-specific styles like colors, layout, or branding */
+   }
+   
+   .hello-world-section-title {
+     color: var(--colorBrandForeground1);
+     font-weight: var(--fontWeightSemibold);
    }
    ```
 
 4. **Component Usage**:
    ```tsx
-   // Apply both generic + item-specific classes
-   <div className="item-settings-panel-container hello-world-settings-panel-container">
-     {/* Content uses generic classes from styles.scss */}
+   // Use item-specific classes for your content
+   <div className="hello-world-view">
+     <div className="hello-world-section-title">
+       {/* Content with item-specific styling */}
+     </div>
    </div>
    ```
 
-5. **Verification Checklist** (Will be checked):
+4. **Verification Checklist** (Will be checked):
    - ✅ ItemEditor used (no custom editor layout)
-   - ✅ Ribbon + RibbonToolbar used (no custom ribbon layout)
-   - ✅ Styles in separate `[ItemName]Item.scss` file
-   - ✅ No modifications to `styles.scss` for item-specific needs
-   - ✅ CSS cascading pattern used (generic class + item class)
-   - ✅ Only brand colors overridden, not layout/structure
+   - ✅ Ribbon + RibbonToolbar used (no custom ribbon layout)  
+   - ✅ Styles in separate `[ItemName]Item.scss` file in item directory
+   - ✅ **NO MODIFICATIONS** to any files in `controls/` directory
+   - ✅ Item-specific class naming pattern used (`.item-name-*`)
+   - ✅ Only item content and branding styled, not control structure
+   - ✅ Import pattern: `import "./[ItemName]Item.scss";` (no global imports)
 
 **❌ STYLE VIOLATIONS** (Will fail verification):
 ```scss
-// ❌ WRONG: Adding item-specific styles to styles.scss
-// styles.scss
-.my-custom-item-editor {
-  background: blue;  // Don't add item-specific styles here
+// ❌ WRONG: Modifying control files
+// controls/ItemEditor/ItemEditor.scss
+.item-editor-container {
+  background: blue;  // FORBIDDEN: Don't modify control styles
+}
+
+// ❌ WRONG: Modifying any control files
+// controls/Ribbon/Ribbon.scss, controls/OneLakeView/OneLakeView.scss, etc.
 }
 
 // ❌ WRONG: Not using separate SCSS file
@@ -320,7 +328,7 @@ import { ItemEditor, ItemEditorEmptyView } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
-import "../../styles.scss";
+import "./[ItemName]Item.scss";
 
 
 export function [ItemName]ItemEditor(props: PageProps) {
@@ -661,7 +669,7 @@ The default view is shown when the item has content and is the main editing inte
 import React, { useState, useEffect } from "react";
 import { Stack } from "@fluentui/react";
 import { Text, Input, Button, Card, CardHeader } from "@fluentui/react-components";
-import "../../styles.scss";
+import "./[ItemName]Item.scss";
 import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition, saveItemDefinition } from "../../controller/ItemCRUDController";
@@ -903,7 +911,6 @@ import {
   createRibbonTabs
 } from '../../controls/ItemEditor';
 import { Rocket24Regular } from '@fluentui/react-icons';
-import '../../styles.scss';
 
 /**
  * Props interface for the [ItemName] Ribbon component
@@ -1075,62 +1082,69 @@ return (
 **File Location**: `Workload/app/items/[ItemName]Item/[ItemName]Item.scss`
 
 ```scss
-// [ItemName]Item.scss - Item-specific style overrides
+// [ItemName]Item.scss - Item-specific styles
 // Based on HelloWorldItem.scss pattern
 
-// 🚨 IMPORTANT: Only override item-specific branding, NOT layout/structure
-// Layout and structure are defined in ../../styles.scss
+// 🚨 IMPORTANT: Contains ONLY item-specific styles
+// Controls provide their own layout/structure (DO NOT modify control files)
 
-// Example: Settings panel with item branding
-.item-name-settings-panel-container {
-  background-color: var(--colorBrandBackground2);  // Your brand color
-  color: var(--colorBrandForeground2);
-  
-  .item-settings-section-header {
-    color: var(--colorBrandForeground1);  // Brand header color
-  }
+// Example: Item-specific view styling
+.[item-name]-view {
+  background-color: var(--colorNeutralBackground1);
+  padding: var(--spacingVerticalL);
+  border-radius: var(--borderRadiusMedium);
 }
 
-// Example: Item-specific editor elements
-.item-name-hero-section {
+// Example: Item-specific section headers
+.[item-name]-section-title {
+  color: var(--colorBrandForeground1);
+  font-size: var(--fontSizeBase500);
+  font-weight: var(--fontWeightSemibold);
+  margin-bottom: var(--spacingVerticalM);
+}
+
+// Example: Item-specific hero section
+.[item-name]-hero-section {
   background: linear-gradient(135deg, var(--colorBrandBackground), var(--colorBrandBackground2));
   padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
   border-radius: var(--borderRadiusLarge);
+  color: var(--colorNeutralForegroundOnBrand);
 }
 
-// Add other item-specific styles here
+// Add other item-specific styles here - NO CONTROL MODIFICATIONS
 ```
 
 **Import Pattern in Components**:
 
 ```tsx
-// In [ItemName]ItemEditor.tsx, [ItemName]ItemEmptyView.tsx, [ItemName]ItemDefaultView.tsx, etc.
-import "../../styles.scss";           // Generic styles (REQUIRED)
+// In [ItemName]ItemEditor.tsx, [ItemName]ItemDefaultView.tsx, [ItemName]ItemRibbon.tsx, etc.
 import "./[ItemName]Item.scss";       // Item-specific styles (REQUIRED)
 ```
 
 **Usage Pattern**:
 
 ```tsx
-// Apply both generic + item-specific classes (CSS cascading)
-<div className="item-settings-panel-container item-name-settings-panel-container">
-  {/* Generic structure with item-specific branding */}
+// Apply item-specific classes with clear naming
+<div className="[item-name]-view">
+  <div className="[item-name]-section-title">
+    {/* Item-specific styling and content */}
+  </div>
 </div>
 ```
 
 **✅ DO** (Will pass verification):
-- Create separate `[ItemName]Item.scss` file
-- Override only colors, fonts, and item-specific elements
-- Use design tokens (`var(--color*, --spacing*, --fontSize*)`)
+- Create separate `[ItemName]Item.scss` file with all item-specific styles
+- Use item-prefixed class names (`.hello-world-*`, `.data-analyzer-*`, etc.)
+- Use Fabric design tokens (`var(--color*, --spacing*, --fontSize*)`)
 - Follow BEM naming: `.item-name-element-modifier`
-- Import both `styles.scss` and `[ItemName]Item.scss` in components
+- Import only `[ItemName]Item.scss` in item components
 
 **❌ DON'T** (Will fail verification):
-- Modify `Workload/app/styles.scss` for item-specific needs
-- Duplicate layout/structure styles from generic patterns
+- Modify control files in `Workload/app/controls/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
+- Duplicate control layout/structure styles in item SCSS
 - Use inline styles instead of SCSS file
-- Create custom ribbon or editor container styles
-- Override ItemEditor or Ribbon structural styles
+- Override control structural styles with `!important`
+- Create global styles that affect other items
 
 ### Step 6: Create Manifest Configuration
 

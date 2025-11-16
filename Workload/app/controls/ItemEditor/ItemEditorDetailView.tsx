@@ -3,7 +3,7 @@ import { ArrowLeft20Regular } from "@fluentui/react-icons";
 import { ItemEditorDefaultView, ItemEditorDefaultViewProps } from "./ItemEditorDefaultView";
 import { RibbonAction } from "./RibbonToolbar";
 import { DetailViewActionsContext } from "./ItemEditor";
-import "../../styles.scss";
+import "./ItemEditor.scss"
 
 /**
  * Action item for the detail view ribbon

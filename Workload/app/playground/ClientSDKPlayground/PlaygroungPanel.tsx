@@ -14,7 +14,7 @@ import {
 } from "@fluentui/react-icons";
 import { TabContentProps } from './ClientSDKPlaygroundModel';
 import { callPanelClose } from '../../controller/PanelController';
-import '../../styles.scss';
+import "../Playground.scss"
 
 export function PlaygroundPanel(props: TabContentProps) {
   const { workloadClient } = props;

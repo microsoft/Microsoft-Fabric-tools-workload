@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { ViewContext } from './ItemEditor';
 import { RibbonToolbar, RibbonAction } from './RibbonToolbar';
 import { RibbonActionButton, RibbonActionButtonConfig } from './RibbonActionButton';
-import '../../styles.scss';
+import "./ItemEditor.scss"
 
 /**
  * Definition for additional ribbon tabs beyond Home

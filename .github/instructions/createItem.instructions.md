@@ -100,10 +100,10 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
    - Import: `import { Ribbon, RibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/ItemEditor';`
 
 3. **Item-Specific SCSS File** (MANDATORY - VERIFIED):
-   - Create `[ItemName]Item.scss` in item folder
-   - Override ONLY item-specific branding (colors, fonts)
-   - DO NOT duplicate layout/structure styles
-   - Import both: `import "../../styles.scss"; import "./[ItemName]Item.scss";`
+   - Create `[ItemName]Item.scss` in item folder  
+   - Contains ONLY item-specific styles (no control modifications)
+   - DO NOT modify any files in `controls/` directory
+   - Import: `import "./[ItemName]Item.scss";`
    - **Verification team will check this pattern**
 
 ### 🚨 CRITICAL: Styling Rules (VERIFIED BY TEAM)
@@ -112,11 +112,11 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 
 **✅ REQUIRED**:
 1. Create separate `[ItemName]Item.scss` file in item folder
-2. Import generic styles: `import "../../styles.scss";`
-3. Import item styles: `import "./[ItemName]Item.scss";`
-4. Use CSS cascading: `className="generic-class item-specific-class"`
-5. Override only colors/fonts, not layout/structure
-6. Use design tokens: `var(--colorBrand*, --spacing*, --fontSize*)`
+2. Import item styles: `import "./[ItemName]Item.scss";`
+3. Use item-prefixed class names: `.[item-name]-view`, `.[item-name]-section-title`
+4. Style only item content, not control structure
+5. Use design tokens: `var(--colorBrand*, --spacing*, --fontSize*)`
+6. **🚫 FORBIDDEN**: Modify any files in `Workload/app/controls/` directory
 7. **ADD CONTENT PADDING**: ItemEditor panels have zero padding - your content MUST handle its own padding
 
 **🎨 MANDATORY: Content Padding Requirements**
@@ -148,31 +148,30 @@ ItemEditorDefaultView panels have **zero internal padding**. Your content compon
 ```
 
 **❌ PROHIBITED** (Will fail verification):
-1. Modifying `Workload/app/styles.scss` for item-specific needs
+1. Modifying any files in `Workload/app/controls/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
 2. Using inline styles instead of SCSS file
-3. Duplicating layout styles from generic patterns
+3. Duplicating control styles in item SCSS
 4. Creating custom ribbon/editor container styles
-5. Overriding ItemEditor/Ribbon structural styles
+5. Overriding control structural styles
 6. Not creating separate `[ItemName]Item.scss` file
 7. **Forgetting content padding** - content will touch panel edges
 
 **Example - Correct Pattern**:
 ```scss
-// [ItemName]Item.scss - ONLY item-specific overrides
+// [ItemName]Item.scss - ONLY item-specific styles
 .[item-name]-view {
   padding: var(--spacingVerticalM, 12px);  // ✅ REQUIRED for content spacing
-  background-color: var(--colorBrandBackground2);  // ✅ Override color
-  // ❌ DON'T duplicate: display: flex from generic patterns
+  // Add your item-specific styles here (colors, typography, spacing)
+  // ❌ DON'T duplicate control styles or modify controls
 }
 ```
 
 ```tsx
-// [ItemName]ItemEditor.tsx - Import both
-import "../../styles.scss";        // ✅ Generic styles
-import "./[ItemName]Item.scss";    // ✅ Item overrides
+// [ItemName]ItemEditor.tsx - Import item styles only
+import "./[ItemName]Item.scss";    // ✅ Item-specific styles
 
-// Use cascading
-<div className="item-settings-panel-container item-name-settings-panel-container">
+// Use item-specific classes
+<div className="[item-name]-view">
 ```
 
 ### Smart Code Generation
@@ -375,11 +374,16 @@ return (
 When creating a new item, GitHub Copilot MUST generate `[ItemName]Item.scss`:
 
 ```scss
-// 🚨 CORRECT: Item-specific overrides only
+// 🚨 CORRECT: Item-specific styles only (2-tier architecture)
 // [ItemName]Item.scss
 
-// Settings panel with item branding
-.item-name-settings-panel-container {
+// Content padding for proper spacing (typically required)
+.[item-name]-view {
+  padding: var(--spacingVerticalM, 12px);  // Prevent content from touching edges
+}
+
+// Item-specific branding and styling
+.[item-name]-settings-panel-container {
   background-color: var(--colorBrandBackground2);
   color: var(--colorBrandForeground2);
   
@@ -389,27 +393,26 @@ When creating a new item, GitHub Copilot MUST generate `[ItemName]Item.scss`:
 }
 
 // Hero section with item branding
-.item-name-hero-section {
+.[item-name]-hero-section {
   background: linear-gradient(135deg, var(--colorBrandBackground), var(--colorBrandBackground2));
 }
 ```
 
 **❌ NEVER generate**:
 ```scss
-// ❌ WRONG: Duplicating layout from generic styles
+// ❌ WRONG: Don't duplicate control structural styles  
 .item-name-settings-panel-container {
-  display: flex;              // ❌ Already in styles.scss
-  flex-direction: column;     // ❌ Already in styles.scss
-  padding: 24px;              // ❌ Already in styles.scss
-  background-color: blue;     // ✅ Only this should be here
+  display: flex;              // ❌ Controls handle their own layout
+  flex-direction: column;     // ❌ Controls handle their own layout
+  padding: 24px;              // ❌ Controls handle their own padding
+  background-color: blue;     // ✅ Only item-specific styles like this
 }
 ```
 
 **Import Pattern in Every Component**:
 ```typescript
-// ✅ ALWAYS include both imports
-import "../../styles.scss";        // Generic styles
-import "./[ItemName]Item.scss";    // Item-specific overrides
+// ✅ CORRECT: Import only item-specific styles
+import "./[ItemName]Item.scss";    // Item-specific styles only
 ```
 
 ### Auto-Import Intelligence
@@ -427,7 +430,7 @@ When creating components, GitHub Copilot expands to MANDATORY patterns:
 - **Empty state components**: Proper onboarding flow with navigation callback
 - **Model interfaces**: Fabric-compatible data types for persisted state only
 - **Editor view types**: EDITOR_VIEW_TYPES enum defined in the Editor component
-- **SCSS files**: Separate `[ItemName]Item.scss` with item-specific overrides only
+- **SCSS files**: Separate `[ItemName]Item.scss` with item-specific styles only (2-tier architecture)
 
 ## ✅ Pre-Generation Verification Checklist
 
@@ -450,11 +453,11 @@ Before generating any item code, GitHub Copilot should verify:
 
 **Styling Compliance** (VERIFIED BY TEAM):
 - [ ] `[ItemName]Item.scss` file created in item folder
-- [ ] Both style imports present: `../../styles.scss` and `./[ItemName]Item.scss`
-- [ ] Only colors/fonts overridden, not layout/structure
-- [ ] CSS cascading used: `generic-class item-specific-class`
+- [ ] Item styles imported: `./[ItemName]Item.scss` (no global imports)
+- [ ] Item-specific class naming used: `.[item-name]-view`, etc.
+- [ ] Only item content styled, not control structure
 - [ ] Design tokens used: `var(--color*, --spacing*, --fontSize*)`
-- [ ] No modifications to `Workload/app/styles.scss`
+- [ ] No modifications to any files in `Workload/app/controls/` directory
 
 **File Structure** (REQUIRED):
 - [ ] `[ItemName]ItemModel.ts` - Data model with persisted state interfaces only
@@ -468,8 +471,7 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] `import { ItemEditor } from "../../controls/ItemEditor";` (loading handled internally)
 - [ ] `import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";` (for detail views only)
 - [ ] `import { Ribbon, RibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';`
-- [ ] `import "../../styles.scss";`
-- [ ] `import "./[ItemName]Item.scss";`
+- [ ] `import "./[ItemName]Item.scss";` (item-specific styles only)
 - [ ] No import of `RegisteredView` type (not needed, inline definition sufficient)
 
 ## 🎯 Workspace Intelligence
@@ -922,7 +924,7 @@ import {
   Settings24Regular,
 } from "@fluentui/react-icons";
 import { PageProps } from '../../App';
-import '../../styles.scss';
+import './[ItemName]Item.scss';  // ❌ WRONG: Should use standard components instead
 import { t } from "i18next";
 
 const [ItemName]ItemEditorRibbonHomeTabToolbar = (props: [ItemName]ItemEditorRibbonProps) => {

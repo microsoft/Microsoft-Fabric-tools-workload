@@ -14,11 +14,13 @@
  * - Flexible content area and optional footer
  * 
  * @see {@link ../../../docs/controls/Wizard.md} - Complete documentation with examples
- * @see {@link ../../../styles.scss} - CSS implementation with .wizard-control classes
+ * @see {@link ./Wizard.scss} - CSS implementation with .wizard-control classes
  * 
  * @author Microsoft Fabric Extensibility Toolkit
  * @version 1.0.0
  */
+
+import './Wizard.scss';
 
 import React from "react";
 import { Text, Button } from "@fluentui/react-components";
