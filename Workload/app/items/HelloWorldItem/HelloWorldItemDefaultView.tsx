@@ -233,7 +233,7 @@ export function HelloWorldItemDefaultView({
                 </div>
                 <CardHeader
                   header={<Text weight="semibold">{t('GettingStarted_Card3_Title', 'Use the Fabric UX system')}</Text>}
-                  description={<Text >{t('GettingStarted_Card3_Description', 'Learn about design patterns and best practices.')}</Text>}
+                  description={<Text >{t('GettingStarted_Card3_Description', 'Learn about design patterns and best practices of the platform.')}</Text>}
                 />
               </div>
               <div className="hello-world-card-body">
