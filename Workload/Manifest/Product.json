@@ -22,9 +22,7 @@
           "introduction": "HelloWorld_GetStarted_2_Sub_Title",
           "description": "HelloWorld_GetStarted_2_Description",
           "image": "assets/images/LearningMaterialTemplateCards.png",
-          "onClick": {
-                  "action": "open.ClientSDKPlaygroundPage"
-                }
+          "link": "https://aka.ms/get-started-learning-docs"
         },
         {
           "title": "HelloWorld_GetStarted_3_Title",

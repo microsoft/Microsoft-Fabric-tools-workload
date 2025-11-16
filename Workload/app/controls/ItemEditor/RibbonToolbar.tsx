@@ -10,6 +10,10 @@ export type { DropdownMenuItem } from './RibbonActionButton';
 
 /**
  * Configuration for a ribbon action button
+ * 
+ * @see {@link ../../../docs/controls/ItemEditor/RibbonToolbar.md} - Complete RibbonToolbar documentation
+ * @see {@link ../../../docs/controls/ItemEditor/Ribbon.md} - Ribbon integration patterns
+ * @see {@link ./RibbonActionButton.tsx} - Individual action button component
  */
 export interface RibbonAction {
   /**

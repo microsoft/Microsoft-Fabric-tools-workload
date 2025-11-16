@@ -124,7 +124,7 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
    - 🚨 **MANDATORY**: Use the standardized Ribbon pattern
    - **Ribbon**: Standard ribbon structure with tabs
    - **RibbonToolbar**: Renders action buttons with proper spacing
-   - **Standard Action Factories**: `createSaveAction`, `createSettingsAction`, `createAboutAction`
+   - **Standard Action Factories**: `createSaveAction`, `createSettingsAction`
    - **Tooltip + ToolbarButton**: ALWAYS wrap ToolbarButton in Tooltip for accessibility
 
 ### Standard Architecture Pattern
@@ -251,12 +251,12 @@ export function [ItemName]ItemEditor(props: PageProps) {
 // Inline styles in JSX
 <div style={{background: 'blue'}}>  // Use SCSS file instead
 
-// ❌ WRONG: Duplicating entire generic style
+// ❌ WRONG: Duplicating control structural styles
 // [ItemName]Item.scss
-.my-item-settings-panel {
-  display: flex;           // ❌ Don't duplicate layout
-  flex-direction: column;  // ❌ Already in generic
-  background: blue;        // ✅ Only override this
+.my-item-view {
+  display: flex;           // ❌ Don't duplicate layout from controls
+  flex-direction: column;  // ❌ Controls handle their own structure
+  background: blue;        // ✅ Only item-specific styles like this
 }
 ```
 
@@ -489,20 +489,20 @@ export function [ItemName]ItemEditor(props: PageProps) {
         }
         // 🎯 FOR DETAIL VIEWS (L2 Pages): Add additional views here
         // {
-        //   name: 'settings-detail',
+        //   name: 'record-detail-123',
         //   component: (
         //     <ItemEditorDetailView
         //       left={{
-        //         content: <SettingsNavigation />,
-        //         title: "Settings",
+        //         content: <PropertiesPanel />,
+        //         title: "Properties",
         //         width: 240
         //       }}
         //       center={{
-        //         content: <SettingsEditor />
+        //         content: <RecordEditor />
         //       }}
         //       actions={[
         //         { key: 'save', label: 'Save', icon: Save24Regular, onClick: handleSave },
-        //         { key: 'reset', label: 'Reset', icon: ArrowReset24Regular, onClick: handleReset }
+        //         { key: 'delete', label: 'Delete', icon: Delete24Regular, onClick: handleDelete }
         //       ]}
         //     />
         //   ),
@@ -960,7 +960,7 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
   
   // Define ribbon actions - mix of standard and custom actions
   const actions: RibbonAction[] = [
-    // 🚨 STANDARD ACTION: Save button
+    // 🚨 STANDARD ACTION: Save button (mandatory for most items)
     // Use createSaveAction factory for consistent behavior
     createSaveAction(
       props.saveItemCallback,
@@ -968,8 +968,8 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
       translate
     ),
     
-    // 🚨 STANDARD ACTION: Settings button
-    // Use createSettingsAction factory for consistent behavior
+    // ✅ OPTIONAL ACTION: Settings button (if your item needs settings)
+    // Use createSettingsAction factory for consistent behavior when needed
     createSettingsAction(
       props.openSettingsCallback,
       translate
@@ -1014,9 +1014,9 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
    - Ensures Home tab is always present
    - Accepts Home tab label and optional additional tabs array
 
-4. **Standard Action Factories** (REQUIRED for common actions):
-   - `createSaveAction()`: Save button with standard behavior
-   - `createSettingsAction()`: Settings button with standard behavior
+4. **Standard Action Factories** (use when needed):
+   - `createSaveAction()`: Save button with standard behavior (required for most items)
+   - `createSettingsAction()`: Settings button with standard behavior (optional, only if item needs settings)
    - Import from `'../../controls/ItemEditor'`
 
 5. **Custom Actions** (when needed):

@@ -48,7 +48,7 @@ export async function initialize(params: InitParams) {
                 await callPageOpen(workloadClient, sampleWorkloadName, `${path}/${createdItem.objectId}`);
                 return Promise.resolve({ succeeded: true });
 
-            case 'item.onCreationFailure':
+            case 'item.onCreationFailure': {
                 const failureData = data as ItemCreationFailureData;
                 await workloadClient.notification.open(
                     {
@@ -57,16 +57,7 @@ export async function initialize(params: InitParams) {
                         message: `Failed to create item, error code: ${failureData.errorCode}, result code: ${failureData.resultCode}`
                     });
                 return;
-
-
-            case 'sample.Action':
-                return callNotificationOpen(
-                    workloadClient,
-                    'Action executed',
-                    'Action executed via API',
-                    NotificationType.Success,
-                    NotificationToastDuration.Medium);
-
+            }
             case 'getItemSettings': {
                 const { item: createdItem } = data as ItemSettingContext;
                 const itemTypeName = createdItem.itemType.substring(createdItem.itemType.lastIndexOf('.') + 1);
@@ -78,11 +69,11 @@ export async function initialize(params: InitParams) {
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
                             route: `/${itemTypeName}Item-about/${createdItem.objectId}`,
-                        },
-                        workloadIframeHeight: '1000px'
+                        }
                     },
-                    {
-                        name: 'itemCustomSettings',
+                    //In case you want to use a dedicated item settings uncomment this and create a route for your item in the App.tsx according to the pattern below
+                    /*{
+                        name: 'customItemSettings',
                         displayName: t('Item_Settings_Label'),
                         icon: {
                             name: 'apps_20_regular',
@@ -90,27 +81,18 @@ export async function initialize(params: InitParams) {
                         workloadSettingLocation: {
                             workloadName: sampleWorkloadName,
                             route: `/${itemTypeName}Item-settings/${createdItem.objectId}`,
-                        },
-                        workloadIframeHeight: '1000px'
-                    }
+                        }
+                    }*/
                 ];
-
-
             }
-            case 'open.ClientSDKPlaygroundPage':
-                return workloadClient.page.open({
-                    workloadName: sampleWorkloadName,
-                    route: {
-                        path: `/playground-client-sdk`,
-                    },
-                });
-            case 'open.DataApiSamplePage':
-                return workloadClient.page.open({
-                    workloadName: sampleWorkloadName,
-                    route: {
-                        path: `/playground-data`,
-                    },
-                });
+            case 'playground.sampleAction': {
+                return callNotificationOpen(
+                    workloadClient,
+                    'Action executed',
+                    'Action executed via API',
+                    NotificationType.Success,
+                    NotificationToastDuration.Medium);
+            }
             default:
                 throw new Error('Unknown action received');
         }

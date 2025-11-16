@@ -191,7 +191,7 @@ Type `fabric item create [ItemName]` to trigger:
 GitHub Copilot learns from existing items and suggests:
 - **ItemEditor wrapper pattern** (core architecture requirement)
 - **Standard Ribbon pattern** (Ribbon + RibbonToolbar architecture)
-- **Standard View patterns** (Empty, Default, Detail, Settings views)
+- **Standard View patterns** (Empty, Default, Detail views)
 - Consistent naming conventions ([ItemName]Item pattern with View suffix)
 - Similar state management patterns
 - Matching component structures
@@ -479,7 +479,7 @@ Before generating any item code, GitHub Copilot should verify:
 ### Context Detection
 GitHub Copilot detects:
 - **ItemEditor architecture** as the primary pattern (mandatory for all items)
-- **Standard View patterns** in HelloWorld sample implementation (Empty, Default, Detail, Settings views)
+- **Standard View patterns** in HelloWorld sample implementation (Empty, Default, Detail views)
 - **Standard Ribbon pattern** in HelloWorld sample implementation as reference
 - Existing item patterns to maintain consistency
 - Available Fabric API clients in the workspace
@@ -1397,14 +1397,13 @@ Workload/app/items/
     ├── HelloWorldItemEmptyView.tsx    ← Empty state view
     ├── HelloWorldItemDefaultView.tsx  ← Main content view  
     ├── HelloWorldItemRibbon.tsx       ← Ribbon using Ribbon
-    ├── HelloWorldItemAboutView.tsx    ← About settings view
-    └── HelloWorldItemSettingsView.tsx ← Settings view
+    └── HelloWorldItem.scss            ← Item-specific styles
 ```
 
 **Core Architecture** (ItemEditor components are the foundation):
 - **ItemEditor**: Main container component (mandatory)
 - **Ribbon & RibbonToolbar**: Standard ribbon components
-- **Standard View Types**: Empty, Default, Detail, Settings patterns
+- **Standard View Types**: Empty, Default, Detail patterns
 - **HelloWorld**: Sample implementation demonstrating the architecture
 
 **Manifest Structure**:

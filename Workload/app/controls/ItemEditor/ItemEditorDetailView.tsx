@@ -235,7 +235,9 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  * 
  * @component
  * @see {@link https://react.fluentui.dev/} Fluent UI v9 Documentation
- * @see {@link ItemEditorDefaultView} Base layout component
+ * @see {@link ../../../docs/controls/ItemEditor/ItemEditorDetailView.md} - Complete ItemEditorDetailView documentation
+ * @see {@link ./ItemEditorDefaultView.tsx} - Base layout component
+ * @see {@link ../../../docs/controls/ItemEditor.md} - ItemEditor integration patterns
  */
 export function ItemEditorDetailView({
   left,

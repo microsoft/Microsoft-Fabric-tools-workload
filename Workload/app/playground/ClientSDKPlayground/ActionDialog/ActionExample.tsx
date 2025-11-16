@@ -10,7 +10,7 @@ export function ActionExample(props: TabContentProps) {
   const { sampleWorkloadName, workloadClient } = props;
 
   async function onCallExecuteAction() {
-    callActionExecute(workloadClient, "sample.Action", sampleWorkloadName);
+    callActionExecute(workloadClient, "playground.sampleAction", sampleWorkloadName);
   }
 
   return (

@@ -286,6 +286,9 @@ export interface ItemEditorDefaultViewProps {
  * 
  * @component
  * @see {@link https://react.fluentui.dev/} Fluent UI v9 Documentation
+ * @see {@link ../../../docs/controls/ItemEditor/ItemEditorDefaultView.md} - Complete ItemEditorDefaultView documentation
+ * @see {@link ../../../docs/controls/ItemEditor.md} - ItemEditor integration patterns
+ * @see {@link ./ItemEditor.tsx} - Main ItemEditor component
  */
 export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
   const { left, center, bottom, resizable = false, className = "" } = props;

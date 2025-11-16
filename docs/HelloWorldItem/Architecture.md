@@ -8,8 +8,6 @@ graph TB
         A[HelloWorldItemEditor] --> B[HelloWorldItemRibbon]
         A --> C[HelloWorldItemEmptyView]
         A --> D[HelloWorldItemDefaultView]
-        A --> E[HelloWorldItemSettingsView]
-        A --> F[HelloWorldItemAboutView]
     end
     
     subgraph "Data Layer"

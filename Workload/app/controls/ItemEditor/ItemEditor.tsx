@@ -103,6 +103,11 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * 
  * ItemEditor manages view state internally. Components register views and can switch between them using setCurrentView.
  * 
+ * @see {@link ../../../docs/controls/ItemEditor.md} - Complete documentation with examples and architecture
+ * @see {@link ../../../docs/controls/ItemEditor/README.md} - Main ItemEditor documentation
+ * @see {@link ../../../docs/controls/ItemEditor/Architecture.md} - System design and patterns
+ * @see {@link ../../../docs/controls/ItemEditor/QuickReference.md} - Quick reference guide
+ * 
  * ## Architecture
  * 
  * ```

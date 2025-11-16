@@ -40,6 +40,10 @@ export interface RibbonTab {
 
 /**
  * Props for the Ribbon component
+ * 
+ * @see {@link ../../../docs/controls/ItemEditor/Ribbon.md} - Complete Ribbon documentation
+ * @see {@link ../../../docs/controls/ItemEditor.md} - ItemEditor overview and integration patterns
+ * @see {@link ./RibbonToolbar.tsx} - RibbonToolbar component for action groups
  */
 export interface RibbonProps {
 

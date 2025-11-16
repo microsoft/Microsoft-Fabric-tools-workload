@@ -92,9 +92,8 @@ HelloWorldItem/
 ├── HelloWorldItemRibbon.tsx              # Toolbar and actions
 ├── HelloWorldItemEmptyView.tsx           # Empty state/onboarding
 ├── HelloWorldItemDefaultView.tsx         # Main content view
-├── HelloWorldItemSettingsView.tsx      # Settings interface
-├── HelloWorldItemAboutView.tsx         # About/info page
 ├── HelloWorldItemModel.ts                # Data models and types
+├── HelloWorldItem.scss                   # Item-specific styles
 └── docs/                                 # Documentation
     ├── Architecture.md                   # System architecture
 ```
@@ -112,7 +111,7 @@ HelloWorldItem/
 1. **Load Item**: Uses `getWorkloadItem` to load existing items
 2. **State Management**: Proper handling of item definition state
 3. **Save Operations**: `saveItemDefinition` for persistence
-4. **View Switching**: Navigate between empty, default, and settings views
+4. **View Switching**: Navigate between empty and default views
 
 ### Customization Points
 - **Data Model**: Extend `HelloWorldItemDefinition` interface
