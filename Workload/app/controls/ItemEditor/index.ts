@@ -3,6 +3,11 @@
  * 
  * This module exports all ItemEditor-related components and types
  * for building consistent item editors in Microsoft Fabric workloads.
+ * 
+ * @see {@link ../../../docs/controls/ItemEditor.md} - Complete ItemEditor documentation
+ * @see {@link ../../../docs/controls/ItemEditor/README.md} - Detailed ItemEditor guide
+ * @see {@link ../../../docs/controls/ItemEditor/Architecture.md} - System architecture overview
+ * @see {@link ../../../docs/controls/ItemEditor/QuickReference.md} - Quick reference guide
  */
 
 // Core ItemEditor component

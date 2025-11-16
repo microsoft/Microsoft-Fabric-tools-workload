@@ -154,6 +154,10 @@ export interface RibbonActionButtonProps {
  * <RibbonActionButton action={action} />
  * <RibbonActionButton action={dropdownAction} />
  * ```
+ * 
+ * @see {@link ../../../docs/controls/ItemEditor/RibbonToolbar.md} - RibbonToolbar integration documentation
+ * @see {@link ../../../docs/controls/ItemEditor.md} - ItemEditor overview and patterns
+ * @see {@link https://react.fluentui.dev/} - Fluent UI v9 Documentation
  */
 export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
   action,

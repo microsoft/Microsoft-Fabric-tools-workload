@@ -3,6 +3,11 @@
  * 
  * This module exports commonly used UI controls that maintain consistency
  * across all item editors in the workload.
+ * 
+ * @see {@link ../../docs/controls/README.md} - Complete controls documentation overview
+ * @see {@link ../../docs/controls/ItemEditor.md} - ItemEditor component and architecture
+ * @see {@link ../../docs/controls/Wizard.md} - Wizard component for step-by-step workflows
+ * @see {@link ../../docs/controls/OneLakeView.md} - OneLakeView component for data browsing
  */
 
 // Base Item Editor - Foundation for all item editors

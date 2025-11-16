@@ -51,6 +51,10 @@ import { callDialogOpenMsgBox } from "../../controller/DialogController";
  * 
  * This control focuses on the tree functionality only. Header, collapse logic,
  * and layout should be handled by the consuming component.
+ * 
+ * @see {@link ../../docs/controls/OneLakeView.md} - Complete OneLakeView documentation
+ * @see {@link https://react.fluentui.dev/} - Fluent UI v9 Documentation
+ * @see {@link ./OneLakeViewController.ts} - OneLake data operations controller
  */
 export function OneLakeView(props: OneLakeViewProps) {
   const [selectedItem, setSelectedItem] = useState<OneLakeViewItem>(null);

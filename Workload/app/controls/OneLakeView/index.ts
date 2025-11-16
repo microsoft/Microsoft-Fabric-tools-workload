@@ -16,6 +16,10 @@
  * - OneLakeViewCallbacks: Event callback functions
  * - TableMetadata, FileMetadata: Data structures
  * 
+ * @see {@link ../../../docs/controls/OneLakeView.md} - Complete OneLakeView documentation
+ * @see {@link ./OneLakeView.tsx} - Main component implementation
+ * @see {@link ./OneLakeViewController.ts} - Data operations controller
+ * 
  * Usage:
  * ```tsx
  * import { OneLakeView } from '../controls/OneLakeView';
