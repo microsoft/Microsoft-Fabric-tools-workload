@@ -2,8 +2,6 @@ import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import CustomItemSettings from "./items/HelloWorldItem/HelloWorldItemSettingsView";
-import CustomAbout from "./items/HelloWorldItem/HelloWorldItemAboutView";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem/HelloWorldItemEditor";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 
@@ -49,16 +47,6 @@ export function App({ history, workloadClient }: AppProps) {
             <Route path="/HelloWorldItem-editor/:itemObjectId">
                 <HelloWorldItemEditor
                     workloadClient={workloadClient} data-testid="HelloWorldItem-editor" />
-            </Route>
-            
-            <Route path="/HelloWorldItem-settings/:itemObjectId">
-                <CustomItemSettings 
-                    workloadClient={workloadClient}
-                        data-testid="HelloWorldItem-settings" />
-            </Route>
-            <Route path="/HelloWorldItem-about/:itemObjectId">
-                <CustomAbout  workloadClient={workloadClient} 
-                    data-testid="HelloWorldItem-about" />
             </Route>
 
             {/* Conditionally loaded playground routes (only in development) */}
