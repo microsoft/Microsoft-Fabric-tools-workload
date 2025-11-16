@@ -241,6 +241,12 @@
   justify-content: flex-start;
   padding: var(--spacingVerticalS) 0;
   gap: var(--spacingHorizontalXS);
+  
+  // Special handling for rows with input fields
+  &:has(.hello-world-hero-input) {
+    flex-direction: column;
+    gap: var(--spacingVerticalXS);
+  }
 }
 
 .hello-world-detail-label {

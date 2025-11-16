@@ -61,18 +61,20 @@ export function HelloWorldItemDefaultView({
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet1', 'Save the item to store the state in Fabric:')}
-              <div className="hello-world-hero-input">
-                <label className="hello-world-input-label" htmlFor="message-input">Item Definition: </label>
-                <Input
-                  id="message-input"
-                  value={messageValue || item?.definition?.message || ""}
-                  onChange={(e, data) => onMessageChange?.(data.value)}
-                  placeholder={t('Item_Message_Placeholder', 'Enter a message...')}
-                />
+              {t('GettingStarted_Card1_Bullet1', 'Change the item definition (message) on the right.')}
+            </li>
+            <li className="hello-world-next-item">
+              {t('GettingStarted_Card1_Bullet2', 'Save the item to store the definition in Fabric.')}
+              <div className="hello-world-step-button">
+                <Button
+                  appearance="outline"
+                  size="small"
+                  onClick={() => handleOpenResource("https://aka.ms/fabric-item-definition-guide")}
+                >
+                  {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
+                </Button>
               </div>
             </li>
-            <li className="hello-world-next-item">{t('GettingStarted_Card1_Bullet2', 'Use the resources on the right to learn more.')}</li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet3', 'Start building your own item.')}
               <div className="hello-world-step-button">
@@ -81,7 +83,7 @@ export function HelloWorldItemDefaultView({
                   size="small"
                   onClick={() => handleOpenResource("https://aka.ms/fabric-item-development-guide")}
                 >
-                  {t('GettingStarted_OpenButton', 'Open Tutorial')}
+                  {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
                 </Button>
               </div>
             </li>
@@ -93,7 +95,7 @@ export function HelloWorldItemDefaultView({
                   size="small"
                   onClick={() => handleOpenResource("https://aka.ms/fabric-workload-publishing-guide")}
                 >
-                  {t('GettingStarted_OpenButton', 'Open Tutorial')}
+                  {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
                 </Button>
               </div>
             </li>
@@ -144,6 +146,17 @@ export function HelloWorldItemDefaultView({
                 <div className="hello-world-detail-row">
                   <span className="hello-world-detail-label">{t('GettingStarted_WorkspaceType', 'Item Type')}</span>
                   <span className="hello-world-detail-value">{item.type}</span>
+                </div>
+                <div className="hello-world-detail-row">
+                  <span className="hello-world-detail-label">{t('Item_Definition_Label', 'Item Definition')}</span>
+                  <div className="hello-world-hero-input">
+                    <Input
+                      id="message-input"
+                      value={messageValue || item?.definition?.message || ""}
+                      onChange={(e, data) => onMessageChange?.(data.value)}
+                      placeholder={t('Item_Message_Placeholder', 'Enter a message...')}
+                    />
+                  </div>
                 </div>
               </div>
             )}
