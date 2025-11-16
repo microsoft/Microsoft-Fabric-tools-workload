@@ -760,35 +760,35 @@
 
   // Resize Handle (for resizable panels)
   &__resize-handle {
-    width: 1px;
+    width: 0px; /* No visible width - only the hit area */
     background: transparent;
     cursor: col-resize;
     position: relative;
     flex-shrink: 0;
     z-index: 10;
     
-    // Hover state
+    // Hover state - show the visual indicator
     &:hover {
-      background: var(--colorBrandBackground, #0078d4);
+      background: transparent; /* Keep transparent, use ::after for visual */
     }
     
     // Active/resizing state
     &.resizing {
-      background: var(--colorBrandBackground, #0078d4);
+      background: transparent; /* Keep transparent, use ::after for visual */
     }
     
-    // Add a wider hit area for easier interaction
+    // Add a minimal hit area for easier interaction
     &::before {
       content: '';
       position: absolute;
-      left: -3px;
-      right: -3px;
+      left: -2px;
+      right: -2px;
       top: 0;
       bottom: 0;
       background: transparent;
     }
     
-    // Visual indicator on hover
+    // Visual indicator on hover only
     &:hover::after,
     &.resizing::after {
       content: '';
@@ -798,7 +798,7 @@
       transform: translate(-50%, -50%);
       width: 1px;
       height: 40px;
-      background: var(--colorNeutralBackground1, #ffffff);
+      background: var(--colorBrandBackground, #0078d4);
       border-radius: 1px;
       box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
     }
