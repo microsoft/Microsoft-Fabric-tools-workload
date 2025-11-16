@@ -935,7 +935,7 @@ Add appropriate ARIA attributes to your content:
 
 ## 🔗 Related Documentation
 
-- **[Sample Implementation](../HelloWorldItem/README.md)** - HelloWorld sample item for guidance  
+- **[Sample Implementation](../items/HelloWorldItem/README.md)** - HelloWorld sample item for guidance  
 - **[Project Structure](../Project_Structure.md)** - Overall toolkit organization  
 - **[Fabric Design Guidelines](https://learn.microsoft.com/en-us/fabric/)** - Official Fabric design system
 
