@@ -64,16 +64,7 @@ export function HelloWorldItemDefaultView({
               {t('GettingStarted_Card1_Bullet1', 'Change the item definition (message) on the right.')}
             </li>
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet2', 'Save the item to store the definition in Fabric.')}
-              <div className="hello-world-step-button">
-                <Button
-                  appearance="outline"
-                  size="small"
-                  onClick={() => handleOpenResource("https://aka.ms/fabric-item-definition-guide")}
-                >
-                  {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
-                </Button>
-              </div>
+              {t('GettingStarted_Card1_Bullet2', 'Save the item to store the state in Fabric.')}
             </li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet3', 'Start building your own item.')}
