@@ -385,25 +385,29 @@ export function OneLakeView(props: OneLakeViewProps) {
   // If no item is selected, show empty state
   if (!selectedItem) {
     return (
-      <Stack className="onelake-explorer__empty" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
-        <Image src="/assets/controls/OneLakeView/EmptyIcon.svg" />
-        <span className="add">Add an item</span>
-        {props.config?.allowItemSelection && (
-          <Tooltip content={"Open Datahub Explorer"} relationship="label">
-            <Button className="add-button" size="small" onClick={() => onDatahubClicked()} appearance="primary">
-              Add
-            </Button>
-          </Tooltip>
-        )}
-      </Stack>
+      <div className="onelake-view__container">
+        <Stack className="onelake-view__empty" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
+          <Image src="/assets/controls/OneLakeView/EmptyIcon.svg" />
+          <span className="add">Add an item</span>
+          {props.config?.allowItemSelection && (
+            <Tooltip content={"Open Datahub Explorer"} relationship="label">
+              <Button className="add-button" size="small" onClick={() => onDatahubClicked()} appearance="primary">
+                Add
+              </Button>
+            </Tooltip>
+          )}
+        </Stack>
+      </div>
     );
   }
 
   // Show loading spinner
   if (loadingStatus === "loading") {
     return (
-      <div className="onelake-explorer__loading">
-        <Spinner label="Loading Data" />
+      <div className="onelake-view__container">
+        <div className="onelake-view__loading">
+          <Spinner label="Loading Data" />
+        </div>
       </div>
     );
   }
@@ -411,9 +415,11 @@ export function OneLakeView(props: OneLakeViewProps) {
   // Show error state
   if (loadingStatus === "error") {
     return (
-      <div className="onelake-explorer__error">
-        <Subtitle2>Error loading data</Subtitle2>
-        <p>Do you have permission to view this Item?</p>
+      <div className="onelake-view__container">
+        <div className="onelake-view__error">
+          <Subtitle2>Error loading data</Subtitle2>
+          <p>Do you have permission to view this Item?</p>
+        </div>
       </div>
     );
   }
@@ -422,11 +428,11 @@ export function OneLakeView(props: OneLakeViewProps) {
   return (
     <Tree
       aria-label="OneLake Item Explorer"
-      className="onelake-explorer__tree"
+      className="onelake-view__tree"
       size="medium"
       defaultOpenItems={["Tables", "Files"]}
     >
-      <div className="onelake-explorer__tree-container">
+      <div className="onelake-view__tree-container">
         <TreeItem itemType="branch" value="Tables">
           <Menu
             open={openTablesMenu}
@@ -471,7 +477,7 @@ export function OneLakeView(props: OneLakeViewProps) {
               </MenuList>
             </MenuPopover>
           </Menu>
-          <Tree className="onelake-explorer__subtree" selectionMode="single">
+          <Tree className="onelake-view__subtree" selectionMode="single">
             {hasSchema &&
               <TableTreeWithSchema
                 allTablesInItem={tablesInItem}
@@ -537,7 +543,7 @@ export function OneLakeView(props: OneLakeViewProps) {
               </MenuList>
             </MenuPopover>
           </Menu>
-          <Tree className="onelake-explorer__subtree" selectionMode="single">
+          <Tree className="onelake-view__subtree" selectionMode="single">
             <FileTree
               allFilesInItem={filesInItem}
               selectedFilePath={selectedFilePath}

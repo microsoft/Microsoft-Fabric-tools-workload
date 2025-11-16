@@ -28,12 +28,20 @@
 // Core Tree Container Styles
 // ============================================================================
 
+.onelake-view__container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
 .onelake-view__tree {
   --spacingHorizontalXXL: var(--spacingHorizontalL, 16px);
   display: flex;
   align-items: start;
   overflow: hidden;
   flex: 1; // Take remaining space
+  height: 100%; // Ensure full height is available
 
   // Selected item highlighting
   .selected {
@@ -101,6 +109,7 @@
 // Empty state
 .onelake-view__empty {
   display: flex;
+  min-height: 200px;
   height: 100%;
   align-items: center;
   justify-content: center;
@@ -109,6 +118,7 @@
   gap: var(--spacingVerticalM, 12px);
   padding: var(--spacingVerticalXL, 24px);
   color: var(--colorNeutralForeground2, #616161);
+  flex: 1; // Take available space
   
   p {
     margin: 0;
@@ -129,15 +139,18 @@
 // Loading state
 .onelake-view__loading {
   display: flex;
+  min-height: 200px;
   height: 100%;
   align-items: center;
   justify-content: center;
   padding: var(--spacingVerticalXL, 24px);
+  flex: 1; // Take available space
 }
 
 // Error state
 .onelake-view__error {
   display: flex;
+  min-height: 200px;
   height: 100%;
   align-items: center;
   justify-content: center;
@@ -146,6 +159,7 @@
   gap: var(--spacingVerticalM, 12px);
   padding: var(--spacingVerticalXL, 24px);
   color: var(--colorPaletteRedForeground1, #d13438);
+  flex: 1; // Take available space
   
   p {
     margin: 0;

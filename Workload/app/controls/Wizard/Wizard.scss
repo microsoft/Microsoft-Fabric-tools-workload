@@ -24,30 +24,50 @@
 .wizard-control {
   display: flex;
   flex-direction: column;
-  min-height: 500px;
-  min-width: 800px;
+  height: 100%;
+  width: 100%;
+  max-height: 100%; // Never exceed container height
+  min-width: 600px; // Reduced minimum width for smaller containers
+
+  // Header area with title
+  &__header {
+    padding: 20px;
+    background-color: white;
+    border-bottom: 1px solid #e1dfdd;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    color: #323130;
+    margin: 0;
+  }
 
   // Main content area
   &__main {
     display: flex;
     flex: 1;
+    min-height: 0; // Allow flex child to shrink below content size
+    overflow: hidden; // Prevent the main area from creating scrollbars
   }
 
   // Left panel - Steps navigation
   &__steps-panel {
     width: 180px;
-    background-color: var(--colorNeutralBackground2, #292828);
-    border-right: 1px solid var(--colorNeutralStroke2, #E1DFDD);
-    padding: var(--spacingVerticalL, 20px);
+    background-color: #FAFAFA;
+    border-right: 1px solid #E1DFDD;
+    padding: 12px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto; // Allow scrolling if steps don't fit
+    min-height: 0; // Allow shrinking
+    flex-shrink: 0; // Don't shrink the width
   }
 
   // Individual step container
   &__step {
     display: flex;
     align-items: flex-start;
-    gap: var(--spacingHorizontalS, 12px);
+    gap: 12px;
     max-width: 280px;
     
     &--clickable {
@@ -75,11 +95,11 @@
     // Step states
     &--completed,
     &--current {
-      background-color: var(--colorPaletteGreenForeground1, #018574);
+      background-color: #018574;
     }
     
     &--upcoming {
-      background-color: var(--colorNeutralStroke2, #E1DFDD);
+      background-color: #E1DFDD;
     }
   }
 
@@ -103,37 +123,45 @@
     }
     
     &--upcoming {
-      color: var(--colorNeutralForeground3, #616161);
+      color: #616161;
     }
   }
 
   // Step content area
   &__step-content {
     flex: 1;
-    padding-bottom: var(--spacingVerticalL, 20px);
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; // Allow text to wrap
   }
 
   // Step title
   &__step-title {
     display: block;
-    margin-bottom: var(--spacingVerticalXXS, 4px);
+    margin-top: 4px;
+    margin-bottom: 4px;
+    width: 100%;
+    word-wrap: break-word;
     
     &--current {
-      color: var(--colorPaletteGreenForeground1, #018574);
-      font-weight: var(--fontWeightSemibold);
+      color: #018574;
+      font-weight: 600;
     }
     
     &--normal {
-      color: var(--colorNeutralForeground1, #323130);
-      font-weight: var(--fontWeightMedium);
+      color: #323130;
+      font-weight: 500;
     }
   }
 
   // Step description
   &__step-description {
-    color: var(--colorNeutralForeground3, #616161);
+    color: #616161;
     display: block;
     line-height: 1.3;
+    width: 100%;
+    word-wrap: break-word;
   }
 
   // Connecting line between steps
@@ -145,121 +173,83 @@
     margin-bottom: 0;
     
     &--completed {
-      background-color: var(--colorPaletteGreenForeground1, #107C10);
+      background-color: #107C10;
     }
     
     &--upcoming {
-      background-color: var(--colorNeutralStroke2, #E1DFDD);
+      background-color: #E1DFDD;
     }
   }
 
   // Right panel - Content area
   &__content-panel {
     flex: 1;
-    padding: var(--spacingVerticalL, 20px);
-    background-color: var(--colorNeutralBackground1, white);
+    padding: 12px;
+    background-color: white;
     overflow: auto;
+    min-height: 0; // Allow flex child to shrink
   }
 
   // Footer area
   &__footer {
-    border-top: 1px solid var(--colorNeutralStroke2, #E1DFDD);
-    background-color: var(--colorNeutralBackground1, white);
-    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 20px);
+    border-top: 1px solid #e1dfdd;
+    background-color: white;
+  }
+
+  // Navigation container inside footer
+  &__navigation {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
+    padding: 8px 20px 8px 20px;
+    gap: 12px;
 
-    // Footer button container
-    &-buttons {
+    &-left {
       display: flex;
-      gap: var(--spacingHorizontalS, 12px);
       align-items: center;
     }
 
-    // Footer navigation buttons
-    &-button {
-      min-width: 80px;
-      height: 32px;
-      border-radius: var(--borderRadiusMedium);
-      font-weight: var(--fontWeightMedium);
-      
-      &--primary {
-        background-color: var(--colorBrandBackground);
-        color: var(--colorNeutralForegroundOnBrand);
-        border: 1px solid var(--colorBrandBackground);
-        
-        &:hover {
-          background-color: var(--colorBrandBackgroundHover);
-          border-color: var(--colorBrandBackgroundHover);
-        }
-        
-        &:disabled {
-          background-color: var(--colorNeutralBackgroundDisabled);
-          border-color: var(--colorNeutralStrokeDisabled);
-          color: var(--colorNeutralForegroundDisabled);
-        }
-      }
-      
-      &--secondary {
-        background-color: var(--colorNeutralBackground1);
-        color: var(--colorNeutralForeground1);
-        border: 1px solid var(--colorNeutralStroke1);
-        
-        &:hover {
-          background-color: var(--colorNeutralBackground1Hover);
-          border-color: var(--colorNeutralStroke1Hover);
-        }
-        
-        &:disabled {
-          background-color: var(--colorNeutralBackgroundDisabled);
-          border-color: var(--colorNeutralStrokeDisabled);
-          color: var(--colorNeutralForegroundDisabled);
-        }
-      }
+    &-center {
+      display: flex;
+      align-items: center;
     }
+
+    &-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+  }
+
+  &__step-indicator {
+    color: #616161;
+    font-size: 12px;
   }
 }
 
 // Responsive adjustments for wizard
 @media (max-width: 768px) {
   .wizard-control {
-    min-width: 100%;
-    min-height: 400px;
+    min-width: 100%; // Fill available width on mobile
     
     &__steps-panel {
       width: 140px;
-      padding: var(--spacingVerticalM, 12px);
+      padding: 8px;
     }
     
     &__step {
-      gap: var(--spacingHorizontalXS, 8px);
-    }
-    
-    &__step-title {
-      font-size: var(--fontSizeBase200);
-    }
-    
-    &__step-description {
-      font-size: var(--fontSizeBase100);
+      gap: 8px;
     }
     
     &__content-panel {
-      padding: var(--spacingVerticalM, 12px);
+      padding: 8;
     }
-    
-    &__footer {
-      padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+
+    &__navigation {
+      padding: 8px 12px;
       
-      &-buttons {
-        gap: var(--spacingHorizontalXS, 8px);
-      }
-      
-      &-button {
-        min-width: 70px;
-        height: 28px;
-        font-size: var(--fontSizeBase200);
+      &-right {
+        gap: 8px;
       }
     }
   }
@@ -274,28 +264,10 @@
     
     &__step-circle {
       border: 2px solid;
-      
-      &--completed,
-      &--current {
-        border-color: var(--colorNeutralForeground1);
-      }
-      
-      &--upcoming {
-        border-color: var(--colorNeutralForeground3);
-      }
     }
     
     &__footer {
       border-top: 2px solid;
-      
-      &-button {
-        border-width: 2px;
-        
-        &:focus-visible {
-          outline: 3px solid var(--colorNeutralForeground1);
-          outline-offset: 2px;
-        }
-      }
     }
   }
 }
@@ -303,13 +275,7 @@
 // Focus management for accessibility
 .wizard-control {
   &__step--clickable:focus-visible {
-    outline: 2px solid var(--colorBrandStroke1);
-    outline-offset: 2px;
-    border-radius: var(--borderRadiusSmall);
-  }
-  
-  &__footer-button:focus-visible {
-    outline: 2px solid var(--colorBrandStroke1);
+    outline: 2px solid #0078d4;
     outline-offset: 2px;
   }
 }
@@ -321,7 +287,7 @@
   // Fade transition for step content
   & > * {
     opacity: 1;
-    transition: opacity var(--durationNormal) var(--curveEasyEase);
+    transition: opacity 0.25s ease;
   }
   
   &.transitioning > * {
@@ -333,7 +299,7 @@
 .wizard-control__step--loading {
   .wizard-control__step-circle {
     background: transparent;
-    border: 2px solid var(--colorNeutralStroke2);
+    border: 2px solid #E1DFDD;
     position: relative;
     
     &::after {
@@ -341,7 +307,7 @@
       position: absolute;
       width: 16px;
       height: 16px;
-      border: 2px solid var(--colorBrandBackground);
+      border: 2px solid #0078d4;
       border-top: 2px solid transparent;
       border-radius: 50%;
       animation: wizard-spin 1s linear infinite;

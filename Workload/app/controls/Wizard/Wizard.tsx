@@ -15,9 +15,6 @@
  * 
  * @see {@link ../../../docs/controls/Wizard.md} - Complete documentation with examples
  * @see {@link ./Wizard.scss} - CSS implementation with .wizard-control classes
- * 
- * @author Microsoft Fabric Extensibility Toolkit
- * @version 1.0.0
  */
 
 import './Wizard.scss';
@@ -56,13 +53,6 @@ function WizardNavigation({
                         {labels.cancel}
                     </Button>
                 )}
-            </div>
-
-            {/* Center - Step indicator */}
-            <div className="wizard-control__navigation-center">
-                <Text size={200} className="wizard-control__step-indicator">
-                    Step {currentStepIndex + 1} of {totalSteps}
-                </Text>
             </div>
 
             {/* Right side - Navigation buttons */}
@@ -116,7 +106,11 @@ export interface WizardStep {
     /** Whether this step can be skipped (allows forward navigation without completion) */
     canSkip?: boolean;
     /** Validation function that returns true if step is valid and can proceed */
-    validate?: () => boolean | Promise<boolean>;
+    validate?: (context: Record<string, any>) => boolean | Promise<boolean>;
+    /** Function called when the step is shown */
+    onShow?: (context: Record<string, any>) => boolean | Promise<boolean>;
+    /** Function called when the step is left */
+    onLeave?: (context: Record<string, any>) => boolean | Promise<boolean>;
     /** Reserved for future use - whether the step has been completed */
     completed?: boolean;
 }
@@ -155,6 +149,8 @@ export interface WizardStepProps {
 export interface WizardControlProps {
     /** Array of steps to display in the wizard */
     steps: WizardStep[];
+    /** Title to display at the top of the wizard */
+    title?: string;
     /** ID of the initially active step (defaults to first step if not provided) */
     initialStepId?: string;
     /** Callback fired when step changes */
@@ -252,6 +248,7 @@ export interface WizardNavigationProps {
  */
 export function WizardControl({ 
     steps, 
+    title,
     initialStepId,
     onStepChange, 
     onComplete,
@@ -293,6 +290,26 @@ export function WizardControl({
         }));
     }, []);
 
+    // Effect to call onShow when the current step changes
+    React.useEffect(() => {
+        const callOnShow = async () => {
+            if (currentStep?.onShow) {
+                try {
+                    // Create a wrapper context that includes updateContext for proper state management
+                    const contextWithUpdate = {
+                        ...wizardContext,
+                        updateContext
+                    };
+                    await currentStep.onShow(contextWithUpdate);
+                } catch (error) {
+                    console.error('Step onShow failed:', error);
+                }
+            }
+        };
+        
+        callOnShow();
+    }, [currentStepId, currentStep, wizardContext, updateContext]); // Run when step changes
+
     /**
      * Determines the visual status of a step based on its position relative to the current step
      * @param stepIndex - Zero-based index of the step to check
@@ -312,11 +329,20 @@ export function WizardControl({
         if (!currentStep?.validate) return true;
         
         try {
-            const isValid = await currentStep.validate();
+            const isValid = await currentStep.validate(wizardContext);
             return isValid;
         } catch (error) {
             console.error('Step validation failed:', error);
             return false;
+        }
+    };
+
+    const onLeave = async (): Promise<void> => {
+        if (!currentStep?.onLeave) return;
+        try {
+           await currentStep.onLeave(wizardContext);
+        } catch (error) {
+            console.error('Step onLeave failed:', error);
         }
     };
 
@@ -327,6 +353,7 @@ export function WizardControl({
         const isValid = await validateCurrentStep();
         if (!isValid) return;
 
+        await onLeave();
         // Mark current step as completed
         setCompletedSteps(prev => new Set([...prev, currentStepId]));
 
@@ -355,7 +382,7 @@ export function WizardControl({
      * Navigates to a specific step
      * @param stepId - ID of the step to navigate to
      */
-    const goToStep = (stepId: string) => {
+    const goToStep = async (stepId: string) => {
         const targetIndex = steps.findIndex(s => s.id === stepId);
         if (targetIndex === -1) return;
 
@@ -365,6 +392,7 @@ export function WizardControl({
         const canNavigate = targetIndex <= currentStepIndex || completedSteps.has(stepId);
         if (!canNavigate) return;
 
+        await onLeave(); // Call onLeave for current step
         setCurrentStepId(stepId);
         onStepChange?.(stepId, targetIndex);
     };
@@ -375,13 +403,13 @@ export function WizardControl({
      * @param step - The step that was clicked
      * @param stepIndex - Zero-based index of the clicked step
      */
-    const handleStepClick = (step: WizardStep, stepIndex: number) => {
+    const handleStepClick = async (step: WizardStep, stepIndex: number) => {
         const canNavigate = allowStepNavigation && (
             stepIndex <= currentStepIndex || completedSteps.has(step.id)
         );
         
         if (canNavigate) {
-            goToStep(step.id);
+            await goToStep(step.id);
         }
     };
 
@@ -427,6 +455,15 @@ export function WizardControl({
 
     return (
         <div className={`wizard-control ${className}`.trim()}>
+            {/* Title Header */}
+            {title && (
+                <div className="wizard-control__header">
+                    <Text size={500} weight="semibold" className="wizard-control__title">
+                        {title}
+                    </Text>
+                </div>
+            )}
+
             {/* Main Content Area - Split layout with steps panel and content */}
             <div className="wizard-control__main">
                 {/* Left Panel - Steps Navigation */}

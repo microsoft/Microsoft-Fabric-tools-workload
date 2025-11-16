@@ -31,8 +31,6 @@
  * @see {@link ./Wizard.tsx} - Main component implementation
  * @see {@link ../../../docs/controls/Wizard.md} - Complete documentation
  * 
- * @author Microsoft Fabric Extensibility Toolkit
- * @version 1.0.0
  */
 
 // Export the main component and types
