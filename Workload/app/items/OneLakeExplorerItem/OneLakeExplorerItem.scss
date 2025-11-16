@@ -5,12 +5,12 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 8px;
   overflow: hidden;
 }
 
 .table-editor-header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 
   .header-content {
     display: flex;
@@ -35,12 +35,12 @@
   justify-content: center;
   flex: 1;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .table-editor-error {
-  margin: 16px;
-  padding: 16px;
+  margin: 8px;
+  padding: 8px;
   background-color: #fef2f2;
 
   .error-header {
@@ -60,8 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 12px;
+  margin-bottom: 8px;
+  padding: 8px;
   border-radius: 4px;
 
   &.theme-dark {
@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .delta-files-section {
@@ -96,7 +96,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 
     .pagination-controls {
       display: flex;
@@ -212,4 +212,16 @@
   &.default {
     color: #666;
   }
+}
+
+/* Status Bar Styling for OneLake Explorer */
+.status-bar {
+  // Status text styling
+  span {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
 }

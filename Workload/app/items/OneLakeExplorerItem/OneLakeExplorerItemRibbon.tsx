@@ -13,7 +13,6 @@ import {
   Open24Regular,
   ArrowUpload24Regular,
 } from "@fluentui/react-icons";
-import '../../styles.scss';
 
 /**
  * Props interface for the OneLakeExplorerItem Ribbon component

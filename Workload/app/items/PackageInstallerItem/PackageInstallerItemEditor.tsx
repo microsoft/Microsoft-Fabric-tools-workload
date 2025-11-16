@@ -5,7 +5,6 @@ import { PackageInstallerItemRibbon } from "./PackageInstallerItemRibbon";
 import { callGetItem, getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
-import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus } from "./PackageInstallerItemModel";
@@ -15,7 +14,7 @@ import { callNotificationOpen } from "../../controller/NotificationController";
 import { DeploymentDetailView } from "./DeploymentDetailView";
 import { DeploymentStrategyFactory } from "./deployment/DeploymentStrategyFactory";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { PackageInstallerDeployResult } from "./components/PackageInstallerDeployDialog";
+import { DeployPackageWizardResult } from "./components/DeployPackageWizard";
 import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { callOpenSettings } from "../../controller/SettingsController";
@@ -544,7 +543,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         true
       );
       
-      const result = dialogResult.value as PackageInstallerDeployResult;
+      const result = dialogResult.value as DeployPackageWizardResult;
       
       if (result && result.state === 'deploy') {
         // If a capacity was selected, update the deployment with the capacity info

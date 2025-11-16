@@ -17,8 +17,7 @@ import { FolderDisplayNameCell } from "./components/FolderDisplayName";
 import { PackageDisplayNameCell } from "./components/PackageDisplayName";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { ItemEditorView } from "../../controls/ItemEditor";
-import "../../styles.scss";
+import { ItemEditorDefaultView } from "../../controls/ItemEditor";
 import "./PackageInstallerItem.scss";
 
 interface PackageInstallerItemDefaultViewProps {
@@ -40,7 +39,7 @@ interface PackageInstallerItemDefaultViewProps {
  * PackageInstallerItemDefaultView - Main view showing deployed packages
  * 
  * This component displays the main table of deployed packages and their statuses.
- * It follows the new BaseItemEditorView pattern for consistent layout.
+ * It follows the new ItemEditorDefaultView pattern for consistent layout.
  */
 export function PackageInstallerItemDefaultView({
   editorItem,
@@ -161,7 +160,7 @@ export function PackageInstallerItemDefaultView({
   );
 
   return (
-    <ItemEditorView
+    <ItemEditorDefaultView
       center={{
         content: mainContent,
         className: "package-installer-default-view-center",

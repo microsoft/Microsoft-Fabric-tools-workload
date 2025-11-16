@@ -17,7 +17,6 @@ import {
   BoxMultiple24Regular,
   Settings24Regular,
 } from "@fluentui/react-icons";
-import '../../styles.scss';
 import "./PackageInstallerItem.scss";
 
 /**

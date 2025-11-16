@@ -16,7 +16,6 @@ import { DeploymentJobLabel } from "./components/DeploymentJob";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { navigateToItem } from "../../controller/NavigationController";
 import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
-import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 
 // Props for the PackageDetailCard component

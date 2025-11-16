@@ -12,7 +12,6 @@ import {
   Card,
   CardHeader,
   Body1,
-  Caption1
 } from "@fluentui/react-components";
 import { DatabaseRegular, DocumentRegular, FolderRegular } from "@fluentui/react-icons";
 import { OneLakeExplorerItemDefinition } from "./OneLakeExplorerItemModel";
@@ -212,7 +211,6 @@ export function TableEditorView({
           <DatabaseRegular className="table-icon" />
           <Text size={600} weight="semibold">{tableName}</Text>
         </div>
-        <Caption1 className="table-path">{oneLakeLink}</Caption1>
       </div>
 
       {/* Loading State */}
@@ -292,7 +290,6 @@ export function TableEditorView({
           {/* Delta Files Section */}
           <div className="delta-files-section">
             <div className="section-header">
-              <Text weight="semibold">Delta Files</Text>
               <div className="pagination-controls">
                 <Button 
                   size="small" 

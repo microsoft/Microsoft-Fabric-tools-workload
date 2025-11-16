@@ -2,7 +2,7 @@ import React from "react";
 import { Stack, Text } from "@fluentui/react";
 import { Button } from "@fluentui/react-components";
 import { DocumentAdd24Regular, Code24Regular, FolderOpen24Regular } from "@fluentui/react-icons";
-import "../../styles.scss";
+import "./OneLakeExplorerItem.scss";
 
 interface OneLakeExplorerItemEmptyViewProps {
   onCreateNewFile: () => Promise<void>;

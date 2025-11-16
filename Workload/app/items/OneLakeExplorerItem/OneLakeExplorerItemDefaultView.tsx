@@ -2,7 +2,7 @@ import React from "react";
 import { TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
-import { OneLakeItemExplorer } from "../../controls/OneLakeItemExplorer";
+import { OneLakeView } from "../../controls/OneLakeView";
 import { FileEditorView } from "./FileEditorView";
 import { TableEditorView } from "./TableEditorView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
@@ -54,8 +54,8 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
 
   // Create the OneLake explorer content for the left panel
   const explorerContent = (
-    <div style={{ height: "100%", overflow: "hidden" }}>
-      <OneLakeItemExplorer
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <OneLakeView
         workloadClient={workloadClient}
         config={{
           mode: "edit",
@@ -101,6 +101,18 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
     />
   );
 
+  // Create a simple bottom panel for status/info (single line style)
+  const bottomPanelContent = (
+    <div className="status-bar">
+      <span>
+        {viewMode === 'table' 
+          ? `${item.definition?.selectedTable?.oneLakeLink || 'No table selected'}`
+          : `${currentFile?.oneLakeLink || 'No file selected'}`
+        }
+      </span>
+    </div>
+  );
+
   return (
     <ItemEditorDetailView
       left={{
@@ -108,12 +120,20 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
         title: "OneLake Explorer",
         width: 350,
         minWidth: 280,
-        collapsible: true
+        maxWidth: 600,
+        collapsible: true,
+        onWidthChange: (newWidth) => {
+          console.log(`OneLake Explorer panel resized to: ${newWidth}px`);
+        }
       }}
       center={{
         content: editorContent,
         ariaLabel: viewMode === 'table' ? "Table viewer workspace" : "Code editor workspace"
       }}
+      bottom={{
+        content: bottomPanelContent
+      }}
+      resizable={true}
     />
   );
 }

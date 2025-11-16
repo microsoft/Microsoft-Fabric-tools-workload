@@ -30,7 +30,7 @@ This folder contains the components for the OneLake Explorer item that allows us
 - **Purpose**: Main layout component that orchestrates the file and table views
 - **Features**:
   - Conditional rendering based on view mode ('file' | 'table')
-  - Integrates with OneLakeItemExplorer for navigation
+  - Integrates with OneLakeView for navigation
   - Switches views based on user selection (file vs table)
 
 ## View Mode Switching

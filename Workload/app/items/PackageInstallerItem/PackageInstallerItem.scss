@@ -1,14 +1,15 @@
 /* PackageInstaller Item Styles */
 
-/* Main Content Styles - Following BaseItemEditorView pattern */
+/* Main Content Styles - Following ItemEditorDefaultView pattern */
 .package-installer-content {
-  padding: 0;
+  padding: 12px;
   width: 100%;
   max-width: 100%; /* Prevent overflow */
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow-x: hidden; /* Prevent horizontal scroll */
+  box-sizing: border-box; /* Include any padding in width calculations */
 }
 
 /* Default View Center Container */
@@ -591,7 +592,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .package-installer-content {
-    padding: var(--spacingVerticalS, 8px);
+    padding: 12px;
   }
   
   .package-installer-detail-container {

@@ -5,7 +5,6 @@ import { ContextProps, PageProps } from "../../App";
 import { getWorkloadItem, saveItemDefinition, callGetItem } from "../../controller/ItemCRUDController";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { useLocation, useParams } from "react-router-dom";
-import "../../styles.scss";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callOpenSettings } from "../../controller/SettingsController";
@@ -16,6 +15,8 @@ import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
 import { ItemEditor } from "../../controls/ItemEditor";
 import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
+import "./OneLakeExplorerItem.scss";
+
 
 
 const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
@@ -233,7 +234,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
 
     const newFile: OneLakeFileReference = {
       ...targetItem,
-      onelakeLink: oneLakeLink,
+      oneLakeLink: oneLakeLink,
       fileName: fileName,
       content,
       language,
@@ -407,7 +408,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
       }
 
       // Check if file is already open
-      const existingFileIndex = openFiles.findIndex(file => file.onelakeLink === oneLakeLink);
+      const existingFileIndex = openFiles.findIndex(file => file.oneLakeLink === oneLakeLink);
       
       if (existingFileIndex !== -1) {
         // File is already open, just switch to it (no need to mark as unsaved)
@@ -426,7 +427,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
 
       const newFile: OneLakeFileReference = {
         ...definition?.itemReference,
-        onelakeLink: oneLakeLink,
+        oneLakeLink: oneLakeLink,
         fileName,
         content,
         language,
@@ -475,7 +476,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
         .filter(file => file.isDirty)
         .map(async (file) => {
           try {
-            let oneLakeLink = file.onelakeLink;
+            let oneLakeLink = file.oneLakeLink;
             const oneLakeClient = new OneLakeStorageClient(workloadClient)
             await oneLakeClient.writeFileAsText(oneLakeLink, file.content);
               // Mark file as clean

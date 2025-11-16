@@ -1,6 +1,5 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import "../../styles.scss";
 import "./PackageInstallerItem.scss";
 import { PackageSelectionView } from "./PackageSelectionView";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
