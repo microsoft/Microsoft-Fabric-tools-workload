@@ -6,7 +6,7 @@ A comprehensive solution for deploying and managing packages of Fabric items acr
 
 The Package Installer Item provides a unified interface for package selection, deployment configuration, and deployment monitoring. It supports multiple deployment strategies and flexible content handling for both text and binary files.
 
-For technical details on package creation and structure, see the [Package Creation Strategy Documentation](./package/README.md).
+For technical details on package creation and structure, see the [Package Structure Documentation](./PackageStructure.md).
 
 ## Supported Item Types
 
@@ -22,7 +22,7 @@ The PackageInstallerItem supports all standard Fabric platform items. See the [f
 - **Real-time Monitoring**: Track deployment progress and status
 - **Item Availability Checking**: Validate items before deployment
 - **Binary File Support**: Automatic handling of text and binary content
-- **Package Creation**: Automated package creation from selected Fabric items (see [Package Creation Strategy](./package/README.md))
+- **Package Creation**: Automated package creation from selected Fabric items (see [Package Structure](./PackageStructure.md))
 
 ## Architecture
 
@@ -37,9 +37,14 @@ PackageInstallerItem/
 └── PackageSelectionView.tsx              # Package Selection UI
 ```
 
+For detailed architecture information, see [Architecture.md](./Architecture.md).
+
+For developers wanting to integrate PackageInstallerItem functionality into their own custom items, see [DeveloperIntegration.md](./DeveloperIntegration.md).
+
 ## Deployment Strategies
 
 ### UX Deployment Strategy
+
 Direct deployment using Fabric Platform APIs for immediate item creation.
 
 - Real-time workspace and folder creation
@@ -48,6 +53,7 @@ Direct deployment using Fabric Platform APIs for immediate item creation.
 - Best for: Interactive deployments, small to medium packages
 
 ### Spark Livy Deployment Strategy
+
 Background deployment using Spark batch jobs for scalable processing.
 
 - Asynchronous processing
@@ -56,6 +62,7 @@ Background deployment using Spark batch jobs for scalable processing.
 - Best for: Large packages, automated pipelines
 
 ### Spark Notebook Deployment Strategy
+
 Deployment through Spark notebook execution with custom logic.
 
 - Custom deployment scripts
@@ -65,7 +72,7 @@ Deployment through Spark notebook execution with custom logic.
 
 ## Package Creation
 
-For detailed information about creating packages, including JSON structure, supported item types, and asset organization, see the [Package Creation Strategy Documentation](./package/README.md).
+For detailed information about creating packages, including JSON structure, supported item types, and asset organization, see the [Package Structure Documentation](./PackageStructure.md).
 
 Quick overview:
 
