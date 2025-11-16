@@ -101,7 +101,7 @@ const views: RegisteredView[] = [
 
 ### 3. Documentation
 
-#### `docs/ItemEditor/README.md`
+#### `docs/controls/ItemEditor/README.md`
 **Purpose**: Comprehensive documentation
 
 **Sections**:
@@ -118,7 +118,7 @@ const views: RegisteredView[] = [
 - Accessibility guidelines
 - Related documentation links
 
-#### `docs/ItemEditor/QuickReference.md`
+#### `docs/controls/ItemEditor/QuickReference.md`
 **Purpose**: Fast lookup guide for developers
 
 **Sections**:
@@ -363,9 +363,14 @@ When creating a new item editor:
 ## 📚 Documentation Structure
 
 ```
-docs/ItemEditor/
-├── README.md           ← Full documentation (this file)
-└── QuickReference.md   ← Quick lookup guide
+docs/controls/ItemEditor/
+├── README.md           ← Full documentation (main file)
+├── QuickReference.md   ← Quick lookup guide
+├── Architecture.md     ← System design and patterns
+├── Implementation.md   ← Implementation guidelines (this file)
+├── Ribbon.md           ← Ribbon component documentation
+├── RibbonToolbar.md    ← Toolbar documentation
+└── [View Components]   ← Individual view documentation
 ```
 
 ## 🎓 Learning Path

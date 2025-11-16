@@ -9,8 +9,8 @@ import { PageProps } from "../../../App";
 import { Item } from "../../../clients/FabricPlatformTypes";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 import { 
-  OneLakeItemExplorer
-} from "../../../controls/OneLakeItemExplorer";
+  OneLakeView
+} from "../../../controls/OneLakeView";
 
 // Re-export the types from the control for backwards compatibility  
 export interface OneLakeItemExplorerItem extends ItemReference {
@@ -103,7 +103,7 @@ export function OneLakeItemExplorerComponent(props: OneLakeItemExplorerComponent
         
         {isExplorerVisible && (
           <div className="selector-body" style={{ flex: 1, overflow: "hidden" }}>
-            <OneLakeItemExplorer
+            <OneLakeView
               workloadClient={props.workloadClient}
               config={{
                 mode: props.config.mode,

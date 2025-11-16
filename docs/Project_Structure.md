@@ -179,28 +179,32 @@ All files in the `build/` directory are generated on-demand from templates and s
 - **Developer workspace**: Run SetupDevEnvironment.ps1 again
 - **Build artifacts**: Run build scripts to regenerate all files in build/ directory
 
-## 🧩 Reusable Controls
+## 🧩 Application Architecture
 
-The toolkit includes reusable controls in `Workload/app/controls/` that provide common functionality:
+The toolkit follows a layered architecture in `Workload/app/` with clear separation of concerns:
 
-### OneLakeItemExplorer
+### clients/
+- **Purpose**: API wrappers for Microsoft Fabric APIs
+- **Location**: `Workload/app/clients/`
+- **Usage**: Direct API integration with authentication and error handling
 
-- **Purpose**: Tree-based OneLake item browsing with files and tables
-- **Location**: `controls/OneLakeItemExplorer/`
-- **Documentation**: [OneLakeItemExplorer.md](controls/OneLakeItemExplorer.md)
-- **Usage**: Import the control, don't copy sample code
+### controller/
+- **Purpose**: Client controller SDK abstractions for easier development
+- **Location**: `Workload/app/controller/` 
+- **Usage**: Higher-level abstractions over client APIs for common patterns
 
-```typescript
-import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
-```
+### controls/
+- **Purpose**: UX-compliant reusable controls following Fabric design guidelines
+- **Location**: `Workload/app/controls/`
+- **Documentation**: [Available Controls](./controls/README.md)
+- **Requirements**: 
+  - **ItemEditor**: MANDATORY for all item editors - provides view registration, ribbon integration, and consistent layouts
+  - **Other controls**: Optional based on use case (OneLakeView, Wizard, etc.)
 
-**⚠️ Important**: Always use the control from `controls/`, never copy code from `samples/`.
-
-### Ribbon & ItemEditor
-
-- **Purpose**: Standard ribbon and item editing patterns
-- **Location**: `controls/ItemEditor/` and `controls/`
-- **Documentation**: [Ribbon.md](ItemEditor/Ribbon.md)
+### items/
+- **Purpose**: Individual item implementations using the above layers
+- **Location**: `Workload/app/items/[ItemName]/`
+- **Pattern**: Each item uses ItemEditor control + other components as needed
 
 ## 🎯 Key Benefits
 
@@ -210,4 +214,3 @@ import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
 4. **No Dependencies**: After setup, no external config files needed
 5. **Environment Clarity**: Each deployment target has its own committed file
 6. **Direct Editing**: Developers can modify .env files without complex scripts
-

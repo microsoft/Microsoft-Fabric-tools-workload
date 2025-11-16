@@ -148,7 +148,7 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
 - **Center Panel (Required)**: Main editing content, forms, canvases, detail views
 - **Bottom Panel (Optional)**: Full-width status bars, output panels, debugging tools  
 - **Resizable Splitters**: Drag-to-resize with min/max constraints and live preview
-- **Collapse Controls**: Header-based toggle following OneLakeItemExplorer patterns
+- **Collapse Controls**: Header-based toggle following OneLakeView patterns
 - **State Management**: Internal state management with notification callbacks
 - **Responsive Design**: Mobile-friendly with adaptive layouts
 

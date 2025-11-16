@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, Link20Regular, FolderLink20Regular } from "@fluentui/react-icons";
 import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
-import { FileMetadata, OneLakeItemExplorerFilesTreeProps } from "./OneLakeItemExplorerModel";
-import { getShortcutContents } from "./OneLakeItemExplorerController";
+import { FileMetadata, OneLakeViewFilesTreeProps } from "./OneLakeViewModel";
+import { getShortcutContents } from "./OneLakeViewController";
 
 interface TreeNode {
     metadata: FileMetadata;
@@ -13,7 +13,7 @@ interface TreeNode {
 
 type FolderMap = Map<string, TreeNode>;
 
-export function FileTree(props: OneLakeItemExplorerFilesTreeProps) {
+export function FileTree(props: OneLakeViewFilesTreeProps) {
     const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback, onCreateFolderCallback, onCreateShortcutCallback, workloadClient, workspaceId, itemId, mode} = props;
     const [openMenu, setOpenMenu] = useState<string | null>(null);
     const [expandedShortcuts, setExpandedShortcuts] = useState<Set<string>>(new Set());

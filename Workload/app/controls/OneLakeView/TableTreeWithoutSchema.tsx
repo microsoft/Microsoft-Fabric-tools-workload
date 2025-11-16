@@ -1,9 +1,9 @@
 import React from "react";
-import { OneLakeItemExplorerTablesTreeProps } from "./OneLakeItemExplorerModel";
+import { OneLakeViewTablesTreeProps } from "./OneLakeViewModel";
 import { Table20Regular } from "@fluentui/react-icons";
 import { TreeItem, TreeItemLayout, Tooltip } from "@fluentui/react-components";
 
-export function TableTreeWithoutSchema(props: OneLakeItemExplorerTablesTreeProps) {
+export function TableTreeWithoutSchema(props: OneLakeViewTablesTreeProps) {
     const {allTablesInItem: allTablesInOneLake, selectedTablePath, onSelectTableCallback} = props;
     return (
         <>

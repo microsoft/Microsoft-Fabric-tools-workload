@@ -15,7 +15,7 @@ import { getConfiguredWorkloadItemTypes } from './../../controller/Configuration
 
 export function DataPlayground(props: TabContentProps) {
   const { workloadClient } = props;
-  const [selectedTab, setSelectedTab] = useState<TabValue>("onelakeItemExplorer");
+  const [selectedTab, setSelectedTab] = useState<TabValue>("OneLakeView");
 
   return (
     <Stack className="playground-container" >
@@ -25,13 +25,13 @@ export function DataPlayground(props: TabContentProps) {
         data-testid="item-editor-selected-tab-btn"
         onTabSelect={(_, data: SelectTabData) => setSelectedTab(data.value)}
       >
-        <Tab value="onelakeItemExplorer">OneLake Item Explorer</Tab>
+        <Tab value="OneLakeView">OneLake Item Explorer</Tab>
         <Tab value="onelakeShortcutCreator">OneLake Shortcut Creator</Tab>
         <Tab value="eventhouseExplorer">Eventhouse Explorer</Tab>
       </TabList>
 
       <Stack className="main">
-        {selectedTab === 'onelakeItemExplorer' && (
+        {selectedTab === 'OneLakeView' && (
           <OneLakeItemExplorerComponent 
             workloadClient={workloadClient}
             onFileSelected={async (fileName: string, oneLakeLink: string) => {

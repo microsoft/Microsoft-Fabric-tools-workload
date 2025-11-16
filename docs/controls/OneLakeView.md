@@ -1,6 +1,6 @@
-# OneLakeItemExplorer Control
+# OneLakeView Control
 
-The **OneLakeItemExplorer** is a reusable control that provides comprehensive OneLake item browsing functionality. Use this control when you need to display OneLake items, files, tables, or provide OneLake navigation in your workload.
+The **OneLakeView** is a reusable control that provides comprehensive OneLake item browsing functionality. Use this control when you need to display OneLake items, files, tables, or provide OneLake navigation in your workload.
 
 ## 🎯 When to Use This Control
 
@@ -11,27 +11,27 @@ The **OneLakeItemExplorer** is a reusable control that provides comprehensive On
 
 ## ❌ What NOT to Do
 
-- **Don't copy from samples**: Never copy code from `SampleOneLakeItemExplorer` 
+- **Don't copy from samples**: Never copy code from `SampleOneLakeView` 
 - **Don't create your own**: Use this control instead of building custom OneLake explorers
-- **Don't use the sample wrapper**: Import from `controls/OneLakeItemExplorer`, not from samples
+- **Don't use the sample wrapper**: Import from `controls/OneLakeView`, not from samples
 
 ## 📦 Import and Usage
 
 ### Basic Import
 ```typescript
-import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
+import { OneLakeView } from '../../../controls/OneLakeView';
 ```
 
 ### Complete Example
 ```typescript
 import React, { useState } from 'react';
-import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
+import { OneLakeView } from '../../../controls/OneLakeView';
 
 export function MyItemEditor(props: ItemEditorProps) {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   return (
-    <OneLakeItemExplorer
+    <OneLakeView
       workloadClient={props.workloadClient}
       config={{
         mode: "edit", // "edit" | "view"
@@ -69,7 +69,7 @@ export function MyItemEditor(props: ItemEditorProps) {
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `mode` | `"edit" \| "view"` | No | Controls if user can create/delete files. Default: `"view"` |
-| `initialItem` | `OneLakeItemExplorerItem` | No* | Item to display initially. Shows empty state if not provided |
+| `initialItem` | `OneLakeViewItem` | No* | Item to display initially. Shows empty state if not provided |
 | `allowItemSelection` | `boolean` | No | Shows "Add" button to open DataHub for item selection |
 | `allowedItemTypes` | `string[]` | No | Item types allowed in DataHub selection |
 | `refreshTrigger` | `number` | No | Change this value to trigger a data refresh |
@@ -118,7 +118,7 @@ const refreshData = () => {
   setRefreshTrigger(Date.now());
 };
 
-<OneLakeItemExplorer
+<OneLakeView
   config={{
     refreshTrigger: refreshTrigger,
     // ... other config
@@ -158,11 +158,11 @@ const handleItemChanged = async (newItem: Item) => {
 The control includes its own SCSS styles. You can override specific parts if needed:
 
 ```scss
-.onelake-explorer__empty {
+.onelake-view__empty {
   // Override empty state styling
 }
 
-.onelake-explorer__tree {
+.onelake-view__tree {
   // Override tree styling  
 }
 ```
@@ -193,10 +193,10 @@ All types are exported from the control:
 
 ```typescript
 import { 
-  OneLakeItemExplorerProps,
-  OneLakeItemExplorerConfig,
-  OneLakeItemExplorerCallbacks,
+  OneLakeViewProps,
+  OneLakeViewConfig,
+  OneLakeViewCallbacks,
   TableMetadata,
   FileMetadata
-} from '../../../controls/OneLakeItemExplorer';
+} from '../../../controls/OneLakeView';
 ```

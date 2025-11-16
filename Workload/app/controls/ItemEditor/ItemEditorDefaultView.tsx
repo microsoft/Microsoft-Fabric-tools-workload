@@ -19,7 +19,7 @@ import "../../styles.scss";
  * ## Header Behavior
  * - **Expanded**: Shows title on left, collapse button (⏷) on right
  * - **Collapsed**: Shows only expand button (⏵) in vertical strip
- * - **Pattern**: Follows SampleOneLakeItemExplorer design for consistency
+ * - **Pattern**: Follows SampleOneLakeView design for consistency
  * 
  * @example
  * ```tsx
@@ -193,7 +193,7 @@ export interface ItemEditorDefaultViewProps {
  * - **Responsive**: Proper spacing and overflow handling
  * - **Accessible**: Semantic HTML with ARIA regions
  * - **Fabric Compliant**: Uses design tokens for spacing and colors
- * - **Header-Based Toggle**: Follows SampleOneLakeItemExplorer pattern with title and toggle button
+ * - **Header-Based Toggle**: Follows SampleOneLakeView pattern with title and toggle button
  * 
  * ## Usage Examples
  * 

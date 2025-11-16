@@ -262,7 +262,7 @@ This guide provides step-by-step instructions for AI tools to create a new item 
 - Always use ItemEditor and standard Ribbon components!
 - **CRITICAL**: Must update Product.json to register item in create dialogs
 - **OneLakeStorageClient**: Always use `createItemWrapper()` for item-scoped OneLake operations
-- **OneLakeItemExplorer**: Use the control from `controls/OneLakeItemExplorer`, NOT the sample code
+- **OneLakeView**: Use the control from `controls/OneLakeView`, NOT the sample code
 
 ### Step 1: Create Item Implementation Structure
 
@@ -811,18 +811,18 @@ await oneLakeClient.writeFileAsBase64(filePath, base64Content);
 - **Error Prevention**: Can't accidentally use wrong workspace/item IDs
 - **Consistency**: All operations use the same item context
 
-### Step 4.3: OneLakeItemExplorer Control Usage
+### Step 4.3: OneLakeView Control Usage
 
-**🚨 CRITICAL**: Use the new OneLakeItemExplorer control for OneLake browsing functionality. Do NOT copy code from the sample.
+**🚨 CRITICAL**: Use the new OneLakeView control for OneLake browsing functionality. Do NOT copy code from the sample.
 
 #### ✅ **CORRECT Pattern** - Use the reusable control:
 
 ```typescript
-// ✅ Import the OneLakeItemExplorer control
-import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
+// ✅ Import the OneLakeView control
+import { OneLakeView } from '../../../controls/OneLakeView';
 
 // ✅ Use the control with proper configuration
-<OneLakeItemExplorer
+<OneLakeView
   workloadClient={props.workloadClient}
   config={{
     mode: "edit", // or "view" for read-only
@@ -852,19 +852,19 @@ import { OneLakeItemExplorer } from '../../../controls/OneLakeItemExplorer';
 #### ❌ **WRONG Pattern** - Don't copy from samples:
 
 ```typescript
-// ❌ NEVER copy SampleOneLakeItemExplorerComponent code
-// Use the OneLakeItemExplorer control instead
-import { OneLakeItemExplorerComponent } from '../../../samples/views/SampleOneLakeItemExplorer';
+// ❌ NEVER copy SampleOneLakeViewComponent code
+// Use the OneLakeView control instead
+import { OneLakeViewComponent } from '../../../samples/views/SampleOneLakeView';
 
 // ❌ This is a sample wrapper, not the reusable control
-<OneLakeItemExplorerComponent ... />
+<OneLakeViewComponent ... />
 ```
 
 #### ❌ **WRONG Pattern** - Missing configuration:
 
 ```typescript
 // ❌ NEVER do this - control will show empty state without initialItem
-<OneLakeItemExplorer
+<OneLakeView
   workloadClient={props.workloadClient}
   config={{
     mode: "view",
@@ -877,7 +877,7 @@ import { OneLakeItemExplorerComponent } from '../../../samples/views/SampleOneLa
 
 #### **Key Points:**
 
-- **Use Control Not Sample**: Import from `controls/OneLakeItemExplorer`, not samples
+- **Use Control Not Sample**: Import from `controls/OneLakeView`, not samples
 - **initialItem Required**: Control needs current item to load and display content
 - **All Properties Needed**: Must include `id`, `workspaceId`, and `displayName`  
 - **Empty State Handling**: Control shows add button when no initialItem provided
@@ -1615,7 +1615,7 @@ grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
 - **Ribbon used**: Check ribbon uses `Ribbon` + `RibbonToolbar`
 - **Existing Base Components**: Used ItemEditorView, ItemEditorDetailView etc. instead of reinventing
 - **OneLakeStorageClient Wrapper**: Used `createItemWrapper()` for all OneLake operations, no manual path construction
-- **OneLakeItemExplorer Control**: Used control from `controls/OneLakeItemExplorer`, not sample code
+- **OneLakeView Control**: Used control from `controls/OneLakeView`, not sample code
 - **Version number**: Must be "1.100" (copy from HelloWorld exactly)
 - **SCSS overrides only**: Check .scss file doesn't duplicate layout styles
 

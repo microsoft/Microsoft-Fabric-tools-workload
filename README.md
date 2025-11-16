@@ -97,6 +97,19 @@ If you use a codespace please make sure that you select at least an 8 core machi
 
 Use the [Project structure](./docs/Project_Structure.md) to get a better understanding about Extensibility projects are structured and where you can find and change it to your needs.
 
+### Available Controls
+
+The toolkit includes pre-built controls to accelerate your workload development. These controls follow Fabric Design System guidelines for consistent user experiences.
+
+**[📋 View All Controls →](./docs/controls/README.md)**
+
+Key highlights:
+- **ItemEditor Control** - Foundation for all item editors (mandatory)
+- **OneLakeView** - OneLake integration and file browsing  
+- **Wizard Control** - Multi-step guided workflows
+
+For complete documentation, examples, and implementation guides, see the [Controls Documentation](./docs/controls/README.md).
+
 ### Setting things up
 
 To set things up follow the [Setup Guide](./docs/Project_Setup.md).

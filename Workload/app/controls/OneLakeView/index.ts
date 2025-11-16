@@ -1,24 +1,24 @@
 /**
- * OneLakeItemExplorer Control - Main Export Module
+ * OneLakeView Control - Main Export Module
  * 
  * This module provides a reusable OneLake Item Explorer control that can be
  * integrated into any component that needs tree-based OneLake browsing functionality.
  * 
  * Core Components:
- * - OneLakeItemExplorer: Main control with tree functionality
+ * - OneLakeView: Main control with tree functionality
  * - FileTree: File system tree component
  * - TableTreeWithSchema: Table tree with schema grouping
  * - TableTreeWithoutSchema: Flat table tree
  * 
  * Data Models:
- * - OneLakeItemExplorerProps: Main control props interface
- * - OneLakeItemExplorerConfig: Configuration options
- * - OneLakeItemExplorerCallbacks: Event callback functions
+ * - OneLakeViewProps: Main control props interface
+ * - OneLakeViewConfig: Configuration options
+ * - OneLakeViewCallbacks: Event callback functions
  * - TableMetadata, FileMetadata: Data structures
  * 
  * Usage:
  * ```tsx
- * import { OneLakeItemExplorer } from '../controls/OneLakeItemExplorer';
+ * import { OneLakeView } from '../controls/OneLakeView';
  * 
  * const config = {
  *   mode: "edit",
@@ -32,7 +32,7 @@
  *   onItemChanged: async (item) => { ... }
  * };
  * 
- * <OneLakeItemExplorer 
+ * <OneLakeView 
  *   workloadClient={workloadClient}
  *   config={config}
  *   callbacks={callbacks}
@@ -41,7 +41,7 @@
  */
 
 // Main control
-export { OneLakeItemExplorer } from './OneLakeItemExplorer';
+export { OneLakeView } from './OneLakeView';
 
 // Sub-components
 export { FileTree } from './FileTree';
@@ -55,19 +55,19 @@ export {
   getShortcutContents,
   getFilesInPath,
   getItem
-} from './OneLakeItemExplorerController';
+} from './OneLakeViewController';
 
 // Types and interfaces
 export type {
-  OneLakeItemExplorerProps,
-  OneLakeItemExplorerConfig,
-  OneLakeItemExplorerCallbacks,
-  OneLakeItemExplorerItem,
+  OneLakeViewProps,
+  OneLakeViewConfig,
+  OneLakeViewCallbacks,
+  OneLakeViewItem,
   TableMetadata,
   FileMetadata,
   OneLakeObjectMetadata,
-  OneLakeItemExplorerTablesTreeProps,
-  OneLakeItemExplorerFilesTreeProps,
+  OneLakeViewTablesTreeProps,
+  OneLakeViewFilesTreeProps,
   LoadingStatus,
   ContextMenuState
-} from './OneLakeItemExplorerModel';
+} from './OneLakeViewModel';

@@ -1,7 +1,7 @@
 /**
- * OneLakeItemExplorer Control - Core Data Models and Interfaces
+ * OneLakeView Control - Core Data Models and Interfaces
  * 
- * This module defines the core data structures and interfaces for the OneLake Item Explorer
+ * This module defines the core data structures and interfaces for the OneLake View
  * control. These types are shared between the control and its consumer components.
  */
 
@@ -30,7 +30,7 @@ export interface FileMetadata extends OneLakeObjectMetadata {
     isDirectory: boolean;
 }
 
-export interface OneLakeItemExplorerItem extends ItemReference {
+export interface OneLakeViewItem extends ItemReference {
     displayName: string;
 }
 
@@ -38,7 +38,7 @@ export interface OneLakeItemExplorerItem extends ItemReference {
 // Control Configuration
 // ============================================================================
 
-export interface OneLakeItemExplorerConfig {
+export interface OneLakeViewConfig {
     /**
      * Control mode - view for read-only, edit for full functionality
      */
@@ -47,7 +47,7 @@ export interface OneLakeItemExplorerConfig {
     /**
      * Initial item to display in the explorer
      */
-    initialItem?: OneLakeItemExplorerItem;
+    initialItem?: OneLakeViewItem;
     
     /**
      * Allowed item types for item selection
@@ -69,7 +69,7 @@ export interface OneLakeItemExplorerConfig {
 // Callback Interfaces
 // ============================================================================
 
-export interface OneLakeItemExplorerCallbacks {
+export interface OneLakeViewCallbacks {
     /**
      * Called when a file is selected
      */
@@ -90,29 +90,29 @@ export interface OneLakeItemExplorerCallbacks {
 // Control Props
 // ============================================================================
 
-export interface OneLakeItemExplorerProps extends PageProps {
+export interface OneLakeViewProps extends PageProps {
     /**
      * Configuration options for the explorer
      */
-    config: OneLakeItemExplorerConfig;
+    config: OneLakeViewConfig;
     
     /**
      * Callback functions for explorer events
      */
-    callbacks: OneLakeItemExplorerCallbacks;
+    callbacks: OneLakeViewCallbacks;
 }
 
 // ============================================================================
 // Tree Component Props
 // ============================================================================
 
-export interface OneLakeItemExplorerTablesTreeProps {
+export interface OneLakeViewTablesTreeProps {
     allTablesInItem: TableMetadata[];
     selectedTablePath?: string;
     onSelectTableCallback: (selectedTable: TableMetadata) => void;
 }
 
-export interface OneLakeItemExplorerFilesTreeProps {
+export interface OneLakeViewFilesTreeProps {
     allFilesInItem: FileMetadata[];
     selectedFilePath?: string;
     onSelectFileCallback: (selectedFile: FileMetadata) => void;

@@ -1,16 +1,16 @@
 /**
  * ============================================================================
- * OneLake Item Explorer Control - Core Tree Styles
+ * OneLake View Control - Core Tree Styles
  * ============================================================================
  * 
- * This file contains styles specific to the OneLake Item Explorer control.
+ * This file contains styles specific to the OneLake View control.
  * These styles focus on the tree functionality and should not include
  * header, layout, or collapsible container styles.
  * 
  * ## Usage
- * Import this file in OneLakeItemExplorer.tsx:
+ * Import this file in OneLakeView.tsx:
  * ```typescript
- * import "./OneLakeItemExplorer.scss";
+ * import "./OneLakeView.scss";
  * ```
  * 
  * ## Design Principles
@@ -28,7 +28,7 @@
 // Core Tree Container Styles
 // ============================================================================
 
-.onelake-explorer__tree {
+.onelake-view__tree {
   --spacingHorizontalXXL: var(--spacingHorizontalL, 16px);
   display: flex;
   align-items: start;
@@ -42,7 +42,7 @@
   }
 }
 
-.onelake-explorer__tree-container {
+.onelake-view__tree-container {
   width: 100%;
   overflow-y: auto;
   padding: var(--spacingVerticalXS, 4px);
@@ -66,7 +66,7 @@
   }
 }
 
-.onelake-explorer__subtree {
+.onelake-view__subtree {
   --spacingHorizontalXXL: var(--spacingHorizontalL, 16px);
   
   // Selected item highlighting
@@ -81,14 +81,14 @@
 // ============================================================================
 
 // Individual tree items
-.onelake-explorer__tree-item {
+.onelake-view__tree-item {
   display: flex;
   width: 100%;
   align-items: center;
 }
 
 // Fluent UI TreeItemLayout truncation
-.onelake-explorer__tree .fui-TreeItemLayout__main {
+.onelake-view__tree .fui-TreeItemLayout__main {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -99,7 +99,7 @@
 // ============================================================================
 
 // Empty state
-.onelake-explorer__empty {
+.onelake-view__empty {
   display: flex;
   height: 100%;
   align-items: center;
@@ -127,7 +127,7 @@
 }
 
 // Loading state
-.onelake-explorer__loading {
+.onelake-view__loading {
   display: flex;
   height: 100%;
   align-items: center;
@@ -136,7 +136,7 @@
 }
 
 // Error state
-.onelake-explorer__error {
+.onelake-view__error {
   display: flex;
   height: 100%;
   align-items: center;
@@ -159,14 +159,14 @@
 // ============================================================================
 
 @media (prefers-contrast: high) {
-  .onelake-explorer__tree {
+  .onelake-view__tree {
     .selected {
       outline: 2px solid transparent;
       outline-offset: -2px;
     }
   }
   
-  .onelake-explorer__subtree {
+  .onelake-view__subtree {
     .selected {
       outline: 2px solid transparent;
       outline-offset: -2px;
@@ -179,13 +179,13 @@
 // ============================================================================
 
 @media (max-width: 768px) {
-  .onelake-explorer__tree-container {
+  .onelake-view__tree-container {
     padding: var(--spacingVerticalXXS, 2px);
   }
   
-  .onelake-explorer__empty,
-  .onelake-explorer__loading,
-  .onelake-explorer__error {
+  .onelake-view__empty,
+  .onelake-view__loading,
+  .onelake-view__error {
     padding: var(--spacingVerticalL, 16px);
     
     p {

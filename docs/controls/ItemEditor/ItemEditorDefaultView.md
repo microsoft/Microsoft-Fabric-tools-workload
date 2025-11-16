@@ -189,7 +189,7 @@ const leftConfig: LeftPanelConfig = {
 **Collapse States:**
 - **Expanded**: Shows title on left, collapse button (⏷) on right  
 - **Collapsed**: Shows only expand button (⏵) in vertical strip
-- **Pattern**: Follows OneLakeItemExplorer design for consistency
+- **Pattern**: Follows OneLakeView design for consistency
 
 ### Resizable Splitter
 
@@ -633,7 +633,7 @@ The `ItemEditorDefaultView` panels have **zero internal padding** to give maximu
 - **[ItemEditorView](./ItemEditorView.md)** - Simple single-panel layout  
 - **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state layout
 - **[Ribbon](./Ribbon.md)** - Ribbon container component
-- **[OneLakeItemExplorer](../controls/OneLakeItemExplorer.md)** - Example left panel content
+- **[OneLakeView](../controls/OneLakeView.md)** - Example left panel content
 
 ## 📝 Examples
 

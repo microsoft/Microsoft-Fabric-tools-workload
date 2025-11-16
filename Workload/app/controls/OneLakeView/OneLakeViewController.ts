@@ -1,14 +1,14 @@
 import { Item, OneLakeStoragePathMetadata } from "../../clients/FabricPlatformTypes";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { FileMetadata, TableMetadata } from "./OneLakeItemExplorerModel";
+import { FileMetadata, TableMetadata } from "./OneLakeViewModel";
 import { FabricPlatformAPIClient } from "../../clients";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 
 /**
- * OneLakeItemExplorer Controller - Data access logic for the OneLake Item Explorer control
+ * OneLakeView Controller - Data access logic for the OneLake Item Explorer control
  * 
  * This module provides data access functions for retrieving tables, files, and item metadata
- * from OneLake storage. These functions are used by the OneLakeItemExplorer control to
+ * from OneLake storage. These functions are used by the OneLakeView control to
  * populate the tree view with actual data.
  * 
  * Key Functions:

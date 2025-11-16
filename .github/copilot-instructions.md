@@ -62,7 +62,7 @@ Beyond the generic `.ai/context/` files, GitHub Copilot provides:
 - **Ribbon Pattern**: ALWAYS suggests `homeToolbarActions` (mandatory) + optional `additionalToolbars` pattern. Use `createSaveAction()`, `createSettingsAction()` factories from controls/ItemEditor
 - **Toolbar Components**: ALWAYS suggests `Tooltip` + `ToolbarButton` pattern for toolbar actions. Auto-imports both from `@fluentui/react-components` and wraps ToolbarButtons in Tooltips with proper accessibility attributes
 - **OneLakeStorageClient**: ALWAYS use `createItemWrapper()` when working with OneLake storage in an item context. Never use direct OneLakeStorageClient methods with manual path construction
-- **OneLakeItemExplorer**: ALWAYS use control from `controls/OneLakeItemExplorer`, not sample code. Initialize with `initialItem` config for content display
+- **OneLakeView**: ALWAYS use control from `controls/OneLakeView`, not sample code. Initialize with `initialItem` config for content display
 - **Error Recovery**: Provides specific fixes for common Fabric authentication and manifest issues
 - **Code Completion**: Understands Fabric-specific patterns like `callNotificationOpen()` and `saveItemDefinition()`
 
@@ -106,7 +106,7 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **Ribbon Components**: Always creates `homeToolbarActions` array (mandatory) with `createSaveAction()`, `createSettingsAction()` factories, plus optional `additionalToolbars` array for complex items
 - **Toolbar Integration**: Mandatory `Tooltip` + `ToolbarButton` patterns for all toolbar implementations
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
-- **OneLake Explorer**: Always use control from `controls/OneLakeItemExplorer`, not sample code
+- **OneLake Explorer**: Always use control from `controls/OneLakeView`, not sample code
 - **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate
 - **Panel Configuration**: Suggests `collapsible: true`, proper panel titles, min/max width constraints, and accessibility labels for complex layouts
 - **Manifest Updates**: Template processing with placeholder replacement

@@ -2,22 +2,28 @@
 
 The `ItemEditor` is a foundational control for building item editors in the Microsoft Fabric Extensibility Toolkit. It provides a view registration system with automatic navigation, fixed ribbon layout, and consistent UX patterns.
 
-## � Component Documentation
+## 📚 Detailed Documentation
 
-This folder contains comprehensive documentation for the ItemEditor system and all related components:
+This is the main entry point for ItemEditor documentation. Detailed documentation is organized in the `ItemEditor/` subfolder:
 
 ### Core Components
 
-- **[ItemEditor](./README.md)** (this file) - Main container with view registration system
-- **[Ribbon](./Ribbon.md)** - Ribbon container with automatic back navigation
-- **[RibbonToolbar](./RibbonToolbar.md)** - Standardized toolbar actions
+- **[ItemEditor](./ItemEditor/README.md)** - Main container with view registration system  
+- **[Ribbon](./ItemEditor/Ribbon.md)** - Ribbon container with automatic back navigation
+- **[RibbonToolbar](./ItemEditor/RibbonToolbar.md)** - Standardized toolbar actions
 
 ### View Components
 
-- **[ItemEditorDefaultView](./ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters and bottom panel support
-- **[ItemEditorView](./ItemEditorView.md)** - Simple single-panel layout
-- **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state onboarding
-- **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail/drill-down views
+- **[ItemEditorDefaultView](./ItemEditor/ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters and bottom panel support
+- **[ItemEditorView](./ItemEditor/ItemEditorView.md)** - Simple single-panel layout
+- **[ItemEditorEmptyView](./ItemEditor/ItemEditorEmptyView.md)** - Empty state onboarding
+- **[ItemEditorDetailView](./ItemEditor/ItemEditorDetailView.md)** - Detail/drill-down views
+
+### Architecture & Implementation
+
+- **[Architecture](./ItemEditor/Architecture.md)** - System design and patterns
+- **[Implementation](./ItemEditor/Implementation.md)** - Implementation guidelines
+- **[QuickReference](./ItemEditor/QuickReference.md)** - Quick reference guide
 
 ### Reference Documentation
 

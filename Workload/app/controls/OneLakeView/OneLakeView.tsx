@@ -17,14 +17,14 @@ import {
 } from "@fluentui/react-components";
 import { FolderAdd20Regular, Link20Regular } from "@fluentui/react-icons";
 import { 
-  OneLakeItemExplorerProps,
+  OneLakeViewProps,
   TableMetadata, 
   FileMetadata, 
-  OneLakeItemExplorerItem,
+  OneLakeViewItem,
   LoadingStatus 
-} from "./OneLakeItemExplorerModel";
-import "./OneLakeItemExplorer.scss";
-import { getTables, getFiles } from "./OneLakeItemExplorerController";
+} from "./OneLakeViewModel";
+import "./OneLakeView.scss";
+import { getTables, getFiles } from "./OneLakeViewController";
 import { TableTreeWithSchema } from "./TableTreeWithSchema";
 import { TableTreeWithoutSchema } from "./TableTreeWithoutSchema";
 import { FileTree } from "./FileTree";
@@ -36,7 +36,7 @@ import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDialogOpenMsgBox } from "../../controller/DialogController";
 
 /**
- * OneLakeItemExplorer - Core tree functionality for exploring OneLake items
+ * OneLakeView - Core tree functionality for exploring OneLake items
  * 
  * This control provides the essential tree view functionality for browsing OneLake items,
  * including tables and files, with support for context menus, loading states, and CRUD operations.
@@ -52,8 +52,8 @@ import { callDialogOpenMsgBox } from "../../controller/DialogController";
  * This control focuses on the tree functionality only. Header, collapse logic,
  * and layout should be handled by the consuming component.
  */
-export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
-  const [selectedItem, setSelectedItem] = useState<OneLakeItemExplorerItem>(null);
+export function OneLakeView(props: OneLakeViewProps) {
+  const [selectedItem, setSelectedItem] = useState<OneLakeViewItem>(null);
   const [tablesInItem, setTablesInItem] = useState<TableMetadata[]>(null);
   const [filesInItem, setFilesInItem] = useState<FileMetadata[]>(null);
   const [selectedTablePath, setSelectedTablePath] = useState<string>(null);
@@ -86,14 +86,14 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
           try {
             success = await setTablesAndFiles(".default");
           } catch (secondException) {
-            console.error("OneLakeItemExplorer: Failed to load data for item:", selectedItem, secondException);
+            console.error("OneLakeView: Failed to load data for item:", selectedItem, secondException);
             success = false;
           }
         }
         setLoadingStatus(success ? "idle" : "error");
       } else if (selectedItem) {
         // selectedItem exists but is missing required properties
-        console.error("OneLakeItemExplorer: selectedItem is missing required properties:", selectedItem);
+        console.error("OneLakeView: selectedItem is missing required properties:", selectedItem);
         setLoadingStatus("error");
       }
     };
@@ -112,7 +112,7 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
           try {
             success = await setTablesAndFiles(".default");
           } catch (secondException) {
-            console.error("OneLakeItemExplorer: Failed to refresh data for item:", selectedItem, secondException);
+            console.error("OneLakeView: Failed to refresh data for item:", selectedItem, secondException);
             success = false;
           }
         }
@@ -125,7 +125,7 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
   async function setTablesAndFiles(additionalScopesToConsent: string): Promise<boolean> {
     try {
       if (!selectedItem || !selectedItem.workspaceId || !selectedItem.id) {
-        console.error("OneLakeItemExplorer: Cannot fetch data - selectedItem is invalid:", selectedItem);
+        console.error("OneLakeView: Cannot fetch data - selectedItem is invalid:", selectedItem);
         return false;
       }
 
@@ -144,7 +144,7 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
         return true;
       }
     } catch (error) {
-      console.error("OneLakeItemExplorer: Error fetching tables and files:", error);
+      console.error("OneLakeView: Error fetching tables and files:", error);
     }
     return false;
   }
@@ -362,7 +362,7 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
 
   async function onDatahubClicked() {
     if (!props.callbacks?.onItemChanged) {
-      console.warn("OneLakeItemExplorer: onItemChanged callback is required for item selection");
+      console.warn("OneLakeView: onItemChanged callback is required for item selection");
       return;
     }
 
@@ -382,7 +382,7 @@ export function OneLakeItemExplorer(props: OneLakeItemExplorerProps) {
   if (!selectedItem) {
     return (
       <Stack className="onelake-explorer__empty" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
-        <Image src="/assets/controls/OneLakeItemExplorer/EmptyIcon.svg" />
+        <Image src="/assets/controls/OneLakeView/EmptyIcon.svg" />
         <span className="add">Add an item</span>
         {props.config?.allowItemSelection && (
           <Tooltip content={"Open Datahub Explorer"} relationship="label">

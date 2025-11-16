@@ -61,7 +61,7 @@ export function HelloWorldItemDefaultView({
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet1', 'Change the item definition (message) on the right.')}
+              {t('GettingStarted_Card1_Bullet1', 'Change the item definition on the right.')}
             </li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet2', 'Save the item to store the state in Fabric.')}
