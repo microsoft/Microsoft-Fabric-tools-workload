@@ -4,18 +4,15 @@ import { useTranslation } from "react-i18next";
 import { 
   Ribbon, 
   RibbonAction,
-  RibbonTab,
   createSaveAction,
   createSettingsAction
 } from '../../controls/ItemEditor';
-import { RibbonActionButtonConfig } from '../../controls/ItemEditor/RibbonActionButton';
 import { ViewContext } from '../../controls';
 import { 
   Add24Regular,
   ArrowSync24Regular,
   DocumentAdd24Regular,
   BoxMultiple24Regular,
-  Settings24Regular,
 } from "@fluentui/react-icons";
 import "./PackageInstallerItem.scss";
 
