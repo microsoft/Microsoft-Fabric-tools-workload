@@ -79,7 +79,7 @@ export function HelloWorldItemDefaultView({
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">            
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet3', 'Use the content on the right to learn more about workloads.')}
+              {t('GettingStarted_Card1_Bullet3', 'Use the content on the right to learn more.')}
             </li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet4', 'Create your own Fabric item.')}
