@@ -127,18 +127,13 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
     title: "Files",
     width: 320,
     collapsible: true,
-    onCollapseChange: (collapsed) => savePreference('collapsed', collapsed)
+    onCollapseChange: (collapsed) => savePreference('collapsed', collapsed),
+    enableUserResize: true
   }}
   center={{
     content: <CodeEditor />,
     ariaLabel: "Code editor workspace"
   }}
-  bottom={{
-    content: <OutputConsole />,
-    height: 150,
-    className: "output-panel"
-  }}
-  resizable={true}
 />
 ```
 
@@ -146,8 +141,7 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
 
 - **Left Panel (Optional)**: Navigation trees, file explorers, OneLakeView, and secondary views (list views, catalog browsers, workspace explorers) with collapsible headers
 - **Center Panel (Required)**: Main editing content, forms, canvases, detail views
-- **Bottom Panel (Optional)**: Full-width status bars, output panels, debugging tools  
-- **Resizable Splitters**: Drag-to-resize with min/max constraints and live preview
+- **Resizable Splitters**: Drag-to-resize with min/max constraints and live preview (controlled via `enableUserResize` in left panel config)
 - **Collapse Controls**: Header-based toggle following OneLakeView patterns
 - **State Management**: Internal state management with notification callbacks
 - **Responsive Design**: Mobile-friendly with adaptive layouts
@@ -165,7 +159,7 @@ import { ItemEditorDetailView } from '../../controls/ItemEditor';
   component: (
     <ItemEditorDetailView
       center={{ content: <ItemDetailsForm item={selectedItem} /> }}
-      actions={[
+      toolbarActions={[
         { key: 'save', label: 'Save', icon: Save24Regular, onClick: handleSave },
         { key: 'delete', label: 'Delete', icon: Delete24Regular, onClick: handleDelete }
       ]}

@@ -19,7 +19,6 @@ export {
   Ribbon,
   RibbonToolbar,
   RibbonToolbarAction,
-  RibbonActionButton,
   createSaveAction,
   createSettingsAction,
   createAboutAction
@@ -29,19 +28,13 @@ export type {
   ItemEditorProps, 
   RegisteredView,
   ViewContext,
-  ItemEditorDefaultViewProps,
   LeftPanelConfig,
   CentralPanelConfig,
-  BottomPanelConfig,
-  ItemEditorEmptyViewProps,
   EmptyStateTask,
-  ItemEditorDetailViewProps,
   DetailViewAction,
   RibbonProps,
-  RibbonToolbarProps,
   RibbonAction,
-  RibbonToolbarActionProps,
-  RibbonActionButtonProps,
+  RibbonActionButton,
   FluentIconComponent
 } from './ItemEditor/';
 

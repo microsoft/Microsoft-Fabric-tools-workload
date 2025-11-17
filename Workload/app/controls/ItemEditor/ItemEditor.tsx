@@ -102,7 +102,7 @@ export interface ViewContext {
  * ```
  * 
  * @property {ReactNode | Function} ribbon - The ribbon component (receives ViewContext)
- * @property {RegisteredNotification[] | Function} notification - Static notification registration or function (DEPRECATED: prefer array)
+ * @property {RegisteredNotification[] | Function} messageBar - Static messageBar registration or function (DEPRECATED: prefer array)
  * @property {RegisteredView[]} views - Array of registered views with static definitions
  * @property {string | null | undefined} initialView - Name of the initial view to show (null/undefined = no view rendered until set)
  * @property {() => string | null | undefined} getInitialView - Function to determine initial view when loading completes (alternative to initialView)
@@ -113,8 +113,8 @@ export interface ViewContext {
 export interface ItemEditorPropsWithViews {
   /** The ribbon component - can be ReactNode or function receiving (ViewContext) */
   ribbon: ReactNode | ((context: ViewContext) => ReactNode);
-  /** Static notification registration or function (DEPRECATED: prefer array) */
-  notifications?: RegisteredNotification[] | ((currentView: string) => ReactNode);
+  /** Static messageBar registration or function (DEPRECATED: prefer array) */
+  messageBar?: RegisteredNotification[] | ((currentView: string) => ReactNode);
   /** Array of registered views with static definitions */
   views: RegisteredView[];
   /** Name of the initial view to show (null/undefined = don't render content until set) */
@@ -164,7 +164,7 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * ┌─────────────────────────────────────┐
  * │  Ribbon (Fixed at top)              │
  * ├─────────────────────────────────────┤
- * │  Notification (Optional, Fixed)     │
+ * │  MessageBar (Optional, Fixed)       │
  * ├─────────────────────────────────────┤
  * │                                     │
  * │  Scrollable Content Area            │
@@ -235,9 +235,13 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  *       onBack={context.goBack}  // ⭐ Automatically navigates to previous view
  *     />
  *   )}
- *   notification={(currentView) => 
- *     currentView === 'main' ? <MessageBar>Info</MessageBar> : undefined
- *   }
+ *   messageBar={[
+ *     {
+ *       name: 'info-message',
+ *       showInViews: ['main'],
+ *       component: <MessageBar intent="info">Info</MessageBar>
+ *     }
+ *   ]}
  *   views={views}
  *   initialView="empty"
  * />
@@ -404,7 +408,7 @@ export function ItemEditor(props: ItemEditorProps) {
 
   // Resolve notification (static registration or legacy function)
   const notificationContent = React.useMemo(() => {
-    const notifications = props.notifications;
+    const notifications = props.messageBar;
     
     if (!notifications) {
       return null;
@@ -432,7 +436,7 @@ export function ItemEditor(props: ItemEditorProps) {
     }
     
     return null;
-  }, [props.notifications, currentView]);
+  }, [props.messageBar, currentView]);
 
   // Determine content from view registration
   const content = React.useMemo(() => {

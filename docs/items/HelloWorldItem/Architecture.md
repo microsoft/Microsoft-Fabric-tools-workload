@@ -156,12 +156,12 @@ return (
       content: leftPanelContent,
       width: 600,
       minWidth: 350,
-      collapsible: false
+      collapsible: false,
+      enableUserResize: true
     }}
     center={{
       content: centerPanelContent,
     }}
-    resizable={true}
   />
 );
 ```

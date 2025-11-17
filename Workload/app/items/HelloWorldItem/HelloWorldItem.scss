@@ -29,31 +29,6 @@
  */
 
 // ============================================================================
-// Combined Layout - Single center panel with left/right sections
-// ============================================================================
-
-.hello-world-combined-layout {
-  display: flex;
-  width: 100%;
-  height: auto; // Allow natural height growth - ItemEditor handles overflow
-  gap: var(--spacingHorizontalXS, 4px);
-  align-items: stretch; // Force both sections to have same height
-  // NO overflow handling - ItemEditor center panel is responsible for scrolling
-}
-
-.hello-world-getting-started-section {
-  flex: 0 0 430px; 
-  min-width: 280px;
-  // NO height/overflow - let content grow naturally, ItemEditor handles scrolling
-}
-
-.hello-world-details-section {
-  flex: 1;
-  min-width: 0; // Allow flex shrinking
-  // NO height/overflow - let content grow naturally, ItemEditor handles scrolling
-}
-
-// ============================================================================
 // Unified View Section - Common container for both left and center panels
 // ============================================================================
 
@@ -66,7 +41,6 @@
   justify-content: flex-start;
   flex-direction: column;
   gap: var(--spacingVerticalXL);
-  background: var(--colorBrandBackground2);
   border-radius: 0;
   flex-shrink: 0;
   padding: var(--spacingVerticalM, 12px);
@@ -101,6 +75,11 @@
 // Section Header - Standard section header pattern
 // ============================================================================
 
+.hello-world-next {
+  width: 100%;
+  box-sizing: border-box; /* Ensure consistent box model */
+}
+
 .hello-world-section-header {
   display: flex;
   flex-direction: column;
@@ -115,7 +94,7 @@
 
 .hello-world-section-title {
   color: var(--colorNeutralForeground1);
-  font-size: 28px; // Slightly larger for section prominence
+  font-size: 22px;
   font-family: var(--fontFamilyBase);
   font-weight: var(--fontWeightSemibold);
   line-height: 36px;
@@ -131,7 +110,7 @@
 }
 
 .hello-world-next-item {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 28px;
   color: var(--colorNeutralForegroundStatic);
   margin-bottom: var(--spacingVerticalM);

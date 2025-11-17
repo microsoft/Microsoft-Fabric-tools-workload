@@ -19,7 +19,7 @@ export interface DetailViewAction extends RibbonAction {
  */
 export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
   /** Optional additional actions to display in the ribbon */
-  actions?: DetailViewAction[];
+  toolbarActions?: DetailViewAction[];
   /** Callback for the back action (if not provided, uses automatic ViewContext.goBack) */
   onBack?: () => void;
   /** Custom label for the back button (if not provided, will be handled at display level) */
@@ -86,7 +86,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  * import { ItemEditorDetailView } from "../../controls/ItemEditor";
  * import { Save24Regular, Delete24Regular } from "@fluentui/react-icons";
  * 
- * const actions = [
+ * const toolbarActions = [
  *   {
  *     key: 'save',
  *     label: 'Save Changes', // Can be omitted for translation at display level
@@ -110,7 +110,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  *   center={{
  *     content: <MyDetailContent />
  *   }}
- *   actions={actions}
+ *   toolbarActions={toolbarActions}
  * />
  * ```
  * 
@@ -126,7 +126,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  *   center={{
  *     content: <DetailEditor item={selectedItem} />
  *   }}
- *   actions={[
+ *   toolbarActions={[
  *     {
  *       key: 'apply',
  *       label: 'Apply',
@@ -144,7 +144,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  * 
  * import { ArrowDownload24Regular, Share24Regular } from "@fluentui/react-icons";
  * 
- * const actions = [
+ * const toolbarActions = [
  *   {
  *     key: 'export',
  *     label: 'Export',
@@ -176,7 +176,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  *   center={{
  *     content: <PageContent page={selectedPage} />
  *   }}
- *   actions={actions}
+ *   toolbarActions={toolbarActions}
  * />
  * ```
  * 
@@ -201,7 +201,7 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
  * // Actions automatically appear in ribbon when this view is active
  * <ItemEditorDetailView
  *   center={{ content: <MyContent /> }}
- *   actions={detailActions}
+ *   toolbarActions={detailActions}
  * />
  * ```
  * 
@@ -242,10 +242,8 @@ export interface ItemEditorDetailViewProps extends ItemEditorDefaultViewProps {
 export function ItemEditorDetailView({
   left,
   center,
-  bottom,
   className,
-  resizable,
-  actions = [],
+  toolbarActions = [],
   onBack,
   backLabel,
   backTooltip
@@ -266,7 +264,7 @@ export function ItemEditorDetailView({
   };
 
   // Combine back action with additional actions (only if onBack is provided)
-  const allActions = onBack ? [backAction, ...actions] : actions;
+  const allActions = onBack ? [backAction, ...toolbarActions] : toolbarActions;
 
   // Register actions with ItemEditor through context
   React.useEffect(() => {
@@ -289,9 +287,7 @@ export function ItemEditorDetailView({
     <ItemEditorDefaultView
       left={left}
       center={center}
-      bottom={bottom}
       className={className}
-      resizable={resizable}
     />
   );
 }

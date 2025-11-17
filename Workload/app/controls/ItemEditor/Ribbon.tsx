@@ -5,7 +5,7 @@ import { ArrowLeft24Regular } from '@fluentui/react-icons';
 import { useTranslation } from "react-i18next";
 import { ViewContext } from './ItemEditor';
 import { RibbonToolbar, RibbonAction } from './RibbonToolbar';
-import { RibbonActionButton, RibbonActionButtonConfig } from './RibbonActionButton';
+import { RibbonActionButtonImpl, RibbonActionButton } from './RibbonActionButton';
 import "./ItemEditor.scss"
 
 /**
@@ -84,7 +84,7 @@ export interface RibbonProps {
    * Optional action buttons to display on the right side of the ribbon
    * These buttons are always visible at the same height as the tabs
    */
-  rightActionButtons?: RibbonActionButtonConfig[];
+  rightActionButtons?: RibbonActionButton[];
 
 }
 
@@ -235,7 +235,7 @@ export const Ribbon: React.FC<RibbonProps> = ({
         {rightActionButtons.length > 0 && (
           <div className="ribbon-header__right ribbon-header__right-actions">
             {rightActionButtons.map((action) => (
-              <RibbonActionButton
+              <RibbonActionButtonImpl
                 key={action.key}
                 action={action}
               />

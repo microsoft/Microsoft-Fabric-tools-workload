@@ -161,7 +161,7 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: var(--spacingVerticalXS, 4px);
+    margin-bottom: 0;
     min-height: 32px;
 }
 
@@ -226,8 +226,8 @@
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
     padding: 0;
-    min-height: 28px; // Reduced from 32px for more compact ribbon
-    max-height: 28px;
+    min-height: 29px; // Updated to match reference height
+    max-height: 29px; // Updated to match reference height
     display: flex;
     align-items: center;
     justify-content: center;
@@ -277,8 +277,7 @@
     max-width: none !important;
     width: auto !important;
     padding: 0 !important;
-    min-height: 28px !important; // Reduced from 32px for more compact ribbon
-    max-height: 28px !important;
+    height: 100% !important; // Use full height like reference
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -300,6 +299,9 @@
     line-height: var(--lineHeightBase300) !important;
     color: var(--colorNeutralForeground2) !important;
     transition: all 0.1s ease !important;
+    height: 100% !important; // Use full height like reference
+    white-space: nowrap !important;
+    user-select: none !important;
 }
 
 .ribbon-container .ribbon-tab-label {
@@ -319,7 +321,6 @@
 
 // Selected state for tabs
 .ribbon-container .ribbon-tab-button[aria-selected="true"] .ribbon-tab-content {
-    background-color: var(--colorNeutralBackground1) !important;
     color: var(--colorNeutralForeground1) !important;
     font-weight: var(--fontWeightSemibold) !important;
     border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
@@ -575,7 +576,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
+      padding: 1px 0px 0px 12px;
       border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
       min-height: 32px;
 
@@ -962,9 +963,9 @@
 .ribbon-action-button {
   display: inline-flex !important;
   align-items: center !important;
-  gap: var(--spacingHorizontalXS) !important; // Gap between icon and text
-  height: 28px !important; // Slightly shorter than tab height for better visual balance
-  padding: var(--spacingVerticalXXS) var(--spacingHorizontalS) !important;
+  gap: 0 !important; // No gap between icon and text
+  height: 24px !important; // Total height: 20px content + 2px padding + 2px border = 24px
+  padding: 1px 8px !important;
   border-radius: var(--borderRadiusMedium) !important;
   font-size: var(--fontSizeBase200) !important;
   font-weight: var(--fontWeightMedium) !important;
@@ -974,12 +975,22 @@
   transition: all var(--durationFaster) var(--curveEasyEase) !important;
   border: 1px solid transparent !important;
   white-space: nowrap !important;
+  margin-left: 8px !important; // Add 8px left margin
+  min-width: auto !important; // Remove any minimum width constraints
+  width: auto !important; // Let the button size to its content
   
   // Icon styling
   svg, .ribbon-action-button__icon {
-    width: 16px !important;
-    height: 16px !important;
+    width: 20px !important; // Updated from 16px to match reference
+    height: 20px !important; // Updated from 16px to match reference
+    font-size: 20px !important; // Add font-size for icon fonts
     flex-shrink: 0 !important;
+  }
+  
+  // Remove default icon margins from Fluent UI Button component
+  .fui-Button__icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
   }
   
   // Text styling

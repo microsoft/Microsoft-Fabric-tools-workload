@@ -251,78 +251,104 @@ GitHub Copilot understands:
 - `fabric.notify` → Expands to callNotificationOpen with proper typing
 - `fabric.action` → Creates custom RibbonAction object
 
-### Editor Template Expansion (MANDATORY PATTERN - View Registration)
-When typing `fabric.editor`, GitHub Copilot expands to the NEW view registration pattern:
+### Editor Template Expansion (MANDATORY PATTERN - Current View Registration)
+When typing `fabric.editor`, GitHub Copilot expands to the CURRENT view registration pattern:
 
 ```typescript
-// 🚨 CORRECT: ItemEditor with view registration system
+// 🚨 CORRECT: ItemEditor with static view registration system
 return (
   <ItemEditor
-    ribbon={(currentView, setCurrentView) => (
+    isLoading={isLoading}
+    loadingMessage={t("[ItemName]ItemEditor_Loading", "Loading item...")}
+    ribbon={(context) => (
       <[ItemName]ItemRibbon
         {...props}
-        isSaveButtonEnabled={isSaveEnabled(currentView)}
-        currentView={currentView}
-        saveItemCallback={SaveItem}
+        viewContext={context}
+        isSaveButtonEnabled={isSaveEnabled(context.currentView)}
+        saveItemCallback={saveItem}
         openSettingsCallback={handleOpenSettings}
-        onViewChange={setCurrentView}
       />
     )}
-    views={(setCurrentView) => [
-      {
-        name: EDITOR_VIEW_TYPES.EMPTY,
-        component: (
-          <ItemEditorEmptyView
-            title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
-            description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
-            imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
-            imageAlt="Empty state illustration"
-            tasks={[
-              {
-                id: 'getting-started',
-                label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
-                onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT),
-                appearance: 'primary'
-              }
-            ]}
-          />
-        )
-      },
-      {
-        name: EDITOR_VIEW_TYPES.DEFAULT,
-        component: (
-          <[ItemName]ItemDefaultView
-            workloadClient={workloadClient}
-            item={item}
-            onShowDetail={(id) => setCurrentView(`detail-${id}`)}
-          />
-        )
-      }
-      // Add detail views here using ItemEditorDetailView
-    ]}
-    initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
+    messageBar={notifications}
+    views={views}
+    getInitialView={getInitialView}
   />
 );
 ```
 
 **Key Concepts**:
-1. **ItemEditor manages view state internally** - no need for parent useState
-2. **Ribbon receives** `(currentView, setCurrentView)` - can switch views and show view-specific actions
-3. **Notification receives** `(currentView)` - can show view-specific notifications
-4. **Views receives** `(setCurrentView)` - views can navigate (e.g., empty → main, main → detail)
-5. **initialView** - simple expression determining starting view based on data
+1. **ItemEditor manages loading and view state internally** - pass `isLoading` and `loadingMessage` props
+2. **Ribbon receives** `(context)` - ViewContext with `currentView` and `setCurrentView` for navigation
+3. **MessageBar uses static registration** - array of RegisteredNotification objects with showInViews targeting
+4. **Views uses static array** - no function wrapper, direct array of view objects
+5. **getInitialView function** - callback that determines starting view based on loaded data
 
-**❌ NEVER generate these OLD patterns**:
+**View Registration Pattern**:
 ```typescript
-// ❌ WRONG 1: Custom layout without ItemEditor
+// Static view definitions - no function wrapper needed!
+const views = [
+  {
+    name: EDITOR_VIEW_TYPES.EMPTY,
+    component: <EmptyViewWrapper />
+  },
+  {
+    name: EDITOR_VIEW_TYPES.DEFAULT,
+    component: <DefaultViewWrapper />
+  }
+];
+
+// Function to determine initial view when loading completes
+const getInitialView = React.useCallback(() => {
+  if (!item) return null; // Still loading or no item
+  return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
+}, [item]);
+```
+
+**View Navigation with useViewNavigation Hook**:
+```typescript
+// Wrapper component for views that need navigation
+const EmptyViewWrapper = () => {
+  const { setCurrentView } = useViewNavigation();
+  
+  return (
+    <[ItemName]ItemEmptyView
+      onNavigateToGettingStarted={() => {
+        // Update state then navigate
+        setCurrentDefinition(prev => ({ ...prev, message: "Hello!" }));
+        setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+      }}
+    />
+  );
+};
+```
+
+**MessageBar Static Registration**:
+```typescript
+// Static notification definitions
+const notifications: RegisteredNotification[] = [
+  {
+    name: 'welcome-message',
+    showInViews: [EDITOR_VIEW_TYPES.DEFAULT], // Only show in DEFAULT view
+    component: showWarning ? (
+      <MessageBar intent="info">
+        <MessageBarBody>Welcome to your new item!</MessageBarBody>
+      </MessageBar>
+    ) : null
+  }
+];
+```
+
+**❌ NEVER generate these patterns that don't match current implementation**:
+```typescript
+// ❌ WRONG 1: Old function-based patterns
 return (
-  <Stack className="editor">
-    <[ItemName]ItemRibbon {...props} />
-    <Stack className="main">{content}</Stack>
-  </Stack>
+  <ItemEditor
+    views={(setCurrentView) => [...]}           // ❌ Views is now static array
+    ribbon={(currentView, setCurrentView) => ...} // ❌ Ribbon receives context object
+  />
 );
 
-// ❌ WRONG 2: Manual view switching with if/else
+// ❌ WRONG 2: Manual view switching with if/else  
 const [currentView, setCurrentView] = useState('empty');
 return (
   <ItemEditor ribbon={<Ribbon />}>
@@ -330,11 +356,10 @@ return (
   </ItemEditor>
 );
 
-// ❌ WRONG 3: Static views array without setCurrentView access
-const views = [
-  { name: 'empty', component: <Empty /> },  // ❌ Can't navigate
-  { name: 'main', component: <Main /> }
-];
+// ❌ WRONG 3: Direct initialView prop instead of getInitialView function
+<ItemEditor
+  initialView={!item?.definition?.state ? 'empty' : 'default'} // ❌ Should be getInitialView function
+/>
 ```
 
 ### Ribbon Template Expansion (MANDATORY PATTERN)
@@ -510,19 +535,19 @@ GitHub Copilot detects:
 
 **Reference**: For complete step-by-step instructions, always consult `.ai/commands/item/createItem.md` first, then apply these Copilot-specific enhancements.
 
-## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (View Registration System)
+## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (Current View Registration System)
 
 **Purpose**:
 - Create main editor component with ItemEditor
-- MUST use view registration system (NOT manual if/else switching)
-- ItemEditor manages view state internally
-- Views, ribbon, and notifications can access and change current view
+- MUST use current static view registration system
+- ItemEditor manages view state internally with loading support
+- Views, ribbon, and notifications access current view via ViewContext
 
-**🚨 CRITICAL**: GitHub Copilot MUST generate the NEW pattern with view registration:
+**🚨 CRITICAL**: GitHub Copilot MUST generate the CURRENT pattern with static view registration:
 
 ```typescript
-// 🚨 CORRECT: ItemEditor with view registration (loading handled internally)
-import { ItemEditor } from "../../controls/ItemEditor";
+// 🚨 CORRECT: ItemEditor with current implementation pattern
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 
 /**
@@ -535,10 +560,14 @@ export const EDITOR_VIEW_TYPES = {
 
 export function [ItemName]ItemEditor(props: PageProps) {
   const { workloadClient } = props;
+  const { t } = useTranslation();
+  
+  // State management
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState(false);
-  
+  const [currentDefinition, setCurrentDefinition] = useState<[ItemName]ItemDefinition>({});
+
   // Load item data
   useEffect(() => {
     async function loadItem() {
@@ -547,102 +576,131 @@ export function [ItemName]ItemEditor(props: PageProps) {
         itemObjectId
       );
       setItem(loadedItem);
+      setCurrentDefinition(loadedItem.definition || {});
       setIsLoading(false);
     }
     loadItem();
   }, [itemObjectId]);
-  
+
   // Handlers
   const handleSave = async () => {
-    await saveItemDefinition(workloadClient, item.id, { state: 'saved' });
+    await saveItemDefinition(workloadClient, item.id, currentDefinition);
     setHasBeenSaved(true);
   };
-  
+
   const isSaveEnabled = (currentView: string) => {
     return currentView !== EDITOR_VIEW_TYPES.EMPTY && !hasBeenSaved;
   };
-  
-  // ItemEditor handles loading states internally
+
+  // Wrapper component for empty view that uses navigation hook
+  const EmptyViewWrapper = () => {
+    const { setCurrentView } = useViewNavigation();
+    
+    return (
+      <[ItemName]ItemEmptyView
+        workloadClient={workloadClient}
+        item={item}
+        onNavigateToGettingStarted={() => {
+          setCurrentDefinition(prev => ({ ...prev, message: "Hello!" }));
+          setHasBeenSaved(false);
+          setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+        }}
+      />
+    );
+  };
+
+  // Wrapper component for default view
+  const DefaultViewWrapper = () => {
+    return (
+      <[ItemName]ItemDefaultView
+        workloadClient={workloadClient}
+        item={item}
+        definitionData={currentDefinition}
+        onDataChange={(newData) => {
+          setCurrentDefinition(newData);
+          setHasBeenSaved(false);
+        }}
+      />
+    );
+  };
+
+  // Static view definitions - no function wrapper needed!
+  const views = [
+    {
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: <EmptyViewWrapper />
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEFAULT,
+      component: <DefaultViewWrapper />
+    }
+  ];
+
+  // Function to determine initial view when loading completes
+  const getInitialView = React.useCallback(() => {
+    if (!item) return null; // Still loading or no item
+    return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
+  }, [item]);
+
+  // Static notification definitions
+  const notifications: RegisteredNotification[] = [
+    {
+      name: 'welcome-message',
+      showInViews: [EDITOR_VIEW_TYPES.DEFAULT], // Only show in DEFAULT view
+      component: (
+        <MessageBar intent="info">
+          <MessageBarBody>Welcome to your new item!</MessageBarBody>
+        </MessageBar>
+      )
+    }
+  ];
+
   return (
     <ItemEditor
-      // Ribbon receives currentView and setCurrentView
-      ribbon={(currentView, setCurrentView) => (
+      isLoading={isLoading}
+      loadingMessage={t("[ItemName]ItemEditor_Loading", "Loading item...")}
+      ribbon={(context) => (
         <[ItemName]ItemRibbon
           {...props}
-          isSaveButtonEnabled={isSaveEnabled(currentView)}
-          currentView={currentView}
+          viewContext={context}
+          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
           saveItemCallback={handleSave}
-          onViewChange={setCurrentView}  // Pass setCurrentView down
+          openSettingsCallback={handleOpenSettings}
         />
-      )}      
-      // Views receives setCurrentView - allows navigation
-      views={(setCurrentView) => [
-        {
-          name: EDITOR_VIEW_TYPES.EMPTY,
-          component: (
-            <ItemEditorEmptyView
-              title={t('[ItemName]ItemEmptyView_Title', 'Welcome to [ItemName]!')}
-              description={t('[ItemName]ItemEmptyView_Description', 'Get started with your new item')}
-              imageSrc="/assets/items/[ItemName]Item/EditorEmpty.svg"
-              imageAlt="Empty state illustration"
-              tasks={[
-                {
-                  id: 'getting-started',
-                  label: t('[ItemName]ItemEmptyView_StartButton', 'Getting Started'),
-                  onClick: () => setCurrentView(EDITOR_VIEW_TYPES.DEFAULT),
-                  appearance: 'primary'
-                }
-              ]}
-            />
-          )
-        },
-        {
-          name: EDITOR_VIEW_TYPES.DEFAULT,
-          component: (
-            <[ItemName]ItemDefaultView
-              workloadClient={workloadClient}
-              item={item}
-            />
-          )
-        }
-      ]}
-      
-      // Initial view determined from item data
-      initialView={!item?.definition?.state ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT}
+      )}
+      messageBar={notifications}
+      views={views}
+      getInitialView={getInitialView}
     />
   );
 }
 ```
 
-**❌ NEVER generate these OLD patterns**:
+**❌ NEVER generate these outdated patterns**:
 ```typescript
-// ❌ WRONG 1: Custom layout
-return (
-  <Stack className="editor">
-    <[ItemName]ItemRibbon />
-    <Stack className="main">{content}</Stack>
-  </Stack>
-);
+// ❌ WRONG 1: Function-based view props (old pattern)
+<ItemEditor
+  views={(setCurrentView) => [...]}           // ❌ Now static array
+  ribbon={(currentView, setCurrentView) => ...} // ❌ Now receives context object
+/>
 
-// ❌ WRONG 2: Manual view state in parent
-const [currentView, setCurrentView] = useState('empty');
-return (
-  <ItemEditor ribbon={<Ribbon currentView={currentView} />}>
-    {currentView === 'empty' ? <Empty /> : <Main />}
-  </ItemEditor>
-);
+// ❌ WRONG 2: Direct initialView prop
+<ItemEditor
+  initialView={someExpression}  // ❌ Now getInitialView function
+/>
 
-// ❌ WRONG 3: Static views without navigation
-const views = [
-  { name: 'empty', component: <Empty onStart={...} /> }  // ❌ onStart can't navigate
-];
+// ❌ WRONG 3: Missing loading support
+<ItemEditor
+  views={views}  // ❌ Missing isLoading and loadingMessage props
+/>
 ```
 
 **Key Architecture Points**:
-1. **No view state in parent** - ItemEditor manages it
-2. **Render prop pattern** - `ribbon`, `notification`, `views` receive functions
-3. **Navigation from anywhere** - Views, ribbon, notifications can call `setCurrentView`
-4. **Simple initial view** - Just an expression, not state
+1. **Static view array** - `views` is a static array, not a function
+2. **ViewContext pattern** - `ribbon` receives `(context)` with `currentView` and `setCurrentView`  
+3. **getInitialView function** - Callback that determines starting view based on loaded data
+4. **Loading support** - Pass `isLoading` and `loadingMessage` props to ItemEditor
+5. **useViewNavigation hook** - Views that need navigation use this hook in wrapper components
 
 ---
 

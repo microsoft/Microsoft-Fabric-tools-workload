@@ -21,17 +21,19 @@ The `ItemEditorDetailView` component provides a standardized layout for detail/d
 ```tsx
 import { ItemEditorDetailView } from "../../controls/ItemEditor";
 
-export function MyItemDetailView({ itemId }: { itemId: string }) {
+export function MyItemDetailView({ item }: { item: MyItem }) {
   return (
     <ItemEditorDetailView
-      title="Item Details"
-      subtitle={`ID: ${itemId}`}
-    >
-      <div>
-        <h3>Detailed Information</h3>
-        <p>Your detailed view content goes here.</p>
-      </div>
-    </ItemEditorDetailView>
+      center={{
+        content: (
+          <div>
+            <h3>Item Details</h3>
+            <p>ID: {item.id}</p>
+            <p>Your detailed view content goes here.</p>
+          </div>
+        )
+      }}
+    />
   );
 }
 ```
@@ -42,18 +44,19 @@ export function MyItemDetailView({ itemId }: { itemId: string }) {
 import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
 
 export function MyItemDetailView({ item }: { item: MyItem }) {
-  const actions: DetailViewAction[] = [
+export function MyItemDetailView({ item }: { item: MyItem }) {
+  const toolbarActions: DetailViewAction[] = [
     {
       key: 'edit',
       label: 'Edit Item',
-      iconName: 'Edit',
+      icon: Edit24Regular,
       onClick: () => editItem(item.id),
       appearance: 'primary'
     },
     {
       key: 'delete',
       label: 'Delete Item',
-      iconName: 'Delete',
+      icon: Delete24Regular,
       onClick: () => deleteItem(item.id),
       appearance: 'subtle'
     }
@@ -61,23 +64,28 @@ export function MyItemDetailView({ item }: { item: MyItem }) {
 
   return (
     <ItemEditorDetailView
-      title={item.name}
-      subtitle={`Created: ${item.createdDate}`}
-      actions={actions}
-    >
-      <div>
-        <h4>Description</h4>
-        <p>{item.description}</p>
-        
-        <h4>Properties</h4>
-        <dl>
-          <dt>Type:</dt>
-          <dd>{item.type}</dd>
-          <dt>Status:</dt>
-          <dd>{item.status}</dd>
-        </dl>
-      </div>
-    </ItemEditorDetailView>
+      left={{
+        content: <PropertiesPanel item={item} />,
+        title: "Properties"
+      }}
+      center={{
+        content: (
+          <div>
+            <h4>Description</h4>
+            <p>{item.description}</p>
+            
+            <h4>Properties</h4>
+            <dl>
+              <dt>Type:</dt>
+              <dd>{item.type}</dd>
+              <dt>Status:</dt>
+              <dd>{item.status}</dd>
+            </dl>
+          </div>
+        )
+      }}
+      toolbarActions={toolbarActions}
+    />
   );
 }
 ```
@@ -95,11 +103,15 @@ const views: RegisteredView[] = [
     name: 'item-detail',
     component: (
       <ItemEditorDetailView
-        title="Item Details"
-        actions={detailActions}
-      >
-        <MyDetailContent />
-      </ItemEditorDetailView>
+        left={{
+          content: <PropertiesPanel />,
+          title: "Properties"
+        }}
+        center={{
+          content: <MyDetailContent />
+        }}
+        toolbarActions={detailActions}
+      />
     ),
     isDetailView: true  // ⭐ Enables automatic back navigation
   }
@@ -112,10 +124,12 @@ const views: RegisteredView[] = [
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `title` | `string` | ✅ | Main heading for the detail view |
-| `subtitle` | `string` | ❌ | Optional subtitle/description |
-| `actions` | `DetailViewAction[]` | ❌ | Array of detail-specific actions |
-| `children` | `ReactNode` | ✅ | Content to display in the detail view |
+| `left` | `LeftPanelConfig` | ❌ | Optional left panel configuration (inherited from ItemEditorDefaultView) |
+| `center` | `CentralPanelConfig` | ✅ | Required center content area (inherited from ItemEditorDefaultView) |
+| `toolbarActions` | `DetailViewAction[]` | ❌ | Array of detail-specific actions for the ribbon |
+| `onBack` | `() => void` | ❌ | Callback for back navigation (if not provided, uses automatic ViewContext.goBack) |
+| `backLabel` | `string` | ❌ | Custom label for the back button |
+| `backTooltip` | `string` | ❌ | Custom tooltip for the back button |
 | `className` | `string` | ❌ | Additional CSS classes |
 
 ### DetailViewAction Interface
@@ -123,11 +137,12 @@ const views: RegisteredView[] = [
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `key` | `string` | ✅ | Unique identifier for the action |
-| `label` | `string` | ✅ | Button text |
-| `iconName` | `string` | ❌ | Fluent UI icon name |
+| `label` | `string` | ❌ | Button text (can be omitted for translation at display level) |
+| `icon` | `React.ComponentType` | ✅ | Fluent UI icon component |
 | `onClick` | `() => void` | ✅ | Click handler function |
 | `appearance` | `'primary' \| 'secondary' \| 'subtle'` | ❌ | Button appearance |
 | `disabled` | `boolean` | ❌ | Whether the action is disabled |
+| `tooltip` | `string` | ❌ | Tooltip text (falls back to label if not provided) |
 
 ## 🎯 Key Features
 
@@ -247,24 +262,28 @@ export function UserDetailView({ userId }: { userId: string }) {
 
   return (
     <ItemEditorDetailView
-      title={user.name}
-      subtitle={`ID: ${user.id} • Last login: ${user.lastLogin}`}
-    >
-      <div className="user-details">
-        <section>
-          <h4>Contact Information</h4>
-          <p>Email: {user.email}</p>
-          <p>Phone: {user.phone}</p>
-        </section>
-        
-        <section>
-          <h4>Permissions</h4>
-          <ul>
-            {user.permissions.map(p => <li key={p}>{p}</li>)}
-          </ul>
-        </section>
-      </div>
-    </ItemEditorDetailView>
+      center={{
+        content: (
+          <div className="user-details">
+            <h2>{user.name}</h2>
+            <p className="user-subtitle">ID: {user.id} • Last login: {user.lastLogin}</p>
+            
+            <section>
+              <h4>Contact Information</h4>
+              <p>Email: {user.email}</p>
+              <p>Phone: {user.phone}</p>
+            </section>
+            
+            <section>
+              <h4>Permissions</h4>
+              <ul>
+                {user.permissions.map(p => <li key={p}>{p}</li>)}
+              </ul>
+            </section>
+          </div>
+        )
+      }}
+    />
   );
 }
 ```
@@ -273,24 +292,24 @@ export function UserDetailView({ userId }: { userId: string }) {
 
 ```tsx
 export function ProjectDetailView({ project }: { project: Project }) {
-  const actions: DetailViewAction[] = [
+  const toolbarActions: DetailViewAction[] = [
     {
       key: 'edit',
       label: 'Edit Project',
-      iconName: 'Edit',
+      icon: Edit24Regular,
       onClick: () => editProject(project.id),
       appearance: 'primary'
     },
     {
       key: 'duplicate',
       label: 'Duplicate',
-      iconName: 'Copy',
+      icon: Copy24Regular,
       onClick: () => duplicateProject(project.id)
     },
     {
       key: 'archive',
       label: 'Archive',
-      iconName: 'Archive',
+      icon: Archive24Regular,
       onClick: () => archiveProject(project.id),
       appearance: 'subtle'
     }
@@ -298,43 +317,52 @@ export function ProjectDetailView({ project }: { project: Project }) {
 
   return (
     <ItemEditorDetailView
-      title={project.name}
-      subtitle={`Status: ${project.status} • Owner: ${project.owner}`}
-      actions={actions}
-    >
-      <div className="project-details">
-        <Card>
-          <CardHeader>
-            <Text variant="title3">Overview</Text>
-          </CardHeader>
-          <CardBody>
-            <p>{project.description}</p>
-            <div className="project-metrics">
-              <div>Tasks: {project.taskCount}</div>
-              <div>Progress: {project.progress}%</div>
-              <div>Due Date: {project.dueDate}</div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <Text variant="title3">Team Members</Text>
-          </CardHeader>
-          <CardBody>
-            {project.members.map(member => (
-              <div key={member.id} className="member-item">
-                <Avatar name={member.name} />
-                <div>
-                  <Text weight="semibold">{member.name}</Text>
-                  <Text variant="caption1">{member.role}</Text>
+      left={{
+        content: <ProjectMetadata project={project} />,
+        title: "Project Info",
+        width: 280
+      }}
+      center={{
+        content: (
+          <div className="project-details">
+            <h2>{project.name}</h2>
+            <p className="project-status">Status: {project.status} • Owner: {project.owner}</p>
+            
+            <Card>
+              <CardHeader>
+                <Text variant="title3">Overview</Text>
+              </CardHeader>
+              <CardBody>
+                <p>{project.description}</p>
+                <div className="project-metrics">
+                  <div>Tasks: {project.taskCount}</div>
+                  <div>Progress: {project.progress}%</div>
+                  <div>Due Date: {project.dueDate}</div>
                 </div>
-              </div>
-            ))}
-          </CardBody>
-        </Card>
-      </div>
-    </ItemEditorDetailView>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Text variant="title3">Team Members</Text>
+              </CardHeader>
+              <CardBody>
+                {project.members.map(member => (
+                  <div key={member.id} className="member-item">
+                    <Avatar name={member.name} />
+                    <div>
+                      <Text weight="semibold">{member.name}</Text>
+                      <Text variant="caption1">{member.role}</Text>
+                    </div>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          </div>
+        )
+      }}
+      toolbarActions={toolbarActions}
+    />
   );
 }
 ```
@@ -353,23 +381,29 @@ export function TabbedDetailView({ item }: { item: DetailItem }) {
 
   return (
     <ItemEditorDetailView
-      title={item.name}
-      subtitle={item.description}
-    >
-      <TabList selectedValue={selectedTab} onTabSelect={(e, data) => setSelectedTab(data.value)}>
-        {tabs.map(tab => (
-          <Tab key={tab.key} value={tab.key}>
-            {tab.label}
-          </Tab>
-        ))}
-      </TabList>
+      center={{
+        content: (
+          <div>
+            <h2>{item.name}</h2>
+            <p>{item.description}</p>
+            
+            <TabList selectedValue={selectedTab} onTabSelect={(e, data) => setSelectedTab(data.value)}>
+              {tabs.map(tab => (
+                <Tab key={tab.key} value={tab.key}>
+                  {tab.label}
+                </Tab>
+              ))}
+            </TabList>
 
-      <div className="tab-content">
-        {selectedTab === 'overview' && <OverviewContent item={item} />}
-        {selectedTab === 'settings' && <SettingsContent item={item} />}
-        {selectedTab === 'history' && <HistoryContent item={item} />}
-      </div>
-    </ItemEditorDetailView>
+            <div className="tab-content">
+              {selectedTab === 'overview' && <OverviewContent item={item} />}
+              {selectedTab === 'settings' && <SettingsContent item={item} />}
+              {selectedTab === 'history' && <HistoryContent item={item} />}
+            </div>
+          </div>
+        )
+      }}
+    />
   );
 }
 ```
@@ -391,32 +425,46 @@ export function DetailViewWithStates({ itemId }: { itemId: string }) {
 
   if (loading) {
     return (
-      <ItemEditorDetailView title="Loading...">
-        <LoadingSpinner />
-      </ItemEditorDetailView>
+      <ItemEditorDetailView 
+        center={{
+          content: (
+            <div>
+              <h2>Loading...</h2>
+              <LoadingSpinner />
+            </div>
+          )
+        }}
+      />
     );
   }
 
   if (error) {
     return (
-      <ItemEditorDetailView title="Error">
-        <div className="error-state">
-          <Text variant="body1">Failed to load item details: {error}</Text>
-          <Button onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </ItemEditorDetailView>
+      <ItemEditorDetailView 
+        center={{
+          content: (
+            <div>
+              <h2>Error</h2>
+              <div className="error-state">
+                <Text variant="body1">Failed to load item details: {error}</Text>
+                <Button onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              </div>
+            </div>
+          )
+        }}
+      />
     );
   }
 
   return (
     <ItemEditorDetailView
-      title={item!.name}
-      actions={getItemActions(item!)}
-    >
-      <ItemContent item={item!} />
-    </ItemEditorDetailView>
+      center={{
+        content: <ItemContent item={item!} />
+      }}
+      toolbarActions={getItemActions(item!)}
+    />
   );
 }
 ```

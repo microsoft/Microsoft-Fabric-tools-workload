@@ -27,10 +27,10 @@ Use `@fabric` or these keywords for specialized GitHub Copilot assistance:
 ### Enhanced Capabilities
 GitHub Copilot provides additional features beyond generic AI tools:
 - 🔮 **Predictive Coding**: Auto-completion for Fabric patterns and TypeScript interfaces
-- � **Context-Aware Suggestions**: Smart suggestions based on current file and cursor position
+- 🧠 **Context-Aware Suggestions**: Smart suggestions based on current file and cursor position
 - ⚡ **Real-time Validation**: Immediate feedback on code quality and Fabric compliance
-- � **Pattern Recognition**: Learns from existing codebase patterns for consistent suggestions
-- � **Inline Documentation**: Generates JSDoc comments following Fabric conventions
+- 🎯 **Pattern Recognition**: Learns from existing codebase patterns for consistent suggestions
+- 📚 **Inline Documentation**: Generates JSDoc comments following Fabric conventions
 
 ## 🎯 GitHub Copilot Integration
 
@@ -110,13 +110,12 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **ItemEditor View Registration**: ALWAYS use static view registration pattern with `useViewNavigation()` hook. Define views as static array like ribbon actions
 - **ItemEditor Initial View**: ALWAYS use `getInitialView` function for data-dependent view determination instead of static `initialView`. Called automatically when loading completes
 - **ItemEditor Scrolling**: NEVER implement scrolling in item views. ItemEditor center panel handles ALL overflow with automatic vertical scrolling. Items should use `height: auto` for natural growth
-- **ItemEditor Notification Registration**: ALWAYS use static notification registration pattern. Define notifications as static array with `showInViews` to control visibility
+- **ItemEditor Notification Registration**: ALWAYS use static messageBar registration pattern. Define messageBar as static array with `showInViews` to control visibility
 - **View Navigation**: ALWAYS suggests `const { setCurrentView, goBack } = useViewNavigation()` in view wrapper components for navigation between views (hook is part of ItemEditorDefaultView module)
-- **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate
+- **ItemEditorDefaultView**: Always suggests two-panel layouts with proper `left`/`center` panel configurations, resizable splitters, and collapsible panels when appropriate
 - **Panel Usage Patterns**: 
   - **Left Panel (Optional)**: For navigation trees, OneLakeView, file explorers, and secondary views (list views, catalog browsers, workspace explorers)
   - **Center Panel (Required)**: For main content, editors, and primary workspace
-  - **Bottom Panel (Optional)**: For status information, logging output, console messages, and temporary feedback
 - **Detail View Navigation**: Always use ItemEditorDetailView component with `isDetailView: true` for L2 drill-down pages (detail records, item properties, configuration screens)
 - **Empty View Pattern**: Use ItemEditorEmptyView for items used for the first time (no definition/state) with initial call-to-action buttons to guide users through setup
 - **Item Properties & Configuration**: Use ItemSettings pattern for general item properties (version, endpoint configuration, descriptions). This creates a separate section in the settings flyout opened through the settings ribbon action. Item names and descriptions are managed there by default.

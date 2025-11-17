@@ -1,7 +1,7 @@
 import React from "react";
 import { Toolbar, ToolbarDivider } from '@fluentui/react-toolbar';
 import { RibbonToolbarAction, FluentIconComponent } from './RibbonToolbarAction';
-import { RibbonActionButton, DropdownMenuItem } from './RibbonActionButton';
+import { DropdownMenuItem, RibbonActionButtonImpl } from './RibbonActionButton';
 
 /**
  * Configuration for a dropdown menu item (re-exported for convenience)
@@ -177,7 +177,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
         <React.Fragment key={action.key}>
           {isDropdownAction(action) ? (
             // Render dropdown action using RibbonActionButton
-            <RibbonActionButton
+            <RibbonActionButtonImpl
               action={{
                 key: action.key,
                 icon: action.icon,

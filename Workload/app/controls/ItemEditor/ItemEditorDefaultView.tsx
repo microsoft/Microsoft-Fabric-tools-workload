@@ -39,6 +39,7 @@ import "./ItemEditor.scss"
  *   minWidth: 240,
  *   collapsible: true,
  *   collapsed: false, // Start expanded
+ *   enableUserResize: true, // Allow user to resize (default)
  *   onCollapseChange: (collapsed) => {
  *     console.log(`Panel ${collapsed ? 'collapsed' : 'expanded'}`);
  *   }
@@ -60,9 +61,11 @@ export interface LeftPanelConfig {
   collapsible?: boolean;
   /** Initial collapsed state of left panel (default: false) - state is managed internally after initialization */
   collapsed?: boolean;
+  /** Whether to enable user resizing of the left panel via drag handle (default: true) */
+  enableUserResize?: boolean;
   /** Callback when left panel collapse state changes (notification only) - does not control state */
   onCollapseChange?: (isCollapsed: boolean) => void;
-  /** Callback when left panel width changes (only called when resizable is enabled) */
+  /** Callback when left panel width changes (only called when enableUserResize is enabled) */
   onWidthChange?: (newWidth: number) => void;
 }
 
@@ -103,47 +106,6 @@ export interface CentralPanelConfig {
 }
 
 /**
- * Bottom Panel Configuration Interface
- * 
- * Defines the configuration for the optional bottom panel in ItemEditorDefaultView.
- * The bottom panel spans the full width across both left and center areas,
- * providing space for status information, output panels, logs, debugging, or action bars.
- * 
- * ## Design Principles
- * - **Full Width**: Spans entire view width, below left and center panels
- * - **Fixed Height**: Uses specified height, does not grow/shrink
- * - **Simple Content**: Direct content rendering without headers or titles
- * - **Single Line Focus**: Typically used for status bars, single-line content
- * 
- * @example
- * ```tsx
- * // Simple status bar
- * const bottomConfig: BottomPanelConfig = {
- *   content: <StatusBar status="Ready" />
- * };
- * 
- * // Log output panel
- * const bottomConfig: BottomPanelConfig = {
- *   content: <LogViewer logs={logs} />,
- *   height: 120,
- *   className: "log-output-panel"
- * };
- * ```
- */
-export interface BottomPanelConfig {
-  /** Bottom panel content (e.g., status bar, logs, output, debugging tools) */
-  content: ReactNode;
-  /** Height of the bottom panel in pixels (optional - content determines height if not specified) */
-  height?: number;
-  /** Minimum height of the bottom panel (default: 32px) */
-  minHeight?: number;
-  /** Optional className for custom styling */
-  className?: string;
-  /** Optional ARIA label for accessibility (default: "Bottom panel") */
-  ariaLabel?: string;
-}
-
-/**
  * ItemEditorDefaultView Props Interface
  */
 export interface ItemEditorDefaultViewProps {
@@ -151,12 +113,8 @@ export interface ItemEditorDefaultViewProps {
   left?: LeftPanelConfig;
   /** Required center content area configuration */
   center: CentralPanelConfig;
-  /** Optional bottom panel configuration */
-  bottom?: BottomPanelConfig;
   /** Optional className for custom styling */
   className?: string;
-  /** Whether to enable resizable splitter between left and center panels (default: false) */
-  resizable?: boolean;
 }
 
 /**
@@ -252,6 +210,7 @@ export interface ItemEditorDefaultViewProps {
  *       title: "Properties",
  *       collapsible: true,
  *       collapsed: false, // Initial state
+ *       enableUserResize: false, // Disable user resizing
  *       onCollapseChange: (collapsed) => console.log('Panel collapsed:', collapsed)
  *     }}
  *     center={{
@@ -261,7 +220,7 @@ export interface ItemEditorDefaultViewProps {
  * </ItemEditor>
  * ```
  * 
- * ### Example 5: With Collapsible Left Panel (No Initial State)
+ * ### Example 5: With Collapsible Left Panel (Default Resize Enabled)
  * ```tsx
  * <ItemEditor ribbon={<MyRibbon />}>
  *   <ItemEditorDefaultView
@@ -269,6 +228,7 @@ export interface ItemEditorDefaultViewProps {
  *       content: <PropertiesPanel properties={props} />,
  *       title: "Properties",
  *       collapsible: true
+ *       // enableUserResize defaults to true
  *       // collapsed defaults to false, state managed internally
  *     }}
  *     center={{
@@ -292,7 +252,7 @@ export interface ItemEditorDefaultViewProps {
  * @see {@link ./ItemEditor.tsx} - Main ItemEditor component
  */
 export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
-  const { left, center, bottom, resizable = false, className = "" } = props;
+  const { left, center, className = "" } = props;
 
   // State for left panel collapse
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(left?.collapsed ?? false);
@@ -310,15 +270,11 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
   const leftPanelMaxWidth = left?.maxWidth ?? 600;
   const leftPanelTitle = left?.title ?? "Panel";
   const isLeftPanelCollapsible = left?.collapsible ?? false;
+  const enableUserResize = left?.enableUserResize ?? true;
 
   // Extract center panel configuration with defaults
   const centerClassName = center.className ?? "";
   const centerAriaLabel = center.ariaLabel ?? "Main content";
-
-  // Extract bottom panel configuration with defaults
-  const bottomHeight = bottom?.height; // No default height - let content determine height
-  const bottomClassName = bottom?.className ?? "";
-  const bottomAriaLabel = bottom?.ariaLabel ?? "Bottom panel";
 
   // Handle left panel collapse toggle
   const handleToggleCollapse = () => {
@@ -367,7 +323,7 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
 
   // Handle resize start
   const handleResizeStart = (e: React.MouseEvent) => {
-    if (!resizable) return;
+    if (!enableUserResize) return;
     
     e.preventDefault();
     setIsResizing(true);
@@ -443,8 +399,8 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
               )}
             </aside>
 
-            {/* Resize Handle (Only show when resizable and not collapsed) */}
-            {resizable && !isLeftPanelCollapsed && (
+            {/* Resize Handle (Only show when enableUserResize and not collapsed) */}
+            {enableUserResize && !isLeftPanelCollapsed && (
               <div 
                 className={`item-editor-view__resize-handle ${isResizing ? 'resizing' : ''}`}
                 onMouseDown={handleResizeStart}
@@ -465,21 +421,6 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
           {center.content}
         </main>
       </div>
-
-      {/* Bottom Panel (Optional) */}
-      {bottom && (
-        <footer 
-          className={`item-editor-view__bottom ${bottomClassName}`.trim()}
-          style={{ 
-            ...(bottomHeight && { height: `${bottomHeight}px` })
-          }}
-          role="complementary"
-          aria-label={bottomAriaLabel}
-          data-testid="item-editor-view-bottom"
-        >
-          {bottom.content}
-        </footer>
-      )}
     </div>
   );
 }

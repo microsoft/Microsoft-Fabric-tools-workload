@@ -41,7 +41,8 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
-  const [showWarning, setShowWarning] = useState<boolean>(true);
+  // Set to true if you want to see the messageBar content in the editor
+  const [showWarning, setShowWarning] = useState<boolean>(false);
 
   const { pathname } = useLocation();
 
@@ -224,7 +225,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           openSettingsCallback={handleOpenSettings}
         />
       )}
-      notifications={notifications}
+      messageBar={notifications}
       views={views}
       getInitialView={getInitialView}
     />

@@ -55,7 +55,7 @@ export function HelloWorldItemDefaultView({
       
       <div className="hello-world-next">
         <div className="hello-world-section-header">
-          <h2 className="hello-world-section-title">The item</h2>
+          <h2 className="hello-world-section-title">Getting started</h2>
           <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to save your Fabric item.')}</p>
         </div>
         <div className="hello-world-section-body">
@@ -113,8 +113,7 @@ export function HelloWorldItemDefaultView({
   // Center panel content - Main content with item details and resources
   const itemDetailSection = (
     <div className="hello-world-view">
-      <div className="hello-world-content-inner">
-        <h1 className="hello-world-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
+      <div className="hello-world-content-inner">       
 
         {/* Item Details Expandable Section */}
         <div className="hello-world-section-body">
@@ -291,36 +290,15 @@ export function HelloWorldItemDefaultView({
       //Add left control if you want to split the center content in the editor
       left={{
         content: gettingStartedSection,
-        width: 450,
+        width: 400,
         minWidth: 350,
-        title: t('Item_GettingStarted_Label', 'Getting Started'),
+        title: t('Item_GettingStarted_Label', 'Next Steps'),
+        enableUserResize: true,
         collapsible: true
       }}
       center={{
-        /** content: (
-          <div className="hello-world-combined-layout">
-            <div className="hello-world-getting-started-section">
-              {gettingStartedSection}
-            </div>
-            <div className="hello-world-details-section">
-              {itemDetailSection}
-            </div>
-          </div>
-        ),*/
-        //If using the left nav just show the Detail section in the center
         content: itemDetailSection
       }}
-      //Add bottom control if needed
-      bottom={{
-        content: (
-          <div className="hello-world-view">
-            <span>
-              {t('Item_Name_Label', 'Item:')}: {item?.displayName || 'Hello World'}
-            </span>
-          </div>
-        )
-      }}
-      resizable={true}
     />
   );
 }

@@ -21,7 +21,7 @@ export type {
 
 // ItemEditor View components
 export { ItemEditorDefaultView, useViewNavigation } from './ItemEditorDefaultView';
-export type { ItemEditorDefaultViewProps, LeftPanelConfig, CentralPanelConfig, BottomPanelConfig } from './ItemEditorDefaultView';
+export type { ItemEditorDefaultViewProps, LeftPanelConfig, CentralPanelConfig } from './ItemEditorDefaultView';
 
 // ItemEditor Empty View component
 export { ItemEditorEmptyView } from './ItemEditorEmptyView';
@@ -30,9 +30,6 @@ export type { ItemEditorEmptyViewProps, EmptyStateTask } from './ItemEditorEmpty
 // ItemEditor Detail View component  
 export { ItemEditorDetailView } from './ItemEditorDetailView';
 export type { ItemEditorDetailViewProps, DetailViewAction } from './ItemEditorDetailView';
-
-// Item Editor Loading View (internal use only - handled by ItemEditor)
-// export { ItemEditorLoadingView } from './ItemEditorLoadingView';
 
 // Ribbon Controls - Standardized ribbon components
 export { Ribbon } from './Ribbon';
@@ -44,8 +41,8 @@ export type { RibbonToolbarProps, RibbonAction } from './RibbonToolbar';
 export { RibbonToolbarAction } from './RibbonToolbarAction';
 export type { RibbonToolbarActionProps, FluentIconComponent } from './RibbonToolbarAction';
 
-export { RibbonActionButton } from './RibbonActionButton';
-export type { RibbonActionButtonProps, RibbonActionButtonConfig, DropdownMenuItem } from './RibbonActionButton';
+export { RibbonActionButtonImpl } from './RibbonActionButton';
+export type { RibbonActionButtonImplProps, RibbonActionButton, DropdownMenuItem } from './RibbonActionButton';
 
 export { 
   createSaveAction,

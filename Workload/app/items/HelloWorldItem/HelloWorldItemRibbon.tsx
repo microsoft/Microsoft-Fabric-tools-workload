@@ -3,6 +3,7 @@ import { PageProps } from '../../App';
 import { 
   Ribbon, 
   RibbonAction,
+  RibbonActionButton,
   createSaveAction,
   createSettingsAction
 } from '../../controls/ItemEditor';
@@ -46,6 +47,23 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
     props.openSettingsCallback
   );
   
+
+  const ribbonActions: RibbonActionButton[] = [
+    // Uncoment when you want to see how the action looks
+    // SAMPLE RIBBON ACTION
+    /*{
+      key: 'share-item',
+      icon: Share24Regular,
+      label: t("ItemEditor_Ribbon_Share_Label", "Share"),
+      onClick: async () => {
+        // Sample share functionality
+        console.log("Share action clicked!");       
+      },
+      testId: 'ribbon-share-btn',
+      tooltip: t("ItemEditor_Ribbon_Share_Tooltip", "Share this item with others")
+    }*/
+  ]
+
   // Define home toolbar actions - these appear on the mandatory Home toolbar
   const homeToolbarActions: RibbonAction[] = [
     saveAction,
@@ -70,15 +88,17 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
       homeToolbarActions={homeToolbarActions} 
       // ADDITIONAL TOOLBAR EXAMPLE
       // This demonstrates how you can add an addtional toolbar
-      /*additionalToolbars={[
-        {
+      additionalToolbars={[
+        //Uncomment when you want to see how a 2nd toolbar looks
+        /*{
           key: 'edit',
           label: "Edit",
           actions: [
                     settingsAction
                   ]
-        }
-      ]}*/
+        }*/
+      ]}
+      rightActionButtons={ribbonActions} // Added sample share action
       viewContext={viewContext} 
     />
   );

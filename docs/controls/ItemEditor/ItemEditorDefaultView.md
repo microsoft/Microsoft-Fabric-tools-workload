@@ -2,14 +2,13 @@
 
 ## 📋 Overview
 
-The `ItemEditorDefaultView` component provides a flexible, multi-panel layout system for building complex item editors in Microsoft Fabric. It supports optional left navigation panels, required center content areas, and optional bottom panels with resizable splitters for advanced layout scenarios.
+The `ItemEditorDefaultView` component provides a flexible, two-panel layout system for building complex item editors in Microsoft Fabric. It supports optional left navigation panels and required center content areas with resizable splitters for advanced layout scenarios.
 
 ## ✨ Features
 
-✅ **Multi-Panel Layout** - Left navigation + center content + optional bottom panel  
+✅ **Two-Panel Layout** - Left navigation + center content  
 ✅ **Resizable Splitters** - Drag to resize panels with min/max constraints  
 ✅ **Collapsible Left Panel** - Toggle panel visibility with header controls  
-✅ **Bottom Panel Support** - Full-width bottom area for status bars, logs, tools  
 ✅ **Responsive Design** - Adapts to different screen sizes with mobile optimization  
 ✅ **Fabric Design System** - Uses official design tokens and spacing  
 ✅ **Accessibility Compliant** - Semantic HTML, ARIA regions, keyboard support  
@@ -34,10 +33,6 @@ The `ItemEditorDefaultView` component provides a flexible, multi-panel layout sy
 │  │  │  Content   │ │ │ Form/Details          │ │  │
 │  │  │            │ │ │                       │ │  │
 │  │  └────────────┴─│─┴───────────────────────┘ │  │
-│  │  ┌──────────────────────────────────────────┐ │  │
-│  │  │         Bottom Panel (Optional)          │ │  │
-│  │  │    Status bar / Logs / Tools             │ │  │
-│  │  └──────────────────────────────────────────┘ │  │
 │  └──────────────────────────────────────────────┘  │
 │                                                     │
 └─────────────────────────────────────────────────────┘
@@ -47,7 +42,6 @@ The `ItemEditorDefaultView` component provides a flexible, multi-panel layout sy
 
 - **Left Panel (Optional)**: Navigation trees, file explorers, property panels with collapsible header
 - **Center Panel (Required)**: Main editing content, forms, canvases, detail views  
-- **Bottom Panel (Optional)**: Full-width status bars, output panels, debugging tools
 - **Resize Handles**: Drag to adjust panel widths with min/max constraints
 
 ## 🚀 Quick Start
@@ -88,14 +82,12 @@ export function MyItemEditor() {
 }
 ```
 
-### With Collapsible Left Panel & Bottom Panel
+### With Collapsible Left Panel
 
 ```tsx
 import { ItemEditorDefaultView } from "../../controls/ItemEditor";
 
 export function MyItemEditor() {
-  const [statusMessages, setStatusMessages] = useState<string[]>([]);
-
   return (
     <ItemEditorDefaultView
       left={{
@@ -105,18 +97,13 @@ export function MyItemEditor() {
         minWidth: 240,
         collapsible: true,
         collapsed: false,
+        enableUserResize: true,
         onCollapseChange: (collapsed) => console.log('Panel collapsed:', collapsed)
       }}
       center={{
         content: <CodeEditor file={currentFile} />,
         ariaLabel: "Code editor workspace"
       }}
-      bottom={{
-        content: <StatusBar messages={statusMessages} />,
-        height: 120,
-        className: "status-panel"
-      }}
-      resizable={true}
     />
   );
 }
@@ -130,8 +117,6 @@ export function MyItemEditor() {
 |----------|------|----------|---------|-------------|
 | `left` | `LeftPanelConfig` | ❌ | - | Optional left panel configuration |
 | `center` | `CentralPanelConfig` | ✅ | - | Required center content area configuration |
-| `bottom` | `BottomPanelConfig` | ❌ | - | Optional bottom panel configuration |
-| `resizable` | `boolean` | ❌ | `false` | Enable resizable splitter between left and center panels |
 | `className` | `string` | ❌ | `""` | Additional CSS classes |
 
 ### LeftPanelConfig
@@ -145,6 +130,7 @@ export function MyItemEditor() {
 | `maxWidth` | `number` | ❌ | `600` | Maximum width for resizing |
 | `collapsible` | `boolean` | ❌ | `false` | Whether the left panel is collapsible |
 | `collapsed` | `boolean` | ❌ | `false` | Initial collapsed state (managed internally after init) |
+| `enableUserResize` | `boolean` | ❌ | `true` | Whether to enable user resizing via drag handle |
 | `onCollapseChange` | `(isCollapsed: boolean) => void` | ❌ | - | Callback when collapse state changes (notification only) |
 | `onWidthChange` | `(newWidth: number) => void` | ❌ | - | Callback when panel width changes (resizable only) |
 
@@ -155,16 +141,6 @@ export function MyItemEditor() {
 | `content` | `ReactNode` | ✅ | - | Main content area (editor, form, canvas, workspace) |
 | `className` | `string` | ❌ | `""` | Optional className for custom styling |
 | `ariaLabel` | `string` | ❌ | `"Main content"` | Optional ARIA label for accessibility |
-
-### BottomPanelConfig
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `content` | `ReactNode` | ✅ | - | Bottom panel content (status bar, logs, output, tools) |
-| `height` | `number` | ❌ | - | Height of the bottom panel in pixels |
-| `minHeight` | `number` | ❌ | `32` | Minimum height of the bottom panel |
-| `className` | `string` | ❌ | `""` | Optional className for custom styling |
-| `ariaLabel` | `string` | ❌ | `"Bottom panel"` | Optional ARIA label for accessibility |
 
 ## 🎯 Key Features
 
@@ -201,12 +177,12 @@ Enable draggable resize handles between panels:
     content: <FileTree />,
     width: 300,
     minWidth: 200,
-    maxWidth: 500
+    maxWidth: 500,
+    enableUserResize: true // ⭐ Enables drag-to-resize
   }}
   center={{
     content: <Editor />
   }}
-  resizable={true} // ⭐ Enables drag-to-resize
 />
 ```
 
@@ -215,23 +191,6 @@ Enable draggable resize handles between panels:
 - **Constraints**: Respects minWidth/maxWidth settings  
 - **Live Preview**: Immediate feedback during resize
 - **Callbacks**: onWidthChange notifications for persistence
-
-### Bottom Panel Layout
-
-Full-width panel below left and center areas:
-
-```typescript
-const bottomConfig: BottomPanelConfig = {
-  content: <StatusBar status="Ready" />,
-  height: 80, // Fixed height
-  className: "custom-status-bar"
-};
-```
-
-**Bottom Panel Characteristics:**
-- **Full Width**: Spans entire view width, below left and center panels
-- **Fixed Height**: Uses specified height, does not grow/shrink
-- **Simple Content**: Direct content rendering without headers or titles
 
 ### Responsive Design
 
@@ -287,7 +246,6 @@ export function NavigationBasedEditor() {
 ```tsx
 export function CodeEditorLayout() {
   const [currentFile, setCurrentFile] = useState<string>();
-  const [editorOutput, setEditorOutput] = useState<string[]>([]);
 
   return (
     <ItemEditorDefaultView
@@ -303,23 +261,17 @@ export function CodeEditorLayout() {
         width: 320,
         minWidth: 240,
         maxWidth: 480,
-        collapsible: true
+        collapsible: true,
+        enableUserResize: true
       }}
       center={{
         content: (
           <CodeEditor 
             file={currentFile}
-            onOutput={(line) => setEditorOutput(prev => [...prev, line])}
           />
         ),
         ariaLabel: "Code editor"
       }}
-      bottom={{
-        content: <OutputConsole lines={editorOutput} />,
-        height: 150,
-        ariaLabel: "Build output"
-      }}
-      resizable={true}
     />
   );
 }
@@ -343,6 +295,7 @@ export function DesignToolLayout() {
         title: "Properties",
         width: 300,
         collapsible: true,
+        enableUserResize: true,
         onCollapseChange: (collapsed) => {
           // Save panel state preference
           localStorage.setItem('propertiesPanelCollapsed', String(collapsed));
@@ -358,16 +311,15 @@ export function DesignToolLayout() {
         ),
         className: "design-workspace"
       }}
-      resizable={true}
     />
   );
 }
 ```
 
-### Pattern 4: Multi-Panel Development Environment
+### Pattern 4: Development Environment Layout
 
 ```tsx
-export function FullIDELayout() {
+export function IDELayout() {
   return (
     <ItemEditorDefaultView
       left={{
@@ -381,29 +333,12 @@ export function FullIDELayout() {
         width: 350,
         minWidth: 250,
         maxWidth: 500,
-        collapsible: true
+        collapsible: true,
+        enableUserResize: true
       }}
       center={{
         content: <CodeEditor />
       }}
-      bottom={{
-        content: (
-          <TabContainer>
-            <Tab label="Terminal">
-              <TerminalPanel />
-            </Tab>
-            <Tab label="Output">
-              <OutputPanel />
-            </Tab>
-            <Tab label="Problems">
-              <ProblemsPanel />
-            </Tab>
-          </TabContainer>
-        ),
-        height: 200,
-        className: "ide-bottom-panel"
-      }}
-      resizable={true}
     />
   );
 }
@@ -422,7 +357,6 @@ The component uses BEM (Block Element Modifier) naming:
     .item-editor-view__left-header   // Element
     .item-editor-view__left-content  // Element
   .item-editor-view__center          // Element  
-  .item-editor-view__bottom          // Element
   .item-editor-view__resize-handle   // Element
 ```
 
@@ -502,12 +436,6 @@ var(--fontSizeBase400)          // Panel titles
       {centerContent}
     </main>
   </div>
-  <footer 
-    role="complementary"
-    aria-label="Bottom panel"
-  >
-    {bottomContent}
-  </footer>
 </div>
 ```
 
@@ -645,4 +573,4 @@ For complete examples, see:
 
 **Component**: `ItemEditorDefaultView`  
 **Location**: `Workload/app/controls/ItemEditor/ItemEditorDefaultView.tsx`  
-**Version**: 2.1.0 - Multi-Panel Layout with Resizable Splitters and Bottom Panel Support
+**Version**: 2.2.0 - Simplified Two-Panel Layout with Resizable Splitters

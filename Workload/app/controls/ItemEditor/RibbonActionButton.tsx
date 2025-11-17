@@ -41,7 +41,7 @@ export interface DropdownMenuItem {
 /**
  * Configuration for a ribbon action button (enhanced for real button appearance)
  */
-export interface RibbonActionButtonConfig {
+export interface RibbonActionButton {
   /**
    * Unique identifier for the action
    */
@@ -99,13 +99,13 @@ export interface RibbonActionButtonConfig {
 }
 
 /**
- * Props for the RibbonActionButton component
+ * Props for the RibbonActionButtonImpl component
  */
-export interface RibbonActionButtonProps {
+export interface RibbonActionButtonImplProps {
   /**
    * Action configuration
    */
-  action: RibbonActionButtonConfig;
+  action: RibbonActionButton;
   
   /**
    * Additional CSS class name
@@ -114,7 +114,7 @@ export interface RibbonActionButtonProps {
 }
 
 /**
- * RibbonActionButton - Real button component for ribbon action buttons
+ * RibbonActionButtonImpl - Real button component for ribbon action buttons
  * 
  * This component provides:
  * - Real button appearance with icon and text
@@ -132,7 +132,7 @@ export interface RibbonActionButtonProps {
  * @example
  * ```tsx
  * // Regular button
- * const action: RibbonActionButtonConfig = {
+ * const action: RibbonActionButton = {
  *   key: 'share',
  *   icon: Share24Regular,
  *   label: 'Share',
@@ -141,7 +141,7 @@ export interface RibbonActionButtonProps {
  * };
  * 
  * // Dropdown button
- * const dropdownAction: RibbonActionButtonConfig = {
+ * const dropdownAction: RibbonActionButton = {
  *   key: 'trial',
  *   icon: Info24Regular,
  *   label: 'Trial',
@@ -151,15 +151,15 @@ export interface RibbonActionButtonProps {
  *   ]
  * };
  * 
- * <RibbonActionButton action={action} />
- * <RibbonActionButton action={dropdownAction} />
+ * <RibbonActionButtonImpl action={action} />
+ * <RibbonActionButtonImpl action={dropdownAction} />
  * ```
  * 
  * @see {@link ../../../docs/controls/ItemEditor/RibbonToolbar.md} - RibbonToolbar integration documentation
  * @see {@link ../../../docs/controls/ItemEditor.md} - ItemEditor overview and patterns
  * @see {@link https://react.fluentui.dev/} - Fluent UI v9 Documentation
  */
-export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
+export const RibbonActionButtonImpl: React.FC<RibbonActionButtonImplProps> = ({
   action,
   className = ''
 }) => {
@@ -176,7 +176,7 @@ export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
   } = action;
   
   // Filter visible dropdown items
-  const visibleDropdownItems = dropdownItems.filter(item => !item.hidden);
+  const visibleDropdownItems = dropdownItems.filter((item: DropdownMenuItem) => !item.hidden);
   const isDropdown = visibleDropdownItems.length > 0;
   
   // Determine tooltip text
@@ -211,6 +211,7 @@ export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
           disabled={disabled}
           onClick={handleClick}
           data-testid={testId}
+          data-appearance={appearance}
           aria-label={buttonAriaLabel}
           icon={<Icon />}
         >
@@ -230,6 +231,7 @@ export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
             appearance={appearance}
             disabled={disabled}
             data-testid={testId}
+            data-appearance={appearance}
             aria-label={buttonAriaLabel}
             icon={<Icon />}
             iconPosition="before"
@@ -242,7 +244,7 @@ export const RibbonActionButton: React.FC<RibbonActionButtonProps> = ({
       
       <MenuPopover>
         <MenuList>
-          {visibleDropdownItems.map((item) => (
+          {visibleDropdownItems.map((item: DropdownMenuItem) => (
             <MenuItem
               key={item.key}
               disabled={item.disabled}

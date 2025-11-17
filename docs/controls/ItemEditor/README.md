@@ -12,7 +12,7 @@ The `ItemEditor` is a foundational control for building item editors in the Micr
 
 ### View Components
 
-- **[ItemEditorDefaultView](./ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters and bottom panel support
+- **[ItemEditorDefaultView](./ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters (left + center)
 - **[ItemEditorView](./ItemEditorView.md)** - Simple single-panel layout
 - **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state onboarding
 - **[ItemEditorDetailView](./ItemEditorDetailView.md)** - Detail/drill-down views

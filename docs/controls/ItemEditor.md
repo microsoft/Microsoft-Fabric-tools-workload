@@ -14,7 +14,7 @@ This is the main entry point for ItemEditor documentation. Detailed documentatio
 
 ### View Components
 
-- **[ItemEditorDefaultView](./ItemEditor/ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters and bottom panel support
+- **[ItemEditorDefaultView](./ItemEditor/ItemEditorDefaultView.md)** - Multi-panel layout with resizable splitters (left + center)
 - **[ItemEditorView](./ItemEditor/ItemEditorView.md)** - Simple single-panel layout
 - **[ItemEditorEmptyView](./ItemEditor/ItemEditorEmptyView.md)** - Empty state onboarding
 - **[ItemEditorDetailView](./ItemEditor/ItemEditorDetailView.md)** - Detail/drill-down views
@@ -164,6 +164,17 @@ const EDITOR_VIEW_TYPES = {
   ]}
   initialView={EDITOR_VIEW_TYPES.EMPTY}
   ribbon={(context) => <MyRibbon {...props} viewContext={context} />}
+  messageBar={[
+    {
+      name: 'welcome-message',
+      showInViews: [EDITOR_VIEW_TYPES.DEFAULT],
+      component: (
+        <MessageBar intent="info">
+          <MessageBarBody>Welcome to your new item!</MessageBarBody>
+        </MessageBar>
+      )
+    }
+  ]}
 />
 ```
 
@@ -286,13 +297,17 @@ export function MyItemEditor(props: PageProps) {
           onSave={handleSave}
         />
       )}
-      notification={(currentView) => 
-        currentView === EDITOR_VIEW_TYPES.DEFAULT ? (
-          <MessageBar intent="info">
-            Welcome to your new item!
-          </MessageBar>
-        ) : undefined
-      }
+      messageBar={[
+        {
+          name: 'welcome-message',
+          showInViews: [EDITOR_VIEW_TYPES.DEFAULT],
+          component: (
+            <MessageBar intent="info">
+              <MessageBarBody>Welcome to your new item!</MessageBarBody>
+            </MessageBar>
+          )
+        }
+      ]}
       views={(setCurrentView) => [
         {
           name: EDITOR_VIEW_TYPES.EMPTY,
@@ -369,9 +384,9 @@ The following examples show different layout patterns using the flexible `ItemEd
 }
 ```
 
-#### Advanced Layout with Resizable Panels and Bottom Panel
+#### Advanced Layout with Resizable Panels
 ```tsx
-// Full-featured layout with file explorer, editor, and output panel
+// Full-featured layout with file explorer and editor
 {
   name: EDITOR_VIEW_TYPES.CODE_EDITOR,
   component: (
@@ -383,18 +398,13 @@ The following examples show different layout patterns using the flexible `ItemEd
         minWidth: 240,
         maxWidth: 480,
         collapsible: true,
+        enableUserResize: true,
         onCollapseChange: (collapsed) => console.log('Files panel:', collapsed)
       }}
       center={{
         content: <CodeEditor file={currentFile} />,
         ariaLabel: "Code editor workspace"
       }}
-      bottom={{
-        content: <OutputConsole lines={output} />,
-        height: 150,
-        className: "output-panel"
-      }}
-      resizable={true}
     />
   )
 }
@@ -417,7 +427,6 @@ The following examples show different layout patterns using the flexible `ItemEd
         content: <DesignCanvas onElementSelect={setSelectedElement} />,
         className: "design-workspace"
       }}
-      resizable={true}
     />
   )
 }
@@ -431,7 +440,7 @@ The following examples show different layout patterns using the flexible `ItemEd
 | `ribbon` | `(context: ViewContext) => ReactNode` | ✅ Yes | - | Ribbon component factory that receives ViewContext |
 | `views` | `RegisteredView[]` or `Function` | ✅ Yes | - | Array of registered views or factory function |
 | `initialView` | `string` | ✅ Yes | - | Name of the initial view to show |
-| `notification` | `(currentView: string) => ReactNode` | ❌ No | - | Optional notification component factory |
+| `messageBar` | `RegisteredNotification[]` | ❌ No | - | Optional messageBar definitions for view-specific display |
 | `onViewChange` | `(view: string) => void` | ❌ No | - | Callback when view changes |
 | `className` | `string` | ❌ No | `""` | Additional CSS class for the editor container |
 | `contentClassName` | `string` | ❌ No | `""` | Additional CSS class for the scrollable content area |
@@ -443,8 +452,8 @@ The following examples show different layout patterns using the flexible `ItemEd
 export interface ItemEditorProps {
   /** The ribbon component - receives ViewContext automatically */
   ribbon: (context: ViewContext) => ReactNode;
-  /** Optional notification area - receives currentView */
-  notification?: (currentView: string) => ReactNode;
+  /** Optional messageBar definitions for view-specific display */
+  messageBar?: RegisteredNotification[];
   /** Array of registered views or factory function */
   views: RegisteredView[] | ((setCurrentView: (view: string) => void) => RegisteredView[]);
   /** Name of the initial view to show */
@@ -465,6 +474,16 @@ export interface RegisteredView {
   component: ReactNode;
   /** Whether this is a detail view (L2 page) - affects ribbon behavior */
   isDetailView?: boolean;
+}
+
+// Registered MessageBar Interface
+export interface RegisteredNotification {
+  /** Unique name/key for the messageBar */
+  name: string;
+  /** The messageBar component to render */
+  component: ReactNode;
+  /** Views where this messageBar should be shown (empty array = all views) */
+  showInViews?: string[];
 }
 
 // ViewContext passed to ribbon
@@ -882,11 +901,6 @@ ribbon={(viewContext) => (
       center={{
         content: <MainEditor />
       }}
-      bottom={{
-        content: <StatusBar />,
-        height: 80
-      }}
-      resizable={true}
     />
   )
 }
