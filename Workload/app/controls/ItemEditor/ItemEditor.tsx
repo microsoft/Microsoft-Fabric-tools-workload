@@ -83,6 +83,13 @@ export interface ViewContext {
  * 1. **Static**: Use `initialView` prop with predetermined view name
  * 2. **Dynamic**: Use `getInitialView` function called when loading completes
  * 
+ * ## Scrolling Responsibility (IMPORTANT)
+ * **ItemEditor center panel handles ALL scrolling behavior**
+ * - Individual item views should NOT implement their own scrolling
+ * - Content should grow naturally with `height: auto`
+ * - ItemEditor automatically adds vertical scrolling when content exceeds available space
+ * - This ensures consistent scrolling behavior across all items
+ * 
  * ```tsx
  * // Pattern 1: Static initial view
  * <ItemEditor initialView="dashboard" views={views} />

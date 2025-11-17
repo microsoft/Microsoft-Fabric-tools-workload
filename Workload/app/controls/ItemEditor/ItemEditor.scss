@@ -713,14 +713,38 @@
     background: var(--colorNeutralBackground1, #ffffff);
     border-radius: var(--borderRadiusMedium, 8px);
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
-    overflow: hidden;
     padding: 0;
     min-width: 0; // Prevent flex item from overflowing
+    position: relative; // Establish positioning context
 
-    // Allow content to scroll if needed
+    // SCROLLING RESPONSIBILITY: ItemEditor center panel handles ALL overflow
+    // Individual item controls should NOT implement their own scrolling
+    overflow-y: auto; // Always scroll vertically when content exceeds height
+    overflow-x: hidden; // Never allow horizontal scrolling
+
+    // Custom scrollbar styling - Fabric UX guideline
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--colorNeutralStroke1, #d1d1d1);
+      border-radius: var(--borderRadiusMedium, 4px);
+      
+      &:hover {
+        background: var(--colorNeutralStroke1Hover, #b3b3b3);
+      }
+    }
+
+    // Child content should grow naturally - NO overflow handling at child level
     > * {
-      overflow-y: auto;
-      overflow-x: hidden;
+      max-width: 100%; // Prevent horizontal overflow
+      // NO height restrictions - let content grow naturally
+      // NO overflow properties - parent handles all scrolling
     }
   }
 

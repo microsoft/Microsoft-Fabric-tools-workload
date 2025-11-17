@@ -109,6 +109,7 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **OneLake Explorer**: Always use control from `controls/OneLakeView`, not sample code
 - **ItemEditor View Registration**: ALWAYS use static view registration pattern with `useViewNavigation()` hook. Define views as static array like ribbon actions
 - **ItemEditor Initial View**: ALWAYS use `getInitialView` function for data-dependent view determination instead of static `initialView`. Called automatically when loading completes
+- **ItemEditor Scrolling**: NEVER implement scrolling in item views. ItemEditor center panel handles ALL overflow with automatic vertical scrolling. Items should use `height: auto` for natural growth
 - **ItemEditor Notification Registration**: ALWAYS use static notification registration pattern. Define notifications as static array with `showInViews` to control visibility
 - **View Navigation**: ALWAYS suggests `const { setCurrentView, goBack } = useViewNavigation()` in view wrapper components for navigation between views (hook is part of ItemEditorDefaultView module)
 - **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate

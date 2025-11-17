@@ -52,12 +52,10 @@ export function HelloWorldItemDefaultView({
   // Left panel content - Hero section with welcome message
   const gettingStartedSection = (
     <div className="hello-world-view">
-      <h1 className="hello-world-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
-      <hr className="hello-world-separator-line" />
       
       <div className="hello-world-next">
         <div className="hello-world-section-header">
-          <h2 className="hello-world-section-title">First steps</h2>
+          <h2 className="hello-world-section-title">The item</h2>
           <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to save your Fabric item.')}</p>
         </div>
         <div className="hello-world-section-body">
@@ -116,11 +114,7 @@ export function HelloWorldItemDefaultView({
   const itemDetailSection = (
     <div className="hello-world-view">
       <div className="hello-world-content-inner">
-        {/* Header */}
-        <div className="hello-world-section-header">
-          <h2 className="hello-world-section-title">{t('GettingStarted_SectionTitle', 'Learn more about your workload')}</h2>
-          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'These resources will help you take the next steps.')}</p>
-        </div>
+        <h1 className="hello-world-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
 
         {/* Item Details Expandable Section */}
         <div className="hello-world-section-body">
@@ -180,6 +174,12 @@ export function HelloWorldItemDefaultView({
               </div>
             )}
           </div>
+        </div>
+
+        {/* Header */}
+        <div className="hello-world-section-header">
+          <h2 className="hello-world-section-title">{t('GettingStarted_SectionTitle', 'Learn more about your workload')}</h2>
+          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'These resources will help you take the next steps.')}</p>
         </div>
 
         {/* Resources */}
@@ -289,38 +289,37 @@ export function HelloWorldItemDefaultView({
   return (
     <ItemEditorDefaultView
       //Add left control if you want to split the center content in the editor
-      /*left={{
+      left={{
         content: gettingStartedSection,
         width: 450,
         minWidth: 350,
-        collapsible: false
-      }}*/
+        title: t('Item_GettingStarted_Label', 'Getting Started'),
+        collapsible: true
+      }}
       center={{
-        content: (
+        /** content: (
           <div className="hello-world-combined-layout">
-            {/* Left section with fixed width matching default ItemEditor left panel */}
             <div className="hello-world-getting-started-section">
               {gettingStartedSection}
             </div>
-            {/* Right section taking remaining space */}
             <div className="hello-world-details-section">
               {itemDetailSection}
             </div>
           </div>
-        ),
+        ),*/
         //If using the left nav just show the Detail section in the center
-        //content: itemDetailSection
+        content: itemDetailSection
       }}
       //Add bottom control if needed
-      /*bottom={{
+      bottom={{
         content: (
-                  <div className="hello-world-view">
-                    <span>
-                      {t('Item_Name_Label', 'Item:')}: {item?.displayName || 'Hello World'}
-                    </span>
-                  </div>
-                )
-      }}*/
+          <div className="hello-world-view">
+            <span>
+              {t('Item_Name_Label', 'Item:')}: {item?.displayName || 'Hello World'}
+            </span>
+          </div>
+        )
+      }}
       resizable={true}
     />
   );

@@ -35,26 +35,22 @@
 .hello-world-combined-layout {
   display: flex;
   width: 100%;
-  height: auto; // Allow natural height growth for content
+  height: auto; // Allow natural height growth - ItemEditor handles overflow
   gap: var(--spacingHorizontalXS, 4px);
   align-items: stretch; // Force both sections to have same height
-  // Remove overflow: visible - let ItemEditor center panel handle scrolling
-  // The ItemEditor center panel applies overflow-y: auto to direct children
+  // NO overflow handling - ItemEditor center panel is responsible for scrolling
 }
 
 .hello-world-getting-started-section {
   flex: 0 0 430px; 
   min-width: 280px;
-  height: 100%;
-  // Remove min-height: 100% to let align-items: stretch handle equal heights
-  // Allow natural height growth with content
+  // NO height/overflow - let content grow naturally, ItemEditor handles scrolling
 }
 
 .hello-world-details-section {
   flex: 1;
   min-width: 0; // Allow flex shrinking
-  // Remove min-height: 100% to let align-items: stretch handle equal heights
-  // Allow natural height growth with content
+  // NO height/overflow - let content grow naturally, ItemEditor handles scrolling
 }
 
 // ============================================================================

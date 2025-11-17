@@ -41,7 +41,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
-  const [showWarning, setShowWarning] = useState<boolean>(false);
+  const [showWarning, setShowWarning] = useState<boolean>(true);
 
   const { pathname } = useLocation();
 
