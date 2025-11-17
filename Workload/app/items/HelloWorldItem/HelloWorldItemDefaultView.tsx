@@ -204,7 +204,7 @@ export function HelloWorldItemDefaultView({
                 <ul className="hello-world-card-list">
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet1', 'Review your workload\'s structure and components.')}</li>
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet3', 'Explore adding optional features and custom settings.')}</li>
-                  <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet2', 'Learn how to configure the workload for publishing.')}</li>
+                  <li className="hello-world-card-list-item">{t('GettingStarted_Card1_Bullet2', 'Learn how to build your own item.')}</li>
                 </ul>
               </div>
               <div className="hello-world-card-footer">
@@ -236,7 +236,7 @@ export function HelloWorldItemDefaultView({
                 <ul className="hello-world-card-list">
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet1', 'Explore other workloads.')}</li>
                   <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet2', 'Test UI components in the Workload.')}</li>
-                  <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet3', 'Clone the repo to run and explore the sample workload.')}</li>
+                  <li className="hello-world-card-list-item">{t('GettingStarted_Card2_Bullet3', 'Run and explore the sample workload.')}</li>
                 </ul>
               </div>
               <div className="hello-world-card-footer">
