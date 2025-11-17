@@ -584,7 +584,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        padding: var(--spacingVerticalS, 8px);
+        padding: 8px 0; // 8px top & bottom, 0 left & right
         border-bottom: none;
         width: 40px;
         height: 100%;
@@ -608,9 +608,9 @@
       width: 100%;
       color: var(--colorNeutralForeground1) !important;
       font-weight: 600 !important;
-      padding: var(--spacingVerticalS, 8px) 0;
-      padding-left: 8px;
+      padding: 0;
       align-self: center;
+      align-content: center;
     }
 
     // Horizontal title styling for expanded state
@@ -625,11 +625,13 @@
       flex-shrink: 0;
       margin-bottom: 0;
       align-self: center;
+      padding: 0 !important; // Remove default button padding
     }
 
     // Collapse button styling for expanded state
     &-collapse-button {
       flex-shrink: 0;
+      padding: 0 !important; // Remove default button padding
     }
 
     // Content area with scrolling
