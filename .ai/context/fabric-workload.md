@@ -288,6 +288,43 @@ import { ItemEditorEmptyView } from '../../controls/ItemEditor';
 6. **Content Padding**: ItemEditor panels have ZERO padding. Your view content components MUST add `padding: var(--spacingVerticalM, 12px)` to their root CSS class for proper spacing
 7. **State Management**: Use Redux Toolkit patterns for complex state management
 8. **Performance**: Implement lazy loading and code splitting for large applications
+9. **Item Loading Optimization**: Prevent unnecessary item reloads when the same item is already loaded
+
+#### Item Loading Optimization Pattern
+
+When implementing item editors, prevent unnecessary API calls and loading states by checking if the requested item is already loaded:
+
+```typescript
+// RECOMMENDED: Optimize loadDataFromUrl to prevent unnecessary reloads
+async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
+  // Prevent unnecessary reload if the same item is already loaded
+  if (pageContext.itemObjectId && item && item.id === pageContext.itemObjectId) {
+    console.log(`Item ${pageContext.itemObjectId} is already loaded, skipping reload`);
+    return;
+  }
+
+  setIsLoading(true);
+  // ... rest of loading logic
+}
+```
+
+**Benefits of this optimization:**
+- **Prevents API calls** when the same item is already loaded
+- **Avoids unnecessary loading states** that cause UI flicker  
+- **Preserves current state** (like unsaved changes) when navigating within the same item
+- **Reduces server load** by eliminating redundant requests
+
+**When this optimization helps:**
+- Navigating between different views of the same item
+- URL changes that don't actually change the item being edited
+- Browser history navigation within the same item context
+- Parent component re-renders that trigger useEffect dependencies
+
+**Implementation Notes:**
+- Add the check as the first step in your `loadDataFromUrl` function
+- Compare `pageContext.itemObjectId` with the currently loaded `item.id`
+- Include logging to help with debugging when the optimization is active
+- The function will still reload when the `itemObjectId` actually changes
 
 ### Security Considerations
 1. **Minimal Scopes**: Request only necessary OAuth scopes for operations

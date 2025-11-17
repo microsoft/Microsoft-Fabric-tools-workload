@@ -47,6 +47,12 @@ export function HelloWorldItemEditor(props: PageProps) {
   const { pathname } = useLocation();
 
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
+    // Prevent unnecessary reload if the same item is already loaded
+    if (pageContext.itemObjectId && item && item.id === pageContext.itemObjectId) {
+      console.log(`Item ${pageContext.itemObjectId} is already loaded, skipping reload`);
+      return;
+    }
+
     setIsLoading(true);
     var LoadedItem: ItemWithDefinition<HelloWorldItemDefinition> = undefined;
     if (pageContext.itemObjectId) {

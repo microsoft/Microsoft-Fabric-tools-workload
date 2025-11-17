@@ -568,9 +568,16 @@ export function [ItemName]ItemEditor(props: PageProps) {
   const [hasBeenSaved, setHasBeenSaved] = useState(false);
   const [currentDefinition, setCurrentDefinition] = useState<[ItemName]ItemDefinition>({});
 
-  // Load item data
+  // Load item data with optimization to prevent unnecessary reloads
   useEffect(() => {
     async function loadItem() {
+      // Performance optimization: Prevent unnecessary reload if the same item is already loaded
+      if (itemObjectId && item && item.id === itemObjectId) {
+        console.log(`Item ${itemObjectId} is already loaded, skipping reload`);
+        return;
+      }
+      
+      setIsLoading(true);
       const loadedItem = await getWorkloadItem<[ItemName]ItemDefinition>(
         workloadClient, 
         itemObjectId

@@ -897,9 +897,15 @@
 
 .item-editor-loading-progress-fill {
   height: 100%;
-  background-color: var(--colorBrandBackground);
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--colorBrandBackground) 45%, 
+    var(--colorBrandBackground) 65%, 
+    transparent 100%
+  ); // Add fade effect with gradient
   width: 30%;
   position: absolute;
+  border-radius: var(--borderRadiusMedium); // Add border radius to match container
   animation: progress-indeterminate 2s ease-in-out infinite;
 }
 
