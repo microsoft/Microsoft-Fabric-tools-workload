@@ -12,7 +12,7 @@ import {
   Warning20Filled
 } from "@fluentui/react-icons";
 import { PageProps, ContextProps } from "../../App";
-import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
@@ -43,6 +43,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
   // Set to true if you want to see the messageBar content in the editor
   const [showWarning, setShowWarning] = useState<boolean>(false);
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
 
   const { pathname } = useLocation();
 
@@ -76,6 +77,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           console.log('LoadedItem definition: ', LoadedItem.definition);
         }
 
+        // Initialize the item
         setItem(LoadedItem);
         
         // Initialize current definition
@@ -110,13 +112,16 @@ export function HelloWorldItemEditor(props: PageProps) {
   };
 
   async function saveItem() {
-    var successResult = await saveItemDefinition<HelloWorldItemDefinition>(
-      workloadClient,
-      item.id,
-      {
+    item.definition = {
         ...currentDefinition,
-        message: currentDefinition.message || new Date().toISOString()
-      });
+        message: currentDefinition.message || "Hello, Fabric!"
+      }
+    setCurrentDefinition(item.definition)
+
+    var successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
+      workloadClient,
+      item,
+      );
     const wasSaved = Boolean(successResult);
     setHasBeenSaved(wasSaved);
     callNotificationOpen(
@@ -187,11 +192,15 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   ];
 
-  // Function to determine initial view when loading completes - cleaner than useMemo!
-  const getInitialView = React.useCallback(() => {
-    if (!item) return null; // Still loading or no item
-    return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
-  }, [item]);
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && viewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      viewSetter(correctView);
+    }
+  }, [isLoading, item, viewSetter]);
+
 
   // Static notification definitions - like views!
   const notifications: RegisteredNotification[] = [
@@ -233,7 +242,12 @@ export function HelloWorldItemEditor(props: PageProps) {
       )}
       messageBar={notifications}
       views={views}
-      getInitialView={getInitialView}
+      viewSetter={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
+        }
+      }}
     />
   );
 }

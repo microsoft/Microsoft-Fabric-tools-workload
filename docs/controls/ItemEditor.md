@@ -178,6 +178,41 @@ const EDITOR_VIEW_TYPES = {
 />
 ```
 
+### Dynamic View Registration with ViewSetter
+
+The `viewSetter` prop allows for programmatic view control after item loading completes:
+
+```typescript
+export function MyItemEditor(props: PageProps) {
+  const [item, setItem] = useState<ItemWithDefinition<MyItemDefinition>>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
+
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && viewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      viewSetter(correctView);
+    }
+  }, [isLoading, item, viewSetter]);
+
+  return (
+    <ItemEditor
+      views={views}
+      initialView={EDITOR_VIEW_TYPES.EMPTY}  // Start with empty, effect will switch if needed
+      viewSetter={(setCurrentView) => {
+        // Store the setCurrentView function for later use
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
+        }
+      }}
+      ribbon={(context) => <MyRibbon viewContext={context} />}
+    />
+  );
+}
+```
+
 ### Dynamic View Registration
 
 ```typescript
@@ -440,6 +475,7 @@ The following examples show different layout patterns using the flexible `ItemEd
 | `ribbon` | `(context: ViewContext) => ReactNode` | ✅ Yes | - | Ribbon component factory that receives ViewContext |
 | `views` | `RegisteredView[]` or `Function` | ✅ Yes | - | Array of registered views or factory function |
 | `initialView` | `string` | ✅ Yes | - | Name of the initial view to show |
+| `viewSetter` | `(setCurrentView: (view: string) => void) => void` | ❌ No | - | Callback to receive the view setter function for programmatic view changes |
 | `messageBar` | `RegisteredNotification[]` | ❌ No | - | Optional messageBar definitions for view-specific display |
 | `onViewChange` | `(view: string) => void` | ❌ No | - | Callback when view changes |
 | `className` | `string` | ❌ No | `""` | Additional CSS class for the editor container |
@@ -887,7 +923,38 @@ ribbon={(viewContext) => (
 )}
 ```
 
-#### Pattern 5: Multi-Panel Layout with ItemEditorDefaultView
+#### Pattern 5: ViewSetter for Dynamic View Control
+
+```tsx
+export function MyItemEditor(props: PageProps) {
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
+  const [item, setItem] = useState<ItemWithDefinition<MyItemDefinition>>();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && viewSetter) {
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      viewSetter(correctView);
+    }
+  }, [isLoading, item, viewSetter]);
+
+  return (
+    <ItemEditor
+      views={views}
+      initialView={EDITOR_VIEW_TYPES.EMPTY}
+      viewSetter={(setCurrentView) => {
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
+        }
+      }}
+      ribbon={(context) => <MyRibbon viewContext={context} />}
+    />
+  );
+}
+```
+
+#### Pattern 6: Multi-Panel Layout with ItemEditorDefaultView
 ```tsx
 {
   name: VIEW_TYPES.DEFAULT,

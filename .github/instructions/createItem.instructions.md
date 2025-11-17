@@ -246,16 +246,16 @@ GitHub Copilot understands:
 ### Smart Completions with Standard Architecture
 - `fabric.editor` → Expands to ItemEditor with ribbon and children pattern
 - `fabric.ribbon` → Expands to Ribbon + RibbonToolbar with standard actions
-- `fabric.save` → Expands to complete saveItemDefinition pattern
+- `fabric.save` → Expands to complete saveWorkloadItem pattern
 - `fabric.load` → Expands to complete getWorkloadItem pattern  
 - `fabric.notify` → Expands to callNotificationOpen with proper typing
 - `fabric.action` → Creates custom RibbonAction object
 
-### Editor Template Expansion (MANDATORY PATTERN - Current View Registration)
-When typing `fabric.editor`, GitHub Copilot expands to the CURRENT view registration pattern:
+### Editor Template Expansion (MANDATORY PATTERN - Current ViewSetter System)
+When typing `fabric.editor`, GitHub Copilot expands to the CURRENT viewSetter pattern:
 
 ```typescript
-// 🚨 CORRECT: ItemEditor with static view registration system
+// 🚨 CORRECT: ItemEditor with viewSetter system
 return (
   <ItemEditor
     isLoading={isLoading}
@@ -271,7 +271,12 @@ return (
     )}
     messageBar={notifications}
     views={views}
-    getInitialView={getInitialView}
+    viewSetter={(setCurrentView) => {
+      // Store the setCurrentView function so we can use it after loading
+      if (!viewSetter) {
+        setViewSetter(() => setCurrentView);
+      }
+    }}
   />
 );
 ```
@@ -281,7 +286,8 @@ return (
 2. **Ribbon receives** `(context)` - ViewContext with `currentView` and `setCurrentView` for navigation
 3. **MessageBar uses static registration** - array of RegisteredNotification objects with showInViews targeting
 4. **Views uses static array** - no function wrapper, direct array of view objects
-5. **getInitialView function** - callback that determines starting view based on loaded data
+5. **viewSetter prop** - receives ItemEditor's internal setCurrentView function for programmatic control
+6. **useEffect for automatic view switching** - calls stored viewSetter when item loading completes
 
 **View Registration Pattern**:
 ```typescript
@@ -297,11 +303,16 @@ const views = [
   }
 ];
 
-// Function to determine initial view when loading completes
-const getInitialView = React.useCallback(() => {
-  if (!item) return null; // Still loading or no item
-  return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
-}, [item]);
+// State to store the view setter function
+const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
+
+// Effect to set correct view after loading completes
+useEffect(() => {
+  if (!isLoading && item && viewSetter) {
+    const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
+    viewSetter(correctView);
+  }
+}, [isLoading, item, viewSetter]);
 ```
 
 **View Navigation with useViewNavigation Hook**:
@@ -356,9 +367,14 @@ return (
   </ItemEditor>
 );
 
-// ❌ WRONG 3: Direct initialView prop instead of getInitialView function
+// ❌ WRONG 3: Old getInitialView pattern (deprecated)
 <ItemEditor
-  initialView={!item?.definition?.state ? 'empty' : 'default'} // ❌ Should be getInitialView function
+  getInitialView={getInitialView} // ❌ Should use viewSetter prop instead
+/>
+
+// ❌ WRONG 4: Missing viewSetter for programmatic control
+<ItemEditor
+  views={views}  // ❌ Missing viewSetter prop for automatic view switching
 />
 ```
 
@@ -445,7 +461,7 @@ GitHub Copilot automatically suggests and adds:
 ```typescript
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { Stack, TextField, PrimaryButton } from "@fluentui/react";
-import { getWorkloadItem, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { getWorkloadItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 ```
 
 ### Template Expansion with Standard Architecture
@@ -535,18 +551,19 @@ GitHub Copilot detects:
 
 **Reference**: For complete step-by-step instructions, always consult `.ai/commands/item/createItem.md` first, then apply these Copilot-specific enhancements.
 
-## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (Current View Registration System)
+## 🚨 MANDATORY: Step 3 Editor Implementation Pattern (Current ViewSetter System)
 
 **Purpose**:
 - Create main editor component with ItemEditor
-- MUST use current static view registration system
+- MUST use viewSetter prop for programmatic view control
+- MUST use useEffect to automatically switch views after item loads
 - ItemEditor manages view state internally with loading support
 - Views, ribbon, and notifications access current view via ViewContext
 
-**🚨 CRITICAL**: GitHub Copilot MUST generate the CURRENT pattern with static view registration:
+**🚨 CRITICAL**: GitHub Copilot MUST generate the CURRENT pattern with viewSetter and useEffect for automatic view switching:
 
 ```typescript
-// 🚨 CORRECT: ItemEditor with current implementation pattern
+// 🚨 CORRECT: ItemEditor with current viewSetter implementation pattern
 import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
 
@@ -567,6 +584,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<[ItemName]ItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState(false);
   const [currentDefinition, setCurrentDefinition] = useState<[ItemName]ItemDefinition>({});
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
 
   // Load item data with optimization to prevent unnecessary reloads
   useEffect(() => {
@@ -589,10 +607,29 @@ export function [ItemName]ItemEditor(props: PageProps) {
     loadItem();
   }, [itemObjectId]);
 
+  // 🚨 CRITICAL: Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && viewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      viewSetter(correctView);
+    }
+  }, [isLoading, item, viewSetter]);
+
   // Handlers
   const handleSave = async () => {
-    await saveItemDefinition(workloadClient, item.id, currentDefinition);
-    setHasBeenSaved(true);
+    // Update the item definition with current values
+    item.definition = {
+        ...currentDefinition,
+        message: currentDefinition.message || "Hello, Fabric!"
+      }
+
+    var successResult = await saveWorkloadItem<[ItemName]ItemDefinition>(
+      workloadClient,
+      item,
+      );
+    const wasSaved = Boolean(successResult);
+    setHasBeenSaved(wasSaved);
   };
 
   const isSaveEnabled = (currentView: string) => {
@@ -643,12 +680,6 @@ export function [ItemName]ItemEditor(props: PageProps) {
     }
   ];
 
-  // Function to determine initial view when loading completes
-  const getInitialView = React.useCallback(() => {
-    if (!item) return null; // Still loading or no item
-    return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
-  }, [item]);
-
   // Static notification definitions
   const notifications: RegisteredNotification[] = [
     {
@@ -677,7 +708,12 @@ export function [ItemName]ItemEditor(props: PageProps) {
       )}
       messageBar={notifications}
       views={views}
-      getInitialView={getInitialView}
+      viewSetter={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
+        }
+      }}
     />
   );
 }
@@ -687,27 +723,36 @@ export function [ItemName]ItemEditor(props: PageProps) {
 ```typescript
 // ❌ WRONG 1: Function-based view props (old pattern)
 <ItemEditor
-  views={(setCurrentView) => [...]}           // ❌ Now static array
+  views={(setCurrentView) => [...]}           // ❌ Now static array with viewSetter
   ribbon={(currentView, setCurrentView) => ...} // ❌ Now receives context object
 />
 
-// ❌ WRONG 2: Direct initialView prop
+// ❌ WRONG 2: Missing viewSetter prop
 <ItemEditor
-  initialView={someExpression}  // ❌ Now getInitialView function
+  views={views}  // ❌ Missing viewSetter for programmatic control
 />
 
-// ❌ WRONG 3: Missing loading support
-<ItemEditor
-  views={views}  // ❌ Missing isLoading and loadingMessage props
-/>
+// ❌ WRONG 3: Missing automatic view switching effect
+export function MyItemEditor() {
+  // ❌ Missing useEffect to switch views after loading
+  return <ItemEditor views={views} />
+}
 ```
 
 **Key Architecture Points**:
-1. **Static view array** - `views` is a static array, not a function
-2. **ViewContext pattern** - `ribbon` receives `(context)` with `currentView` and `setCurrentView`  
-3. **getInitialView function** - Callback that determines starting view based on loaded data
-4. **Loading support** - Pass `isLoading` and `loadingMessage` props to ItemEditor
-5. **useViewNavigation hook** - Views that need navigation use this hook in wrapper components
+1. **viewSetter prop** - Receives the ItemEditor's internal setCurrentView function
+2. **viewSetter state** - Store the function to use after item loading completes  
+3. **Automatic view switching** - useEffect calls viewSetter to switch views based on item state
+4. **Static view array** - views is a static array, not a function
+5. **ViewContext pattern** - ribbon receives (context) with currentView and setCurrentView
+6. **Loading support** - Pass isLoading and loadingMessage props to ItemEditor
+7. **useViewNavigation hook** - Views that need navigation use this hook in wrapper components
+
+**Critical Implementation Details**:
+1. **Must store viewSetter function**: `const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);`
+2. **Must provide viewSetter callback**: Pass function to ItemEditor that stores the setCurrentView function
+3. **Must include automatic view switching effect**: useEffect that calls viewSetter when item loads
+4. **Must check all conditions**: Only call viewSetter when `!isLoading && item && viewSetter`
 
 ---
 

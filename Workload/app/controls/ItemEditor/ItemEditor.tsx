@@ -121,6 +121,8 @@ export interface ItemEditorPropsWithViews {
   initialView?: string | null | undefined;
   /** Function to determine initial view when loading completes (alternative to initialView) */
   getInitialView?: () => string | null | undefined;
+  /** Callback to receive the view setter function for programmatic view changes */
+  viewSetter?: (setCurrentView: (view: string) => void) => void;
   /** Optional callback when view changes */
   onViewChange?: (view: string) => void;
   /** Optional CSS class for the editor container */
@@ -396,6 +398,13 @@ export function ItemEditor(props: ItemEditorProps) {
     goBack,
     viewHistory
   }), [setCurrentView, goBack, viewHistory]);
+
+  // Call viewSetter prop to provide the setCurrentView function to the parent
+  React.useEffect(() => {
+    if (props.viewSetter) {
+      props.viewSetter(setCurrentView);
+    }
+  }, [props.viewSetter, setCurrentView]);
 
   // Resolve ribbon (either ReactNode or render function with ViewContext)
   const ribbonContent = React.useMemo(() => {
