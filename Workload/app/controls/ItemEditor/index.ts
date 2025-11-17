@@ -15,11 +15,12 @@ export { ItemEditor } from './ItemEditor';
 export type { 
   ItemEditorProps, 
   RegisteredView,
+  RegisteredNotification,
   ViewContext
 } from './ItemEditor';
 
 // ItemEditor View components
-export { ItemEditorDefaultView } from './ItemEditorDefaultView';
+export { ItemEditorDefaultView, useViewNavigation } from './ItemEditorDefaultView';
 export type { ItemEditorDefaultViewProps, LeftPanelConfig, CentralPanelConfig, BottomPanelConfig } from './ItemEditorDefaultView';
 
 // ItemEditor Empty View component
@@ -52,5 +53,7 @@ export {
   createAboutAction
 } from './RibbonStandardActions';
 
-// Re-export DetailViewActionsContext for consumers who need it
-export { DetailViewActionsContext } from './ItemEditor';
+// Re-export contexts for consumers who need them
+export { DetailViewActionsContext, ViewNavigationContext } from './ItemEditor';
+
+// Hook for view navigation is exported from ItemEditorDefaultView

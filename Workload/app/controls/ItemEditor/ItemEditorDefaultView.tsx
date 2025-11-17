@@ -1,6 +1,7 @@
 import React, { ReactNode, useState, useCallback } from "react";
 import { Button, Text } from "@fluentui/react-components";
 import { ChevronDoubleLeft20Regular, ChevronDoubleRight20Regular } from "@fluentui/react-icons";
+import { ViewNavigationContext } from './ItemEditor';
 import "./ItemEditor.scss"
 
 /**
@@ -481,6 +482,44 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
       )}
     </div>
   );
+}
+
+/**
+ * Hook to access view navigation functions from within ItemEditor view components
+ * 
+ * This hook is part of the ItemEditorDefaultView module as it's an integral part 
+ * of the ItemEditor view system. It provides access to:
+ * - setCurrentView: Function to navigate to a different view
+ * - goBack: Function to navigate back to previous view (for detail views)
+ * - viewHistory: Array of visited view names
+ * 
+ * @example
+ * ```tsx
+ * import { useViewNavigation } from '../../controls/ItemEditor';
+ * 
+ * function MyViewWrapper() {
+ *   const { setCurrentView, goBack } = useViewNavigation();
+ * 
+ *   return (
+ *     <div>
+ *       <button onClick={() => setCurrentView('detail')}>Show Detail</button>
+ *       <button onClick={goBack}>Go Back</button>
+ *     </div>
+ *   );
+ * }
+ * ```
+ * 
+ * @returns Navigation context with setCurrentView, goBack, and viewHistory
+ * @throws Error if used outside of ItemEditor component
+ */
+export function useViewNavigation() {
+  const context = React.useContext(ViewNavigationContext);
+  
+  if (!context) {
+    throw new Error('useViewNavigation must be used within an ItemEditor component');
+  }
+  
+  return context;
 }
 
 export default ItemEditorDefaultView;

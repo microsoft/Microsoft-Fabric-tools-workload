@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import {
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody
+} from "@fluentui/react-components";
+import {
+  Dismiss20Regular,
+  Warning20Filled
+} from "@fluentui/react-icons";
 import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
 import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
@@ -31,7 +41,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
-  const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
+  const [showWarning, setShowWarning] = useState<boolean>(true);
 
   const { pathname } = useLocation();
 
@@ -81,15 +91,6 @@ export function HelloWorldItemEditor(props: PageProps) {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
 
-  // Effect to set the correct view after loading completes
-  useEffect(() => {
-    if (!isLoading && item && currentViewSetter) {
-      // Determine the correct view based on item state
-      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
-      currentViewSetter(correctView);
-    }
-  }, [isLoading, item, currentViewSetter]);
-
   const handleOpenSettings = async () => {
     if (item) {
       try {
@@ -120,6 +121,7 @@ export function HelloWorldItemEditor(props: PageProps) {
     );
   }
 
+  // Check if Save should be enabled
   const isSaveEnabled = (currentView: string) => {
     if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
@@ -134,8 +136,81 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   };
 
-  // Render with view registration
-  // ItemEditor manages the view state internally and handles loading
+  // Wrapper component for empty view that uses navigation hook
+  const EmptyViewWrapper = () => {
+    const { setCurrentView } = useViewNavigation();
+    
+    return (
+      <HelloWorldItemEmptyView
+        workloadClient={workloadClient}
+        item={item}
+        onNavigateToGettingStarted={() => {
+          setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
+          setHasBeenSaved(false);
+          setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+        }}
+      />
+    );
+  };
+
+  // Wrapper component for default view that uses navigation hook
+  const DefaultViewWrapper = () => {
+    return (
+      <HelloWorldItemDefaultView
+        workloadClient={workloadClient}
+        item={item}
+        messageValue={currentDefinition.message}
+        onMessageChange={(newValue) => {
+          setCurrentDefinition(prev => ({ ...prev, message: newValue }));
+          setHasBeenSaved(false);
+        }}
+      />
+    );
+  };
+
+  // Static view definitions - no function wrapper needed!
+  const views = [
+    {
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: <EmptyViewWrapper />
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEFAULT,
+      component: <DefaultViewWrapper />
+    }
+  ];
+
+  // Determine initial view based on item state
+  const initialView = React.useMemo(() => {
+    if (isLoading) return EDITOR_VIEW_TYPES.EMPTY;
+    return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
+  }, [isLoading, item?.definition?.message]);
+
+  // Static notification definitions - like views!
+  const notifications: RegisteredNotification[] = [
+    {
+      name: 'default-warning',
+      showInViews: [EDITOR_VIEW_TYPES.DEFAULT], // Only show in DEFAULT view
+      component: showWarning ? (
+        <MessageBar intent="warning" icon={<Warning20Filled />}>
+          <MessageBarBody>
+            {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
+          </MessageBarBody>
+          <MessageBarActions
+            containerAction={
+              <Button
+                appearance="transparent"
+                icon={<Dismiss20Regular />}
+                aria-label={t('MessageBar_Dismiss', 'Dismiss')}
+                onClick={() => setShowWarning(false)}
+              />
+            }
+          />
+        </MessageBar>
+      ) : null
+    }
+  ];
+
   return (
     <ItemEditor
       isLoading={isLoading}
@@ -143,70 +218,15 @@ export function HelloWorldItemEditor(props: PageProps) {
       ribbon={(context) => (
         <HelloWorldItemRibbon
           {...props}
-          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
           viewContext={context}
+          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
           saveItemCallback={SaveItem}
           openSettingsCallback={handleOpenSettings}
         />
       )}
-      // Notifications can be added if needed
-      /*notification={(currentView) =>
-        currentView === EDITOR_VIEW_TYPES.DEFAULT && showWarning ? (
-          <MessageBar intent="warning" icon={<Warning20Filled />}>
-            <MessageBarBody>
-              {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
-            </MessageBarBody>
-            <MessageBarActions
-              containerAction={
-                <Button
-                  appearance="transparent"
-                  icon={<Dismiss20Regular />}
-                  aria-label={t('MessageBar_Dismiss', 'Dismiss')}
-                  onClick={() => setShowWarning(false)}
-                />
-              }
-            />
-          </MessageBar>
-        ) : undefined
-      }*/
-      views={(setCurrentView) => {
-        // Store the setCurrentView function so we can use it after loading
-        if (!currentViewSetter) {
-          setCurrentViewSetter(() => setCurrentView);
-        }
-        
-        return [
-          {
-            name: EDITOR_VIEW_TYPES.EMPTY,
-            component: (
-              <HelloWorldItemEmptyView
-                workloadClient={workloadClient}
-                item={item}
-                onNavigateToGettingStarted={() => {
-                  setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
-                  setHasBeenSaved(false);
-                  setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
-                }}
-              />
-            )
-          },
-          {
-            name: EDITOR_VIEW_TYPES.DEFAULT,
-            component: (
-              <HelloWorldItemDefaultView
-                workloadClient={workloadClient}
-                item={item}
-                messageValue={currentDefinition.message}
-                onMessageChange={(newValue) => {
-                  setCurrentDefinition(prev => ({ ...prev, message: newValue }));
-                  setHasBeenSaved(false);
-                }}
-              />
-            )
-          }
-        ];
-      }}
-      initialView={EDITOR_VIEW_TYPES.EMPTY}
+      notifications={notifications}
+      views={views}
+      initialView={initialView}
     />
   );
 }

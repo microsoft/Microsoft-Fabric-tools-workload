@@ -4,6 +4,15 @@ import { RibbonAction } from './RibbonToolbar';
 import "./ItemEditor.scss";
 
 /**
+ * Context for views to access navigation functions
+ */
+export const ViewNavigationContext = React.createContext<{
+  setCurrentView: (view: string) => void;
+  goBack: () => void;
+  viewHistory: string[];
+} | null>(null);
+
+/**
  * Context for detail views to register their actions
  */
 export const DetailViewActionsContext = React.createContext<{
@@ -23,11 +32,23 @@ export interface RegisteredView {
 }
 
 /**
+ * Registered notification definition
+ */
+export interface RegisteredNotification {
+  /** Unique name/key for the notification */
+  name: string;
+  /** The notification component to render */
+  component: ReactNode;
+  /** Views where this notification should be shown (empty array = all views) */
+  showInViews?: string[];
+}
+
+/**
  * View context information passed to ribbon
  */
 export interface ViewContext {
-  /** Current active view name */
-  currentView: string;
+  /** Current active view name (null when no view is set yet) */
+  currentView: string | null;
   /** Function to navigate to a different view */
   setCurrentView: (view: string) => void;
   /** Whether the current view is a detail view */
@@ -45,7 +66,8 @@ export interface ViewContext {
 /**
  * ItemEditor Props Interface
  * 
- * ItemEditor manages the view state internally. Components register views and can switch between them using setCurrentView.
+ * ItemEditor manages view state internally using static view registration.
+ * Views are defined as a simple array and can navigate using the useViewNavigation() hook.
  * 
  * ## Detail View Support (Automatic Back Navigation)
  * When a view is marked as `isDetailView: true`, ItemEditor AUTOMATICALLY:
@@ -57,9 +79,9 @@ export interface ViewContext {
  * **NO MANUAL IMPLEMENTATION REQUIRED** - Just mark views as detail views and use `context.goBack()`
  * 
  * @property {ReactNode | Function} ribbon - The ribbon component (receives ViewContext)
- * @property {ReactNode | Function} notification - Optional notification (can access currentView)
- * @property {RegisteredView[] | Function} views - Array of registered views or factory function
- * @property {string} initialView - Name of the initial view to show
+ * @property {RegisteredNotification[] | Function} notification - Static notification registration or function (DEPRECATED: prefer array)
+ * @property {RegisteredView[]} views - Array of registered views with static definitions
+ * @property {string | null | undefined} initialView - Name of the initial view to show (null/undefined = no view rendered until set)
  * @property {(view: string) => void} onViewChange - Optional callback when view changes
  * @property {string} className - Optional additional CSS class for the editor container
  * @property {string} contentClassName - Optional additional CSS class for the scrollable content area
@@ -67,12 +89,12 @@ export interface ViewContext {
 export interface ItemEditorPropsWithViews {
   /** The ribbon component - can be ReactNode or function receiving (ViewContext) */
   ribbon: ReactNode | ((context: ViewContext) => ReactNode);
-  /** Optional notification area - can be ReactNode or function receiving (currentView) */
-  notification?: ReactNode | ((currentView: string) => ReactNode);
-  /** Array of registered views or factory function that receives setCurrentView */
-  views: RegisteredView[] | ((setCurrentView: (view: string) => void) => RegisteredView[]);
-  /** Name of the initial view to show */
-  initialView: string;
+  /** Static notification registration or function (DEPRECATED: prefer array) */
+  notifications?: RegisteredNotification[] | ((currentView: string) => ReactNode);
+  /** Array of registered views with static definitions */
+  views: RegisteredView[];
+  /** Name of the initial view to show (null/undefined = don't render content until set) */
+  initialView: string | null | undefined;
   /** Optional callback when view changes */
   onViewChange?: (view: string) => void;
   /** Optional CSS class for the editor container */
@@ -99,14 +121,16 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * - Proper height management to fill the iframe
  * - Support for different view types (empty, default, detail pages)
  * 
- * ## View Registration Mode
+ * ## View Registration
  * 
- * ItemEditor manages view state internally. Components register views and can switch between them using setCurrentView.
+ * ItemEditor uses static view registration. Views are defined as a simple array and 
+ * can navigate using the useViewNavigation() hook from within view components.
  * 
  * @see {@link ../../../docs/controls/ItemEditor.md} - Complete documentation with examples and architecture
  * @see {@link ../../../docs/controls/ItemEditor/README.md} - Main ItemEditor documentation
  * @see {@link ../../../docs/controls/ItemEditor/Architecture.md} - System design and patterns
  * @see {@link ../../../docs/controls/ItemEditor/QuickReference.md} - Quick reference guide
+ * @see {@link ../../../docs/controls/ItemEditor/ViewNavigationPatterns.md} - View navigation patterns
  * 
  * ## Architecture
  * 
@@ -131,22 +155,47 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * ## Usage Example
  * 
  * ```tsx
- * import { ItemEditor, RegisteredView, ViewContext } from "../../controls/ItemEditor";
+ * import { ItemEditor, RegisteredView, useViewNavigation } from "../../controls/ItemEditor";
  * 
- * // Define views with detail view flag
- * const views = (setCurrentView: (view: string) => void): RegisteredView[] => [
+ * // View wrapper that uses navigation hook
+ * const EmptyViewWrapper = () => {
+ *   const { setCurrentView } = useViewNavigation();
+ *   
+ *   return (
+ *     <EmptyView onStart={() => setCurrentView('main')} />
+ *   );
+ * };
+ * 
+ * const MainViewWrapper = () => {
+ *   const { setCurrentView } = useViewNavigation();
+ *   
+ *   return (
+ *     <MainView onShowDetail={(id) => setCurrentView(`detail-${id}`)} />
+ *   );
+ * };
+ * 
+ * const DetailViewWrapper = () => {
+ *   const { goBack } = useViewNavigation();
+ *   
+ *   return (
+ *     <DetailView recordId="123" onBack={goBack} />
+ *   );
+ * };
+ * 
+ * // Static view definitions
+ * const views: RegisteredView[] = [
  *   { 
  *     name: 'empty', 
- *     component: <EmptyView onStart={() => setCurrentView('main')} />
+ *     component: <EmptyViewWrapper />
  *   },
  *   { 
  *     name: 'main', 
- *     component: <MainView onShowDetail={(id) => setCurrentView(`detail-${id}`)} />
+ *     component: <MainViewWrapper />
  *   },
  *   { 
  *     name: 'detail-123', 
- *     component: <DetailView recordId="123" />,
- *     isDetailView: true  // ⭐ Marks as detail view - enables automatic back navigation
+ *     component: <DetailViewWrapper />,
+ *     isDetailView: true  // ⭐ Enables automatic back navigation
  *   }
  * ];
  * 
@@ -157,7 +206,7 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  *       currentView={context.currentView}
  *       isDetailView={context.isDetailView}  // True when on detail view
  *       onViewChange={context.setCurrentView}
- *       onBack={context.goBack}  // ⭐ Automatically navigates to previous view - NO MANUAL LOGIC NEEDED
+ *       onBack={context.goBack}  // ⭐ Automatically navigates to previous view
  *     />
  *   )}
  *   notification={(currentView) => 
@@ -173,8 +222,9 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * 
  * **What You Do:**
  * 1. Set `isDetailView: true` in RegisteredView
- * 2. Pass `context.goBack` to ribbon back button
- * 3. Ribbon shows back button when `context.isDetailView === true`
+ * 2. Use `const { goBack } = useViewNavigation()` in view component
+ * 3. Pass `context.goBack` to ribbon back button
+ * 4. Ribbon shows back button when `context.isDetailView === true`
  * 
  * **What ItemEditor Does AUTOMATICALLY:**
  * - ✅ Tracks complete view history
@@ -185,23 +235,30 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * ```tsx
  * {
  *   name: 'detail-record-123',
- *   component: (
+ *   component: <DetailViewWrapper />,
+ *   isDetailView: true  // ⭐ This enables automatic back navigation!
+ * }
+ * 
+ * // In your view component:
+ * const DetailViewWrapper = () => {
+ *   const { goBack } = useViewNavigation();
+ *   
+ *   return (
  *     <ItemEditorDetailView
  *       center={<RecordDetails recordId="123" />}
- *       actions={[  // These actions appear in ribbon when view is active
- *         { id: 'save', label: 'Save', icon: <Save24Regular />, onClick: handleSave },
- *         { id: 'delete', label: 'Delete', icon: <Delete24Regular />, onClick: handleDelete }
+ *       onBack={goBack}  // ⭐ No manual logic - ItemEditor handles everything
+ *       actions={[
+ *         { id: 'save', label: 'Save', icon: <Save24Regular />, onClick: handleSave }
  *       ]}
  *     />
- *   ),
- *   isDetailView: true  // ⭐ This is ALL you need - back navigation is automatic!
- * }
+ *   );
+ * };
  * 
  * // In your ribbon - just wire up the back button:
  * ribbon={(context) => (
  *   <Ribbon
  *     showBackButton={context.isDetailView}
- *     onBack={context.goBack}  // ⭐ No manual logic - ItemEditor handles everything
+ *     onBack={context.goBack}  // ⭐ Automatic back navigation
  *   />
  * )}
  * ```
@@ -211,7 +268,8 @@ export type ItemEditorProps = ItemEditorPropsWithViews;
  * - **Fixed Ribbon**: Ribbon stays at the top during scrolling
  * - **Full Height**: Editor fills 100% of the iframe
  * - **Independent Scrolling**: Content scrolls while ribbon remains visible
- * - **View Management**: Centralized view registration and switching
+ * - **Static View Registration**: Views defined as simple array like ribbon actions
+ * - **Navigation Hook**: Easy view navigation with useViewNavigation() hook
  * - **Detail View Support**: Automatic history tracking and back navigation
  * - **View Context**: Ribbon receives full context including isDetailView flag
  * - **Consistent Layout**: Enforces Fabric design guidelines
@@ -222,7 +280,7 @@ export function ItemEditor(props: ItemEditorProps) {
   const { className = "", contentClassName = "", isLoading = false, loadingMessage } = props;
 
   // Internal state for view management - Initialize with the initial view directly
-  const [currentView, setCurrentViewInternal] = React.useState<string>(props.initialView || '');
+  const [currentView, setCurrentViewInternal] = React.useState<string | null>(props.initialView || null);
   // View history for back navigation in detail views - Initialize with initial view
   const [viewHistory, setViewHistory] = React.useState<string[]>(() => 
     props.initialView ? [props.initialView] : []
@@ -269,14 +327,10 @@ export function ItemEditor(props: ItemEditorProps) {
     setDetailViewActions(actions);
   }, []);
 
-  // Resolve views (either array or factory function)
+  // Views are now always an array - no function pattern support
   const resolvedViews = React.useMemo((): RegisteredView[] => {
-    const views = props.views;
-    if (typeof views === 'function') {
-      return views(setCurrentView);
-    }
-    return views;
-  }, [props, setCurrentView]);
+    return props.views;
+  }, [props.views]);
 
   // Check if current view is a detail view
   const isDetailView = React.useMemo(() => {
@@ -295,6 +349,13 @@ export function ItemEditor(props: ItemEditorProps) {
     setDetailViewActions: handleSetDetailViewActions
   }), [currentView, setCurrentView, isDetailView, goBack, viewHistory, detailViewActions, handleSetDetailViewActions]);
 
+  // Build navigation context for views
+  const navigationContext = React.useMemo(() => ({
+    setCurrentView,
+    goBack,
+    viewHistory
+  }), [setCurrentView, goBack, viewHistory]);
+
   // Resolve ribbon (either ReactNode or render function with ViewContext)
   const ribbonContent = React.useMemo(() => {
     const ribbon = props.ribbon;
@@ -304,20 +365,48 @@ export function ItemEditor(props: ItemEditorProps) {
     return ribbon;
   }, [props, viewContext]);
 
-  // Resolve notification (either ReactNode or render function)
+  // Resolve notification (static registration or legacy function)
   const notificationContent = React.useMemo(() => {
-    const notification = props.notification;
-    if (typeof notification === 'function') {
-      return notification(currentView);
+    const notifications = props.notifications;
+    
+    if (!notifications) {
+      return null;
     }
-    return notification;
-  }, [props, currentView]);
+    
+    // Legacy function pattern support
+    if (typeof notifications === 'function') {
+      return notifications(currentView);
+    }
+    
+    // Static notification registration (preferred)
+    if (Array.isArray(notifications)) {
+      // Find notifications that should show in current view
+      const activeNotifications = notifications.filter(notification => {
+        // If showInViews is not specified, show in all views
+        if (!notification.showInViews || notification.showInViews.length === 0) {
+          return true;
+        }
+        // Check if current view is in the showInViews array
+        return notification.showInViews.includes(currentView);
+      });
+      
+      // Return the first active notification (can be enhanced to support multiple)
+      return activeNotifications.length > 0 ? activeNotifications[0].component : null;
+    }
+    
+    return null;
+  }, [props.notifications, currentView]);
 
   // Determine content from view registration
   const content = React.useMemo(() => {
     // Show loading indicator if isLoading is true
     if (isLoading) {
       return <ItemEditorLoadingView message={loadingMessage || "Loading..."} />;
+    }
+    
+    // Don't render any view if currentView is null/undefined (prevents flash of wrong view)
+    if (!currentView) {
+      return null;
     }
     
     // View Registration Mode
@@ -341,9 +430,11 @@ export function ItemEditor(props: ItemEditorProps) {
       
       {/* Scrollable content area */}
       <div className={`item-editor-container__content ${contentClassName}`.trim()} data-testid="item-editor-content">
-        <DetailViewActionsContext.Provider value={{ setDetailViewActions: handleSetDetailViewActions }}>
-          {content}
-        </DetailViewActionsContext.Provider>
+        <ViewNavigationContext.Provider value={navigationContext}>
+          <DetailViewActionsContext.Provider value={{ setDetailViewActions: handleSetDetailViewActions }}>
+            {content}
+          </DetailViewActionsContext.Provider>
+        </ViewNavigationContext.Provider>
       </div>
     </div>
   );

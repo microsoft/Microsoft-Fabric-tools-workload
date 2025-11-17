@@ -107,6 +107,9 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **Toolbar Integration**: Mandatory `Tooltip` + `ToolbarButton` patterns for all toolbar implementations
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
 - **OneLake Explorer**: Always use control from `controls/OneLakeView`, not sample code
+- **ItemEditor View Registration**: ALWAYS use static view registration pattern with `useViewNavigation()` hook. Define views as static array like ribbon actions
+- **ItemEditor Notification Registration**: ALWAYS use static notification registration pattern. Define notifications as static array with `showInViews` to control visibility
+- **View Navigation**: ALWAYS suggests `const { setCurrentView, goBack } = useViewNavigation()` in view wrapper components for navigation between views (hook is part of ItemEditorDefaultView module)
 - **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate
 - **Panel Usage Patterns**: 
   - **Left Panel (Optional)**: For navigation trees, OneLakeView, file explorers, and secondary views (list views, catalog browsers, workspace explorers)

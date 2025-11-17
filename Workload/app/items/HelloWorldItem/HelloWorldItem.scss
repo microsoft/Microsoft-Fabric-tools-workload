@@ -175,6 +175,15 @@
   }
 }
 
+// Separator line for getting started section
+.hello-world-separator-line {
+  width: calc(100% - 8px); // Subtract left + right margins (4px + 4px)
+  height: 1px;
+  border: none;
+  background: var(--colorNeutralStroke2, #e1e1e1);
+  margin: var(--spacingVerticalL, 16px) 4px; // Top/bottom: 16px, Left/right: 4px
+}
+
 // Hero input container and styling
 .hello-world-hero-input {
   margin-top: var(--spacingVerticalS);

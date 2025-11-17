@@ -3,8 +3,9 @@ import {
   Button,
   Card,
   CardHeader,
-  Input,
+  Textarea,
   Text,
+  Tooltip,
 } from "@fluentui/react-components";
 import {
   ChevronDown20Regular
@@ -55,8 +56,9 @@ export function HelloWorldItemDefaultView({
 
       <div className="hello-world-next">
         <div className="hello-world-section-header">
-          <h2 className="hello-world-section-title">Bring your ideas to life:</h2>
-          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to build your Fabric workload.')}</p>
+          <h2 className="hello-world-section-title">Bring your ideas to life</h2>
+          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to build your Fabric item.')}</p>
+          <hr className="hello-world-separator-line" />
         </div>
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">
@@ -67,7 +69,12 @@ export function HelloWorldItemDefaultView({
               {t('GettingStarted_Card1_Bullet2', 'Save the item, to store the state in Fabric.')}
             </li>
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet3', 'Start building your own item.')}
+              {t('GettingStarted_Card1_Bullet3', 'Use the content on the right to learn more about workloads.')}
+            </li>
+            {/* Separator line between learning and building */}
+            <hr className="hello-world-separator-line" />
+            <li className="hello-world-next-item">
+              {t('GettingStarted_Card1_Bullet4', 'Create your own Fabric item.')}
               <div className="hello-world-step-button">
                 <Button
                   appearance="outline"
@@ -79,7 +86,7 @@ export function HelloWorldItemDefaultView({
               </div>
             </li>
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet4', 'Publish your workload for others to use.')}
+              {t('GettingStarted_Card1_Bullet5', 'Publish your workload.')}
               <div className="hello-world-step-button">
                 <Button
                   appearance="outline"
@@ -91,6 +98,7 @@ export function HelloWorldItemDefaultView({
               </div>
             </li>
           </ol>
+          <hr className="hello-world-separator-line" />
         </div>
       </div>
     </div>
@@ -102,7 +110,7 @@ export function HelloWorldItemDefaultView({
       <div className="hello-world-content-inner">
         {/* Header */}
         <div className="hello-world-section-header">
-          <h2 className="hello-world-section-title">{t('GettingStarted_SectionTitle', 'Start customizing your workload')}</h2>
+          <h2 className="hello-world-section-title">{t('GettingStarted_SectionTitle', 'Learn more about your workload')}</h2>
           <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'These resources will help you take the next steps.')}</p>
         </div>
 
@@ -123,29 +131,41 @@ export function HelloWorldItemDefaultView({
             {expandedItemDetails && (
               <div className="hello-world-expand-content">
                 <div className="hello-world-detail-row">
-                  <span className="hello-world-detail-label">{t('Item_Name_Label', 'Item Name')}</span>
+                  <Tooltip content="The display name of this Fabric item" relationship="label">
+                    <span className="hello-world-detail-label">{t('Item_Name_Label', 'Item Name')}</span>
+                  </Tooltip>
                   <span className="hello-world-detail-value">{item.displayName || 'Hello World'}</span>
                 </div>
                 <div className="hello-world-detail-row">
-                  <span className="hello-world-detail-label">{t('Workspace_ID_Label', 'Workspace ID')}</span>
+                  <Tooltip content="Unique identifier for the workspace containing this item" relationship="label">
+                    <span className="hello-world-detail-label">{t('Workspace_ID_Label', 'Workspace ID')}</span>
+                  </Tooltip>
                   <span className="hello-world-detail-value">{item.workspaceId}</span>
                 </div>
                 <div className="hello-world-detail-row">
-                  <span className="hello-world-detail-label">{t('Item_ID_Label', 'Item ID')}</span>
+                  <Tooltip content="Unique identifier for this specific Fabric item" relationship="label">
+                    <span className="hello-world-detail-label">{t('Item_ID_Label', 'Item ID')}</span>
+                  </Tooltip>
                   <span className="hello-world-detail-value">{item.id}</span>
                 </div>
                 <div className="hello-world-detail-row">
-                  <span className="hello-world-detail-label">{t('GettingStarted_WorkspaceType', 'Item Type')}</span>
+                  <Tooltip content="The type of Fabric item in the format [WorkloadName].[ItemName] (e.g., Org.MyWorkload.HelloWorld)" relationship="label">
+                    <span className="hello-world-detail-label">{t('GettingStarted_WorkspaceType', 'Item Type')}</span>
+                  </Tooltip>
                   <span className="hello-world-detail-value">{item.type}</span>
                 </div>
                 <div className="hello-world-detail-row">
-                  <span className="hello-world-detail-label">{t('Item_Definition_Label', 'Item Definition')}</span>
+                  <Tooltip content="Data that is stored as part of the item in Fabric. HelloWorld uses a message to demonstrate the behaviour." relationship="label">
+                    <span className="hello-world-detail-label">{t('Item_Definition_Label', 'Item Definition')}</span>
+                  </Tooltip>
                   <div className="hello-world-hero-input">
-                    <Input
+                    <Textarea
                       id="message-input"
                       value={messageValue || item?.definition?.message || ""}
                       onChange={(e, data) => onMessageChange?.(data.value)}
                       placeholder={t('Item_Message_Placeholder', 'Enter a message...')}
+                      rows={2}
+                      resize="vertical"
                     />
                   </div>
                 </div>
@@ -260,7 +280,7 @@ export function HelloWorldItemDefaultView({
 
   return (
     <ItemEditorDefaultView
-      //Add left control if needed
+      //Add left control if you want to split the center content in the editor
       /*left={{
         content: gettingStartedSection,
         width: 450,
@@ -280,6 +300,8 @@ export function HelloWorldItemDefaultView({
             </div>
           </div>
         ),
+        //If using the left nav just show the Detail section here
+        //content: itemDetailSection
       }}
       //Add bottom control if needed
       /*bottom={{
