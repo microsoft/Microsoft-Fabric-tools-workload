@@ -41,7 +41,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
-  const [showWarning, setShowWarning] = useState<boolean>(true);
+  const [showWarning, setShowWarning] = useState<boolean>(false);
 
   const { pathname } = useLocation();
 
@@ -102,7 +102,7 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   };
 
-  async function SaveItem() {
+  async function saveItem() {
     var successResult = await saveItemDefinition<HelloWorldItemDefinition>(
       workloadClient,
       item.id,
@@ -180,11 +180,11 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   ];
 
-  // Determine initial view based on item state
-  const initialView = React.useMemo(() => {
-    if (isLoading) return EDITOR_VIEW_TYPES.EMPTY;
+  // Function to determine initial view when loading completes - cleaner than useMemo!
+  const getInitialView = React.useCallback(() => {
+    if (!item) return null; // Still loading or no item
     return !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;
-  }, [isLoading, item?.definition?.message]);
+  }, [item]);
 
   // Static notification definitions - like views!
   const notifications: RegisteredNotification[] = [
@@ -194,7 +194,7 @@ export function HelloWorldItemEditor(props: PageProps) {
       component: showWarning ? (
         <MessageBar intent="warning" icon={<Warning20Filled />}>
           <MessageBarBody>
-            {t('GettingStarted_Warning', 'You can delete the content on this page at any time.')}
+            {t('GettingStarted_Warning', 'You can delete or modify the content on this page at any time.')}
           </MessageBarBody>
           <MessageBarActions
             containerAction={
@@ -220,13 +220,13 @@ export function HelloWorldItemEditor(props: PageProps) {
           {...props}
           viewContext={context}
           isSaveButtonEnabled={isSaveEnabled(context.currentView)}
-          saveItemCallback={SaveItem}
+          saveItemCallback={saveItem}
           openSettingsCallback={handleOpenSettings}
         />
       )}
       notifications={notifications}
       views={views}
-      initialView={initialView}
+      getInitialView={getInitialView}
     />
   );
 }

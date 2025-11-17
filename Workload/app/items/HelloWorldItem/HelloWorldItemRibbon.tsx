@@ -49,17 +49,18 @@ export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   // Define home toolbar actions - these appear on the mandatory Home toolbar
   const homeToolbarActions: RibbonAction[] = [
     saveAction,
-    settingsAction
-    
+    settingsAction,
+
     // CUSTOM ACTION EXAMPLE: Getting Started navigation
     // This demonstrates how to create custom actions for view navigation
-    /*,{
+    /*{
       key: 'getting-started',
       icon: Rocket24Regular,
       label: t("ItemEditor_Ribbon_GettingStarted_Label", "Getting Started"),
-      onClick: () => viewContext.setCurrentView(VIEW_TYPES.DEFAULT),
+      onClick: () => {
+        console.log("Open getting started!")
+      },
       testId: 'ribbon-getting-started-btn',
-      hidden: viewContext.currentView !== VIEW_TYPES.EMPTY  // Only show in EMPTY view
     }*/
   ];
 

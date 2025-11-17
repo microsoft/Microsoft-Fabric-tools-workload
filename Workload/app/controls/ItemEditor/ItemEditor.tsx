@@ -78,10 +78,27 @@ export interface ViewContext {
  * 
  * **NO MANUAL IMPLEMENTATION REQUIRED** - Just mark views as detail views and use `context.goBack()`
  * 
+ * ## Initial View Determination
+ * Two patterns for setting the initial view:
+ * 1. **Static**: Use `initialView` prop with predetermined view name
+ * 2. **Dynamic**: Use `getInitialView` function called when loading completes
+ * 
+ * ```tsx
+ * // Pattern 1: Static initial view
+ * <ItemEditor initialView="dashboard" views={views} />
+ * 
+ * // Pattern 2: Dynamic initial view (recommended for data-dependent logic)
+ * <ItemEditor 
+ *   getInitialView={() => item?.hasData ? 'dashboard' : 'onboarding'}
+ *   views={views}
+ * />
+ * ```
+ * 
  * @property {ReactNode | Function} ribbon - The ribbon component (receives ViewContext)
  * @property {RegisteredNotification[] | Function} notification - Static notification registration or function (DEPRECATED: prefer array)
  * @property {RegisteredView[]} views - Array of registered views with static definitions
  * @property {string | null | undefined} initialView - Name of the initial view to show (null/undefined = no view rendered until set)
+ * @property {() => string | null | undefined} getInitialView - Function to determine initial view when loading completes (alternative to initialView)
  * @property {(view: string) => void} onViewChange - Optional callback when view changes
  * @property {string} className - Optional additional CSS class for the editor container
  * @property {string} contentClassName - Optional additional CSS class for the scrollable content area
@@ -94,7 +111,9 @@ export interface ItemEditorPropsWithViews {
   /** Array of registered views with static definitions */
   views: RegisteredView[];
   /** Name of the initial view to show (null/undefined = don't render content until set) */
-  initialView: string | null | undefined;
+  initialView?: string | null | undefined;
+  /** Function to determine initial view when loading completes (alternative to initialView) */
+  getInitialView?: () => string | null | undefined;
   /** Optional callback when view changes */
   onViewChange?: (view: string) => void;
   /** Optional CSS class for the editor container */
@@ -295,6 +314,17 @@ export function ItemEditor(props: ItemEditorProps) {
       setViewHistory([props.initialView]);
     }
   }, [props.initialView]); // Only depend on initialView, not currentView to avoid loops
+
+  // Call getInitialView when loading completes (alternative to static initialView)
+  React.useEffect(() => {
+    if (!isLoading && props.getInitialView && !currentView) {
+      const determinedView = props.getInitialView();
+      if (determinedView) {
+        setCurrentViewInternal(determinedView);
+        setViewHistory([determinedView]);
+      }
+    }
+  }, [isLoading, props.getInitialView, currentView]);
 
   // Wrapped setCurrentView that manages history and calls the optional callback
   const setCurrentView = React.useCallback((view: string) => {
