@@ -49,14 +49,14 @@ export function HelloWorldItemDefaultView({
   };
 
   // Left panel content - Hero section with welcome message
-  const leftPanelContent = (
+  const gettingStartedSection = (
     <div className="hello-world-view">
       <h1 className="hello-world-title">{t('GettingStarted_Title', 'Hello, Fabric!')}</h1>
 
       <div className="hello-world-next">
         <div className="hello-world-section-header">
           <h2 className="hello-world-section-title">Bring your ideas to life:</h2>
-          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use below steps to build your Fabric workload.')}</p>
+          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to build your Fabric workload.')}</p>
         </div>
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">
@@ -64,7 +64,7 @@ export function HelloWorldItemDefaultView({
               {t('GettingStarted_Card1_Bullet1', 'Change the item definition on the right.')}
             </li>
             <li className="hello-world-next-item">
-              {t('GettingStarted_Card1_Bullet2', 'Save the item to store the state in Fabric.')}
+              {t('GettingStarted_Card1_Bullet2', 'Save the item, to store the state in Fabric.')}
             </li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet3', 'Start building your own item.')}
@@ -97,7 +97,7 @@ export function HelloWorldItemDefaultView({
   );  
   
   // Center panel content - Main content with item details and resources
-  const centerPanelContent = (
+  const itemDetailSection = (
     <div className="hello-world-view">
       <div className="hello-world-content-inner">
         {/* Header */}
@@ -260,14 +260,26 @@ export function HelloWorldItemDefaultView({
 
   return (
     <ItemEditorDefaultView
-      left={{
-        content: leftPanelContent,
-        width: 600,
+      //Add left control if needed
+      /*left={{
+        content: gettingStartedSection,
+        width: 450,
         minWidth: 350,
         collapsible: false
-      }}
+      }}*/
       center={{
-        content: centerPanelContent,
+        content: (
+          <div className="hello-world-combined-layout">
+            {/* Left section with fixed width matching default ItemEditor left panel */}
+            <div className="hello-world-getting-started-section">
+              {gettingStartedSection}
+            </div>
+            {/* Right section taking remaining space */}
+            <div className="hello-world-details-section">
+              {itemDetailSection}
+            </div>
+          </div>
+        ),
       }}
       //Add bottom control if needed
       /*bottom={{
