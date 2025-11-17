@@ -108,6 +108,13 @@ GitHub Copilot recognizes Fabric patterns and suggests:
 - **OneLake Storage**: Always creates `itemWrapper = oneLakeClient.createItemWrapper({id, workspaceId})` for item-scoped operations
 - **OneLake Explorer**: Always use control from `controls/OneLakeView`, not sample code
 - **ItemEditorDefaultView**: Always suggests multi-panel layouts with proper `left`/`center`/`bottom` panel configurations, resizable splitters, and collapsible panels when appropriate
+- **Panel Usage Patterns**: 
+  - **Left Panel (Optional)**: For navigation trees, OneLakeView, file explorers, and secondary views (list views, catalog browsers, workspace explorers)
+  - **Center Panel (Required)**: For main content, editors, and primary workspace
+  - **Bottom Panel (Optional)**: For status information, logging output, console messages, and temporary feedback
+- **Detail View Navigation**: Always use ItemEditorDetailView component with `isDetailView: true` for L2 drill-down pages (detail records, item properties, configuration screens)
+- **Empty View Pattern**: Use ItemEditorEmptyView for items used for the first time (no definition/state) with initial call-to-action buttons to guide users through setup
+- **Item Properties & Configuration**: Use ItemSettings pattern for general item properties (version, endpoint configuration, descriptions). This creates a separate section in the settings flyout opened through the settings ribbon action. Item names and descriptions are managed there by default.
 - **Panel Configuration**: Suggests `collapsible: true`, proper panel titles, min/max width constraints, and accessibility labels for complex layouts
 - **Manifest Updates**: Template processing with placeholder replacement
 - **Route Configuration**: Automatic route registration

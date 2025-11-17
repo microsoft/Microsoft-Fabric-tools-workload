@@ -144,13 +144,137 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
 
 **Key Features:**
 
-- **Left Panel (Optional)**: Navigation trees, file explorers, property panels with collapsible headers
+- **Left Panel (Optional)**: Navigation trees, file explorers, OneLakeView, and secondary views (list views, catalog browsers, workspace explorers) with collapsible headers
 - **Center Panel (Required)**: Main editing content, forms, canvases, detail views
 - **Bottom Panel (Optional)**: Full-width status bars, output panels, debugging tools  
 - **Resizable Splitters**: Drag-to-resize with min/max constraints and live preview
 - **Collapse Controls**: Header-based toggle following OneLakeView patterns
 - **State Management**: Internal state management with notification callbacks
 - **Responsive Design**: Mobile-friendly with adaptive layouts
+
+#### ItemEditorDetailView - L2 Navigation Pattern
+
+For drill-down detail views (L2 pages), always use the dedicated DetailView component:
+
+```typescript
+import { ItemEditorDetailView } from '../../controls/ItemEditor';
+
+// Register as detail view for automatic back navigation
+{
+  name: 'item-details',
+  component: (
+    <ItemEditorDetailView
+      center={{ content: <ItemDetailsForm item={selectedItem} /> }}
+      actions={[
+        { key: 'save', label: 'Save', icon: Save24Regular, onClick: handleSave },
+        { key: 'delete', label: 'Delete', icon: Delete24Regular, onClick: handleDelete }
+      ]}
+    />
+  ),
+  isDetailView: true  // ⭐ Enables automatic back navigation
+}
+```
+
+**L2 Detail View Use Cases:**
+- Item property/configuration screens  
+- Record detail forms
+- Settings dialogs
+- Data preview/inspection views
+- Any drill-down content requiring back navigation
+
+#### ItemSettings Pattern - General Item Configuration
+
+For general item properties and configuration, use the ItemSettings pattern instead of editor panels:
+
+```typescript
+// Use createSettingsAction() in ribbon to open settings flyout
+import { createSettingsAction } from '../../controls/ItemEditor';
+
+const homeToolbarActions: RibbonAction[] = [
+  createSaveAction(handleSave, !isSaveEnabled, translate),
+  createSettingsAction(handleOpenSettings, translate)  // ⭐ Opens settings flyout
+];
+
+// Settings flyout automatically includes:
+// - Item name and description (managed by platform)
+// - Custom settings sections for your item
+function handleOpenSettings() {
+  // Platform handles settings flyout display
+  // Custom settings are registered via WorkloadManifest.xml
+}
+```
+
+**ItemSettings Use Cases:**
+- **Version configuration**: API versions, schema versions
+- **Endpoint configuration**: Connection strings, service URLs  
+- **Authentication settings**: Credentials, tokens, connection modes
+- **Performance settings**: Timeout values, retry policies
+- **Feature toggles**: Enable/disable item features
+- **Metadata**: Tags, categories, custom properties
+
+**Benefits:**
+- **Consistent UX**: Standard Fabric settings flyout pattern
+- **Platform Integration**: Item names/descriptions managed automatically  
+- **Separation of Concerns**: Configuration separate from editing workflow
+- **Discoverability**: Users expect settings in the ribbon settings action
+
+#### ItemEditorEmptyView - First-Time User Experience
+
+For items without definition/state (first-time usage), use the Empty View pattern:
+
+```typescript
+import { ItemEditorEmptyView } from '../../controls/ItemEditor';
+
+// Register as initial view for new items
+{
+  name: 'empty',
+  component: (
+    <ItemEditorEmptyView
+      title="Welcome to MyCustomItem!"
+      description="Get started by configuring your item below"
+      imageSrc="/assets/items/MyCustomItem/empty-state.svg"
+      tasks={[
+        {
+          id: 'setup',
+          label: 'Setup Data Source',
+          description: 'Connect to your data source to get started',
+          icon: Database24Regular,
+          onClick: () => setCurrentView('setup'),
+          appearance: 'primary'
+        },
+        {
+          id: 'import',
+          label: 'Import Existing',
+          description: 'Import configuration from another item',
+          icon: CloudArrowUp24Regular,
+          onClick: handleImport,
+          appearance: 'secondary'
+        }
+      ]}
+    />
+  )
+}
+
+// Use as initial view based on item state
+<ItemEditor
+  initialView={!item?.definition?.state ? 'empty' : 'main'}
+  views={views}
+  ribbon={ribbon}
+/>
+```
+
+**Empty View Use Cases:**
+- **New items**: Items created but not yet configured
+- **No definition**: Items without saved state or configuration  
+- **Onboarding**: Guide users through initial setup steps
+- **Call-to-action**: Present clear next steps for getting started
+
+**Empty View Best Practices:**
+- **Clear Value Proposition**: Explain what the item does and why it's useful
+- **Progressive Disclosure**: Start with 1-2 primary actions, not overwhelming choices
+- **Visual Appeal**: Include illustration or icon to make the state feel intentional
+- **Action-Oriented**: Use verbs for button labels ('Setup', 'Import', 'Connect')
+- **Help Documentation**: Provide links to getting started guides or samples
 
 ### Manifest Configuration
 
