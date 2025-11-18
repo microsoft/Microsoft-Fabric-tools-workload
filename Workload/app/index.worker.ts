@@ -63,6 +63,7 @@ export async function initialize(params: InitParams) {
                 const itemTypeName = createdItem.itemType.substring(createdItem.itemType.lastIndexOf('.') + 1);
 
                 return [
+                    //Route to about page
                     {
                         name: 'about',
                         displayName: t('Item_About_Label'),
@@ -71,8 +72,8 @@ export async function initialize(params: InitParams) {
                             route: `/${itemTypeName}Item-about/${createdItem.objectId}`,
                         }
                     },
-                    //In case you want to use a dedicated item settings uncomment this and create a route for your item in the App.tsx according to the pattern below
-                    /*{
+                    //Route to custom settings page
+                    {
                         name: 'customItemSettings',
                         displayName: t('Item_Settings_Label'),
                         icon: {
@@ -82,7 +83,7 @@ export async function initialize(params: InitParams) {
                             workloadName: sampleWorkloadName,
                             route: `/${itemTypeName}Item-settings/${createdItem.objectId}`,
                         }
-                    }*/
+                    }
                 ];
             }
             case 'playground.sampleAction': {
