@@ -25,16 +25,19 @@ Every workload item requires exactly four components:
 
 ```typescript
 // 1. Model - Data interface and state definition
-[ItemName]ItemModel.ts
+[ItemName]ItemDefinition.ts
 
 // 2. Editor - Main editing experience
 [ItemName]ItemEditor.tsx
 
-// 3. Empty State - Initial setup and onboarding
-[ItemName]ItemEditorEmpty.tsx
-
-// 4. Ribbon - Toolbar and navigation commands
+// 3. Ribbon - Toolbar and navigation commands
 [ItemName]ItemEditorRibbon.tsx
+
+// 3. Empty View - Initial view that is shown if the item does not have a state
+[ItemName]ItemEditorEmptyView.tsx
+
+// 4. Default View - Default view that contains the default editor experience 
+[ItemName]ItemEditorDefaultView.tsx
 ```
 
 ### Authentication Integration

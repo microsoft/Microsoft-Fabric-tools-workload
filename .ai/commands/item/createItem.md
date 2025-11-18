@@ -15,7 +15,7 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 **REQUIRED TODO ITEMS - ALL MUST BE COMPLETED:**
 1. Read both instruction files completely
 2. 🔍 **DISCOVER EXISTING COMPONENTS** - Search for Base* components before coding
-3. Create [ItemName]ItemModel.ts with proper interface
+3. Create [ItemName]ItemDefinition.ts with proper interface for storing the state of the item
 4. Create [ItemName]ItemEditor.tsx using ItemEditor
 5. Create [ItemName]ItemEmptyView.tsx with proper patterns
 6. Create [ItemName]ItemDefaultView.tsx using **EXISTING BASE COMPONENTS**
@@ -280,18 +280,18 @@ This guide provides step-by-step instructions for AI tools to create a new item 
    ```
 
 2. **Create the required implementation files**:
-   - `[ItemName]ItemModel.ts` - Data model and interface definitions
+   - `[ItemName]ItemDefinition.ts` - Data model and interface definitions
    - `[ItemName]ItemEditor.tsx` - Main editor component
    - `[ItemName]ItemEmptyView.tsx` - Empty state component (shown when item is first created)
    - `[ItemName]ItemDefaultView.tsx` - Default/main content view (shown when item has data)
    - `[ItemName]ItemRibbon.tsx` - Ribbon/toolbar component
 
-### Step 2: Implement the Model (`[ItemName]ItemModel.ts`)
+### Step 2: Implement the Model (`[ItemName]ItemDefinition.ts`)
 
 The model defines the data structure that will be stored in Fabric. **Use the HelloWorld pattern**:
 
 ```typescript
-// Based on HelloWorldItemModel.ts
+// Based on HelloWorldItemDefinition.ts
 export interface [ItemName]ItemDefinition {
   // Add your item-specific properties here
   // Example: Follow HelloWorld pattern with a simple property
@@ -325,7 +325,7 @@ import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } 
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { ItemEditor, ItemEditorEmptyView } from "../../controls/ItemEditor";
-import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
 import "./[ItemName]Item.scss";
@@ -571,7 +571,7 @@ import { useTranslation } from "react-i18next";
 
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 
 interface [ItemName]ItemEmptyViewProps {
@@ -673,7 +673,7 @@ import "./[ItemName]Item.scss";
 import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition, saveItemDefinition } from "../../controller/ItemCRUDController";
-import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 
 interface [ItemName]ItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
@@ -900,7 +900,7 @@ The ribbon provides toolbar actions and navigation tabs. **🚨 CRITICAL: Use st
 // Based on HelloWorldItemRibbon.tsx - Demonstrates RECOMMENDED ribbon pattern
 import React from "react";
 import { PageProps } from '../../App';
-import { CurrentView, EDITOR_VIEW_TYPES } from "./[ItemName]ItemModel";
+import { CurrentView, EDITOR_VIEW_TYPES } from "./[ItemName]ItemDefinition";
 import { useTranslation } from "react-i18next";
 import { 
   Ribbon, 
@@ -1520,7 +1520,7 @@ HelloWorldItemRibbon → [ItemName]ItemRibbon
 ### 3. Update File Names
 ```bash
 # Rename all files to match the new item name
-mv [ItemName]Item/HelloWorldItemModel.ts [ItemName]Item/[ItemName]ItemModel.ts
+mv [ItemName]Item/HelloWorldItemDefinition.ts [ItemName]Item/[ItemName]ItemDefinition.ts
 mv [ItemName]Item/HelloWorldItemEditor.tsx [ItemName]Item/[ItemName]ItemEditor.tsx
 mv [ItemName]Item/HelloWorldItemEmptyView.tsx [ItemName]Item/[ItemName]ItemEmptyView.tsx
 mv [ItemName]Item/HelloWorldItemDefaultView.tsx [ItemName]Item/[ItemName]ItemDefaultView.tsx
@@ -1539,7 +1539,7 @@ This approach ensures you get a **complete, functional item** rather than empty 
 When creating a new item, ensure all these components are created:
 
 **Implementation Files** (in `Workload/app/items/[ItemName]Item/`):
-- [ ] `[ItemName]ItemModel.ts` - Data model interface
+- [ ] `[ItemName]ItemDefinition.ts` - Data model interface
 - [ ] `[ItemName]ItemEditor.tsx` - Main editor component  
 - [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component
 - [ ] `[ItemName]ItemDefaultView.tsx` - Default/main content view
@@ -1594,7 +1594,7 @@ When creating a new item, ensure all these components are created:
 ### 📁 All Files Exist and Are Syntactically Correct
 ```bash
 # Verify these files exist:
-ls Workload/app/items/[ItemName]Item/[ItemName]ItemModel.ts
+ls Workload/app/items/[ItemName]Item/[ItemName]ItemDefinition.ts
 ls Workload/app/items/[ItemName]Item/[ItemName]ItemEditor.tsx  
 ls Workload/app/items/[ItemName]Item/[ItemName]ItemEmptyView.tsx
 ls Workload/app/items/[ItemName]Item/[ItemName]ItemDefaultView.tsx

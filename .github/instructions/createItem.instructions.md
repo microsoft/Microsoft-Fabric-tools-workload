@@ -16,7 +16,7 @@ Use the `manage_todo_list` tool to create a comprehensive todo list with ALL ste
 [
   {id: 1, title: "Read both instruction files", status: "not-started"},
   {id: 2, title: "🔍 DISCOVER EXISTING COMPONENTS - Search for Base* components", status: "not-started"},
-  {id: 3, title: "Create [ItemName]ItemModel.ts", status: "not-started"},
+  {id: 3, title: "Create [ItemName]ItemDefinition.ts", status: "not-started"},
   {id: 4, title: "Create [ItemName]ItemEditor.tsx", status: "not-started"},
   {id: 5, title: "Create [ItemName]ItemEmptyView.tsx", status: "not-started"},
   {id: 6, title: "Create [ItemName]ItemDefaultView.tsx using Base* components", status: "not-started"},
@@ -208,7 +208,7 @@ GitHub Copilot learns from existing items and suggests:
 
 ### Context-Aware Suggestions
 
-#### Model Creation (`[ItemName]ItemModel.ts`)
+#### Model Creation (`[ItemName]ItemDefinition.ts`)
 ```typescript
 // Copilot suggests based on existing patterns:
 // Model contains ONLY data that needs to be persisted
@@ -501,7 +501,7 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] No modifications to any files in `Workload/app/controls/` directory
 
 **File Structure** (REQUIRED):
-- [ ] `[ItemName]ItemModel.ts` - Data model with persisted state interfaces only
+- [ ] `[ItemName]ItemDefinition.ts` - Data model with persisted state interfaces only
 - [ ] `[ItemName]ItemEditor.tsx` - Main editor with ItemEditor + view registration + EDITOR_VIEW_TYPES enum
 - [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component (onboarding)
 - [ ] `[ItemName]ItemDefaultView.tsx` - Main/default view component
@@ -565,7 +565,7 @@ GitHub Copilot detects:
 ```typescript
 // 🚨 CORRECT: ItemEditor with current viewSetter implementation pattern
 import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
-import { [ItemName]ItemDefinition } from "./[ItemName]ItemModel";
+import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 
 /**
  * Different views that are available for the [ItemName] item
@@ -1502,7 +1502,7 @@ The ItemEditor component system is the foundation. HelloWorld serves as one exam
 ```
 Workload/app/items/
 └── HelloWorldItem/                    ← Sample Implementation
-    ├── HelloWorldItemModel.ts         ← Data model
+    ├── HelloWorldItemDefinition.ts         ← Data model
     ├── HelloWorldItemEditor.tsx       ← Main editor using ItemEditor
     ├── HelloWorldItemEmptyView.tsx    ← Empty state view
     ├── HelloWorldItemDefaultView.tsx  ← Main content view  
@@ -1533,7 +1533,7 @@ When creating a new item, ensure all these components are created:
 
 **Implementation Files** (in `Workload/app/items/[ItemName]Item/`):
 - [ ] `[ItemName]Item.scss` - Data model interface (persistable data only)
-- [ ] `[ItemName]ItemModel.ts` - Data model interface (persistable data only)
+- [ ] `[ItemName]ItemDefinition.ts` - Data model interface (persistable data only)
 - [ ] `[ItemName]ItemEditor.tsx` - Main editor component  
 - [ ] `[ItemName]ItemEmptyView.tsx` - Empty state component
 - [ ] `[ItemName]ItemDefaultView.tsx` - Default/main content view component
@@ -1582,7 +1582,7 @@ When creating a new item, ensure all these components are created:
 **BEFORE CLAIMING COMPLETION - VERIFY ALL:**
 
 ### 📁 Files Created (ALL REQUIRED)
-- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemModel.ts`
+- [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemDefinition.ts`
 - [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemEditor.tsx`
 - [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemEmptyView.tsx`
 - [ ] `Workload/app/items/[ItemName]Item/[ItemName]ItemDefaultView.tsx`

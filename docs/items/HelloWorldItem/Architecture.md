@@ -11,7 +11,7 @@ graph TB
     end
     
     subgraph "Data Layer"
-        G[HelloWorldItemModel]
+        G[HelloWorldItemDefinition]
         H[HelloWorldItemDefinition]
         I[EDITOR_VIEW_TYPES]
     end

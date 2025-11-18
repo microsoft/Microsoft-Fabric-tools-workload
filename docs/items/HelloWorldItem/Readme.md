@@ -92,7 +92,7 @@ HelloWorldItem/
 ├── HelloWorldItemRibbon.tsx              # Toolbar and actions
 ├── HelloWorldItemEmptyView.tsx           # Empty state/onboarding
 ├── HelloWorldItemDefaultView.tsx         # Main content view
-├── HelloWorldItemModel.ts                # Data models and types
+├── HelloWorldItemDefinition.ts                # Data models and types
 ├── HelloWorldItem.scss                   # Item-specific styles
 └── docs/                                 # Documentation
     ├── Architecture.md                   # System architecture
@@ -103,7 +103,7 @@ HelloWorldItem/
 ### Using as Template
 1. **Copy the HelloWorldItem folder** to create your new item
 2. **Rename components** and update imports throughout
-3. **Customize the model** in `HelloWorldItemModel.ts`
+3. **Customize the model** in `HelloWorldItemDefinition.ts`
 4. **Update UI components** to match your requirements
 5. **Modify navigation** and routing configuration
 
@@ -167,7 +167,7 @@ HelloWorldItem/
 - Clean, semantic HTML structure with proper accessibility attributes
 - Interactive elements including expandable sections and hover states
 
-### HelloWorldItemModel (Data)
+### HelloWorldItemDefinition (Data)
 **Defines:**
 - Item definition interface
 - View type constants
