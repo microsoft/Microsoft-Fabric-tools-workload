@@ -16,7 +16,7 @@ import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } fr
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
-import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
+import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";

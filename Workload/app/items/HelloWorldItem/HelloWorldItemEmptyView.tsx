@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { HelloWorldItemDefinition } from "./HelloWorldItemModel";
+import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
 import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
 import "./HelloWorldItem.scss";
 
