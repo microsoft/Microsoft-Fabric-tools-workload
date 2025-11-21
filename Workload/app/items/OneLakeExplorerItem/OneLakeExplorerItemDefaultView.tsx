@@ -100,19 +100,6 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
       onOpenItem={onOpenItem}
     />
   );
-
-  // Create a simple bottom panel for status/info (single line style)
-  const bottomPanelContent = (
-    <div className="status-bar">
-      <span>
-        {viewMode === 'table' 
-          ? `${item.definition?.selectedTable?.oneLakeLink || 'No table selected'}`
-          : `${currentFile?.oneLakeLink || 'No file selected'}`
-        }
-      </span>
-    </div>
-  );
-
   return (
     <ItemEditorDetailView
       left={{
@@ -122,6 +109,7 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
         minWidth: 280,
         maxWidth: 600,
         collapsible: true,
+        enableUserResize: true,
         onWidthChange: (newWidth) => {
           console.log(`OneLake Explorer panel resized to: ${newWidth}px`);
         }
@@ -130,10 +118,6 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
         content: editorContent,
         ariaLabel: viewMode === 'table' ? "Table viewer workspace" : "Code editor workspace"
       }}
-      bottom={{
-        content: bottomPanelContent
-      }}
-      resizable={true}
     />
   );
 }

@@ -1,13 +1,9 @@
 import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
-import { WorkloadClientAPI } from "@ms-fabric/workload-client";";
-import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
-import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
-import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
-import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
-import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
-import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { PackageInstallerItemEditor, PackageInstallerDeployDialogWrapper, PackageInstallerPackagingDialogWrapper, PackageInstallerItemEditorAboutPage, PackageInstallerItemEditorSettingsPage } from "./items/PackageInstallerItem";
+import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 

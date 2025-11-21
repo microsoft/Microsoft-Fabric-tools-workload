@@ -671,6 +671,55 @@ export function PackageInstallerItemEditor(props: PageProps) {
     }
   }, []);
 
+  // Static view definitions - no function wrapper needed!
+  const views = [
+    {
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: (
+        <PackageInstallerItemEmptyView
+          context={context}
+          onPackageSelected={async (packageId) => {
+            await addDeployment(packageId);
+            if (currentViewSetter) {
+              currentViewSetter(EDITOR_VIEW_TYPES.DEFAULT);
+            }
+          }}
+        />
+      )
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEFAULT,
+      component: (
+        <PackageInstallerItemDefaultView
+          editorItem={item}
+          context={context}
+          isDeploymentInProgress={isDeploymentInProgress}
+          deploymentProgress={deploymentProgress}
+          onDeploymentSelected={(deployment) => {
+            setSelectedDeployment(deployment);
+            if (currentViewSetter) {
+              currentViewSetter(EDITOR_VIEW_TYPES.DEPLOYMENT);
+            }
+          }}
+          onStartDeployment={handleStartDeployment}
+          onRemoveDeployment={handleRemoveDeployment}
+        />
+      )
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEPLOYMENT,
+      isDetailView: true,
+      component: (
+        <DeploymentDetailView
+          context={context}
+          deployment={selectedDeployment}
+          item={item}
+          onStartDeployment={() => handleStartDeployment(selectedDeployment, undefined)}
+        />
+      )
+    }
+  ];
+
   return (
     <ItemEditor
       isLoading={isLoading}
@@ -689,74 +738,36 @@ export function PackageInstallerItemEditor(props: PageProps) {
           viewContext={viewContext}
         />
       )}
-      notification={
-        deploymentProgress && (
-          <div className="deployment-progress-container">
-            <Text className="deployment-progress-title">
-              Deploying {deploymentProgress.packageName}...
-            </Text>
-            <ProgressBar 
-              value={deploymentProgress.progress}
-              max={100}
-              thickness="medium"
-            />
-            <Text className="deployment-progress-status">
-              {deploymentProgress.currentStep}
-            </Text>
-          </div>
-        )
+      messageBar={
+        deploymentProgress ? [
+          {
+            name: 'deployment-progress',
+            component: (
+              <div className="deployment-progress-container">
+                <Text className="deployment-progress-title">
+                  Deploying {deploymentProgress.packageName}...
+                </Text>
+                <ProgressBar 
+                  value={deploymentProgress.progress}
+                  max={100}
+                  thickness="medium"
+                />
+                <Text className="deployment-progress-status">
+                  {deploymentProgress.currentStep}
+                </Text>
+              </div>
+            ),
+            showInViews: [EDITOR_VIEW_TYPES.DEFAULT]
+          }
+        ] : []
       }
-      views={(setCurrentView) => {
+      views={views}
+      viewSetter={(setCurrentView) => {
         // Store the setCurrentView function so we can use it after loading
         if (!currentViewSetter) {
           setCurrentViewSetter(() => setCurrentView);
         }
-        
-        return [
-          {
-            name: EDITOR_VIEW_TYPES.EMPTY,
-            component: (
-              <PackageInstallerItemEmptyView
-                context={context}
-                onPackageSelected={async (packageId) => {
-                  await addDeployment(packageId);
-                  setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
-                }}
-              />
-            )
-          },
-          {
-            name: EDITOR_VIEW_TYPES.DEFAULT,
-            component: (
-              <PackageInstallerItemDefaultView
-                editorItem={item}
-                context={context}
-                isDeploymentInProgress={isDeploymentInProgress}
-                deploymentProgress={deploymentProgress}
-                onDeploymentSelected={(deployment) => {
-                  setSelectedDeployment(deployment);
-                  setCurrentView(EDITOR_VIEW_TYPES.DEPLOYMENT);
-                }}
-                onStartDeployment={handleStartDeployment}
-                onRemoveDeployment={handleRemoveDeployment}
-              />
-            )
-          },
-          {
-            name: EDITOR_VIEW_TYPES.DEPLOYMENT,
-            isDetailView: true,
-            component: (
-              <DeploymentDetailView
-                context={context}
-                deployment={selectedDeployment}
-                item={item}
-                onStartDeployment={() => handleStartDeployment(selectedDeployment, undefined)}
-              />
-            )
-          }
-        ];
       }}
-      initialView={EDITOR_VIEW_TYPES.EMPTY}
     />
   );
 }
