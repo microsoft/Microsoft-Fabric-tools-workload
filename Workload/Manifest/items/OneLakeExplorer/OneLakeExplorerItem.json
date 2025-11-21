@@ -22,7 +22,7 @@
     },
     "itemSettings": {
       "getItemSettings": {
-            "action": "getItemSettings"
+        "action": "getItemSettings"
       }
     },
     "editorTab": {

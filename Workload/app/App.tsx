@@ -1,14 +1,15 @@
 import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
-import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEditor";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";";
 import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
 import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
 import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
 import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
 import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
+import { HelloWorldItemEditor} from "./items/HelloWorldItem";
+import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -84,6 +85,9 @@ export function App({ history, workloadClient }: AppProps) {
                     workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
+
+            {/* Conditionally loaded playground routes (only in development) */}
+            <ConditionalPlaygroundRoutes workloadClient={workloadClient} />
         </Switch>
     </Router>;
 }

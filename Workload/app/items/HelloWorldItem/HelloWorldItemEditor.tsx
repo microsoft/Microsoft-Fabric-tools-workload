@@ -1,17 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { Stack } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
+import {
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody
+} from "@fluentui/react-components";
+import {
+  Dismiss20Regular,
+  Warning20Filled
+} from "@fluentui/react-icons";
 import { PageProps, ContextProps } from "../../App";
-import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
+import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditorLoadingProgressBar } from "../../controls/ItemEditorLoadingProgressBar";
-import { HelloWorldItemDefinition, VIEW_TYPES, CurrentView } from "./HelloWorldItemModel";
-import { HelloWorldItemEditorEmpty } from "./HelloWorldItemEditorEmpty";
-import { HelloWorldItemEditorDefault } from "./HelloWorldItemEditorDefault";
-import "../../styles.scss";
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
+import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
+import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
+import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
+import "./HelloWorldItem.scss";
+
+/**
+ * Different views that are available for the HelloWorld item
+ */
+export const EDITOR_VIEW_TYPES = {
+  EMPTY: 'empty',
+  DEFAULT: 'default',
+} as const;
 
 
 export function HelloWorldItemEditor(props: PageProps) {
@@ -22,12 +39,21 @@ export function HelloWorldItemEditor(props: PageProps) {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
-  const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
   const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
+  const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
+  // Set to true if you want to see the messageBar content in the editor
+  const [showWarning, setShowWarning] = useState<boolean>(false);
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
 
   const { pathname } = useLocation();
 
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
+    // Prevent unnecessary reload if the same item is already loaded
+    if (pageContext.itemObjectId && item && item.id === pageContext.itemObjectId) {
+      console.log(`Item ${pageContext.itemObjectId} is already loaded, skipping reload`);
+      return;
+    }
+
     setIsLoading(true);
     var LoadedItem: ItemWithDefinition<HelloWorldItemDefinition> = undefined;
     if (pageContext.itemObjectId) {
@@ -43,7 +69,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           LoadedItem = {
             ...LoadedItem,
             definition: {
-              state: undefined,
+              message: undefined,
             }
           };
         }
@@ -51,8 +77,11 @@ export function HelloWorldItemEditor(props: PageProps) {
           console.log('LoadedItem definition: ', LoadedItem.definition);
         }
 
+        // Initialize the item
         setItem(LoadedItem);
-        setCurrentView(!LoadedItem?.definition?.state ? VIEW_TYPES.EMPTY : VIEW_TYPES.GETTING_STARTED);
+        
+        // Initialize current definition
+        setCurrentDefinition(LoadedItem.definition || {});
 
       } catch (error) {
         setItem(undefined);
@@ -65,16 +94,11 @@ export function HelloWorldItemEditor(props: PageProps) {
 
   useEffect(() => {
     setHasBeenSaved(false);
-  }, [currentView, item?.id]);
+  }, [item?.id]);
 
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
-
-
-  const navigateToGettingStarted = () => {
-    setCurrentView(VIEW_TYPES.GETTING_STARTED);
-  };
 
   const handleOpenSettings = async () => {
     if (item) {
@@ -87,13 +111,17 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
   };
 
-  async function SaveItem() {
-    var successResult = await saveItemDefinition<HelloWorldItemDefinition>(
+  async function saveItem() {
+    item.definition = {
+        ...currentDefinition,
+        message: currentDefinition.message || "Hello, Fabric!"
+      }
+    setCurrentDefinition(item.definition)
+
+    var successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
       workloadClient,
-      item.id,
-      {
-        state: VIEW_TYPES.GETTING_STARTED
-      });
+      item,
+      );
     const wasSaved = Boolean(successResult);
     setHasBeenSaved(wasSaved);
     callNotificationOpen(
@@ -105,59 +133,121 @@ export function HelloWorldItemEditor(props: PageProps) {
     );
   }
 
-  const isSaveEnabled = () => {
-    if (currentView === VIEW_TYPES.EMPTY) {
+  // Check if Save should be enabled
+  const isSaveEnabled = (currentView: string) => {
+    if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
-    }
-
-    if (currentView === VIEW_TYPES.GETTING_STARTED) {
+    } else {
       if (hasBeenSaved) {
         return false;
       }
-
-      if (!item?.definition?.state) {
-        return true;
-      }
-
-      return false;
+      // Enable save if message has changed or if no message exists yet
+      const originalMessage = item?.definition?.message || "";
+      const currentMessage = currentDefinition.message || "";
+      return originalMessage !== currentMessage || !item?.definition?.message;
     }
-
-    return false;
   };
 
-
-  // Show loading state
-  if (isLoading) {
+  // Wrapper component for empty view that uses navigation hook
+  const EmptyViewWrapper = () => {
+    const { setCurrentView } = useViewNavigation();
+    
     return (
-      <ItemEditorLoadingProgressBar
-        message={t("HelloWorldItemEditor_Loading", "Loading item...")}
+      <HelloWorldItemEmptyView
+        workloadClient={workloadClient}
+        item={item}
+        onNavigateToGettingStarted={() => {
+          setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
+          setHasBeenSaved(false);
+          setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+        }}
       />
     );
-  }
+  };
 
-  // Render appropriate view based on state
-  return (
-    <Stack className="editor" data-testid="item-editor-inner">
-      <HelloWorldItemRibbon
-        {...props}
-        isSaveButtonEnabled={isSaveEnabled()}
-        currentView={currentView}
-        saveItemCallback={SaveItem}
-        openSettingsCallback={handleOpenSettings}
-        navigateToGettingStartedCallback={navigateToGettingStarted}
+  // Wrapper component for default view that uses navigation hook
+  const DefaultViewWrapper = () => {
+    return (
+      <HelloWorldItemDefaultView
+        workloadClient={workloadClient}
+        item={item}
+        messageValue={currentDefinition.message}
+        onMessageChange={(newValue) => {
+          setCurrentDefinition(prev => ({ ...prev, message: newValue }));
+          setHasBeenSaved(false);
+        }}
       />
-      {currentView === VIEW_TYPES.EMPTY ? (
-        <HelloWorldItemEditorEmpty
-          workloadClient={workloadClient}
-          item={item}
-          onNavigateToGettingStarted={navigateToGettingStarted}
-        />
-      ) : (
-        <HelloWorldItemEditorDefault
-          workloadClient={workloadClient}
-          item={item}
+    );
+  };
+
+  // Static view definitions - no function wrapper needed!
+  const views = [
+    {
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: <EmptyViewWrapper />
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEFAULT,
+      component: <DefaultViewWrapper />
+    }
+  ];
+
+  // Effect to set the correct view after loading completes
+  useEffect(() => {
+    if (!isLoading && item && viewSetter) {
+      // Determine the correct view based on item state
+      const correctView = !item?.definition?.message ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      viewSetter(correctView);
+    }
+  }, [isLoading, item, viewSetter]);
+
+
+  // Static notification definitions - like views!
+  const notifications: RegisteredNotification[] = [
+    {
+      name: 'default-warning',
+      showInViews: [EDITOR_VIEW_TYPES.DEFAULT], // Only show in DEFAULT view
+      component: showWarning ? (
+        <MessageBar intent="warning" icon={<Warning20Filled />}>
+          <MessageBarBody>
+            {t('GettingStarted_Warning', 'You can delete or modify the content on this page at any time.')}
+          </MessageBarBody>
+          <MessageBarActions
+            containerAction={
+              <Button
+                appearance="transparent"
+                icon={<Dismiss20Regular />}
+                aria-label={t('MessageBar_Dismiss', 'Dismiss')}
+                onClick={() => setShowWarning(false)}
+              />
+            }
+          />
+        </MessageBar>
+      ) : null
+    }
+  ];
+
+  return (
+    <ItemEditor
+      isLoading={isLoading}
+      loadingMessage={t("HelloWorldItemEditor_Loading", "Loading item...")}
+      ribbon={(context) => (
+        <HelloWorldItemRibbon
+          {...props}
+          viewContext={context}
+          isSaveButtonEnabled={isSaveEnabled(context.currentView)}
+          saveItemCallback={saveItem}
+          openSettingsCallback={handleOpenSettings}
         />
       )}
-    </Stack>
+      messageBar={notifications}
+      views={views}
+      viewSetter={(setCurrentView) => {
+        // Store the setCurrentView function so we can use it after loading
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
+        }
+      }}
+    />
   );
 }

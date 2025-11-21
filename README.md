@@ -18,6 +18,7 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 - [Microsoft Fabric Extensibility Toolkit](#microsoft-fabric-extensibility-toolkit)
   - [Trademarks](#trademarks)
   - [Table of contents](#table-of-contents)
+  - [Latest Release](#latest-release)
 - [Introduction](#introduction)
   - [What is Fabric](#what-is-fabric)
   - [What is a Fabric Workload](#what-is-a-fabric-workload)
@@ -26,6 +27,12 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 - [Build Your Own Workload](#build-your-own-workload)
   - [Prerequisites](#prerequisites)
   - [Setting things up](#setting-things-up)
+
+## Latest Release
+
+📋 **[v2025.11 - Standardized Base Controls](docs/ReleaseNotes/2025/v2025.11.md)**
+
+This release introduces comprehensive standardized base controls, SCSS architecture improvements, and enhanced HelloWorld reference implementation. [View all release notes →](docs/ReleaseNotes/)
 
 ## Introduction
 
@@ -71,22 +78,38 @@ To run the development environment locally you need the following prerequisites:
 
 - [Node.js](https://nodejs.org/en/download/)
 - [Powershell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell)
-- [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version
+- [Dotnet](https://dotnet.microsoft.com/en-us/download) for MacOS please make sure to install the x64 version - after installing make sure to restart the powershell.
 - [VSCode](https://code.visualstudio.com/download) or similar development environment
 - [Fabric Tenant](https://app.fabric.microsoft.com/) that you use for development and publishing the Workload later on
 - [Fabric Workspace](https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces) that you can use to build your workload
 - [Fabric Capacity](https://learn.microsoft.com/en-us/fabric/enterprise/licenses) that is assigned to the workspace you are planning to use
-- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation)
-- [Entra App](https://entra.microsoft.com/) You either need an existing Entra App you can use that is [configured](./docs/How-To.md) correctly or you need permission to create a new Entra App.
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) (only used for Entra App creation) - after installing make sure to restart powershell.
+- [Entra App](https://entra.microsoft.com/) You either need an existing Entra App you can use one that is configured correctly or you need permission to create a new Entra App.
+
+[!NOTE]
+After installing new software please make sure that you restart Powershell and Visual Studio, otherwise the scripts might file because the software is not part of the path variable.
 
 Alternatively we suggest to use a [Codespace](https://github.com/features/codespaces) in GitHub which has everything preconfigured:
 
-If you use a codespace please make sure that you select at least an 8 core machine and open the Codespace in VSCode locally. This way everything will work out of the box if you follow the [Setup Guide](./docs/SetupGuide.md).
+If you use a codespace please make sure that you select at least an 8 core machine and open the Codespace in VSCode locally. This way everything will work out of the box.
 
 ### Project structure
 
-Use the [Project structure](./PROJECT_STRUCTURE.md) to get a better understanding about Extensibility projects are structured and where you can find and change it to your needs.
+Use the [Project structure](./docs/Project_Structure.md) to get a better understanding about Extensibility projects are structured and where you can find and change it to your needs.
+
+### Available Controls
+
+The toolkit includes pre-built controls to accelerate your workload development. These controls follow Fabric Design System guidelines for consistent user experiences.
+
+**[📋 View All Controls →](./docs/controls/README.md)**
+
+Key highlights:
+- **ItemEditor Control** - Foundation for all item editors (mandatory)
+- **OneLakeView** - OneLake integration and file browsing  
+- **Wizard Control** - Multi-step guided workflows
+
+For complete documentation, examples, and implementation guides, see the [Controls Documentation](./docs/controls/README.md).
 
 ### Setting things up
 
-To set things up follow the [Setup Guide](./PROJECT_SETUP.md).
+To set things up follow the [Setup Guide](./docs/Project_Setup.md).
