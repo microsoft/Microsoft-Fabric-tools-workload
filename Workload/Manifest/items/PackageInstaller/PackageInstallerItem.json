@@ -20,11 +20,6 @@
     "supportedInDatahubL1": true,
     "itemJobActionConfig": {
     },
-    "itemSettings": {
-      "getItemSettings": {
-            "action": "getItemSettings"
-      }
-    },
     "editorTab": {
       "onDeactivate": "item.tab.onDeactivate",
       "canDeactivate": "item.tab.canDeactivate",
