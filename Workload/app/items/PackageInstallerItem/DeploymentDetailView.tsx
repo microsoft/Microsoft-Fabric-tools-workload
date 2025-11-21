@@ -40,8 +40,8 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
   const { t } = useTranslation();
   const pack = context.packageRegistry.getPackage(deployment.packageId);
 
-  // Define detail view actions (deploy button only - back action provided by BaseItemEditorDetailView)
-  const actions: DetailViewAction[] = [
+  // Define detail view actions (deploy button only - back action provided by ItemEditorDetailView)
+  const toolbarActions: DetailViewAction[] = [
     {
       key: 'deploy',
       label: deployment.status === DeploymentStatus.Pending 
@@ -312,12 +312,12 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
 
   return (
     <ItemEditorDetailView
+      toolbarActions={toolbarActions}
       center={{
         content: detailContent,
         className: "package-installer-detail-view-center",
         ariaLabel: "Package deployment details"
       }}
-      actions={actions}
     />
   );
 };

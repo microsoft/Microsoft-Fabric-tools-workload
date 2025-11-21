@@ -10,7 +10,7 @@ const manifestApi = require('./manifestApi');
  * @param {object} app Express application
  */
 function registerDevServerApis(app) {
-  console.log('*** Mounting Manifest API ***');
+  console.log('***                     Mounting Manifest API                     ***');
   app.use('/', manifestApi);
 }
 

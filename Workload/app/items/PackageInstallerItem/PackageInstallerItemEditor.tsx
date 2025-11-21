@@ -378,7 +378,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
       const dialogResult = await callDialogOpen(
         workloadClient,
         process.env.WORKLOAD_NAME,
-        `/PackageInstallerItem-packaging-dialog/${item.id}`,
+        `/PackageInstallerItem-packaging-wizard/${item.id}`,
         900, 700,
         true
       );
@@ -538,7 +538,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
       const dialogResult = await callDialogOpen(
         workloadClient,
         process.env.WORKLOAD_NAME,
-        `/PackageInstallerItem-deploy-dialog/${item.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
+        `/PackageInstallerItem-deploy-wizard/${item.id}?packageId=${deployment.packageId}&deploymentId=${deployment.id}&deploymentLocation=${deploymentLocation}&packageData=${packageDataParam}`,
         800, 600,
         true
       );

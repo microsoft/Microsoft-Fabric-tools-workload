@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Text, TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { ContextProps, PageProps } from "../../App";
 import { getWorkloadItem, saveItemDefinition, callGetItem } from "../../controller/ItemCRUDController";
@@ -355,7 +354,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     }
   }, [currentFile, openFiles, activeFileIndex, updateItemDefinition]);
 
-  const handleTabChange = useCallback((event: any, data: { value: TabValue }) => {
+  const handleTabChange = useCallback((event: any, data: { value: unknown }) => {
     const fileIndex = parseInt(data.value as string);
     if (!isNaN(fileIndex) && fileIndex >= 0 && fileIndex < openFiles.length) {
       updateItemDefinitionSilently({ activeFileIndex: fileIndex });
