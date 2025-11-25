@@ -13,6 +13,11 @@ import { HelloWorldItemEditorDefault } from "./HelloWorldItemEditorDefault";
 import "../../styles.scss";
 import { HelloWorldItemRibbon } from "./HelloWorldItemRibbon";
 
+const enum SaveStatus {
+  NotSaved = 'NotSaved',
+  Saving = 'Saving',
+  Saved = 'Saved'
+}
 
 export function HelloWorldItemEditor(props: PageProps) {
   const { workloadClient } = props;
@@ -23,7 +28,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
   const [currentView, setCurrentView] = useState<CurrentView>(VIEW_TYPES.EMPTY);
-  const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NotSaved);
 
   const { pathname } = useLocation();
 
@@ -40,6 +45,7 @@ export function HelloWorldItemEditor(props: PageProps) {
 
         // Ensure item definition is properly initialized without mutation
         if (!LoadedItem.definition) {
+          setSaveStatus(SaveStatus.NotSaved);
           LoadedItem = {
             ...LoadedItem,
             definition: {
@@ -48,6 +54,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           };
         }
         else {
+          setSaveStatus(SaveStatus.Saved);
           console.log('LoadedItem definition: ', LoadedItem.definition);
         }
 
@@ -62,10 +69,6 @@ export function HelloWorldItemEditor(props: PageProps) {
     }
     setIsLoading(false);
   }
-
-  useEffect(() => {
-    setHasBeenSaved(false);
-  }, [currentView, item?.id]);
 
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
@@ -88,43 +91,43 @@ export function HelloWorldItemEditor(props: PageProps) {
   };
 
   async function SaveItem() {
-    var successResult = await saveItemDefinition<HelloWorldItemDefinition>(
-      workloadClient,
-      item.id,
-      {
-        state: VIEW_TYPES.GETTING_STARTED
-      });
-    const wasSaved = Boolean(successResult);
-    setHasBeenSaved(wasSaved);
-    callNotificationOpen(
-      props.workloadClient,
-      t("ItemEditor_Saved_Notification_Title"),
-      t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
-      undefined,
-      undefined
-    );
+    setSaveStatus(SaveStatus.Saving);
+    
+    try {
+      var successResult = await saveItemDefinition<HelloWorldItemDefinition>(
+        workloadClient,
+        item.id,
+        {
+          state: VIEW_TYPES.GETTING_STARTED
+        });
+      
+      const wasSaved = Boolean(successResult);
+      
+      if (wasSaved) {
+        setSaveStatus(SaveStatus.Saved);
+        callNotificationOpen(
+          props.workloadClient,
+          t("ItemEditor_Saved_Notification_Title"),
+          t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
+          undefined,
+          undefined
+        );
+      } else {
+        setSaveStatus(SaveStatus.NotSaved);
+      }
+    } catch (error) {
+      setSaveStatus(SaveStatus.NotSaved);
+      console.error('Save failed:', error);
+    }
   }
 
   const isSaveEnabled = () => {
     if (currentView === VIEW_TYPES.EMPTY) {
       return false;
     }
-
-    if (currentView === VIEW_TYPES.GETTING_STARTED) {
-      if (hasBeenSaved) {
-        return false;
-      }
-
-      if (!item?.definition?.state) {
-        return true;
-      }
-
-      return false;
-    }
-
-    return false;
+    
+    return saveStatus === SaveStatus.NotSaved;
   };
-
 
   // Show loading state
   if (isLoading) {

@@ -53,11 +53,17 @@ graph TB
 **Primary orchestrator managing the complete item lifecycle**
 
 ```typescript
+enum SaveStatus {
+  NotSaved = 'NotSaved',
+  Saving = 'Saving',
+  Saved = 'Saved'
+}
+
 interface EditorState {
   isLoading: boolean;
   item: ItemWithDefinition<HelloWorldItemDefinition>;
   currentView: CurrentView;
-  hasBeenSaved: boolean;
+  saveStatus: SaveStatus;
 }
 ```
 
@@ -223,6 +229,8 @@ async function loadDataFromUrl(pageContext: ContextProps): Promise<void> {
 #### Save Operations
 ```typescript
 async function handleSave(): Promise<void> {
+  setSaveStatus(SaveStatus.Saving);
+  
   try {
     const updatedItem = await saveItemDefinition(
       workloadClient,
@@ -231,15 +239,16 @@ async function handleSave(): Promise<void> {
     );
     
     setItem(updatedItem);
-    setHasBeenSaved(true);
+    setSaveStatus(SaveStatus.Saved);
     
     callNotificationOpen({
       type: 'success',
       message: t('Item saved successfully')
     });
   } catch (error) {
+    setSaveStatus(SaveStatus.NotSaved);
     callNotificationOpen({
-      type: 'error', 
+      type: 'error',
       message: t('Save failed: ') + error.message
     });
   }
