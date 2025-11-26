@@ -87,7 +87,7 @@
     flex: 1; // Take all remaining space
     overflow-y: auto; // Allow vertical scrolling
     overflow-x: hidden; // Prevent horizontal scroll
-    padding: 4px var(--spacingHorizontalS, 8px) var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
+    padding: 0px var(--spacingHorizontalS, 8px) var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
     //background: var(--colorNeutralBackground2, #f3f2f1);
     background: var(--colorNeutralBackground3);
     //border-radius: var(--borderRadiusMedium, 8px);
@@ -162,7 +162,7 @@
     align-items: center;
     width: 100%;
     margin-bottom: 0;
-    min-height: 32px;
+    min-height: 36px;
 }
 
 .ribbon-container .ribbon-header__left {
@@ -170,6 +170,7 @@
     align-items: center;
     flex: 1; // Take available space
     min-width: 0; // Allow shrinking
+    min-height: 36px;
 }
 
 .ribbon-container .ribbon-header__right {
@@ -187,7 +188,7 @@
     background: transparent !important; // No background in header
     box-shadow: none !important; // No shadow in header
     border: 1px solid var(--colorNeutralStroke2, #e1e1e1) !important; // Subtle border
-    border-radius: var(--borderRadiusMedium, 4px) !important;
+    border-radius: var(--borderRadiusXLarge) !important;
     height: 28px !important; // Match reduced tab height
     max-height: 28px !important;
     min-height: 28px !important;
@@ -201,16 +202,18 @@
 
 .ribbon-container .toolbarContainer {
     // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
-    max-height: 32px;
+    //max-height: 32px;
     height: auto; // Allow flexible height for content
-    border-radius: var(--borderRadiusMedium, 8px); // Use Fabric design tokens
+    border-radius: var(--borderRadiusXLarge); // Use Fabric design tokens
     background: var(--colorNeutralBackground1, #ffffff);
     box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
-    margin: 4px 0px 4px ;
+    //margin: 0px 0px 4px ;
+    margin-bottom: 8px; // Space below toolbar
     padding: 4px 8px; // Add padding for content spacing
     display: flex;
     align-items: center;
     gap: 4px; // Spacing between toolbar items
+    min-height: 32px;
 
 }
 
@@ -226,8 +229,8 @@
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
     padding: 0;
-    min-height: 29px; // Updated to match reference height
-    max-height: 29px; // Updated to match reference height
+    //min-height: 29px; // Updated to match reference height
+    //max-height: 29px; // Updated to match reference height
     display: flex;
     align-items: center;
     justify-content: center;
@@ -237,6 +240,7 @@
 .ribbon-container .ribbon-tablist-container {
     display: flex !important;
     width: auto !important;
+    min-height: 36px;
 }
 
 .ribbon-container .ribbon-tablist {
@@ -257,6 +261,7 @@
     margin: 0 !important;
     margin-right: 0 !important;
     position: relative !important;
+    min-height: 32px;
 }
 
 .ribbon-container .ribbon-tab-wrapper {
@@ -550,7 +555,7 @@
     display: flex;
     flex-direction: row;
     flex: 1;
-    gap: var(--spacingHorizontalS, 6px);
+    //gap: var(--spacingHorizontalS, 6px);
     min-height: 0; // Allow flex shrinking
   }
 
@@ -560,7 +565,7 @@
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1, #ffffff);
-    border-radius: var(--borderRadiusMedium, 4px);
+    border-radius: var(--borderRadiusXLarge) 0 0 var(--borderRadiusXLarge);
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
     overflow: hidden;
     position: relative;
@@ -577,8 +582,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 1px 0px 0px 12px;
-      border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
-      min-height: 32px;
+      //border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
+      //min-height: 32px;
+      min-height: 40px;
 
       &.collapsed {
         display: flex;
@@ -633,6 +639,7 @@
     &-collapse-button {
       flex-shrink: 0;
       padding: 0 !important; // Remove default button padding
+      min-height: 32px;
     }
 
     // Content area with scrolling
@@ -714,7 +721,7 @@
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1, #ffffff);
-    border-radius: var(--borderRadiusMedium, 8px);
+    border-radius: 0 var(--borderRadiusXLarge, 8px) var(--borderRadiusXLarge, 8px) 0;
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
     padding: 0;
     min-width: 0; // Prevent flex item from overflowing

@@ -6,6 +6,7 @@ import {
   Textarea,
   Text,
   Tooltip,
+  Link
 } from "@fluentui/react-components";
 import {
   ChevronDown20Regular
@@ -82,29 +83,25 @@ export function HelloWorldItemDefaultView({
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet4', 'Create your own Fabric item.')}
               <div className="hello-world-step-button">
-                <Button
-                  appearance="outline"
-                  size="small"
+                <Link
                   onClick={() => handleOpenResource("https://aka.ms/fabric-item-development-guide")}
                 >
                   {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
-                </Button>
+                </Link>
               </div>
             </li>
             <li className="hello-world-next-item">
               {t('GettingStarted_Card1_Bullet5', 'Publish your workload.')}
               <div className="hello-world-step-button">
-                <Button
-                  appearance="outline"
-                  size="small"
+                <Link
                   onClick={() => handleOpenResource("https://aka.ms/fabric-workload-publishing-guide")}
                 >
                   {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
-                </Button>
+                </Link>
               </div>
             </li>
           </ol>
-          <hr className="hello-world-separator-line" />
+          {/* <hr className="hello-world-separator-line" /> */}
         </div>
       </div>
     </div>
