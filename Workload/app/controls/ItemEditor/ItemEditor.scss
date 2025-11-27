@@ -59,16 +59,13 @@
   width: 100%;
   height: 100vh; // Fill entire viewport/iframe height
   background: var(--colorNeutralBackground3); //colorNeutralBackground3
-  //border-radius: var(--borderRadiusMedium, 8px);
   overflow: hidden; // Prevent outer scroll
 
   // Ribbon Container - Fixed at the top
   &__ribbon {
     flex-shrink: 0; // Don't shrink the ribbon
     padding: 0 var(--spacingHorizontalS, 8px) 0 var(--spacingHorizontalS, 8px);
-    //background: var(--colorNeutralBackground2, #f3f2f1);
     background: var(--colorNeutralBackground3);
-    //border-radius: var(--borderRadiusMedium, 8px);
     z-index: 1; // Keep ribbon above content during scroll
   }
 
@@ -77,8 +74,6 @@
     flex-shrink: 0; // Don't shrink the notification area
     padding: 0 var(--spacingHorizontalS, 8px);
     background: var(--colorNeutralBackground3);
-    //border-radius: var(--borderRadiusMedium, 8px);
-    //background: var(--colorNeutralBackground2, #f3f2f1);
     z-index: 1; // Keep notification above content during scroll
   }
 
@@ -88,9 +83,7 @@
     overflow-y: auto; // Allow vertical scrolling
     overflow-x: hidden; // Prevent horizontal scroll
     padding: 0px var(--spacingHorizontalS, 8px) var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
-    //background: var(--colorNeutralBackground2, #f3f2f1);
     background: var(--colorNeutralBackground3);
-    //border-radius: var(--borderRadiusMedium, 8px);
 
     // Custom scrollbar styling - Fabric UX guideline
     &::-webkit-scrollbar {
@@ -103,7 +96,7 @@
 
     &::-webkit-scrollbar-thumb {
       background: var(--colorNeutralStroke1, #d1d1d1);
-      border-radius: var(--borderRadiusMedium, 4px);
+      border-radius: var(--borderRadiusXLarge);
       
       &:hover {
         background: var(--colorNeutralStroke1Hover, #b3b3b3);
@@ -202,12 +195,10 @@
 
 .ribbon-container .toolbarContainer {
     // Fabric UX guideline: Use appropriate height for touch targets (minimum 32px)
-    //max-height: 32px;
     height: auto; // Allow flexible height for content
     border-radius: var(--borderRadiusXLarge); // Use Fabric design tokens
     background: var(--colorNeutralBackground1, #ffffff);
     box-shadow: var(--shadow4, 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14));
-    //margin: 0px 0px 4px ;
     margin-bottom: 8px; // Space below toolbar
     padding: 4px 8px; // Add padding for content spacing
     display: flex;
@@ -229,8 +220,6 @@
 .ribbon-container button[role="tab"] {
     // Fabric UX guideline: Tabs should have adequate padding for accessibility
     padding: 0;
-    //min-height: 29px; // Updated to match reference height
-    //max-height: 29px; // Updated to match reference height
     display: flex;
     align-items: center;
     justify-content: center;
@@ -262,6 +251,7 @@
     margin-right: 0 !important;
     position: relative !important;
     min-height: 32px;
+    padding-bottom: 4px !important;
 }
 
 .ribbon-container .ribbon-tab-wrapper {
@@ -276,7 +266,7 @@
     margin: 0 !important;
     margin-left: 12px !important;
     margin-right: 12px !important;
-    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
+    border-radius: var(--borderRadiusXLarge) var(--borderRadiusXLarge) 0 0 !important;
     position: relative !important;
     min-width: auto !important;
     max-width: none !important;
@@ -321,14 +311,14 @@
 .ribbon-container .ribbon-tab-button:hover .ribbon-tab-content {
     background-color: var(--colorNeutralBackground1Hover) !important;
     color: var(--colorNeutralForeground1) !important;
-    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
+    border-radius: var(--borderRadiusXLarge) var(--borderRadiusXLarge) 0 0 !important;
 }
 
 // Selected state for tabs
 .ribbon-container .ribbon-tab-button[aria-selected="true"] .ribbon-tab-content {
     color: var(--colorNeutralForeground1) !important;
     font-weight: var(--fontWeightSemibold) !important;
-    border-radius: var(--borderRadiusMedium, 4px) var(--borderRadiusMedium, 4px) 0 0 !important;
+    border-radius: var(--borderRadiusXLarge) var(--borderRadiusXLarge) 0 0 !important;
     position: relative !important;
 }
 
@@ -337,8 +327,8 @@
     content: '' !important;
     position: absolute !important;
     bottom: 0 !important;
-    left: 4px !important;
-    right: 4px !important;
+    left: 2px !important;
+    right: 2px !important;
     height: 2px !important;
     background: var(--colorCompoundBrandStroke, #0078d4) !important;
     border-radius: 1px 1px 0 0 !important;
@@ -348,7 +338,7 @@
 .ribbon-container .ribbon-tab-button:focus-visible {
     outline: 2px solid var(--colorCompoundBrandStroke, #0078d4) !important;
     outline-offset: 2px !important;
-    border-radius: var(--borderRadiusMedium, 4px) !important;
+    border-radius: var(--borderRadiusXLarge) !important;
 }
 
 // Disabled state
@@ -582,8 +572,6 @@
       align-items: center;
       justify-content: space-between;
       padding: 1px 0px 0px 12px;
-      //border-bottom: 1px solid var(--colorNeutralStroke2, #e1e1e1);
-      //min-height: 32px;
       min-height: 40px;
 
       &.collapsed {
@@ -721,7 +709,7 @@
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1, #ffffff);
-    border-radius: 0 var(--borderRadiusXLarge, 8px) var(--borderRadiusXLarge, 8px) 0;
+    border-radius: var(--borderRadiusXLarge, 8px); 
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
     padding: 0;
     min-width: 0; // Prevent flex item from overflowing
@@ -731,6 +719,10 @@
     // Individual item controls should NOT implement their own scrolling
     overflow-y: auto; // Always scroll vertically when content exceeds height
     overflow-x: hidden; // Never allow horizontal scrolling
+
+    &[data-testid="item-editor-view-center--with-left-panel"] {
+    border-radius: 0 var(--borderRadiusXLarge, 8px) var(--borderRadiusXLarge, 8px) 0;
+  }
 
     // Custom scrollbar styling - Fabric UX guideline
     &::-webkit-scrollbar {
@@ -764,7 +756,7 @@
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1, #ffffff);
-    border-radius: var(--borderRadiusMedium, 8px);
+    border-radius: var(--borderRadiusXLarge);
     box-shadow: var(--shadow4, 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14));
     overflow: hidden;
     margin-top: var(--spacingVerticalS, 6px);

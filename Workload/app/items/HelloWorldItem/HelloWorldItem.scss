@@ -43,7 +43,6 @@
   gap: var(--spacingVerticalXL);
   border-radius: 0;
   flex-shrink: 0;
-  //padding: var(--spacingVerticalM, 12px);
   padding: var(--spacingHorizontalXXL);
   box-sizing: border-box; /* Include padding in width/height calculations */
 }
@@ -69,7 +68,6 @@
   flex: 1;
   width: 100%;
   box-sizing: border-box; /* Ensure consistent box model */
-  // Remove min-height: 0 to allow natural content growth
 }
 
 // ============================================================================
@@ -115,7 +113,6 @@
   font-size: var(--fontSizeBase300);
   line-height: 28px;
   color: var(--colorNeutralForegroundStatic);
-  //margin-bottom: var(--spacingVerticalM);
 }
 
 .hello-world-step-button {
@@ -205,7 +202,6 @@
 .hello-world-section-subtitle {
   color: var(--colorNeutralForeground1);
   font-size: var(--fontSizeBase300);
-  //font-size: var(--fontSizeBase400);
   font-family: var(--fontFamilyBase);
   font-weight: var(--fontWeightRegular);
   line-height: var(--lineHeightBase400);
@@ -331,11 +327,6 @@
   background: var(--colorNeutralBackground1);
   padding: var(--spacingVerticalL);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
-
-  // &:hover {
-  //   box-shadow: var(--shadow8);
-  //   transform: translateY(-2px);
-  // }
 }
 
 .hello-world-card-header-section {

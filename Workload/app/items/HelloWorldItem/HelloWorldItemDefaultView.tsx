@@ -9,7 +9,8 @@ import {
   Link
 } from "@fluentui/react-components";
 import {
-  ChevronDown20Regular
+  ChevronDown20Regular,
+  Open16Regular
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
@@ -38,7 +39,6 @@ export function HelloWorldItemDefaultView({
 }: HelloWorldItemDefaultViewProps) {
   const { t } = useTranslation();
   const [expandedItemDetails, setExpandedItemDetails] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   const handleOpenResource = async (url: string) => {
     try {
@@ -85,8 +85,10 @@ export function HelloWorldItemDefaultView({
               <div className="hello-world-step-button">
                 <Link
                   onClick={() => handleOpenResource("https://aka.ms/fabric-item-development-guide")}
+                  
                 >
                   {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
+                  <Open16Regular style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
             </li>
@@ -97,11 +99,11 @@ export function HelloWorldItemDefaultView({
                   onClick={() => handleOpenResource("https://aka.ms/fabric-workload-publishing-guide")}
                 >
                   {t('GettingStarted_OpenTutorial', 'Open Tutorial')}
+                  <Open16Regular style={{ marginLeft: '4px' }} />
                 </Link>
               </div>
             </li>
           </ol>
-          {/* <hr className="hello-world-separator-line" /> */}
         </div>
       </div>
     </div>
@@ -182,11 +184,7 @@ export function HelloWorldItemDefaultView({
         <div className="hello-world-resources-section">
           <div className="hello-world-cards-grid">
             {/* Card 1: Getting to know your workload */}
-            <Card 
-              className={`hello-world-resource-card ${hoveredCard === 1 ? 'hover' : ''}`}
-              onMouseEnter={() => setHoveredCard(1)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
+            <Card className="hello-world-resource-card">
               <div className="hello-world-card-header-section">
                 <div className="hello-world-card-image-container">
                   <img src="/assets/items/HelloWorldItem/card_1.svg" alt="Getting started" className="hello-world-card-image" />
@@ -214,11 +212,7 @@ export function HelloWorldItemDefaultView({
             </Card>
 
             {/* Card 2: Explore samples and playground */}
-            <Card 
-              className={`hello-world-resource-card ${hoveredCard === 2 ? 'hover' : ''}`}
-              onMouseEnter={() => setHoveredCard(2)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
+            <Card className="hello-world-resource-card">
               <div className="hello-world-card-header-section">
                 <div className="hello-world-card-image-container">
                   <img src="/assets/items/HelloWorldItem/card_2.svg" alt="Playground" className="hello-world-card-image" />
@@ -246,11 +240,7 @@ export function HelloWorldItemDefaultView({
             </Card>
 
             {/* Card 3: Use the Fabric UX system */}
-            <Card 
-              className={`hello-world-resource-card ${hoveredCard === 3 ? 'hover' : ''}`}
-              onMouseEnter={() => setHoveredCard(3)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
+            <Card className="hello-world-resource-card">
               <div className="hello-world-card-header-section">
                 <div className="hello-world-card-image-container">
                   <img src="/assets/items/HelloWorldItem/card_3.svg" alt="Fabric UX" className="hello-world-card-image" />

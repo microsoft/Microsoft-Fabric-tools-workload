@@ -416,7 +416,7 @@ export function ItemEditorDefaultView(props: ItemEditorDefaultViewProps) {
           className={`item-editor-view__center ${centerClassName}`.trim()}
           role="main"
           aria-label={centerAriaLabel}
-          data-testid="item-editor-view-center"
+          data-testid={left  ? "item-editor-view-center--with-left-panel" : "item-editor-view-center"}
         >
           {center.content}
         </main>
