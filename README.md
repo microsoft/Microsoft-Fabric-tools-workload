@@ -1,4 +1,3 @@
-
 # Microsoft Fabric Extensibility Toolkit
 
 Welcome to the Microsoft Fabric Extensibility Toolkit. This repository contains everything you need to start creating a new Extension for Fabric. Besides the source code itself with a HelloWorld Sample it also contains a comprehensive guide that covers everything you need to know to create custom Fabric items for your organization. We're here to assist you every step of the way, so please don't hesitate to reach out with any questions, via "Issues" tab in this GitHub repository. Happy developing!
@@ -97,7 +96,16 @@ If you use a codespace please make sure that you select at least an 8 core machi
 
 Use the [Project structure](./docs/Project_Structure.md) to get a better understanding about Extensibility projects are structured and where you can find and change it to your needs.
 
-### Available Components
+### 🤖 AI Assistance
+
+If you are using GitHub Copilot or other AI assistants, please refer to the **[AI Instructions](.github/copilot-instructions.md)**. This file contains critical architectural rules and context that will help the AI generate correct code for this repository.
+
+**Key Resources for AI:**
+
+- `.github/copilot-instructions.md` - Main entry point for AI instructions
+- `.ai/` folder - Detailed context and command references
+
+### Available Controls
 
 The toolkit includes pre-built components to accelerate your workload development. These components follow Fabric Design System guidelines for consistent user experiences.
 
@@ -112,4 +120,4 @@ For complete documentation, examples, and implementation guides, see the [Compon
 
 ### Setting things up
 
-To set things up follow the [Setup Guide](./docs/Project_Setup.md).
+To set things up follow the [Setup Guide](./docs/Project_Setup.md)
