@@ -54,7 +54,7 @@ The toolkit provides a standardized Ribbon component with a clean API for consis
 
 ```typescript
 // Recommended pattern - mandatory homeToolbarActions, optional additionalToolbars
-import { Ribbon, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';
+import { Ribbon, createSaveAction, createSettingsAction } from '../../components/ItemEditor';
 
 export function MyItemRibbon(props: RibbonProps) {
   const { t } = useTranslation();
@@ -116,7 +116,7 @@ Key Benefits:
 The toolkit provides `ItemEditorDefaultView` for flexible multi-panel layouts with advanced features:
 
 ```typescript
-import { ItemEditorDefaultView } from '../../controls/ItemEditor';
+import { ItemEditorDefaultView } from '../../components/ItemEditor';
 
 // Basic single-panel layout
 <ItemEditorDefaultView
@@ -154,7 +154,7 @@ import { ItemEditorDefaultView } from '../../controls/ItemEditor';
 For drill-down detail views (L2 pages), always use the dedicated DetailView component:
 
 ```typescript
-import { ItemEditorDetailView } from '../../controls/ItemEditor';
+import { ItemEditorDetailView } from '../../components/ItemEditor';
 
 // Register as detail view for automatic back navigation
 {
@@ -185,7 +185,7 @@ For general item properties and configuration, use the ItemSettings pattern inst
 
 ```typescript
 // Use createSettingsAction() in ribbon to open settings flyout
-import { createSettingsAction } from '../../controls/ItemEditor';
+import { createSettingsAction } from '../../components/ItemEditor';
 
 const homeToolbarActions: RibbonAction[] = [
   createSaveAction(handleSave, !isSaveEnabled, translate),
@@ -220,7 +220,7 @@ function handleOpenSettings() {
 For items without definition/state (first-time usage), use the Empty View pattern:
 
 ```typescript
-import { ItemEditorEmptyView } from '../../controls/ItemEditor';
+import { ItemEditorEmptyView } from '../../components/ItemEditor';
 
 // Register as initial view for new items
 {
@@ -286,7 +286,7 @@ import { ItemEditorEmptyView } from '../../controls/ItemEditor';
 1. **Follow Naming Conventions**: Use PascalCase for item names, maintain consistency
 2. **Implement Error Handling**: Provide user-friendly error messages and recovery options
 3. **Use Fluent UI**: Leverage @fluentui/react-components for consistent visual design
-4. **Ribbon Pattern**: Use Ribbon with `homeToolbarActions` (mandatory) and optional `additionalToolbars`. Import action factories from controls/ItemEditor
+4. **Ribbon Pattern**: Use Ribbon with `homeToolbarActions` (mandatory) and optional `additionalToolbars`. Import action factories from components/ItemEditor
 5. **Toolbar Components**: ALWAYS use `Tooltip` + `ToolbarButton` pattern for toolbar actions. Import from `@fluentui/react-components` and wrap each `ToolbarButton` in a `Tooltip` for accessibility
 6. **Content Padding**: ItemEditor panels have ZERO padding. Your view content components MUST add `padding: var(--spacingVerticalM, 12px)` to their root CSS class for proper spacing
 7. **State Management**: Use Redux Toolkit patterns for complex state management

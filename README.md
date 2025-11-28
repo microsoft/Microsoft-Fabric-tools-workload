@@ -30,9 +30,9 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 
 ## Latest Release
 
-📋 **[v2025.11 - Standardized Base Controls](docs/ReleaseNotes/2025/v2025.11.md)**
+📋 **[v2025.11 - Standardized Base Components](docs/ReleaseNotes/2025/v2025.11.md)**
 
-This release introduces comprehensive standardized base controls, SCSS architecture improvements, and enhanced HelloWorld reference implementation. [View all release notes →](docs/ReleaseNotes/)
+This release introduces comprehensive standardized base components, SCSS architecture improvements, and enhanced HelloWorld reference implementation. [View all release notes →](docs/ReleaseNotes/)
 
 ## Introduction
 
@@ -97,18 +97,18 @@ If you use a codespace please make sure that you select at least an 8 core machi
 
 Use the [Project structure](./docs/Project_Structure.md) to get a better understanding about Extensibility projects are structured and where you can find and change it to your needs.
 
-### Available Controls
+### Available Components
 
-The toolkit includes pre-built controls to accelerate your workload development. These controls follow Fabric Design System guidelines for consistent user experiences.
+The toolkit includes pre-built components to accelerate your workload development. These components follow Fabric Design System guidelines for consistent user experiences.
 
-**[📋 View All Controls →](./docs/controls/README.md)**
+**[📋 View All Components →](./docs/components/README.md)**
 
 Key highlights:
-- **ItemEditor Control** - Foundation for all item editors (mandatory)
+- **ItemEditor Component** - Foundation for all item editors (mandatory)
 - **OneLakeView** - OneLake integration and file browsing  
-- **Wizard Control** - Multi-step guided workflows
+- **Wizard Component** - Multi-step guided workflows
 
-For complete documentation, examples, and implementation guides, see the [Controls Documentation](./docs/controls/README.md).
+For complete documentation, examples, and implementation guides, see the [Components Documentation](./docs/components/README.md).
 
 ### Setting things up
 

@@ -442,8 +442,8 @@ function Update-ReadmeLatestRelease {
                 $releaseTitle = $matches[1].Trim()  
             } elseif ($releaseContent -match 'Major.*enhancement|Major.*toolkit.*enhancement') {
                 $releaseTitle = "Major Toolkit Enhancement"
-            } elseif ($releaseContent -match 'introduces.*controls|standardized.*controls') {
-                $releaseTitle = "Standardized Base Controls"
+            } elseif ($releaseContent -match 'introduces.*components|standardized.*components') {
+                $releaseTitle = "Standardized Base Components"
             } elseif ($releaseContent -match 'Bug.*fixes|fixes.*and.*improvements') {
                 $releaseTitle = "Bug Fixes and Improvements"
             } else {

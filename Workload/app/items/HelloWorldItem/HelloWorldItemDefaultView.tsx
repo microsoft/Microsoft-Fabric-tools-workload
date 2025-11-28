@@ -17,7 +17,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { callNavigationOpenInNewBrowserTab } from "../../controller/NavigationController";
 import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
-import { ItemEditorDefaultView } from "../../controls/ItemEditor";
+import { ItemEditorDefaultView } from "../../components/ItemEditor";
 import "./HelloWorldItem.scss";
 
 interface HelloWorldItemDefaultViewProps {

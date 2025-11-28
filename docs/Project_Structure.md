@@ -193,18 +193,18 @@ The toolkit follows a layered architecture in `Workload/app/` with clear separat
 - **Location**: `Workload/app/controller/` 
 - **Usage**: Higher-level abstractions over client APIs for common patterns
 
-### controls/
-- **Purpose**: UX-compliant reusable controls following Fabric design guidelines
-- **Location**: `Workload/app/controls/`
-- **Documentation**: [Available Controls](./controls/README.md)
+### components/
+- **Purpose**: UX-compliant reusable components following Fabric design guidelines
+- **Location**: `Workload/app/components/`
+- **Documentation**: [Available Components](./components/README.md)
 - **Requirements**: 
   - **ItemEditor**: MANDATORY for all item editors - provides view registration, ribbon integration, and consistent layouts
-  - **Other controls**: Optional based on use case (OneLakeView, Wizard, etc.)
+  - **Other components**: Optional based on use case (OneLakeView, Wizard, etc.)
 
 ### items/
 - **Purpose**: Individual item implementations using the above layers
 - **Location**: `Workload/app/items/[ItemName]/`
-- **Pattern**: Each item uses ItemEditor control + other components as needed
+- **Pattern**: Each item uses ItemEditor component + other components as needed
 
 ## 🎯 Key Benefits
 

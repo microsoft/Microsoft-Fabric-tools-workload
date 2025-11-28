@@ -6,8 +6,8 @@ import {
   RibbonActionButton,
   createSaveAction,
   createSettingsAction
-} from '../../controls/ItemEditor';
-import { ViewContext } from '../../controls';
+} from '../../components/ItemEditor';
+import { ViewContext } from '../../components';
 
 /**
  * Props interface for the HelloWorld Ribbon component

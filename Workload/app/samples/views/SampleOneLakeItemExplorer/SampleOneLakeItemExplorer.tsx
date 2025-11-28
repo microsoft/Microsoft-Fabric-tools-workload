@@ -10,7 +10,7 @@ import { Item } from "../../../clients/FabricPlatformTypes";
 import { ItemReference } from "../../../controller/ItemCRUDController";
 import { 
   OneLakeView
-} from "../../../controls/OneLakeView";
+} from "../../../components/OneLakeView";
 
 // Re-export the types from the control for backwards compatibility  
 export interface OneLakeItemExplorerItem extends ItemReference {

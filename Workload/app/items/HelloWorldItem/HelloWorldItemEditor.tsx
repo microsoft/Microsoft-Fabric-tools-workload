@@ -15,7 +15,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../components/ItemEditor";
 import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";

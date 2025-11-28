@@ -87,7 +87,7 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
 
 1. **ItemEditor Component** (MANDATORY):
    - Container for ALL item editors
-   - Import: `import { ItemEditor } from "../../controls/ItemEditor";`
+   - Import: `import { ItemEditor } from "../../components/ItemEditor";`
    - Provides fixed ribbon + scrollable content layout
    - DO NOT create custom layouts with Stack or div
 
@@ -97,12 +97,12 @@ This file provides GitHub Copilot-specific enhancements for item creation beyond
    - `createRibbonTabs`: Tab creation helper
    - `createSaveAction`: Standard Save button
    - `createSettingsAction`: Standard Settings button
-   - Import: `import { Ribbon, RibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../controls/ItemEditor';`
+   - Import: `import { Ribbon, RibbonToolbar, createRibbonTabs, createSaveAction, createSettingsAction, RibbonAction } from '../../components/ItemEditor';`
 
 3. **Item-Specific SCSS File** (MANDATORY - VERIFIED):
    - Create `[ItemName]Item.scss` in item folder  
-   - Contains ONLY item-specific styles (no control modifications)
-   - DO NOT modify any files in `controls/` directory
+   - Contains ONLY item-specific styles (no component modifications)
+   - DO NOT modify any files in `components/` directory
    - Import: `import "./[ItemName]Item.scss";`
    - **Verification team will check this pattern**
 
@@ -116,7 +116,7 @@ GitHub Copilot MUST follow these styling rules. **Violations will fail verificat
 3. Use item-prefixed class names: `.[item-name]-view`, `.[item-name]-section-title`
 4. Style only item content, not control structure
 5. Use design tokens: `var(--colorBrand*, --spacing*, --fontSize*)`
-6. **🚫 FORBIDDEN**: Modify any files in `Workload/app/controls/` directory
+6. **🚫 FORBIDDEN**: Modify any files in `Workload/app/components/` directory
 7. **ADD CONTENT PADDING**: ItemEditor panels have zero padding - your content MUST handle its own padding
 
 **🎨 MANDATORY: Content Padding Requirements**
@@ -148,7 +148,7 @@ ItemEditorDefaultView panels have **zero internal padding**. Your content compon
 ```
 
 **❌ PROHIBITED** (Will fail verification):
-1. Modifying any files in `Workload/app/controls/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
+1. Modifying any files in `Workload/app/components/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
 2. Using inline styles instead of SCSS file
 3. Duplicating control styles in item SCSS
 4. Creating custom ribbon/editor container styles
@@ -162,7 +162,7 @@ ItemEditorDefaultView panels have **zero internal padding**. Your content compon
 .[item-name]-view {
   padding: var(--spacingVerticalM, 12px);  // ✅ REQUIRED for content spacing
   // Add your item-specific styles here (colors, typography, spacing)
-  // ❌ DON'T duplicate control styles or modify controls
+  // ❌ DON'T duplicate control styles or modify components
 }
 ```
 
@@ -443,9 +443,9 @@ When creating a new item, GitHub Copilot MUST generate `[ItemName]Item.scss`:
 ```scss
 // ❌ WRONG: Don't duplicate control structural styles  
 .item-name-settings-panel-container {
-  display: flex;              // ❌ Controls handle their own layout
-  flex-direction: column;     // ❌ Controls handle their own layout
-  padding: 24px;              // ❌ Controls handle their own padding
+  display: flex;              // ❌ Components handle their own layout
+  flex-direction: column;     // ❌ Components handle their own layout
+  padding: 24px;              // ❌ Components handle their own padding
   background-color: blue;     // ✅ Only item-specific styles like this
 }
 ```
@@ -498,7 +498,7 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] Item-specific class naming used: `.[item-name]-view`, etc.
 - [ ] Only item content styled, not control structure
 - [ ] Design tokens used: `var(--color*, --spacing*, --fontSize*)`
-- [ ] No modifications to any files in `Workload/app/controls/` directory
+- [ ] No modifications to any files in `Workload/app/components/` directory
 
 **File Structure** (REQUIRED):
 - [ ] `[ItemName]ItemDefinition.ts` - Data model with persisted state interfaces only
@@ -509,9 +509,9 @@ Before generating any item code, GitHub Copilot should verify:
 - [ ] `[ItemName]Item.scss` - Item-specific style overrides
 
 **Import Verification**:
-- [ ] `import { ItemEditor } from "../../controls/ItemEditor";` (loading handled internally)
-- [ ] `import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";` (for detail views only)
-- [ ] `import { Ribbon, RibbonToolbar, createSaveAction, createSettingsAction } from '../../controls/ItemEditor';`
+- [ ] `import { ItemEditor } from "../../components/ItemEditor";` (loading handled internally)
+- [ ] `import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";` (for detail views only)
+- [ ] `import { Ribbon, RibbonToolbar, createSaveAction, createSettingsAction } from '../../components/ItemEditor';`
 - [ ] `import "./[ItemName]Item.scss";` (item-specific styles only)
 - [ ] No import of `RegisteredView` type (not needed, inline definition sufficient)
 
@@ -564,7 +564,7 @@ GitHub Copilot detects:
 
 ```typescript
 // 🚨 CORRECT: ItemEditor with current viewSetter implementation pattern
-import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../components/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 
 /**
@@ -774,7 +774,7 @@ export function MyItemEditor() {
 
 ```typescript
 // 🚨 CORRECT: Detail view using ItemEditorDetailView
-import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 
 interface [ItemName]ItemDetailViewProps {
   workloadClient: WorkloadClientAPI;
@@ -958,7 +958,7 @@ import {
   createSaveAction,
   createSettingsAction,
   createRibbonTabs
-} from '../../controls/ItemEditor';
+} from '../../components/ItemEditor';
 
 export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
   const { t } = useTranslation();
@@ -1002,7 +1002,7 @@ return (
 ```
 
 **Key Requirements**:
-- Import from `'../../controls/ItemEditor'`
+- Import from `'../../components/ItemEditor'`
 - Use `createRibbonTabs()` for tabs
 - Use `createSaveAction()` and `createSettingsAction()` for standard actions
 - Define custom actions inline as `RibbonAction` objects
@@ -1615,3 +1615,4 @@ When creating a new item, ensure all these components are created:
 - [ ] All strings use translation keys (no hardcoded text)
 
 **If ANY checkbox is unchecked, the item is NOT complete. Go back and finish that step.**
+
