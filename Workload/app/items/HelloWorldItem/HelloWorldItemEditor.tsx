@@ -179,9 +179,15 @@ export function HelloWorldItemEditor(props: PageProps) {
     );
   };
 
-  // Wrapper component for default view that uses navigation hook
-  const DefaultViewWrapper = () => {
-    return (
+  // Static view definitions - no function wrapper needed!
+  const views = [
+    {
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: <EmptyViewWrapper />
+    },
+    {
+      name: EDITOR_VIEW_TYPES.DEFAULT,
+      component: (
       <HelloWorldItemDefaultView
         workloadClient={workloadClient}
         item={item}
@@ -191,18 +197,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           setSaveStatus(SaveStatus.NotSaved);
         }}
       />
-    );
-  };
-
-  // Static view definitions - no function wrapper needed!
-  const views = [
-    {
-      name: EDITOR_VIEW_TYPES.EMPTY,
-      component: <EmptyViewWrapper />
-    },
-    {
-      name: EDITOR_VIEW_TYPES.DEFAULT,
-      component: <DefaultViewWrapper />
+    )
     }
   ];
 
