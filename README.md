@@ -102,10 +102,10 @@ If you are using GitHub Copilot or other AI assistants, please refer to the **[A
 
 **Key Resources for AI:**
 
-- `.github/copilot-instructions.md` - Main entry point for AI instructions
-- `.ai/` folder - Detailed context and command references
+- `.github/copilot-instructions.md` - Main entry point for AI github copilot
+- `.ai/` folder - Detailed context and command references for any AI assistant
 
-### Available Controls
+### Available Components
 
 The toolkit includes pre-built components to accelerate your workload development. These components follow Fabric Design System guidelines for consistent user experiences.
 

@@ -57,7 +57,7 @@ export function HelloWorldItemDefaultView({
       <div className="hello-world-next">
         <div className="hello-world-section-header">
           <h2 className="hello-world-section-title">Getting started</h2>
-          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to save your Fabric item.')}</p>
+          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Follow the steps below to save your Fabric item.')}</p>
         </div>
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">
@@ -73,7 +73,7 @@ export function HelloWorldItemDefaultView({
         <hr className="hello-world-separator-line" />
         <div className="hello-world-section-header">
           <h2 className="hello-world-section-title">Bring your ideas to life</h2>
-          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Use the steps below to build your Fabric item.')}</p>
+          <p className="hello-world-section-subtitle">{t('GettingStarted_SectionSubtitle', 'Follow the steps below to build a new Fabric item.')}</p>
         </div>
         <div className="hello-world-section-body">
           <ol className="hello-world-next-list">            
