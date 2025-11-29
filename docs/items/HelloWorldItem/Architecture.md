@@ -51,11 +51,17 @@ graph TB
 **Primary orchestrator managing the complete item lifecycle**
 
 ```typescript
+enum SaveStatus {
+  NotSaved = 'NotSaved',
+  Saving = 'Saving',
+  Saved = 'Saved'
+}
+
 interface EditorState {
   isLoading: boolean;
   item: ItemWithDefinition<HelloWorldItemDefinition>;
   currentView: CurrentView;
-  hasBeenSaved: boolean;
+  saveStatus: SaveStatus;
 }
 ```
 
@@ -221,10 +227,10 @@ type CurrentView = typeof EDITOR_VIEW_TYPES[keyof typeof EDITOR_VIEW_TYPES];
 **State Transitions**
 ```mermaid
 stateDiagram-v2
-    [*] --> EMPTY: New Item Created
-    EMPTY --> DEFAULT: User Clicks Start
-    DEFAULT --> EMPTY: Reset/Clear
-    DEFAULT --> [*]: Item Saved
+    [*] --> EmptyView: New Item Created
+    EmptyView --> DefaultView: User Clicks Start
+    DefaultView --> EmptyView: Reset/Clear
+    DefaultView --> [*]: Item Saved
 ```
 
 ## Integration Architecture
@@ -258,6 +264,8 @@ async function loadDataFromUrl(pageContext: ContextProps): Promise<void> {
 #### Save Operations
 ```typescript
 async function handleSave(): Promise<void> {
+  setSaveStatus(SaveStatus.Saving);
+  
   try {
     const updatedItem = await saveItemDefinition(
       workloadClient,
@@ -266,15 +274,16 @@ async function handleSave(): Promise<void> {
     );
     
     setItem(updatedItem);
-    setHasBeenSaved(true);
+    setSaveStatus(SaveStatus.Saved);
     
     callNotificationOpen({
       type: 'success',
       message: t('Item saved successfully')
     });
   } catch (error) {
+    setSaveStatus(SaveStatus.NotSaved);
     callNotificationOpen({
-      type: 'error', 
+      type: 'error',
       message: t('Save failed: ') + error.message
     });
   }
