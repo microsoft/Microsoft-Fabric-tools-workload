@@ -13,7 +13,7 @@ Getting started involves 5 Steps that are all outlined in this document below.
 
 ## Setup the development environment
 
-To make it easy as possible we have created a [Setup.ps1](./scripts/Setup/Setup.ps1) script that will automate all the work for you.  The setup script can be started without any parameters. All necessary information will be asked in the commandline. If you want to automate the process you can also parse the values as parameters to the script. An example to parse the WorkloadName (unique identifier of the workload in Fabric) is shown below.
+To make it easy as possible we have created a [Setup.ps1](../scripts/Setup/Setup.ps1) script that will automate all the work for you.  The setup script can be started without any parameters. All necessary information will be asked in the commandline. If you want to automate the process you can also parse the values as parameters to the script. An example to parse the WorkloadName (unique identifier of the workload in Fabric) is shown below.
 
 ```powershell
 .\Setup.ps1 -WorkloadName "Org.MyWorkload"
@@ -21,9 +21,9 @@ To make it easy as possible we have created a [Setup.ps1](./scripts/Setup/Setup.
 
 * Make sure you have Powershell 7 installed and configured in the environment you run the script.
 * Make sure that the Powershell execution policy is set to Unrestricted and the files are unblocked if you are getting asked if the ps files should be started.
-* If you want to use an existing Entra application, make sure to configure the SPA redirect URIs in the application's manifest as described in the [documentation](https://learn.microsoft.com/fabric/extensibility-toolkit/setup-guide).
+* If you want to use an existing Entra application, make sure to configure the SPA redirect URIs in the application's manifest as described in the [documentation](https://learn.microsoft.com/fabric/extensibility-toolkit/setup-manual).
 * Follow the guidance the Script provides to get everything setup
-* The WorkloadName needs to follow a specific pattern [Organization].[WorkloadName]. For Development and Organizational workloads  use Org.[YourWorkloadName]. You can find more information on how Workload names work for publishing in the [public documentation](https://learn.microsoft.com/fabric/extensibility-toolkit/publish-workload-flow).
+* The WorkloadName needs to follow a specific pattern [Organization].[WorkloadName]. For Development and Organizational workloads  use Org.[YourWorkloadName]. You can find more information on how Workload names work for publishing in the [public documentation](https://learn.microsoft.com/fabric/extensibility-toolkit/publishing-overview).
 
 For Mac and Linux use pwsh to start the powershell Scripts:
 

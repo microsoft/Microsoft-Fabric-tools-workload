@@ -2,7 +2,7 @@ const { merge } = require('webpack-merge');
 const baseConfig = require('../webpack.config.js');
 const express = require("express");
 const Webpack = require("webpack");
-const { registerDevServerApis } = require('.'); // Import our manifest API
+const { registerDevServerApis, registerDevServerComponents } = require('.'); // Import our dev server functions
 
 
 // making sure the dev configuration is set correctly!
@@ -22,6 +22,10 @@ console.log('*******************************************************************
 module.exports = merge(baseConfig, {
     mode: "development",
     devtool: "source-map",
+    cache: {
+        type: 'filesystem',
+        allowCollectingMemory: true,
+    },
     plugins: [
         new Webpack.DefinePlugin({
             "process.env.DEV_AAD_CONFIG_FE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_FE_APPID),
@@ -64,6 +68,9 @@ module.exports = merge(baseConfig, {
             
             // Register the manifest API from our extracted implementation
             registerDevServerApis(devServer.app);
+            
+            // Register dev server components and log playground availability
+            registerDevServerComponents();
 
             return middlewares;
         },
