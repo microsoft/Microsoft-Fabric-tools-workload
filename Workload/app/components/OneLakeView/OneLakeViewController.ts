@@ -74,7 +74,6 @@ function convertToTableMetadata(path: OneLakeStoragePathMetadata, deltaLogDirect
  */
 export async function getItem(
     workloadClient: WorkloadClientAPI,
-    token: string,
     workspaceId: string,
     itemId: string
 ): Promise<Item | null> {

@@ -1,8 +1,8 @@
 /**
- * OneLakeView Control - Core Data Models and Interfaces
+ * OneLakeView Component - Core Data Models and Interfaces
  * 
  * This module defines the core data structures and interfaces for the OneLake View
- * control. These types are shared between the control and its consumer components.
+ * component. These types are shared between the component and its consumer components.
  */
 
 import { PageProps } from "../../App";

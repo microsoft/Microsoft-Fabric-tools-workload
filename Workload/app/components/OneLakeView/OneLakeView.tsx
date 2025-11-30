@@ -67,6 +67,22 @@ export function OneLakeView(props: OneLakeViewProps) {
   const [openFilesMenu, setOpenFilesMenu] = useState<boolean>(false);
   const [openTablesMenu, setOpenTablesMenu] = useState<boolean>(false);
 
+  const loadItemData = async (): Promise<void> => {
+    setLoadingStatus("loading");
+    let success = false;
+    try {
+      success = await setTablesAndFiles(null);
+    } catch (exception) {
+      try {
+        success = await setTablesAndFiles(".default");
+      } catch (secondException) {
+        console.error("OneLakeView: Failed to load data for item:", selectedItem, secondException);
+        success = false;
+      }
+    }
+    setLoadingStatus(success ? "idle" : "error");
+  };
+
   // Initialize selectedItem from props.config.initialItem
   useEffect(() => {
     if (props.config.initialItem && 
@@ -80,49 +96,19 @@ export function OneLakeView(props: OneLakeViewProps) {
   }, [props.config.initialItem]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (selectedItem && selectedItem.id && selectedItem.workspaceId) {
-        setLoadingStatus("loading");
-        let success = false;
-        try {
-          success = await setTablesAndFiles(null);
-        } catch (exception) {
-          try {
-            success = await setTablesAndFiles(".default");
-          } catch (secondException) {
-            console.error("OneLakeView: Failed to load data for item:", selectedItem, secondException);
-            success = false;
-          }
-        }
-        setLoadingStatus(success ? "idle" : "error");
-      } else if (selectedItem) {
-        // selectedItem exists but is missing required properties
-        console.error("OneLakeView: selectedItem is missing required properties:", selectedItem);
-        setLoadingStatus("error");
-      }
-    };
-    fetchData();
+    if (selectedItem && selectedItem.id && selectedItem.workspaceId) {
+      loadItemData();
+    } else if (selectedItem) {
+      // selectedItem exists but is missing required properties
+      console.error("OneLakeView: selectedItem is missing required properties:", selectedItem);
+      setLoadingStatus("error");
+    }
   }, [selectedItem]);
 
   // Watch for refresh trigger changes to re-fetch data
   useEffect(() => {
     if (props.config.refreshTrigger && selectedItem && selectedItem.id && selectedItem.workspaceId) {
-      const fetchData = async () => {
-        setLoadingStatus("loading");
-        let success = false;
-        try {
-          success = await setTablesAndFiles(null);
-        } catch (exception) {
-          try {
-            success = await setTablesAndFiles(".default");
-          } catch (secondException) {
-            console.error("OneLakeView: Failed to refresh data for item:", selectedItem, secondException);
-            success = false;
-          }
-        }
-        setLoadingStatus(success ? "idle" : "error");
-      };
-      fetchData();
+      loadItemData();
     }
   }, [props.config.refreshTrigger, selectedItem]);
 

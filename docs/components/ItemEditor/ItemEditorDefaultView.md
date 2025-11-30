@@ -561,7 +561,7 @@ The `ItemEditorDefaultView` panels have **zero internal padding** to give maximu
 - **[ItemEditorView](./ItemEditorView.md)** - Simple single-panel layout  
 - **[ItemEditorEmptyView](./ItemEditorEmptyView.md)** - Empty state layout
 - **[Ribbon](./Ribbon.md)** - Ribbon container component
-- **[OneLakeView](../components/OneLakeView.md)** - Example left panel content
+- **[OneLakeView](../OneLakeView.md)** - Example left panel content
 
 ## 📝 Examples
 
