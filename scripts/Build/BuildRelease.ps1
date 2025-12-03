@@ -22,13 +22,13 @@ $replacements = @{
     "WORKLOAD_VERSION" = $WorkloadVersion
 }
 
-$realeaseDir = Join-Path $PSScriptRoot "..\..\release"
-if ((Test-Path $realeaseDir)) {
-    Write-Output "Release directory already exists at $realeaseDir. Deleting it."
-    Remove-Item -Path $realeaseDir -Recurse -Force
+$releaseDir = Join-Path $PSScriptRoot "..\..\release"
+if ((Test-Path $releaseDir)) {
+    Write-Output "Release directory already exists at $releaseDir. Deleting it."
+    Remove-Item -Path $releaseDir -Recurse -Force
 } 
-New-Item -ItemType Directory -Path $realeaseDir | Out-Null
-$realeaseDir = Resolve-Path $realeaseDir
+New-Item -ItemType Directory -Path $releaseDir | Out-Null
+$releaseDir = Resolve-Path $releaseDir
 
 ###############################################################################
 # Creating the release manifest
@@ -46,7 +46,7 @@ if (Test-Path $buildManifestPackageScript) {
 
 # Copy the nuget package to the release directory
 $buildManifestDir = Join-Path $PSScriptRoot "..\..\build\Manifest"
-$realeaseManifestDir = Join-Path $realeaseDir ""
+$realeaseManifestDir = Join-Path $releaseDir ""
 
 Move-Item -Path "$buildManifestDir\*.nupkg" -Destination $realeaseManifestDir -Force
 
@@ -58,7 +58,7 @@ Write-Host “✅ Moved the new ManifestPackage to $realeaseManifestDir." -Foreg
 # 
 ###############################################################################
 
-$realeaseApptDir = Join-Path $realeaseDir "app"
+$realeaseApptDir = Join-Path $releaseDir "app"
 
 #TODO: overwrite the .env.$Environment file with the correct settings
 
@@ -77,7 +77,7 @@ try {
 
 Write-Host ""
 Write-Host "All release information has been build an is available under the" -ForegroundColor Green
-Write-Host "$realeaseDir"
+Write-Host "$releaseDir"
 Write-Host ""
 Write-Host "You can now upload the manifest package and the app release to the Fabric portal." 
 Write-Host "The manifest package is located at $realeaseManifestDir"
