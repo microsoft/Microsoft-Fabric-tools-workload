@@ -7,7 +7,7 @@ import {
   RibbonAction,
   createSaveAction,
   createSettingsAction
-} from '../../controls/ItemEditor';
+} from '../../components/ItemEditor';
 import { 
   DocumentAdd24Regular,
   Open24Regular,

@@ -12,19 +12,6 @@
     "PackageInstallerItem_Description": "A item that can install different package configurations into Fabric workspaces.",
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
-    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
-    "HelloWorldItem_DisplayName": "Hello World",
-    "HelloWorldItem_DisplayName_Plural": "Hello Worlds",
-    "HelloWorldItem_Description": "A Hello World Item to start your Dev Experience",
-    "HelloWorld_GetStarted_1_Title": "Title1",
-    "HelloWorld_GetStarted_2_Title": "Title2",
-    "HelloWorld_GetStarted_3_Title": "Title3",
-    "HelloWorld_GetStarted_1_Sub_Title": "SubTitle1",
-    "HelloWorld_GetStarted_2_Sub_Title": "SubTitle2",
-    "HelloWorld_GetStarted_3_Sub_Title": "SubTitle3",
-    "HelloWorld_GetStarted_1_Description": "Card1 description",
-    "HelloWorld_GetStarted_2_Description": "Card2 description",
-    "HelloWorld_GetStarted_3_Description": "Card3 description"
+    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities."
 }
-
 

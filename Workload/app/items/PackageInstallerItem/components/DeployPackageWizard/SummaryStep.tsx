@@ -5,7 +5,7 @@
 import React from 'react';
 import { Text } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
-import { WizardStepProps } from '../../../../controls';
+import { WizardStepProps } from '../../../../components';
 
 interface SummaryStepProps extends WizardStepProps {
     // Additional props specific to summary step

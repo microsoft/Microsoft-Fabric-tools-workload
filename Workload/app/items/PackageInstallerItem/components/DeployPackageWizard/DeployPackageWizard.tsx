@@ -5,7 +5,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { callDialogClose } from "../../../../controller/DialogController";
 import { CloseMode } from "@ms-fabric/workload-client";
 import { DeploymentLocation, WorkspaceConfig, Package } from "../../PackageInstallerItemModel";
-import { WizardControl, WizardStep } from '../../../../controls';
+import { WizardControl, WizardStep } from '../../../../components';
 import { ConfigureStep, SummaryStep } from './index';
 
 export interface DeployPackageWizardProps extends PageProps {

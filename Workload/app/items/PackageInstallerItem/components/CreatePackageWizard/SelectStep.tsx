@@ -5,7 +5,7 @@
 import React, { useEffect} from 'react';
 import { Text, Checkbox, Spinner, SearchBox, Button } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
-import { WizardStepProps } from '../../../../controls';
+import { WizardStepProps } from '../../../../components';
 
 interface SelectStepProps extends WizardStepProps {
     // Additional props specific to select step

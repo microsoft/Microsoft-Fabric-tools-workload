@@ -6,8 +6,8 @@ import {
   RibbonAction,
   createSaveAction,
   createSettingsAction
-} from '../../controls/ItemEditor';
-import { ViewContext } from '../../controls';
+} from '../../components/ItemEditor';
+import { ViewContext } from '../../components';
 import { 
   Add24Regular,
   ArrowSync24Regular,

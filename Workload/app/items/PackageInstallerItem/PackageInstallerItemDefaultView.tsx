@@ -17,7 +17,7 @@ import { FolderDisplayNameCell } from "./components/FolderDisplayName";
 import { PackageDisplayNameCell } from "./components/PackageDisplayName";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { ItemEditorDefaultView } from "../../controls/ItemEditor";
+import { ItemEditorDefaultView } from "../../components/ItemEditor";
 import "./PackageInstallerItem.scss";
 
 interface PackageInstallerItemDefaultViewProps {

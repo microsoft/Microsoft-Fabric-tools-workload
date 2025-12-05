@@ -2,12 +2,12 @@ import React from "react";
 import { TabValue } from "@fluentui/react-components";
 import { editor } from "monaco-editor";
 import { OneLakeExplorerItemDefinition, OneLakeFileReference } from "./OneLakeExplorerItemModel";
-import { OneLakeView } from "../../controls/OneLakeView";
+import { OneLakeView } from "../../components/OneLakeView";
 import { FileEditorView } from "./FileEditorView";
 import { TableEditorView } from "./TableEditorView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { PageProps } from "../../App";
-import { ItemEditorDetailView } from "../../controls/ItemEditor";
+import { ItemEditorDetailView } from "../../components/ItemEditor";
 import "./OneLakeExplorerItem.scss";
 
 interface OneLakeExplorerItemDefaultViewProps extends PageProps {

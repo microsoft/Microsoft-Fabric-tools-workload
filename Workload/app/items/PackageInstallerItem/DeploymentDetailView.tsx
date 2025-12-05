@@ -15,7 +15,7 @@ import { FolderDisplayNameLabel } from "./components/FolderDisplayName";
 import { DeploymentJobLabel } from "./components/DeploymentJob";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { navigateToItem } from "../../controller/NavigationController";
-import { ItemEditorDetailView, DetailViewAction } from "../../controls/ItemEditor";
+import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import "./PackageInstallerItem.scss";
 
 // Props for the PackageDetailCard component

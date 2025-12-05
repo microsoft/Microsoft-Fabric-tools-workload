@@ -6,7 +6,7 @@ import { callDialogClose } from "../../../../controller/DialogController";
 import { CloseMode } from "@ms-fabric/workload-client";
 import { Item } from "../../../../clients/FabricPlatformTypes";
 import { DeploymentLocation, PackageInstallerItemDefinition } from "../../PackageInstallerItemModel";
-import { WizardControl, WizardStep } from '../../../../controls';
+import { WizardControl, WizardStep } from '../../../../components';
 import { ConfigStep, SelectStep, SummaryStep } from './index';
 import { getWorkloadItem, ItemWithDefinition } from '../../../../controller/ItemCRUDController';
 import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";

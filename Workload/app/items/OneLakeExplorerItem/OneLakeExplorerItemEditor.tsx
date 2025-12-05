@@ -12,7 +12,7 @@ import { OneLakeExplorerItemRibbon } from "./OneLakeExplorerItemRibbon";
 import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
-import { ItemEditor } from "../../controls/ItemEditor";
+import { ItemEditor } from "../../components/ItemEditor";
 import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
 import "./OneLakeExplorerItem.scss";
 

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "./PackageInstallerItem.scss";
 import { PackageSelectionView } from "./PackageSelectionView";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { ItemEditorEmptyView } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView } from "../../components/ItemEditor";
 
 interface PackageInstallerItemEmptyViewProps {
   context: PackageInstallerContext,
