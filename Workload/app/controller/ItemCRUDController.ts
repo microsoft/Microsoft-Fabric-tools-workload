@@ -199,8 +199,7 @@ export async function callUpdateItemDefinition(
             format: undefined,
             parts: definitionParts
         }
-    }
-    
+    }  
     
     try {
         return await workloadClient.itemCrud.updateItemDefinition({

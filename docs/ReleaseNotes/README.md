@@ -63,7 +63,7 @@ Each release note should include:
 
 ## Latest Releases
 
-- **[v2025.11](2025/v2025.11.md)** - Major toolkit enhancement with standardized base controls and SCSS architecture
+- **[v2025.11](2025/v2025.11.md)** - Major toolkit enhancement with standardized base components and SCSS architecture
 
 ---
 

@@ -15,7 +15,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../controls/ItemEditor";
+import { ItemEditor, useViewNavigation, RegisteredNotification } from "../../components/ItemEditor";
 import { HelloWorldItemDefinition } from "./HelloWorldItemDefinition";
 import { HelloWorldItemEmptyView } from "./HelloWorldItemEmptyView";
 import { HelloWorldItemDefaultView } from "./HelloWorldItemDefaultView";
@@ -30,6 +30,12 @@ export const EDITOR_VIEW_TYPES = {
   DEFAULT: 'default',
 } as const;
 
+const enum SaveStatus {
+  NotSaved = 'NotSaved',
+  Saving = 'Saving',
+  Saved = 'Saved'
+}
+
 
 export function HelloWorldItemEditor(props: PageProps) {
   const { workloadClient } = props;
@@ -39,7 +45,7 @@ export function HelloWorldItemEditor(props: PageProps) {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [item, setItem] = useState<ItemWithDefinition<HelloWorldItemDefinition>>();
-  const [hasBeenSaved, setHasBeenSaved] = useState<boolean>(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NotSaved);
   const [currentDefinition, setCurrentDefinition] = useState<HelloWorldItemDefinition>({});
   // Set to true if you want to see the messageBar content in the editor
   const [showWarning, setShowWarning] = useState<boolean>(false);
@@ -66,6 +72,7 @@ export function HelloWorldItemEditor(props: PageProps) {
 
         // Ensure item definition is properly initialized without mutation
         if (!LoadedItem.definition) {
+          setSaveStatus(SaveStatus.NotSaved);
           LoadedItem = {
             ...LoadedItem,
             definition: {
@@ -74,6 +81,7 @@ export function HelloWorldItemEditor(props: PageProps) {
           };
         }
         else {
+          setSaveStatus(SaveStatus.Saved);
           console.log('LoadedItem definition: ', LoadedItem.definition);
         }
 
@@ -92,9 +100,6 @@ export function HelloWorldItemEditor(props: PageProps) {
     setIsLoading(false);
   }
 
-  useEffect(() => {
-    setHasBeenSaved(false);
-  }, [item?.id]);
 
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
@@ -112,25 +117,34 @@ export function HelloWorldItemEditor(props: PageProps) {
   };
 
   async function saveItem() {
-    item.definition = {
+    setSaveStatus(SaveStatus.Saving);
+    try {
+      item.definition = {
         ...currentDefinition,
         message: currentDefinition.message || "Hello, Fabric!"
       }
-    setCurrentDefinition(item.definition)
+      setCurrentDefinition(item.definition)
 
-    var successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
-      workloadClient,
-      item,
+      var successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
+        workloadClient,
+        item,
       );
-    const wasSaved = Boolean(successResult);
-    setHasBeenSaved(wasSaved);
-    callNotificationOpen(
-      props.workloadClient,
-      t("ItemEditor_Saved_Notification_Title"),
-      t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
-      undefined,
-      undefined
-    );
+      const wasSaved = Boolean(successResult);
+
+      if (wasSaved) {
+        setSaveStatus(SaveStatus.Saved);
+        callNotificationOpen(
+          props.workloadClient,
+          t("ItemEditor_Saved_Notification_Title"),
+          t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
+          undefined,
+          undefined
+        );
+      }
+    } catch (error) {
+        setSaveStatus(SaveStatus.NotSaved);
+        console.error('Save failed:', error);
+    }
   }
 
   // Check if Save should be enabled
@@ -138,7 +152,7 @@ export function HelloWorldItemEditor(props: PageProps) {
     if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
     } else {
-      if (hasBeenSaved) {
+      if (saveStatus === SaveStatus.Saved) {
         return false;
       }
       // Enable save if message has changed or if no message exists yet
@@ -158,23 +172,8 @@ export function HelloWorldItemEditor(props: PageProps) {
         item={item}
         onNavigateToGettingStarted={() => {
           setCurrentDefinition(prev => ({ ...prev, message: "Hello Fabric Item!" }));
-          setHasBeenSaved(false);
+          setSaveStatus(SaveStatus.NotSaved);
           setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
-        }}
-      />
-    );
-  };
-
-  // Wrapper component for default view that uses navigation hook
-  const DefaultViewWrapper = () => {
-    return (
-      <HelloWorldItemDefaultView
-        workloadClient={workloadClient}
-        item={item}
-        messageValue={currentDefinition.message}
-        onMessageChange={(newValue) => {
-          setCurrentDefinition(prev => ({ ...prev, message: newValue }));
-          setHasBeenSaved(false);
         }}
       />
     );
@@ -188,7 +187,17 @@ export function HelloWorldItemEditor(props: PageProps) {
     },
     {
       name: EDITOR_VIEW_TYPES.DEFAULT,
-      component: <DefaultViewWrapper />
+      component: (
+      <HelloWorldItemDefaultView
+        workloadClient={workloadClient}
+        item={item}
+        messageValue={currentDefinition.message}
+        onMessageChange={(newValue) => {
+          setCurrentDefinition(prev => ({ ...prev, message: newValue }));
+          setSaveStatus(SaveStatus.NotSaved);
+        }}
+      />
+    )
     }
   ];
 

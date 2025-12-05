@@ -113,14 +113,14 @@ Before writing ANY code, create a comprehensive todo list with `manage_todo_list
 
 ### Required Base Components
 
-1. **ItemEditor** (`Workload/app/controls/ItemEditor/ItemEditor.tsx`)
+1. **ItemEditor** (`Workload/app/components/ItemEditor/ItemEditor.tsx`)
    - 🚨 **MANDATORY**: ALL item editors must use ItemEditor as the container
    - Provides consistent layout: Fixed ribbon + scrollable content
    - Handles full-height iframe rendering
    - Ensures proper scroll behavior (ribbon stays fixed, content scrolls)
    - **DO NOT create custom layout patterns** - use ItemEditor
 
-2. **Ribbon Components** (`Workload/app/controls/ItemEditor/`)
+2. **Ribbon Components** (`Workload/app/components/ItemEditor/`)
    - 🚨 **MANDATORY**: Use the standardized Ribbon pattern
    - **Ribbon**: Standard ribbon structure with tabs
    - **RibbonToolbar**: Renders action buttons with proper spacing
@@ -190,9 +190,9 @@ export function [ItemName]ItemEditor(props: PageProps) {
 **MANDATORY**: All styling MUST follow the standardized patterns and will be verified by the verification team:
 
 1. **Component Styles** (🚫 STRICTLY FORBIDDEN TO MODIFY):
-   - **DO NOT EDIT**: Any files in `Workload/app/controls/` directory
+   - **DO NOT EDIT**: Any files in `Workload/app/components/` directory
    - **DO NOT MODIFY**: `ItemEditor.scss`, `Ribbon.scss`, `OneLakeView.scss`, `Wizard.scss`, etc.
-   - **REASON**: Controls provide standardized layouts and functionality for all items
+   - **REASON**: Components provide standardized layouts and functionality for all items
    - **CONSEQUENCE**: Modifications to control files will fail verification and break other items
 
 2. **Item-Specific Styles** (✅ REQUIRED):
@@ -230,7 +230,7 @@ export function [ItemName]ItemEditor(props: PageProps) {
    - ✅ ItemEditor used (no custom editor layout)
    - ✅ Ribbon + RibbonToolbar used (no custom ribbon layout)  
    - ✅ Styles in separate `[ItemName]Item.scss` file in item directory
-   - ✅ **NO MODIFICATIONS** to any files in `controls/` directory
+   - ✅ **NO MODIFICATIONS** to any files in `components/` directory
    - ✅ Item-specific class naming pattern used (`.item-name-*`)
    - ✅ Only item content and branding styled, not control structure
    - ✅ Import pattern: `import "./[ItemName]Item.scss";` (no global imports)
@@ -238,13 +238,13 @@ export function [ItemName]ItemEditor(props: PageProps) {
 **❌ STYLE VIOLATIONS** (Will fail verification):
 ```scss
 // ❌ WRONG: Modifying control files
-// controls/ItemEditor/ItemEditor.scss
+// components/ItemEditor/ItemEditor.scss
 .item-editor-container {
   background: blue;  // FORBIDDEN: Don't modify control styles
 }
 
 // ❌ WRONG: Modifying any control files
-// controls/Ribbon/Ribbon.scss, controls/OneLakeView/OneLakeView.scss, etc.
+// components/Ribbon/Ribbon.scss, components/OneLakeView/OneLakeView.scss, etc.
 }
 
 // ❌ WRONG: Not using separate SCSS file
@@ -254,8 +254,8 @@ export function [ItemName]ItemEditor(props: PageProps) {
 // ❌ WRONG: Duplicating control structural styles
 // [ItemName]Item.scss
 .my-item-view {
-  display: flex;           // ❌ Don't duplicate layout from controls
-  flex-direction: column;  // ❌ Controls handle their own structure
+  display: flex;           // ❌ Don't duplicate layout from components
+  flex-direction: column;  // ❌ components handle their own structure
   background: blue;        // ✅ Only item-specific styles like this
 }
 ```
@@ -270,7 +270,7 @@ This guide provides step-by-step instructions for AI tools to create a new item 
 - Always use ItemEditor and standard Ribbon components!
 - **CRITICAL**: Must update Product.json to register item in create dialogs
 - **OneLakeStorageClient**: Always use `createItemWrapper()` for item-scoped OneLake operations
-- **OneLakeView**: Use the control from `controls/OneLakeView`, NOT the sample code
+- **OneLakeView**: Use the control from `components/OneLakeView`, NOT the sample code
 
 ### Step 1: Create Item Implementation Structure
 
@@ -324,7 +324,7 @@ import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveItemDefinition } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callNotificationOpen } from "../../controller/NotificationController";
-import { ItemEditor, ItemEditorEmptyView } from "../../controls/ItemEditor";
+import { ItemEditor, ItemEditorEmptyView } from "../../components/ItemEditor";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
 import { [ItemName]ItemDefaultView } from "./[ItemName]ItemDefaultView";
 import { [ItemName]ItemRibbon } from "./[ItemName]ItemRibbon";
@@ -572,7 +572,7 @@ import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { [ItemName]ItemDefinition } from "./[ItemName]ItemDefinition";
-import { ItemEditorEmptyView, EmptyStateTask } from "../../controls/ItemEditor";
+import { ItemEditorEmptyView, EmptyStateTask } from "../../components/ItemEditor";
 
 interface [ItemName]ItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
@@ -618,7 +618,7 @@ export function [ItemName]ItemEmptyView({
 **🚨 CRITICAL Requirements**:
 
 1. **Use ItemEditorEmptyView** (MANDATORY):
-   - Import from `../../controls`
+   - Import from `../../components`
    - Provides consistent empty state UI across all items
    - DO NOT create custom empty state layouts
 
@@ -827,7 +827,7 @@ await oneLakeClient.writeFileAsBase64(filePath, base64Content);
 
 ```typescript
 // ✅ Import the OneLakeView control
-import { OneLakeView } from '../../../controls/OneLakeView';
+import { OneLakeView } from '../../../components/OneLakeView';
 
 // ✅ Use the control with proper configuration
 <OneLakeView
@@ -885,7 +885,7 @@ import { OneLakeViewComponent } from '../../../samples/views/SampleOneLakeView';
 
 #### **Key Points:**
 
-- **Use Control Not Sample**: Import from `controls/OneLakeView`, not samples
+- **Use Control Not Sample**: Import from `components/OneLakeView`, not samples
 - **initialItem Required**: Control needs current item to load and display content
 - **All Properties Needed**: Must include `id`, `workspaceId`, and `displayName`  
 - **Empty State Handling**: Control shows add button when no initialItem provided
@@ -909,7 +909,7 @@ import {
   createSaveAction,
   createSettingsAction,
   createRibbonTabs
-} from '../../controls/ItemEditor';
+} from '../../components/ItemEditor';
 import { Rocket24Regular } from '@fluentui/react-icons';
 
 /**
@@ -1017,7 +1017,7 @@ export function [ItemName]ItemRibbon(props: [ItemName]ItemRibbonProps) {
 4. **Standard Action Factories** (use when needed):
    - `createSaveAction()`: Save button with standard behavior (required for most items)
    - `createSettingsAction()`: Settings button with standard behavior (optional, only if item needs settings)
-   - Import from `'../../controls/ItemEditor'`
+   - Import from `'../../components/ItemEditor'`
 
 5. **Custom Actions** (when needed):
    - Define inline as `RibbonAction` objects
@@ -1086,7 +1086,7 @@ return (
 // Based on HelloWorldItem.scss pattern
 
 // 🚨 IMPORTANT: Contains ONLY item-specific styles
-// Controls provide their own layout/structure (DO NOT modify control files)
+// Components provide their own layout/structure (DO NOT modify control files)
 
 // Example: Item-specific view styling
 .[item-name]-view {
@@ -1140,7 +1140,7 @@ import "./[ItemName]Item.scss";       // Item-specific styles (REQUIRED)
 - Import only `[ItemName]Item.scss` in item components
 
 **❌ DON'T** (Will fail verification):
-- Modify control files in `Workload/app/controls/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
+- Modify control files in `Workload/app/components/` directory (ItemEditor, Ribbon, OneLakeView, etc.)
 - Duplicate control layout/structure styles in item SCSS
 - Use inline styles instead of SCSS file
 - Override control structural styles with `!important`
@@ -1629,7 +1629,7 @@ grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
 - **Ribbon used**: Check ribbon uses `Ribbon` + `RibbonToolbar`
 - **Existing Base Components**: Used ItemEditorView, ItemEditorDetailView etc. instead of reinventing
 - **OneLakeStorageClient Wrapper**: Used `createItemWrapper()` for all OneLake operations, no manual path construction
-- **OneLakeView Control**: Used control from `controls/OneLakeView`, not sample code
+- **OneLakeView Control**: Used control from `components/OneLakeView`, not sample code
 - **Version number**: Must be "1.100" (copy from HelloWorld exactly)
 - **SCSS overrides only**: Check .scss file doesn't duplicate layout styles
 
@@ -1638,3 +1638,5 @@ grep "[ItemName]Item" Workload/app/assets/locales/en-US/translation.json
 - **Imports correct**: All import paths are valid and components exist
 
 **IF ANY VERIFICATION FAILS, THE ITEM IS INCOMPLETE. FIX IT BEFORE PROCEEDING.**
+
+
