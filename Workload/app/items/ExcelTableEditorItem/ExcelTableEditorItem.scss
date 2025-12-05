@@ -1,0 +1,418 @@
+/* Excel Edit Item Styles */
+.excel-edit-container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.workflow-card {
+  margin-bottom: 1rem;
+}
+
+.card-content {
+  padding: 1rem;
+}
+
+.selectable-card {
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.selectable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-step-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.workflow-step-icon {
+  font-size: 3rem;
+  color: #0078d4;
+  margin-bottom: 1rem;
+}
+
+.workflow-step-title {
+  margin-bottom: 1rem;
+}
+
+.workflow-step-description {
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+.selectable-card-content {
+  padding: 1rem;
+}
+
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-card-info {
+  color: #666;
+}
+
+.loading-step-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-step-text {
+  margin-top: 1rem;
+}
+
+.excel-editing-placeholder {
+  border: 2px dashed #0078d4;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  background-color: #f8f9fa;
+}
+
+.excel-editing-title {
+  margin-bottom: 0.5rem;
+}
+
+.excel-editing-description {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.excel-editing-table-info {
+  color: #666;
+}
+
+.excel-editing-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.save-options {
+  margin-top: 1rem;
+}
+
+.saving-step-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.completion-step-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.completion-step-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.completion-step-title {
+  margin-bottom: 1rem;
+}
+
+.completion-step-description {
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+.completion-step-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.progress-indicator {
+  margin-bottom: 2rem;
+}
+
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progress-chevron {
+  transform: rotate(-90deg);
+}
+
+.error-message {
+  margin-bottom: 1rem;
+}
+
+.error-icon {
+  margin-right: 0.5rem;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.overview-item-title {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.overview-item-description {
+  color: #666;
+}
+
+/* Back to Canvas Button - positioned above ribbon */
+.back-to-home-container {
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  align-items: center;
+}
+
+.back-to-home-container button {
+  font-size: 14px;
+  font-weight: 400;
+  color: #323130;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.back-to-home-container button:hover {
+  background-color: #f3f2f1;
+}
+
+.back-to-home-container button span {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Table Editor Header Content */
+.table-editor-header-clean {
+  padding: 20px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #edebe9;
+  margin: 0;
+  text-align: left !important;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.table-title {
+  color: #323130 !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  line-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  display: block !important;
+  width: 100% !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+.table-subtitle {
+  color: #605e5c !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 22px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  display: block !important;
+  width: 100% !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+/* Table Editor Actions */
+.table-editor-actions {
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.table-editor-actions button {
+  margin: 0;
+  border-radius: 4px;
+}
+
+/* Clean up any unwanted lines or borders */
+.canvas-header * {
+  box-sizing: border-box;
+}
+
+.excel-canvas {
+  background: #ffffff;
+}
+
+.excel-canvas * {
+  box-sizing: border-box;
+}
+
+/* Override Fluent UI Text component styles to remove any unwanted borders/lines */
+.table-title span,
+.table-subtitle span {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  text-decoration: none !important;
+  text-align: left !important;
+  display: inline-block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+/* Ensure both title and subtitle Text components have identical positioning */
+.table-title > *,
+.table-subtitle > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  position: relative !important;
+  left: 0 !important;
+  text-indent: 0 !important;
+}
+
+/* Remove any focus outlines that might appear as lines */
+.table-editor-header-clean *:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure consistent spacing and alignment */
+.table-editor-header-clean > *,
+.table-editor-header-clean div,
+.header-content > * {
+  text-align: left !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Specific targeting for the Excel editor header path */
+.excel-canvas .table-editor-header-clean > div {
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+}
+
+/* Ensure all text content in the header is left-aligned */
+.excel-canvas .table-editor-header-clean * {
+  text-align: left !important;
+}
+
+/* Force exact alignment for both title and subtitle */
+.table-editor-header-clean .table-title,
+.table-editor-header-clean .table-subtitle {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+/* Ensure Fluent UI Text components have consistent positioning */
+.table-editor-header-clean [class*="fui-Text"] {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+/* Target all possible internal elements of Fluent UI Text components */
+.table-title *,
+.table-subtitle * {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  text-indent: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Override any default Fluent UI typography margins/padding */
+.header-content [role="text"],
+.header-content [class*="ms-"],
+.header-content [class*="fui-"] {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+/* Excel Info Banner */
+.excel-info-banner {
+  padding: 16px 24px;
+  background: #e1f5fe;
+  border-left: 4px solid #0078d4;
+  margin: 0;
+  text-align: left;
+}
+
+.excel-info-banner strong {
+  color: #0078d4;
+  font-weight: 600;
+}
+
+/* Excel Online Warning Banner */
+.excel-online-warning {
+  padding: 20px;
+  text-align: center;
+  background: #fff5cc;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin: 10px;
+}
+
+.excel-online-warning strong {
+  color: #ff6f00;
+}
+
+/* Table Editor iframe container */
+.table-editor-iframe-container-clean {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-editor-iframe {
+  width: 100%;
+  height: 600px;
+  border: 1px solid #ccc;
+  flex: 1;
+}

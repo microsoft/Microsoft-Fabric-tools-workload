@@ -12,6 +12,9 @@
     "PackageInstallerItem_Description": "A item that can install different package configurations into Fabric workspaces.",
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
-    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities."
+    "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
+    "ExcelTableEditorItem_DisplayName": "Excel Table Editor",
+    "ExcelTableEditorItem_DisplayName_Plural": "Excel Table Editors",
+    "ExcelTableEditorItem_Description": "Advanced Excel table editing and data manipulation with Lakehouse integration"
 }
 

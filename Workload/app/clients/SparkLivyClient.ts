@@ -295,6 +295,32 @@ export class SparkLivyClient extends FabricPlatformClient {
   }
 
   // ============================
+  // Operations Management
+  // ============================
+
+  /**
+   * Get operation status (for Long Running Operations)
+   * @param workspaceId The workspace ID
+   * @param lakehouseId The lakehouse ID
+   * @param operationId The operation ID from 202 Accepted response
+   * @returns A promise resolving to the operation status
+   */
+  async getOperationStatus(
+    workspaceId: string,
+    lakehouseId: string,
+    operationId: string
+  ): Promise<any> {
+    try {
+      const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/operations/${operationId}`;
+      return this.get<any>(endpoint);
+    } catch (error: any) {
+      console.error(`Error getting operation ${operationId}: ${error.message}`);
+      throw error;
+    }
+  }
+
+
+  // ============================
   // Statement Management
   // ============================
 

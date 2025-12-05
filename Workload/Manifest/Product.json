@@ -69,6 +69,27 @@
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
             }        
+          },
+          {
+            "title": "ExcelTableEditorItem_DisplayName",
+            "description": "ExcelTableEditorItem_Description",
+            "icon": {
+              "name": "assets/images/ExcelTableEditorItem-icon.png"
+            },
+            "icon_small": {
+              "name": "assets/images/ExcelTableEditorItem-icon.png"
+            },
+            "availableIn": [
+              "home",
+              "create-hub",
+              "workspace-plus-new",
+              "workspace-plus-new-teams"
+            ],
+            "itemType": "ExcelTableEditor",
+            "createItemDialogConfig": {
+              "onCreationFailure": { "action": "item.onCreationFailure" },
+              "onCreationSuccess": { "action": "item.onCreationSuccess" }
+            }        
           }
         ]
     },
@@ -88,6 +109,10 @@
         {
           "mediaType": 0,
           "source": "assets/images/OneLakeExplorerItem-slideware.png"
+        },
+        {
+          "mediaType": 0,
+          "source": "assets/images/ExcelTableEditorItem-slideware.png"
         }
       ],
         "supportLink": {

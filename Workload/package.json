@@ -19,6 +19,7 @@
     "@ms-fabric/workload-client": "^3.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@reduxjs/toolkit": "^2.6.0",
+    "exceljs": "^4.3.0",
     "history": "^4.9.0",
     "i18next": "^25.4.1",
     "i18next-http-backend": "^2.4.2",
