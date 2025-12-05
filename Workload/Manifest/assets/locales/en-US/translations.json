@@ -13,8 +13,8 @@
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
     "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
-    "ExcelTableEditorItem_DisplayName": "Excel Table Editor",
-    "ExcelTableEditorItem_DisplayName_Plural": "Excel Table Editors",
-    "ExcelTableEditorItem_Description": "Advanced Excel table editing and data manipulation with Lakehouse integration"
+    "ExcelEditorItem_DisplayName": "Excel Editor",
+    "ExcelEditorItem_DisplayName_Plural": "Excel Editors",
+    "ExcelEditorItem_Description": "Advanced Excel editing and data manipulation with Lakehouse integration"
 }
 

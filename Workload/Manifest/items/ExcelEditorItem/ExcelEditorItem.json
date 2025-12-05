@@ -1,17 +1,17 @@
 {
-    "name": "ExcelTableEditor",
+    "name": "ExcelEditor",
     "version": "1.100",
-    "displayName": "ExcelTableEditorItem_DisplayName",
-    "displayNamePlural": "ExcelTableEditorItem_DisplayName_Plural",
+    "displayName": "ExcelEditorItem_DisplayName",
+    "displayNamePlural": "ExcelEditorItem_DisplayName_Plural",
     "editor": {
-      "path": "/ExcelTableEditorItem-editor"
+      "path": "/ExcelEditorItem-editor"
     },
     "icon": {
-      "name": "assets/images/ExcelTableEditorItem-icon.png"
+      "name": "assets/images/ExcelEditorItem-icon.png"
     },
     
     "activeIcon": {
-      "name": "assets/images/ExcelTableEditorItem-icon.png"
+      "name": "assets/images/ExcelEditorItem-icon.png"
     },
     "contextMenuItems": [
     ],

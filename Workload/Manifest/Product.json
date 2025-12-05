@@ -71,13 +71,13 @@
             }        
           },
           {
-            "title": "ExcelTableEditorItem_DisplayName",
-            "description": "ExcelTableEditorItem_Description",
+            "title": "ExcelEditorItem_DisplayName",
+            "description": "ExcelEditorItem_Description",
             "icon": {
-              "name": "assets/images/ExcelTableEditorItem-icon.png"
+              "name": "assets/images/ExcelEditorItem-icon.png"
             },
             "icon_small": {
-              "name": "assets/images/ExcelTableEditorItem-icon.png"
+              "name": "assets/images/ExcelEditorItem-icon.png"
             },
             "availableIn": [
               "home",
@@ -85,7 +85,7 @@
               "workspace-plus-new",
               "workspace-plus-new-teams"
             ],
-            "itemType": "ExcelTableEditor",
+            "itemType": "ExcelEditor",
             "createItemDialogConfig": {
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
@@ -112,7 +112,7 @@
         },
         {
           "mediaType": 0,
-          "source": "assets/images/ExcelTableEditorItem-slideware.png"
+          "source": "assets/images/ExcelEditorItem-slideware.png"
         }
       ],
         "supportLink": {

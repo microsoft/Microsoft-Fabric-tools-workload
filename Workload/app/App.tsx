@@ -5,7 +5,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWizardWrapper } from "./items/PackageInstallerItem";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
-import { ExcelTableEditorItemEditor } from "./items/ExcelTableEditorItem/ExcelTableEditorItemEditor";
+import { ExcelEditorItemEditor } from "./items/ExcelEditorItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 
 /*
@@ -78,9 +78,9 @@ export function App({ history, workloadClient }: AppProps) {
                     data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
-            <Route path="/ExcelTableEditorItem-editor/:itemObjectId">
-                <ExcelTableEditorItemEditor
-                    workloadClient={workloadClient} data-testid="ExcelTableEditorItem-editor" />
+            <Route path="/ExcelEditorItem-editor/:itemObjectId">
+                <ExcelEditorItemEditor
+                    workloadClient={workloadClient} data-testid="ExcelEditorItem-editor" />
             </Route>
 
 

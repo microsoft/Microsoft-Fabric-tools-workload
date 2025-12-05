@@ -198,9 +198,40 @@
 .table-editor-header-clean {
   padding: 20px 24px;
   background: #ffffff;
-  border-bottom: 1px solid #edebe9;
+}
+
+/* Canvas Cards Grid Layout */
+.canvas-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.table-card {
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.canvas-header {
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.canvas-header h2 {
+  margin: 0 0 4px 0;
+}
+
+.canvas-header p {
   margin: 0;
-  text-align: left !important;
+  color: var(--colorNeutralForeground3);
 }
 
 .header-content {

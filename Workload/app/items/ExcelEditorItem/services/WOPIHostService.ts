@@ -72,13 +72,17 @@ export interface LakehouseTableData {
 }
 
 export class WOPIHostService {
-  private baseUrl: string = 'http://127.0.0.1:60006'; // Development server URL
+  private baseUrl: string;
   private wopiEndpoint: string = '/wopi';
   private accessTokens: Map<string, { token: string; expiry: Date; userId: string }> = new Map();
   private sparkLivyClient: SparkLivyClient;
 
   constructor(private workloadClient?: WorkloadClientAPI) {
     // Initialize WOPI Host service
+    // Use FRONTEND_URL from environment or fallback to localhost
+    this.baseUrl = window.location.origin || 'http://127.0.0.1:60006';
+    console.log('🌐 WOPI Host base URL:', this.baseUrl);
+    
     // WorkloadClient will be used for OneLake integration and authentication
     if (this.workloadClient) {
       console.log('WOPI Host initialized with Fabric workload client');
