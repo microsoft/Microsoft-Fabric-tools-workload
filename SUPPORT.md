@@ -1,14 +1,8 @@
-Welcome! Thanks for reaching out. Please note:
+# Welcome! Thanks for reaching out. Please note
 
-## Microsoft Support Policy  
-- **We no longer provide support by email.**  
-  All questions and requests must be opened as GitHub issues.  
-- **Use the Support Request template** when opening a new issue.  
-  This helps us respond faster and keeps all ISV questions searchable.  
-- **Response time:** We aim to respond within 2 business days (best effort).  
-- **Before opening an issue:**  
-  - Check existing issues (open and closed) to avoid duplicates.  
-  - Review our documentation and FAQs.  
+## Where to Open Issues
 
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
-👉 To open a new support request, go to: [New Issue](../../issues/new/choose)
+This repository contains community tools built on top of the [Microsoft Fabric Extensibility Toolkit](https://github.com/microsoft/fabric-extensibility-toolkit).
+
+- **For general issues with the Fabric Extensibility Toolkit** (core framework, base components, platform APIs): Please open issues in the [official FET repository](https://github.com/microsoft/fabric-extensibility-toolkit/issues)
+- **For issues specific to the tools in this repository** (PackageInstaller, OneLakeExplorer, ExcelEditor): Please open issues in this [Microsoft Fabric Tools Workload repository](https://github.com/microsoft/Microsoft-Fabric-tools-workload/issues)

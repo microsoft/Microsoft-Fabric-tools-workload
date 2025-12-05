@@ -1,11 +1,11 @@
 # Microsoft Fabric Tools Workload
 
-Welcome to the Microsoft Fabric Tools Workload repository. This repository is **based on the original [Microsoft Fabric Extensibility Toolkit](https://github.com/microsoft/fabric-extensibility-toolkit)** and contains various community-built item types that demonstrate advanced patterns and implementations.
+Welcome to the Microsoft Fabric Tools Workload repository. This repository is **based on the original [Microsoft Fabric Extensibility Toolkit](https://github.com/microsoft/fabric-extensibility-toolkit)** and contains various community-built item types that demonstrate advanced patterns and implementations. It can also be seen as a example how you can structure your own repostitory and make sure that you can easily get updates from the original.
 
 ## 🎯 Purpose
 
 This repository serves as a **collection of community-contributed Fabric items** that can be:
-- Used as-is in your Fabric workload
+- Used as-is Fabric workload with different items
 - Used as reference implementations for building your own custom items
 - Studied to learn advanced patterns and best practices
 
