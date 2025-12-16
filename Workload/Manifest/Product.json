@@ -91,21 +91,12 @@
         }
       ],
         "supportLink": {
-<<<<<<< HEAD
           "documentation": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/"},
           "certification": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/CERTIFICATION.md"},
           "help": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/SUPPORT.md"},
           "privacy": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/CODE_OF_CONDUCT.md"},
           "terms": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/TERMS"},
           "license": {"url": "https://github.com/microsoft/Microsoft-Fabric-tools-workload/blob/main/LICENSE"}
-=======
-          "documentation": {"url": "https://example.com/documentation"},
-          "certification": {"url": "https://example.com/certification"},
-          "help": {"url": "https://example.com/help"},
-          "privacy": {"url": "https://example.com/privacy"},
-          "terms": {"url": "https://example.com/terms"},
-          "license": {"url": "https://azuremarketplace.microsoft.com"} 
->>>>>>> upstream-fet/main
       }
     },
     "itemJobTypes" :["storeData", "others"],

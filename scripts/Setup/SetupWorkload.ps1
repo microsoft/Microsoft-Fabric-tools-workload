@@ -157,7 +157,14 @@ $itemNames = ""
 if (Test-Path $itemsDir) {
     $items = Get-ChildItem -Path $itemsDir -Directory
     if ($items) {
-        $itemNames = ($items | Select-Object -ExpandProperty Name) -join ","
+        $itemNames = ($items | ForEach-Object { 
+            $name = $_.Name
+            if ($name.EndsWith("Item")) {
+                $name.Substring(0, $name.Length - 4)
+            } else {
+                $name
+            }
+        }) -join ","
     }
 }
 
