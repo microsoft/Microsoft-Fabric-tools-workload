@@ -8,11 +8,13 @@ import { ItemEditorEmptyView } from "../../components/ItemEditor";
 interface PackageInstallerItemEmptyViewProps {
   context: PackageInstallerContext,
   onPackageSelected: (packageId: string) => void;
+  refreshKey?: number; // Optional key to force re-renders when packages change
 }
 
 export function PackageInstallerItemEmptyView({
   context,
-  onPackageSelected: onPackageSelected
+  onPackageSelected: onPackageSelected,
+  refreshKey
 }: PackageInstallerItemEmptyViewProps) {
   const { t } = useTranslation();
 
@@ -26,6 +28,7 @@ export function PackageInstallerItemEmptyView({
     <PackageSelectionView 
       context={context}
       onPackageSelected={handlePackageSelected} 
+      refreshKey={refreshKey}
     />
   );
   

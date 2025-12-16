@@ -44,6 +44,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
   const [isUnsaved, setIsUnsaved] = useState<boolean>(false);
   const [selectedDeployment, setSelectedDeployment] = useState<PackageDeployment | undefined>(undefined);
   const [context, setContext] = useState<PackageInstallerContext>(new PackageInstallerContext(workloadClient));
+  const [packageRegistryVersion, setPackageRegistryVersion] = useState<number>(0); // Force re-renders when packages change
   const [isDeploymentInProgress, setIsDeploymentInProgress] = useState<boolean>(false);
   const [deploymentProgress, setDeploymentProgress] = useState<{
     deploymentId: string;
@@ -179,7 +180,8 @@ export function PackageInstallerItemEditor(props: PageProps) {
         const context = new PackageInstallerContext(workloadClient);
         await context.packageRegistry.loadFromAssets();
         if(loadedItem.definition?.oneLakePackages) {
-          loadedItem.definition.oneLakePackages.forEach(async oneLakePath => {
+          // Use Promise.all to wait for all packages to load
+          await Promise.all(loadedItem.definition.oneLakePackages.map(async oneLakePath => {
             try {
               const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(loadedItem);
               const packJson = await oneLakeClient.readFileAsText(oneLakePath);
@@ -188,10 +190,12 @@ export function PackageInstallerItemEditor(props: PageProps) {
             } catch (error) {
               console.error(`Failed to add package from Onelake ${oneLakePath}:`, error);
             }
-          });
+          }));
         }
         setContext(context);
-        setItem(loadedItem);        
+        setItem(loadedItem);
+        // Force re-render to show the loaded OneLake packages
+        setPackageRegistryVersion(prev => prev + 1);        
       } catch (error) {
         setItem(undefined);        
       } 
@@ -338,6 +342,18 @@ export function PackageInstallerItemEditor(props: PageProps) {
           updateItemDefinition(newItemDefinition);
           await SaveItem(newItemDefinition);
           
+          // Refresh the package registry to show the new package
+          try {
+            const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+            const packJson = await oneLakeClient.readFileAsText(packageResult.oneLakeLocation);
+            const pack = JSON.parse(packJson);
+            context.packageRegistry.addPackage(pack);
+            // Force re-render to show the new package in the UI
+            setPackageRegistryVersion(prev => prev + 1);
+          } catch (error) {
+            console.error(`Failed to add new package to registry:`, error);
+          }
+          
           // Add to package registry
           const packageJson = JSON.parse(fileContent);
           context.packageRegistry.addPackage(packageJson);
@@ -424,6 +440,18 @@ export function PackageInstallerItemEditor(props: PageProps) {
             // Update item definition and save
             updateItemDefinition(newItemDefinition);
             await SaveItem(newItemDefinition);
+            
+            // Refresh the package registry to show the new package
+            try {
+              const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+              const packJson = await oneLakeClient.readFileAsText(packageResult.oneLakeLocation);
+              const pack = JSON.parse(packJson);
+              context.packageRegistry.addPackage(pack);
+              // Force re-render to show the new package in the UI
+              setPackageRegistryVersion(prev => prev + 1);
+            } catch (error) {
+              console.error(`Failed to add new package to registry:`, error);
+            }
             
             callNotificationOpen(
               workloadClient,
@@ -678,6 +706,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
       component: (
         <PackageInstallerItemEmptyView
           context={context}
+          refreshKey={packageRegistryVersion}
           onPackageSelected={async (packageId) => {
             await addDeployment(packageId);
             if (currentViewSetter) {
