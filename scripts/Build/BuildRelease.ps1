@@ -46,11 +46,11 @@ if (Test-Path $buildManifestPackageScript) {
 
 # Copy the nuget package to the release directory
 $buildManifestDir = Join-Path $PSScriptRoot "..\..\build\Manifest"
-$realeaseManifestDir = Join-Path $releaseDir ""
+$releaseManifestDir = Join-Path $releaseDir ""
 
-Move-Item -Path "$buildManifestDir\*.nupkg" -Destination $realeaseManifestDir -Force
+Move-Item -Path "$buildManifestDir\*.nupkg" -Destination $releaseManifestDir -Force
 
-Write-Host “✅ Moved the new ManifestPackage to $realeaseManifestDir." -ForegroundColor Blue
+Write-Host "✅ Moved the new ManifestPackage to $releaseManifestDir." -ForegroundColor Blue
 
 
 ###############################################################################
@@ -58,7 +58,7 @@ Write-Host “✅ Moved the new ManifestPackage to $realeaseManifestDir." -Foreg
 # 
 ###############################################################################
 
-$realeaseApptDir = Join-Path $releaseDir "app"
+$releaseAppDir = Join-Path $releaseDir "app"
 
 #TODO: overwrite the .env.$Environment file with the correct settings
 
@@ -67,8 +67,8 @@ $workloadDir = Join-Path $PSScriptRoot "..\..\Workload"
 Push-Location $workloadDir
 try {
     npm run build:$Environment
-    if (!(Test-Path $realeaseApptDir)) {
-        New-Item -ItemType Directory -Path $realeaseApptDir | Out-Null
+    if (!(Test-Path $releaseAppDir)) {
+        New-Item -ItemType Directory -Path $releaseAppDir | Out-Null
     }
 
 } finally {
@@ -80,9 +80,9 @@ Write-Host "All release information has been build an is available under the" -F
 Write-Host "$releaseDir"
 Write-Host ""
 Write-Host "You can now upload the manifest package and the app release to the Fabric portal." 
-Write-Host "The manifest package is located at $realeaseManifestDir"
+Write-Host "The manifest package is located at $releaseManifestDir"
 Write-Host ""
 write-Host "To upload the app release, to Azure you can use the Deploy scripts."
-Write-Host "The app release is located at $realeaseApptDir"
+Write-Host "The app release is located at $releaseAppDir"
 
 

@@ -151,12 +151,22 @@ if (-not (Test-Path $templateEnvFile)) {
 # Read the template content
 $templateContent = Get-Content $templateEnvFile -Raw
 
+# Get all item names from the Manifest/items directory
+$itemsDir = Join-Path $PSScriptRoot "..\..\Workload\Manifest\items"
+$itemNames = "" 
+if (Test-Path $itemsDir) {
+    $items = Get-ChildItem -Path $itemsDir -Directory
+    if ($items) {
+        $itemNames = ($items | Select-Object -ExpandProperty Name) -join ","
+    }
+}
+
 # Define placeholder replacements for different environments
 $placeholders = @{
     "{{WORKLOAD_HOSTING_TYPE}}" = $HostingType
     "{{WORKLOAD_VERSION}}" = $WorkloadVersion
     "{{WORKLOAD_NAME}}" = $WorkloadName
-    "{{ITEM_NAMES}}" = "HelloWorld"  # Default items, can be updated later
+    "{{ITEM_NAMES}}" = $itemNames
     "{{FRONTEND_APPID}}" = $FrontendAppId
     "{{BACKEND_APPID}}" = $BackendAppId
 }
