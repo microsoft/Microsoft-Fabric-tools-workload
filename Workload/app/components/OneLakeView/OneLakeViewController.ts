@@ -45,26 +45,34 @@ export async function getTables(
 }
 
 function convertToTableMetadata(path: OneLakeStoragePathMetadata, deltaLogDirectory: string): TableMetadata {
-    let pathName = path.name;
-    let parts = pathName.split('/');
+    const pathName = path.name;
+    const parts = pathName.split('/');
     let tableName: string;
     let schemaName: string | null = null;
 
-    // Remove '_delta_log' if present
+    // Remove '_delta_log' if present to get the table directory
+    let tablePathParts = parts;
     if (pathName.endsWith(deltaLogDirectory)) {
-        pathName = parts.slice(0, -1).join('/');
-        parts = pathName.split('/');
+        tablePathParts = parts.slice(0, -1);
     }
 
-    tableName = parts[parts.length - 1];
-    if (parts.length === 4) {
-        schemaName = parts[2];
+    // Path structure: <itemId>/Tables/...<Subdirectories>.../<tableName>
+    tableName = tablePathParts[tablePathParts.length - 1];
+    if (tablePathParts.length === 4) {
+        schemaName = tablePathParts[2];
     }
+
+    // Remove the prefix (itemId/Tables/) from the path - same pattern as files
+    const directory = `${parts[0]}/Tables/`;
+    const tablePathName = tablePathParts.join('/');
+    const relativePath = tablePathName.length > directory.length ? 
+        tablePathName.substring(directory.length) + '/' : 
+        tableName + '/';
 
     return {
         prefix: "Tables",
         name: tableName,
-        path: pathName + '/',
+        path: relativePath,
         schema: schemaName,
     } as TableMetadata;
 }

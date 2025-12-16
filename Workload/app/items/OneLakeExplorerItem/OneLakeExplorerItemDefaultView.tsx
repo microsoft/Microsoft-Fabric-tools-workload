@@ -81,6 +81,7 @@ export function OneLakeExplorerItemDefaultView(props: OneLakeExplorerItemDefault
       tableName={item.definition?.selectedTable?.tableName}
       oneLakeLink={item.definition?.selectedTable?.oneLakeLink}
       currentTheme={currentTheme}
+      workloadClient={workloadClient}
       onCreateNewFile={onCreateNewFile}
       onUploadFile={onUploadFile}
       onOpenItem={onOpenItem}
