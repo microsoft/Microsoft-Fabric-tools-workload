@@ -10,6 +10,7 @@ import { WizardControl, WizardStep } from '../../../../components';
 import { ConfigStep, SelectStep, SummaryStep } from './index';
 import { getWorkloadItem, ItemWithDefinition } from '../../../../controller/ItemCRUDController';
 import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";
+import { PackageContext } from "../../package/PackageContext";
 
 export interface CreatePackageWizardProps extends PageProps {
     title?: string;
@@ -115,11 +116,16 @@ export function CreatePackageWizard(props: CreatePackageWizardProps) {
                 
                 console.log('Loading items for workspace:', targetWorkspaceId);
                 const fabricClient = new FabricPlatformAPIClient(workloadClient);
-                const items = await fabricClient.items.getAllItems(targetWorkspaceId);
+                const allItems = await fabricClient.items.getAllItems(targetWorkspaceId);
                 
-                console.log('Loaded items:', items.length);
-                updateContext('items', items);
-                updateContext('filteredItems', items);
+                // Filter out unsupported item types (like SQLEndpoint)
+                const filteredItems = allItems.filter(item => 
+                    !PackageContext.UNSUPPORTED_PACKAGE_ITEM_TYPES.includes(item.type)
+                );
+                
+                console.log('Loaded items:', allItems.length, 'filtered to:', filteredItems.length);
+                updateContext('items', filteredItems);
+                updateContext('filteredItems', filteredItems);
             } catch (error) {
                 console.error('Failed to load items:', error);
                 updateContext('error', t('Failed to load items from workspace'));
