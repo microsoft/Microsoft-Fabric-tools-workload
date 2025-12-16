@@ -89,7 +89,7 @@
           "help": {"url": "https://example.com/help"},
           "privacy": {"url": "https://example.com/privacy"},
           "terms": {"url": "https://example.com/terms"},
-          "license": {"url": "https://azuremarketplace.microsoft.com/sell"}
+          "license": {"url": "https://azuremarketplace.microsoft.com"} 
       }
     },
     "itemJobTypes" :["storeData", "others"],

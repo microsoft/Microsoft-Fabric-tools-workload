@@ -22,6 +22,7 @@
     "i18next": "^25.4.1",
     "i18next-http-backend": "^2.4.2",
     "jwt-decode": "^3.1.2",
+    "process": "^0.11.10",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-i18next": "^15.0.1",
