@@ -490,7 +490,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
     return Math.random().toString(36).substr(2, 9);
   }, []);
 
-  const addDeployment = useCallback(async (packageId: string) => {
+  const addDeployment = useCallback(async (packageId: string, setCurrentView?: (view: string) => void) => {
     // Find the package configuration that should be used for the deployment
     const pack = context.getPackage(packageId);
     if (pack) {
@@ -514,8 +514,11 @@ export function PackageInstallerItemEditor(props: PageProps) {
       // Save with the updated definition directly to avoid race condition
       await SaveItem(newItemDefinition);
       
-      // Switch to home view to show the new deployment in the table
-      // changeView will be available in the views function parameter    
+      // Set the newly created deployment as selected and navigate to detail view
+      setSelectedDeployment(createdDeployment);
+      if (setCurrentView) {
+        setCurrentView(EDITOR_VIEW_TYPES.DEPLOYMENT);
+      }
     } else {      
       callNotificationOpen(
         workloadClient,
@@ -525,7 +528,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
         undefined
       );
     }
-  }, [item, context, updateItemDefinition, SaveItem, workloadClient, generateUniqueId]);
+  }, [item, context, updateItemDefinition, SaveItem, workloadClient, generateUniqueId, setSelectedDeployment]);
 
   // Handle deployment update function
   const handleDeploymentUpdate = useCallback(async (updatedDeployment: PackageDeployment) => {
@@ -544,11 +547,16 @@ export function PackageInstallerItemEditor(props: PageProps) {
       updateItemDefinition(newItemDefinition);
       await SaveItem(newItemDefinition);
       
+      // Update selected deployment if it's the one being updated
+      if (selectedDeployment && selectedDeployment.id === updatedDeployment.id) {
+        setSelectedDeployment(updatedDeployment);
+      }
+      
       if (updatedDeployment.status === DeploymentStatus.Succeeded) {
         handleRefreshDeployments();
       }
     }
-  }, [item, updateItemDefinition, SaveItem, handleRefreshDeployments]);
+  }, [item, updateItemDefinition, SaveItem, handleRefreshDeployments, selectedDeployment, setSelectedDeployment]);
 
   const handleStartDeployment = useCallback(async (deployment: PackageDeployment, event?: React.MouseEvent) => {
     if (event) {
@@ -589,6 +597,13 @@ export function PackageInstallerItemEditor(props: PageProps) {
           currentStep: 'Initializing deployment...',
           progress: 0
         });
+        
+        // Update deployment status to InProgress
+        const inProgressDeployment: PackageDeployment = {
+          ...deployment,
+          status: DeploymentStatus.InProgress
+        };
+        await handleDeploymentUpdate(inProgressDeployment);
       
         // Start the specific deployment strategy
         try {
@@ -597,7 +612,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
             context,
             item,
             pack,
-            deployment
+            inProgressDeployment
           );
 
           // Update deployment progress callback
@@ -708,10 +723,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
           context={context}
           refreshKey={packageRegistryVersion}
           onPackageSelected={async (packageId) => {
-            await addDeployment(packageId);
-            if (currentViewSetter) {
-              currentViewSetter(EDITOR_VIEW_TYPES.DEFAULT);
-            }
+            await addDeployment(packageId, currentViewSetter);
           }}
         />
       )
@@ -764,7 +776,17 @@ export function PackageInstallerItemEditor(props: PageProps) {
           createPackageCallback={createPackage}
           isSaveButtonEnabled={isUnsaved}
           isDeploymentInProgress={isDeploymentInProgress}
-          viewContext={viewContext}
+          viewContext={{
+            ...viewContext,
+            // Override goBack for detail views to always go to DEFAULT view
+            goBack: () => {
+              if (viewContext.isDetailView) {
+                viewContext.setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+              } else {
+                viewContext.goBack();
+              }
+            }
+          }}
         />
       )}
       messageBar={
@@ -786,7 +808,7 @@ export function PackageInstallerItemEditor(props: PageProps) {
                 </Text>
               </div>
             ),
-            showInViews: [EDITOR_VIEW_TYPES.DEFAULT]
+            showInViews: [EDITOR_VIEW_TYPES.DEFAULT, EDITOR_VIEW_TYPES.DEPLOYMENT]
           }
         ] : []
       }

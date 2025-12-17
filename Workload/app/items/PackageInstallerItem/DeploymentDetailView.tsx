@@ -2,8 +2,7 @@ import React from "react";
 import { 
   Divider,
   Body1,
-  Caption1,
-  Button
+  Caption1
 } from "@fluentui/react-components";
 import { Play20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -78,20 +77,6 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
           <div className="package-status-container">
             <div className={`status-indicator ${DeploymentStatus[deployment.status].toLowerCase()}`}>
               {DeploymentStatus[deployment.status]}
-            </div>
-            <div className="deployment-action-container">
-              <Button
-                appearance="subtle"
-                size="medium"
-                icon={<Play20Regular />}
-                disabled={deployment.status !== DeploymentStatus.Pending || !onStartDeployment}
-                onClick={onStartDeployment}
-              >
-                {deployment.status === DeploymentStatus.Pending 
-                  ? t('PackageInstallerDetailView_StartDeployment', 'Start Deployment')
-                  : t('PackageInstallerDetailView_DeploymentStarted', 'Deployment Started')
-                }
-              </Button>
             </div>
           </div>
         </div>

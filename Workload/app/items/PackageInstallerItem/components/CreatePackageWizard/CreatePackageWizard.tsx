@@ -60,26 +60,7 @@ export function CreatePackageWizard(props: CreatePackageWizardProps) {
             description: t("Review your package and create it"),
             component: SummaryStep
         }
-    ];
-
-    const handleCancel = () => {
-        const result: CreatePackageWizardResult = { state: 'cancel' };
-        callDialogClose(workloadClient, CloseMode.PopOne, result);
-    };
-
-    const handleCreatePackage = (context: Record<string, any>) => {
-        const selectedItemsList = context.items?.filter((item: any) => context.selectedItems?.has(item.id)) || [];
-        const result: CreatePackageWizardResult = { 
-            state: 'package',
-            selectedItems: selectedItemsList,
-            workspaceId: context.selectedWorkspaceId,
-            packageDisplayName: context.packageDisplayName,
-            packageDescription: context.packageDescription,
-            deploymentLocation: context.deploymentLocation,
-            updateItemReferences: context.updateItemReferences
-        };
-        callDialogClose(workloadClient, CloseMode.PopOne, result);
-    };
+    ];    
 
     const initialWizardContext = {
         workloadClient,
@@ -137,12 +118,31 @@ export function CreatePackageWizard(props: CreatePackageWizardProps) {
         }
     };
 
+    const handleComplete = (context: Record<string, any>) => {
+        const selectedItemsList = context.items?.filter((item: any) => context.selectedItems?.has(item.id)) || [];
+        const result: CreatePackageWizardResult = { 
+            state: 'package',
+            selectedItems: selectedItemsList,
+            workspaceId: context.selectedWorkspaceId,
+            packageDisplayName: context.packageDisplayName,
+            packageDescription: context.packageDescription,
+            deploymentLocation: context.deploymentLocation,
+            updateItemReferences: context.updateItemReferences
+        };
+        callDialogClose(workloadClient, CloseMode.PopOne, result);
+    };
+
+    const handleCancel = () => {
+        const result: CreatePackageWizardResult = { state: 'cancel' };
+        callDialogClose(workloadClient, CloseMode.PopOne, result);
+    };
+
     return (
        <WizardControl
             title={title || t('Create a new Package')}
             steps={wizardSteps}
             initialStepId="config"
-            onComplete={handleCreatePackage}
+            onComplete={handleComplete}
             onCancel={handleCancel}
             initialContext={initialWizardContext}
             showNavigation={true}

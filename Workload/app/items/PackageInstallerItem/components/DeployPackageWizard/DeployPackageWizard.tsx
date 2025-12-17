@@ -42,32 +42,6 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
     const needsWorkspaceSelection = deploymentLocation === DeploymentLocation.Default;
     const needsFolderName = deploymentLocation === DeploymentLocation.Default;
 
-    const handleCancel = () => {
-      // Close the dialog with a cancelled result
-      var result = { state: 'cancel' } as DeployPackageWizardResult;
-      callDialogClose(workloadClient, CloseMode.PopOne, result);
-    };
-
-    const handleStartDeployment = () => {
-      // Close the dialog with a success result
-      var result = { 
-        state: 'deploy',
-        workspaceConfig: {
-          id: needsWorkspaceSelection ? selectedWorkspaceId : undefined,
-          name: needsCapacitySelection ? workspaceName : undefined, // Set workspace name for new workspaces
-          capacityId: needsCapacitySelection ? selectedCapacityId : undefined,
-          createNew: !needsWorkspaceSelection,
-          folder: {
-            //TODO: change to a floder selector
-            createNew: deploymentLocation === DeploymentLocation.Default,            
-            parentFolderId: undefined,
-            name: needsFolderName ? folderName : undefined
-          }
-        } as WorkspaceConfig,
-      } as DeployPackageWizardResult;      
-      callDialogClose(workloadClient, CloseMode.PopOne, result);
-    };
-
     // Wizard configuration
     const wizardSteps: WizardStep[] = [
         {
@@ -123,8 +97,31 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
     };
 
     // Handle wizard completion
-    const handleWizardComplete = () => {
-        handleStartDeployment();
+    const handleComplete = (context: Record<string, any>) => {
+        // Close the dialog with a success result
+        var result = { 
+            state: 'deploy',
+            workspaceConfig: {
+            id: needsWorkspaceSelection ? context.selectedWorkspaceId : undefined,
+            // Set workspace name for new workspaces
+            name: needsCapacitySelection ? context.workspaceName : undefined, 
+            capacityId: needsCapacitySelection ? context.selectedCapacityId : undefined,
+            createNew: !needsWorkspaceSelection,
+            folder: {
+                //TODO: change to a folder selector
+                createNew: deploymentLocation === DeploymentLocation.Default,            
+                parentFolderId: undefined,
+                name: needsFolderName ? context.folderName : undefined
+            }
+            } as WorkspaceConfig,
+        } as DeployPackageWizardResult;      
+        callDialogClose(workloadClient, CloseMode.PopOne, result);
+    };
+
+    const handleCancel = () => {
+      // Close the dialog with a cancelled result
+      var result = { state: 'cancel' } as DeployPackageWizardResult;
+      callDialogClose(workloadClient, CloseMode.PopOne, result);
     };
 
     return (
@@ -132,7 +129,7 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
             title={t('Configure the installation')}
             steps={wizardSteps}
             initialStepId="configure"
-            onComplete={handleWizardComplete}
+            onComplete={handleComplete}
             onCancel={handleCancel}
             initialContext={initialWizardContext}
             showNavigation={true}
