@@ -2,7 +2,7 @@ const { merge } = require('webpack-merge');
 const baseConfig = require('../webpack.config.js');
 const express = require("express");
 const Webpack = require("webpack");
-const { registerDevServerApis } = require('.'); // Import our manifest API
+const { registerDevServerApis, registerDevServerComponents } = require('.'); // Import our dev server functions
 
 
 // making sure the dev configuration is set correctly!
@@ -10,27 +10,27 @@ const { registerDevServerApis } = require('.'); // Import our manifest API
 process.env.DEV_AAD_CONFIG_FE_APPID = process.env.FRONTEND_APPID;
 process.env.DEV_AAD_CONFIG_BE_APPID = process.env.BACKEND_APPID;
 process.env.DEV_AAD_CONFIG_BE_AUDIENCE= ""
-process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI=process.env.BACKEND_URL;
 
 
 console.log('********************   Development Configuration   *******************');
 console.log('process.env.DEV_AAD_CONFIG_FE_APPID: ' + process.env.DEV_AAD_CONFIG_FE_APPID);
 console.log('process.env.DEV_AAD_CONFIG_BE_APPID: ' + process.env.DEV_AAD_CONFIG_BE_APPID);
 console.log('process.env.DEV_AAD_CONFIG_BE_AUDIENCE: ' + process.env.DEV_AAD_CONFIG_BE_AUDIENCE);
-console.log('process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI: ' + process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI);
 console.log('*********************************************************************');
 
 
 module.exports = merge(baseConfig, {
     mode: "development",
     devtool: "source-map",
+    cache: {
+        type: 'filesystem',
+        allowCollectingMemory: true,
+    },
     plugins: [
         new Webpack.DefinePlugin({
             "process.env.DEV_AAD_CONFIG_FE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_FE_APPID),
             "process.env.DEV_AAD_CONFIG_BE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_APPID),
             "process.env.DEV_AAD_CONFIG_BE_AUDIENCE": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_AUDIENCE),
-            "process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_REDIRECT_URI),
-            "NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development")
         }),
     ],
     devServer: {
@@ -67,6 +67,9 @@ module.exports = merge(baseConfig, {
             
             // Register the manifest API from our extracted implementation
             registerDevServerApis(devServer.app);
+            
+            // Register dev server components and log playground availability
+            registerDevServerComponents();
 
             return middlewares;
         },

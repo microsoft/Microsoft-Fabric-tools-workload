@@ -56,6 +56,8 @@ export abstract class DeploymentStrategy {
    * @returns Promise<PackageDeployment> - The final deployment state
    */
   async deploy(updateDeploymentProgress: (step: string, progress: number) => void): Promise<PackageDeployment> {
+    this.deployment.triggeredTime = new Date();
+
     const depContext: DeploymentContext = new DeploymentContext(this.pack, this.deployment, updateDeploymentProgress);
     try {
 

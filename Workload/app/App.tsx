@@ -2,13 +2,10 @@ import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { HelloWorldItemEditor } from "./items/HelloWorldItem/HelloWorldItemEditor";
-import { PackageInstallerItemEditor } from "./items/PackageInstallerItem/PackageInstallerItemEditor";
-import { PackageInstallerDeployDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerDeployDialog";
-import { PackageInstallerPackagingDialogWrapper } from "./items/PackageInstallerItem/components/PackageInstallerPackagingDialogWrapper";
-import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem/OneLakeExplorerItemEditor";
-import PackageInstallerItemEditorAboutPage from "./items/PackageInstallerItem/PackageInstallerItemEditorAboutPage";
-import PackageInstallerItemEditorSettingsPage from "./items/PackageInstallerItem/PackageInstallerItemEditorSettingsPage";
+import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWizardWrapper, UploadPackageWizardWrapper } from "./items/PackageInstallerItem";
+import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
+import { HelloWorldItemEditor} from "./items/HelloWorldItem";
+import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -60,30 +57,34 @@ export function App({ history, workloadClient }: AppProps) {
             
             <Route path="/PackageInstallerItem-editor/:itemObjectId">
                 <PackageInstallerItemEditor
-                    workloadClient={workloadClient} data-testid="PackageInstallerItem-editor" />
+                    workloadClient={workloadClient} 
+                    data-testid="PackageInstallerItem-editor" />
             </Route>
-            <Route path="/PackageInstallerItem-deploy-dialog/:itemObjectId">
-                <PackageInstallerDeployDialogWrapper
-                    workloadClient={workloadClient} />
+            <Route path="/PackageInstallerItem-deploy-wizard/:itemObjectId">
+                <DeployPackageWizardWrapper
+                    workloadClient={workloadClient} 
+                    data-testid="PackageInstallerItem-deploy-wizard" />
             </Route>
-            <Route path="/PackageInstallerItem-packaging-dialog/:itemObjectId">
-                <PackageInstallerPackagingDialogWrapper
-                    workloadClient={workloadClient} />
+            <Route path="/PackageInstallerItem-packaging-wizard/:itemObjectId">
+                <CreatePackageWizardWrapper
+                    workloadClient={workloadClient} 
+                    data-testid="PackageInstallerItem-packaging-wizard" />
             </Route>
-            <Route path="/PackageInstallerItem-about-page/">
-                <PackageInstallerItemEditorAboutPage
-                    workloadClient={workloadClient} />
-            </Route>
-            <Route path="/PackageInstallerItem-settings-page/">
-                <PackageInstallerItemEditorSettingsPage
-                    workloadClient={workloadClient} />
+            <Route path="/PackageInstallerItem-upload-wizard/:itemObjectId">
+                <UploadPackageWizardWrapper
+                    workloadClient={workloadClient} 
+                    data-testid="PackageInstallerItem-upload-wizard" />
             </Route>
 
             <Route path="/OneLakeExplorerItem-editor/:itemObjectId">
                 <OneLakeExplorerItemEditor
-                    workloadClient={workloadClient} data-testid="OneLakeExplorerItem-editor" />
+                    workloadClient={workloadClient} 
+                    data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
+
+            {/* Conditionally loaded playground routes (only in development) */}
+            <ConditionalPlaygroundRoutes workloadClient={workloadClient} />
         </Switch>
     </Router>;
 }

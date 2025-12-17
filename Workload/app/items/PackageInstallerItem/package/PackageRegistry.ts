@@ -1,4 +1,7 @@
 import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig, ReferenceInterceptorDefinitionConfig, DeploymentConfiguration } from '../PackageInstallerItemModel';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import packageSchema from './package.schema.json';
 
 export type ConfiguredPackages = {
   [key: string]: Package;
@@ -164,12 +167,37 @@ export class PackageRegistry {
   private initialized = false;
 
   /**
+   * Validates a package JSON object against the schema
+   * @param packageJson The package JSON object to validate
+   * @returns True if valid, throws error if invalid
+   */
+  static validatePackageJson(packageJson: any): boolean {
+    const ajv = new Ajv();
+    addFormats(ajv);
+    const validate = ajv.compile(packageSchema);
+    const valid = validate(packageJson);
+
+    if (!valid) {
+      const errors = validate.errors?.map(err => `${err.instancePath} ${err.message}`).join(', ');
+      throw new Error(`Schema validation failed: ${errors}`);
+    }
+    
+    return true;
+  }
+
+  /**
    * Loads package configurations from asset files.
    */
   async loadFromAssets(): Promise<void> {
-    if (this.initialized) return;
+    console.log('PackageRegistry.loadFromAssets() called, initialized:', this.initialized);
+    
+    if (this.initialized) {
+      console.log('PackageRegistry already initialized, skipping asset loading');
+      return;
+    }
 
     try {
+      console.log('Loading packages from assets...');
       // Import config files from assets - adjust paths as needed
       const configModules: (() => Promise<any>)[] = [
         // Add your config file imports here
@@ -201,6 +229,7 @@ export class PackageRegistry {
           try {
             const packageObj = convertConfigToPackage(config);
             this.packages[packageObj.id] = packageObj;
+            console.log('Successfully loaded package:', packageObj.id);
           } catch (error) {
             console.error('Failed to convert package config:', error);
           }
