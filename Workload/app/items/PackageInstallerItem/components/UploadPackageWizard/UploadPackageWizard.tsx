@@ -2,7 +2,7 @@
  * @fileoverview UploadPackageWizard - Complete package upload wizard
  */
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageProps } from '../../../../App';
 import { WizardControl, WizardStep } from '../../../../components';
@@ -29,8 +29,8 @@ export function UploadPackageWizard(props: UploadPackageWizardProps) {
   const { t } = useTranslation();
   const { workloadClient } = props;
 
-  // Wizard context state
-  const [wizardContext, setWizardContext] = useState({
+  // Initial context state
+  const initialContext = {
     workloadClient,
     // Upload step data
     selectedFile: null as File | null,
@@ -41,15 +41,7 @@ export function UploadPackageWizard(props: UploadPackageWizardProps) {
     displayName: '',
     description: '',
     originalFileName: ''
-  });
-
-  // Update context helper
-  const updateContext = useCallback((key: string, value: any) => {
-    setWizardContext(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  }, []);
+  };
 
   // Step definitions
   const steps: WizardStep[] = [
@@ -58,45 +50,33 @@ export function UploadPackageWizard(props: UploadPackageWizardProps) {
       title: t('Upload Package File', 'Upload Package File'),
       description: t('Choose a JSON file containing the package definition to upload', 'Choose a JSON file containing the package definition to upload'),
       component: UploadStep,
-      validate: () => wizardContext.isValidJson && wizardContext.selectedFile !== null,
-      onLeave: () => {
-        // Extract package info for configuration step
-        try {
-          const packageData = JSON.parse(wizardContext.packageJson);
-          updateContext('displayName', packageData.displayName || packageData.name || wizardContext.originalFileName);
-          updateContext('description', packageData.description || '');
-          return true;
-        } catch (error) {
-          console.error('Failed to parse package JSON:', error);
-          return false;
-        }
-      }
+      validate: (context) => context.isValidJson && context.selectedFile !== null
     },
     {
       id: 'configuration',
       title: t('Package Configuration', 'Package Configuration'),
       description: t('Configure package details and metadata before uploading', 'Configure package details and metadata before uploading'),
       component: ConfigurationStep,
-      validate: () => wizardContext.displayName.trim() !== ''
+      validate: (context) => context.displayName?.trim() !== ''
     }
   ];
 
-  const handleComplete = () => {
+  const handleComplete = (context: Record<string, any>) => {
     console.log('UploadPackageWizard: Starting package upload with context:', {
-      fileName: wizardContext.originalFileName,
-      displayName: wizardContext.displayName,
-      description: wizardContext.description,
-      hasValidJson: wizardContext.isValidJson
+      fileName: context.originalFileName,
+      displayName: context.displayName,
+      description: context.description,
+      hasValidJson: context.isValidJson
     });
 
     // Close the dialog with success result
     const result: UploadPackageWizardResult = {
       state: 'upload',
-      packageJson: wizardContext.packageJson,
+      packageJson: context.packageJson,
       packageData: {
-        displayName: wizardContext.displayName,
-        description: wizardContext.description,
-        originalFileName: wizardContext.originalFileName
+        displayName: context.displayName,
+        description: context.description,
+        originalFileName: context.originalFileName
       }
     };
 
@@ -117,7 +97,7 @@ export function UploadPackageWizard(props: UploadPackageWizardProps) {
       initialStepId="upload"
       onComplete={handleComplete}
       onCancel={handleCancel}
-      initialContext={wizardContext}
+      initialContext={initialContext}
       showNavigation={true}
       navigationLabels={{
         complete: t('Upload Package', 'Upload Package'),

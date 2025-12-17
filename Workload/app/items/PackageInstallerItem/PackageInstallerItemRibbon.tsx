@@ -100,7 +100,7 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
     {
       key: 'upload-package',
       icon: ArrowUpload24Regular,
-      label: t("Upload JSON Package", "Upload JSON Package"),
+      label: t("Upload Package", "Upload Package"),
       onClick: props.uploadPackageCallback,
       testId: 'item-editor-upload-package-btn',
       disabled: props.isDeploymentInProgress

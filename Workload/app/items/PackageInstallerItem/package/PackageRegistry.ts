@@ -1,4 +1,7 @@
 import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig, ReferenceInterceptorDefinitionConfig, DeploymentConfiguration } from '../PackageInstallerItemModel';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import packageSchema from './package.schema.json';
 
 export type ConfiguredPackages = {
   [key: string]: Package;
@@ -162,6 +165,25 @@ export function convertConfigToPackage(pack: any): Package {
 export class PackageRegistry {
   private packages: ConfiguredPackages = {};
   private initialized = false;
+
+  /**
+   * Validates a package JSON object against the schema
+   * @param packageJson The package JSON object to validate
+   * @returns True if valid, throws error if invalid
+   */
+  static validatePackageJson(packageJson: any): boolean {
+    const ajv = new Ajv();
+    addFormats(ajv);
+    const validate = ajv.compile(packageSchema);
+    const valid = validate(packageJson);
+
+    if (!valid) {
+      const errors = validate.errors?.map(err => `${err.instancePath} ${err.message}`).join(', ');
+      throw new Error(`Schema validation failed: ${errors}`);
+    }
+    
+    return true;
+  }
 
   /**
    * Loads package configurations from asset files.

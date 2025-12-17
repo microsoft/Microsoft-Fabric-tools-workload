@@ -7,6 +7,7 @@ import { Text, Button, MessageBar } from '@fluentui/react-components';
 import { DocumentAdd24Regular, Checkmark24Regular, Dismiss24Regular } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
 import { WizardStepProps } from '../../../../components';
+import { PackageRegistry } from '../../package/PackageRegistry';
 
 interface UploadStepProps extends WizardStepProps {
   // Additional props specific to upload step
@@ -44,13 +45,15 @@ export function UploadStep(props: UploadStepProps) {
       try {
         const parsedJson = JSON.parse(content);
         
-        // Basic validation - ensure it has required package properties
-        if (!parsedJson.id || !parsedJson.displayName) {
-          throw new Error('Package JSON must contain "id" and "displayName" properties');
-        }
+        // Validate against schema using PackageRegistry helper
+        PackageRegistry.validatePackageJson(parsedJson);
 
         updateContext('isValidJson', true);
         updateContext('uploadError', '');
+        
+        // Populate configuration data
+        updateContext('displayName', parsedJson.displayName || '');
+        updateContext('description', parsedJson.description || '');
       } catch (parseError) {
         updateContext('isValidJson', false);
         updateContext('uploadError', `Invalid JSON format: ${parseError.message}`);
@@ -109,7 +112,7 @@ export function UploadStep(props: UploadStepProps) {
           <Text weight="semibold" style={{ display: 'block', marginBottom: '8px' }}>
             {t('Click to select a JSON file', 'Click to select a JSON file')}
           </Text>
-          <Text style={{ color: '#616161', marginBottom: '16px' }}>
+          <Text style={{ display: 'block', color: '#616161', marginBottom: '16px' }}>
             {t('or drag and drop your package.json file here', 'or drag and drop your package.json file here')}
           </Text>
           <Button
