@@ -8,7 +8,9 @@ import { Archive24Regular } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
 import { WizardStepProps } from '../../../../components';
 import { PackageInstallerContext } from '../../package/PackageInstallerContext';
-import { Package } from '../../PackageInstallerItemModel';
+import { Package, PackageInstallerItemDefinition } from '../../PackageInstallerItemModel';
+import { getWorkloadItem } from "../../../../controller/ItemCRUDController";
+import { OneLakeStorageClient } from "../../../../clients/OneLakeStorageClient";
 
 interface PackageSelectionStepProps extends WizardStepProps {
     // Additional props specific to package selection step
@@ -37,6 +39,32 @@ export function PackageSelectionStep(props: PackageSelectionStepProps) {
                 const tempContext = new PackageInstallerContext(workloadClient);
                 await tempContext.packageRegistry.loadFromAssets();
                 
+                // Load packages from OneLake if itemObjectId is available
+                if (wizardContext.itemObjectId) {
+                    try {
+                        const item = await getWorkloadItem<PackageInstallerItemDefinition>(
+                            workloadClient, 
+                            wizardContext.itemObjectId
+                        );
+                        
+                        if (item?.definition?.oneLakePackages) {
+                            const oneLakeClient = new OneLakeStorageClient(workloadClient).createItemWrapper(item);
+                            
+                            await Promise.all(item.definition.oneLakePackages.map(async (path) => {
+                                try {
+                                    const content = await oneLakeClient.readFileAsText(path);
+                                    const pack = JSON.parse(content);
+                                    tempContext.packageRegistry.addPackage(pack);
+                                } catch (err) {
+                                    console.error(`Failed to load package from ${path}:`, err);
+                                }
+                            }));
+                        }
+                    } catch (err) {
+                        console.error('Failed to load item definition:', err);
+                    }
+                }
+
                 // Get all available packages as array
                 const allPackages = tempContext.packageRegistry.getPackagesArray();
                 
