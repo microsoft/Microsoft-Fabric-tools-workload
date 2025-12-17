@@ -459,7 +459,7 @@
 
         h2 {
           color: var(--colorNeutralForeground1, #242424);
-          font-size: var(--fontSizeBase500, 20px);
+          font-size: 24px;
           font-family: var(--fontFamilyBase, 'Segoe UI', sans-serif);
           font-weight: var(--fontWeightSemibold, 600);
           line-height: var(--lineHeightBase500, 28px);
@@ -477,6 +477,82 @@
           margin: 0;
           padding: 0;
           max-width: 376px;
+        }
+      }
+    }
+
+    // Tile card layout for tasks/actions
+    .default-view-inner-container {
+      display: flex;
+      flex-wrap: nowrap; // Force single row
+      justify-content: center;
+      gap: 0; // Remove gap, use margins on individual cards
+      margin-top: var(--spacingVerticalL, 16px);
+      overflow-x: auto; // Allow horizontal scroll if needed
+      padding-bottom: 10px; // Add bottom padding to prevent shadow cutoff
+    }
+
+    .tile-card-body {
+      background-color: var(--colorNeutralBackground1);
+      border: 0;
+      border-radius: 6px;
+      box-shadow: rgba(0, 0, 0, 0.133) 0px 1.6px 3.6px 0px, rgba(0, 0, 0, 0.11) 0px 0.3px 0.9px 0px;
+      color: rgb(36, 36, 36);
+      cursor: pointer;
+      width: 184px;
+      height: 188px;
+      display: flex;
+      flex-direction: column;
+      font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: normal;
+      text-align: left;
+      unicode-bidi: isolate;
+      -webkit-font-smoothing: antialiased;
+      transition: all 0.2s ease;
+      position: relative;
+      margin-left: 5px;
+      margin-right: 20px;
+      flex-shrink: 0; // Prevent shrinking
+
+      &:focus {
+        outline: none;
+      }
+
+      .tile-card-children {
+        background-color: var(--colorBrandBackground2);
+        width: 184px;
+        height: 94px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px 8px 0 0;
+
+        svg {
+          width: 32px;
+          height: 32px;
+        }
+      }
+
+      .tile-card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        text-align: left;
+
+        .tile-card-title {
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--colorNeutralForeground1);
+          margin-bottom: 4px;
+        }
+
+        .tile-card-description {
+          font-size: 12px;
+          color: var(--colorNeutralForeground2);
+          line-height: 1.3;
         }
       }
     }

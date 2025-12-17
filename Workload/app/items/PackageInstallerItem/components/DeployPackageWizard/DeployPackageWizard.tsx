@@ -6,7 +6,7 @@ import { callDialogClose } from "../../../../controller/DialogController";
 import { CloseMode } from "@ms-fabric/workload-client";
 import { DeploymentLocation, WorkspaceConfig, Package } from "../../PackageInstallerItemModel";
 import { WizardControl, WizardStep } from '../../../../components';
-import { ConfigureStep, SummaryStep } from './index';
+import { ConfigureStep, SummaryStep, PackageSelectionStep } from './index';
 
 export interface DeployPackageWizardProps extends PageProps {
     packageId: string;
@@ -18,6 +18,7 @@ export interface DeployPackageWizardProps extends PageProps {
 
 export interface DeployPackageWizardResult {
     state: 'deploy' | 'cancel';
+    packageId?: string; // The selected package ID
     workspaceConfig?: WorkspaceConfig; // Optional workspace configuration if selected
 }
 
@@ -33,74 +34,107 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
     
     // Use package data from props
     const packageData = propsPackageData;
-    
-    // Get item count from loaded package
-    const itemCount = packageData?.items?.length || 0;
 
     // Check what kind of selection we need to show
+    const needsPackageSelection = !packageId || packageId.trim() === '';
     const needsCapacitySelection = deploymentLocation === DeploymentLocation.NewWorkspace;
     const needsWorkspaceSelection = deploymentLocation === DeploymentLocation.Default;
     const needsFolderName = deploymentLocation === DeploymentLocation.Default;
 
-    // Wizard configuration
-    const wizardSteps: WizardStep[] = [
-        {
-            id: "configure",
-            title: t('Configure Installation'),
-            description: needsCapacitySelection 
-                ? t('Select a capacity and configure the new workspace')
-                : needsWorkspaceSelection 
-                ? t('Select an existing workspace and configure the deployment')
-                : t('Configure the deployment settings'),
-            component: ConfigureStep,
+    // Wizard configuration - conditionally include package selection step
+    const wizardSteps: WizardStep[] = [];
+    
+    // Add package selection step if no package ID provided
+    if (needsPackageSelection) {
+        wizardSteps.push({
+            id: "package-selection",
+            title: t('Select Package'),
+            description: t('Choose the package to deploy'),
+            component: PackageSelectionStep,
             validate: (context: Record<string, any>) => {
-                // Check deployment location requirements
-                if (needsCapacitySelection) {
-                    // For new workspace deployment, check if capacity is selected and workspace name is provided
-                    if (!context.selectedCapacityId || context.selectedCapacityId.trim() === '') {
-                        return false;
-                    }
-                    if (!context.workspaceName || context.workspaceName.trim() === '') {
-                        return false;
-                    }
-                } else if (needsWorkspaceSelection) {
-                    // For existing workspace deployment, check if workspace is selected
-                    if (!context.selectedWorkspaceId || context.selectedWorkspaceId.trim() === '') {
-                        return false;
-                    }
-                }
-                
-                return true;
+                return !!(context.selectedPackageId && context.selectedPackageId.trim() !== '');
             }
-        },
-        {
-            id: "summary",
-            title: t('Review & Deploy'),
-            description: t('Review your configuration and start the deployment'),
-            component: SummaryStep
+        });
+    }
+    
+    // Add configuration step
+    wizardSteps.push({
+        id: "configure",
+        title: t('Configure Installation'),
+        description: needsCapacitySelection 
+            ? t('Select a capacity and configure the new workspace')
+            : needsWorkspaceSelection 
+            ? t('Select an existing workspace and configure the deployment')
+            : t('Configure the deployment settings'),
+        component: ConfigureStep,
+        validate: (context: Record<string, any>) => {
+            // Check deployment location requirements
+            if (needsCapacitySelection) {
+                // For new workspace deployment, check if capacity is selected and workspace name is provided
+                if (!context.selectedCapacityId || context.selectedCapacityId.trim() === '') {
+                    return false;
+                }
+                if (!context.workspaceName || context.workspaceName.trim() === '') {
+                    return false;
+                }
+            } else if (needsWorkspaceSelection) {
+                // For existing workspace deployment, check if workspace is selected
+                if (!context.selectedWorkspaceId || context.selectedWorkspaceId.trim() === '') {
+                    return false;
+                }
+            }
+            
+            return true;
         }
-    ];
+    });
+    
+    // Add summary step
+    wizardSteps.push({
+        id: "summary",
+        title: t('Review & Deploy'),
+        description: t('Review your configuration and start the deployment'),
+        component: SummaryStep
+    });
 
     // Create initial wizard context with all necessary data
     const initialWizardContext = {
         workloadClient,
-        packageId,
+        itemObjectId: props.itemObjectId,
+        packageId: needsPackageSelection ? '' : packageId,
+        selectedPackageId: needsPackageSelection ? '' : packageId,
+        packageData: needsPackageSelection ? null : packageData,
         deploymentId,
-        itemCount,
+        itemCount: needsPackageSelection ? 0 : (packageData?.items?.length || 0),
         needsCapacitySelection,
         needsWorkspaceSelection,
         needsFolderName,
         selectedCapacityId,
-        workspaceName,
+        workspaceName: needsPackageSelection ? '' : workspaceName,
         selectedWorkspaceId,
-        folderName
+        folderName: needsPackageSelection ? '' : folderName
     };
 
     // Handle wizard completion
     const handleComplete = (context: Record<string, any>) => {
+        // Use the package ID from context (either from props or selected in wizard)
+        const finalPackageId = context.selectedPackageId || packageId;
+        
+        // Debug: Log the context values to verify they are correct
+        console.log('DeployPackageWizard: Starting deployment with context:', {
+            selectedPackageId: finalPackageId,
+            selectedCapacityId: context.selectedCapacityId,
+            selectedWorkspaceId: context.selectedWorkspaceId,
+            workspaceName: context.workspaceName,
+            folderName: context.folderName,
+            needsCapacitySelection,
+            needsWorkspaceSelection,
+            needsFolderName
+        });
+
         // Close the dialog with a success result
         var result = { 
             state: 'deploy',
+            packageId: finalPackageId, // Include the selected package ID
             workspaceConfig: {
             id: needsWorkspaceSelection ? context.selectedWorkspaceId : undefined,
             // Set workspace name for new workspaces
@@ -115,6 +149,8 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
             }
             } as WorkspaceConfig,
         } as DeployPackageWizardResult;      
+        
+        console.log('DeployPackageWizard: Returning result:', result);
         callDialogClose(workloadClient, CloseMode.PopOne, result);
     };
 
@@ -128,7 +164,7 @@ export function DeployPackageWizard(props: DeployPackageWizardProps) {
         <WizardControl
             title={t('Configure the installation')}
             steps={wizardSteps}
-            initialStepId="configure"
+            initialStepId={needsPackageSelection ? "package-selection" : "configure"}
             onComplete={handleComplete}
             onCancel={handleCancel}
             initialContext={initialWizardContext}
@@ -146,12 +182,22 @@ export function DeployPackageWizardWrapper({ workloadClient }: PageProps) {
     const { itemObjectId } = useParams<{ itemObjectId: string }>();
     const location = useLocation();
     
+    // Helper function for generating unique IDs (same as in PackageInstallerItemEditor)
+    const generateUniqueId = () => {
+        return Math.random().toString(36).substr(2, 9);
+    };
+    
     // Parse URL parameters
     const urlParams = new URLSearchParams(location.search);
     const packageId = urlParams.get('packageId') || '';
-    const deploymentId = urlParams.get('deploymentId') || '';
+    let deploymentId = urlParams.get('deploymentId') || '';
     const deploymentLocationStr = urlParams.get('deploymentLocation') || 'NewWorkspace';
     const packageDataStr = urlParams.get('packageData');
+    
+    // Generate deployment ID if not provided
+    if (!deploymentId || deploymentId.trim() === '') {
+        deploymentId = generateUniqueId();
+    }
     
     // Convert string to enum
     const deploymentLocation = DeploymentLocation[deploymentLocationStr as keyof typeof DeploymentLocation] || DeploymentLocation.NewWorkspace;

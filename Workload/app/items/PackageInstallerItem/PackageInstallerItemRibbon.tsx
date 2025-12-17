@@ -9,10 +9,10 @@ import {
 } from '../../components/ItemEditor';
 import { ViewContext } from '../../components';
 import { 
-  Add24Regular,
   ArrowSync24Regular,
-  DocumentAdd24Regular,
-  BoxMultiple24Regular,
+  Box24Regular,
+  Rocket24Regular,
+  ArrowUpload24Regular,
 } from "@fluentui/react-icons";
 import "./PackageInstallerItem.scss";
 
@@ -25,7 +25,7 @@ export interface PackageInstallerItemRibbonProps extends PageProps {
   viewContext: ViewContext;
   saveItemCallback: () => Promise<void>;
   openSettingsCallback: () => Promise<void>;
-  addInstallationCallback: () => void;
+  deployPackageCallback: () => void;
   refreshDeploymentsCallback: () => Promise<void>;
   uploadPackageCallback: () => Promise<void>;
   createPackageCallback: () => Promise<void>;
@@ -61,7 +61,8 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
     createSettingsAction(
       props.openSettingsCallback,
       t("ItemEditor_Ribbon_Settings_Label"),
-      props.isDeploymentInProgress
+      props.isDeploymentInProgress,
+      false
     ),
     
     // Refresh deployments action
@@ -71,24 +72,24 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
       label: t("Refresh Deployment Status", "Refresh Deployment Status"),
       onClick: props.refreshDeploymentsCallback,
       testId: 'item-editor-refresh-deployments-btn',
-      disabled: props.isDeploymentInProgress
-    },
-    
-    // Create installation action
-    {
-      key: 'create-installation',
-      icon: Add24Regular,
-      label: t("Create Installation", "Create Installation"),
-      onClick: props.addInstallationCallback,
-      testId: 'item-editor-add-package-btn',
       disabled: props.isDeploymentInProgress,
       showDividerAfter: true
+    },
+    
+    // Deploy package action
+    {
+      key: 'deploy-package',
+      icon: Rocket24Regular,
+      label: t("Deploy Package", "Deploy Package"),
+      onClick: props.deployPackageCallback,
+      testId: 'item-editor-deploy-package-btn',
+      disabled: props.isDeploymentInProgress
     },
     
     // Create package action
     {
       key: 'create-package',
-      icon: BoxMultiple24Regular,
+      icon: Box24Regular,
       label: t("Create Package", "Create Package"),
       onClick: props.createPackageCallback,
       testId: 'item-editor-create-package-btn',
@@ -98,7 +99,7 @@ export function PackageInstallerItemRibbon(props: PackageInstallerItemRibbonProp
     // Upload package action
     {
       key: 'upload-package',
-      icon: DocumentAdd24Regular,
+      icon: ArrowUpload24Regular,
       label: t("Upload JSON Package", "Upload JSON Package"),
       onClick: props.uploadPackageCallback,
       testId: 'item-editor-upload-package-btn',

@@ -185,6 +185,8 @@ export enum DeploymentStatus {
 export interface Package {
   /** Unique identifier for the package */
   id: string;
+  /** Version of the package */
+  version?: string;
   /** Human-readable name for the package */
   displayName: string;
   /** Optional description of the package contents and purpose */

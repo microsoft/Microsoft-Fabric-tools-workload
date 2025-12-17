@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { Stack, IStackTokens } from "@fluentui/react";
-import { Button, Text } from "@fluentui/react-components";
+import { Text, Button } from "@fluentui/react-components";
 import { ItemEditorDefaultView } from "./ItemEditorDefaultView";
 import "./ItemEditor.scss"
 
@@ -16,8 +16,6 @@ export interface EmptyStateTask {
   description?: string;
   /** Click handler for the task */
   onClick: () => void;
-  /** Button appearance - default is 'primary' for first task, 'secondary' for others */
-  appearance?: "primary" | "secondary" | "outline" | "subtle" | "transparent";
   /** Custom icon (optional) - Fluent UI icon slot or JSX element */
   icon?: React.ReactElement | { children: React.ReactElement };
 }
@@ -117,7 +115,6 @@ export function ItemEditorEmptyView({
   // Stack tokens for consistent spacing using Fabric design tokens
   const containerTokens: IStackTokens = { childrenGap: 24 };
   const headerTokens: IStackTokens = { childrenGap: 8 };
-  const tasksTokens: IStackTokens = { childrenGap: 12 };
 
   // Build the empty state content
   const emptyStateContent = (
@@ -164,36 +161,65 @@ export function ItemEditorEmptyView({
           <Stack.Item>
             {customContent}
           </Stack.Item>
-        ) : tasks.length > 0 ? (
-          <Stack tokens={tasksTokens} horizontalAlign="center">
+        ) : tasks.length === 1 ? (
+          // Single task - use button pattern
+          <Stack.Item>
+            <Button
+              appearance="primary"
+              size="large"
+              icon={tasks[0].icon && (
+                React.isValidElement(tasks[0].icon) 
+                  ? tasks[0].icon 
+                  : (tasks[0].icon as { children: React.ReactElement })?.children
+              )}
+              onClick={tasks[0].onClick}
+            >
+              {tasks[0].label}
+            </Button>
+          </Stack.Item>
+        ) : tasks.length > 1 ? (
+          // Multiple tasks - use tile card layout
+          <div className="default-view-inner-container" role="list">
             {tasks.map((task, index) => (
-              <Stack.Item key={task.id}>
-                <Stack tokens={{ childrenGap: 4 }} horizontalAlign="center">
-                  <Button 
-                    appearance={task.appearance || (index === 0 ? "primary" : "secondary")}
-                    onClick={task.onClick}
-                    icon={task.icon as any}
-                    aria-label={task.description || task.label}
-                    style={{ minWidth: '140px' }}
-                  >
-                    {task.label}
-                  </Button>
-                  {task.description && (
-                    <Text 
-                      size={200} 
-                      style={{ 
-                        color: 'var(--colorNeutralForeground3, #616161)',
-                        textAlign: 'center',
-                        maxWidth: '300px'
-                      }}
-                    >
-                      {task.description}
-                    </Text>
+              <div 
+                key={task.id}
+                className="tile-card-body"
+                id={`${task.id}-tile-card`}
+                data-testid={`${task.id}-tile-card`}
+                aria-label={task.description || task.label}
+                tabIndex={0}
+                role="listitem"
+                onClick={task.onClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    task.onClick();
+                  }
+                }}
+              >
+                {/* Icon section with green highlight background */}
+                <div className="tile-card-children">
+                  {task.icon && (
+                    React.isValidElement(task.icon) 
+                      ? task.icon 
+                      : (task.icon as { children: React.ReactElement })?.children
                   )}
-                </Stack>
-              </Stack.Item>
+                </div>
+                
+                {/* Content section */}
+                <div className="tile-card-content">
+                  <div className="tile-card-title">
+                    {task.label}
+                  </div>
+                  {task.description && (
+                    <div className="tile-card-description">
+                      {task.description}
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
-          </Stack>
+          </div>
         ) : null}
       </Stack>
     </Stack>

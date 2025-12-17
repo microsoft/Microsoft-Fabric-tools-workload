@@ -2,7 +2,7 @@ import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
 import { History } from "history";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWizardWrapper } from "./items/PackageInstallerItem";
+import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWizardWrapper, UploadPackageWizardWrapper } from "./items/PackageInstallerItem";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
@@ -69,6 +69,11 @@ export function App({ history, workloadClient }: AppProps) {
                 <CreatePackageWizardWrapper
                     workloadClient={workloadClient} 
                     data-testid="PackageInstallerItem-packaging-wizard" />
+            </Route>
+            <Route path="/PackageInstallerItem-upload-wizard/:itemObjectId">
+                <UploadPackageWizardWrapper
+                    workloadClient={workloadClient} 
+                    data-testid="PackageInstallerItem-upload-wizard" />
             </Route>
 
             <Route path="/OneLakeExplorerItem-editor/:itemObjectId">
