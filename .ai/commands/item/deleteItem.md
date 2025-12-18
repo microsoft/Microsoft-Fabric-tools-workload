@@ -25,9 +25,10 @@ Delete the entire item directory and all its contents:
 
 ```
 Workload/app/items/[ItemName]Item/
-├── [ItemName]ItemModel.ts
+├── [ItemName]ItemEditorDefaultView.tsx
+├── [ItemName]ItemDefinition.ts
 ├── [ItemName]ItemEditor.tsx
-├── [ItemName]ItemEditorEmpty.tsx
+├── [ItemName]ItemEditorEmptyView.tsx
 └── [ItemName]ItemEditorRibbon.tsx
 ```
 

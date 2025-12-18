@@ -23,16 +23,6 @@ export interface WorkloadConfiguration {
   workloadName: string;
   /** The workload version */
   version: string;
-  /** The hosting type (FERemote or Remote) */
-  hostingType: string;
-  /** Frontend application ID */
-  frontendAppId: string;
-  /** Frontend URL */
-  frontendUrl: string;
-  /** Backend application ID (optional) */
-  backendAppId?: string;
-  /** Backend URL (optional) */
-  backendUrl?: string;
   /** Log level */
   logLevel: string;
   /** Array of configured workload items */
@@ -43,7 +33,7 @@ export interface WorkloadConfiguration {
  * Gets all items that are configured in the process.env variables
  * @returns Array of WorkloadItem objects representing all configured items
  */
-export function getAllConfiguredItems(): WorkloadItem[] {
+export function getConfiguredWorkloadItems(): WorkloadItem[] {
   const workloadName = process.env.WORKLOAD_NAME;
   const itemNames = process.env.ITEM_NAMES;
 
@@ -81,8 +71,8 @@ export function getAllConfiguredItems(): WorkloadItem[] {
  * @param itemName The name of the item to retrieve (e.g., "OneLakeExplorer")
  * @returns WorkloadItem if found, undefined otherwise
  */
-export function getConfiguredItem(itemName: string): WorkloadItem | undefined {
-  const items = getAllConfiguredItems();
+export function getConfiguredWorkloadItem(itemName: string): WorkloadItem | undefined {
+  const items = getConfiguredWorkloadItems();
   return items.find(item => item.name === itemName);
 }
 
@@ -93,23 +83,13 @@ export function getConfiguredItem(itemName: string): WorkloadItem | undefined {
 export function getWorkloadConfiguration(): WorkloadConfiguration {
   const workloadName = process.env.WORKLOAD_NAME || '';
   const version = process.env.WORKLOAD_VERSION || '';
-  const hostingType = process.env.WORKLOAD_HOSTING_TYPE || '';
-  const frontendAppId = process.env.FRONTEND_APPID || '';
-  const frontendUrl = process.env.FRONTEND_URL || '';
-  const backendAppId = process.env.BACKEND_APPID || undefined;
-  const backendUrl = process.env.BACKEND_URL || undefined;
   const logLevel = process.env.LOG_LEVEL || '';
 
-  const items = getAllConfiguredItems();
+  const items = getConfiguredWorkloadItems();
 
   return {
     workloadName,
     version,
-    hostingType,
-    frontendAppId,
-    frontendUrl,
-    backendAppId,
-    backendUrl,
     logLevel,
     items
   };
@@ -119,40 +99,6 @@ export function getWorkloadConfiguration(): WorkloadConfiguration {
  * Gets an array of full item type identifiers for all configured items
  * @returns Array of strings like ["Org.FabricTools.OneLakeExplorer", "Org.FabricTools.PackageInstaller"]
  */
-export function getAllConfiguredItemTypes(): string[] {
-  return getAllConfiguredItems().map(item => item.fullType);
-}
-
-/**
- * Gets an array of item names only
- * @returns Array of strings like ["OneLakeExplorer", "PackageInstaller"]
- */
-export function getAllConfiguredItemNames(): string[] {
-  return getAllConfiguredItems().map(item => item.name);
-}
-
-/**
- * Checks if a specific item is configured in the workload
- * @param itemName The name of the item to check
- * @returns True if the item is configured, false otherwise
- */
-export function isItemConfigured(itemName: string): boolean {
-  return getAllConfiguredItems().some(item => item.name === itemName);
-}
-
-/**
- * Gets the workload name from environment variables
- * @returns The workload name (e.g., "Org.FabricTools")
- */
-export function getWorkloadName(): string {
-  return process.env.WORKLOAD_NAME || '';
-}
-
-/**
- * Gets the default item type (first item in the ITEM_NAMES list)
- * @returns The default item's WorkloadItem object, or undefined if no items configured
- */
-export function getDefaultItem(): WorkloadItem | undefined {
-  const items = getAllConfiguredItems();
-  return items.length > 0 ? items[0] : undefined;
+export function getConfiguredWorkloadItemTypes(): string[] {
+  return getConfiguredWorkloadItems().map(item => item.fullType);
 }

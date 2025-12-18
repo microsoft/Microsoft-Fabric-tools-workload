@@ -478,31 +478,11 @@ export interface ErrorDetail {
   target?: string;
 }
 
-// Long Running Operations types
-export interface LongRunningOperation {
-  id: string;
-  type: string;
-  status: OperationStatus;
-  createdDateTime: string;
-  lastUpdatedDateTime: string;
-  percentComplete?: number;
-  error?: OperationError;
-  result?: any;
+export interface AsyncOperationIndicator {
+  operationId: string;
+  retryAfter?: number;
 }
 
-export type OperationStatus = 'NotStarted' | 'Running' | 'Succeeded' | 'Failed' | 'Cancelled';
-
-export interface OperationError {
-  code: string;
-  message: string;
-  details?: OperationErrorDetail[];
-}
-
-export interface OperationErrorDetail {
-  code: string;
-  message: string;
-  target?: string;
-}
 
 // Enum for batch job states
 export enum BatchState {
@@ -960,5 +940,133 @@ export interface DataAccessRoles {
   value: DataAccessRole[];
   continuationToken?: string;
   continuationUri?: string;
+}
+
+// Gateway Types
+export type GatewayType = 'OnPremises' | 'OnPremisesPersonal' | 'VirtualNetwork';
+export type LoadBalancingSetting = 'Failover' | 'DistributeEvenly';
+export type GatewayRole = 'Admin' | 'ConnectionCreatorWithResharing' | 'ConnectionCreator';
+
+export interface PublicKey {
+  exponent: string;
+  modulus: string;
+}
+
+export interface VirtualNetworkAzureResource {
+  subscriptionId: string;
+  resourceGroupName: string;
+  virtualNetworkName: string;
+  subnetName: string;
+}
+
+// Base Gateway interface
+export interface BaseGateway {
+  id: string;
+  type: GatewayType;
+}
+
+export interface OnPremisesGateway extends BaseGateway {
+  type: 'OnPremises';
+  displayName: string;
+  publicKey: PublicKey;
+  version: string;
+  numberOfMemberGateways: number;
+  loadBalancingSetting: LoadBalancingSetting;
+  allowCloudConnectionRefresh: boolean;
+  allowCustomConnectors: boolean;
+}
+
+export interface OnPremisesGatewayPersonal extends BaseGateway {
+  type: 'OnPremisesPersonal';
+  publicKey: PublicKey;
+  version: string;
+}
+
+export interface VirtualNetworkGateway extends BaseGateway {
+  type: 'VirtualNetwork';
+  displayName: string;
+  capacityId: string;
+  virtualNetworkAzureResource: VirtualNetworkAzureResource;
+  inactivityMinutesBeforeSleep: number;
+  numberOfMemberGateways: number;
+}
+
+// Union type for all gateway types
+export type Gateway = OnPremisesGateway | OnPremisesGatewayPersonal | VirtualNetworkGateway;
+
+// Gateway responses
+export interface ListGatewaysResponse {
+  value: Gateway[];
+  continuationToken?: string;
+  continuationUri?: string;
+}
+
+// Gateway member types
+export interface OnPremisesGatewayMember {
+  id: string;
+  displayName: string;
+  publicKey: PublicKey;
+  version: string;
+  enabled: boolean;
+}
+
+export interface ListGatewayMembersResponse {
+  value: OnPremisesGatewayMember[];
+  continuationToken?: string;
+  continuationUri?: string;
+}
+
+// Gateway role assignment types
+export interface GatewayRoleAssignment {
+  id: string;
+  principal: Principal;
+  role: GatewayRole;
+}
+
+export interface GatewayRoleAssignments {
+  value: GatewayRoleAssignment[];
+  continuationToken?: string;
+  continuationUri?: string;
+}
+
+// Gateway creation requests
+export interface CreateVirtualNetworkGatewayRequest {
+  type: 'VirtualNetwork';
+  displayName: string;
+  capacityId: string;
+  virtualNetworkAzureResource: VirtualNetworkAzureResource;
+  inactivityMinutesBeforeSleep: number;
+  numberOfMemberGateways: number;
+}
+
+// Gateway update requests
+export interface UpdateOnPremisesGatewayRequest {
+  displayName?: string;
+  loadBalancingSetting?: LoadBalancingSetting;
+  allowCloudConnectionRefresh?: boolean;
+  allowCustomConnectors?: boolean;
+}
+
+export interface UpdateVirtualNetworkGatewayRequest {
+  displayName?: string;
+  inactivityMinutesBeforeSleep?: number;
+  numberOfMemberGateways?: number;
+}
+
+export interface UpdateGatewayMemberRequest {
+  enabled: boolean;
+}
+
+// Gateway role assignment requests
+export interface AddGatewayRoleAssignmentRequest {
+  principal: {
+    id: string;
+    type: PrincipalType;
+  };
+  role: GatewayRole;
+}
+
+export interface UpdateGatewayRoleAssignmentRequest {
+  role: GatewayRole;
 }
 

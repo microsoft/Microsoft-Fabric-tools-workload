@@ -59,8 +59,8 @@ export function PackageDisplayNameLabel({
       } 
     },
     // Optional icon
-    showIcon && packageIcon && React.createElement("img", {
-      src: packageIcon,
+    showIcon && React.createElement("img", {
+      src: packageIcon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png",
       alt: packageName || "Package icon",
       style: { 
         width: "16px", 
@@ -68,30 +68,11 @@ export function PackageDisplayNameLabel({
         objectFit: "contain" 
       },
       onError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        console.warn(`Failed to load package icon: ${packageIcon}`);
+        console.warn(`Failed to load package icon: ${packageIcon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"}`);
         // Hide the image on error
         (e.target as HTMLImageElement).style.display = 'none';
       }
     }),
-    // Fallback icon if showIcon is true but no icon URL
-    showIcon && !packageIcon && React.createElement(
-      "div",
-      {
-        style: {
-          width: "16px",
-          height: "16px",
-          backgroundColor: "#f0f0f0",
-          borderRadius: "2px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "10px",
-          fontWeight: "bold",
-          color: "#666"
-        }
-      },
-      packageName?.charAt(0)?.toUpperCase() || "📦"
-    ),
     // Package name
     React.createElement(Body1, {
       title: `Package ID: ${packageId}`
@@ -157,8 +138,8 @@ export function PackageDisplayNameCell({
       } 
     },
     // Optional icon
-    showIcon && packageIcon && React.createElement("img", {
-      src: packageIcon,
+    showIcon && React.createElement("img", {
+      src: packageIcon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png",
       alt: packageName || "Package icon",
       style: { 
         width: "14px", 
@@ -166,30 +147,11 @@ export function PackageDisplayNameCell({
         objectFit: "contain" 
       },
       onError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        console.warn(`Failed to load package icon: ${packageIcon}`);
+        console.warn(`Failed to load package icon: ${packageIcon || "/assets/items/PackageInstallerItem/PackageDefault-icon.png"}`);
         // Hide the image on error
         (e.target as HTMLImageElement).style.display = 'none';
       }
     }),
-    // Fallback icon if showIcon is true but no icon URL
-    showIcon && !packageIcon && React.createElement(
-      "div",
-      {
-        style: {
-          width: "14px",
-          height: "14px",
-          backgroundColor: "#f0f0f0",
-          borderRadius: "2px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "8px",
-          fontWeight: "bold",
-          color: "#666"
-        }
-      },
-      packageName?.charAt(0)?.toUpperCase() || "📦"
-    ),
     // Package name
     React.createElement(Text, {
       title: `Package ID: ${packageId}`

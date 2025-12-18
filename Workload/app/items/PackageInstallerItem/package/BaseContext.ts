@@ -1,6 +1,9 @@
 import { ContextLogRecord } from "./ContextLogRecord";
 
 
+/**
+ * Contextual information and state management for package deployment.
+ */
 export class BaseContext {
 
     /** Map of variables available for substitution during deployment */

@@ -1,4 +1,7 @@
 import { Package, DeploymentType, DeploymentLocation, ItemPartInterceptorType, ItemPartInterceptorDefinition, StringReplacementInterceptorDefinitionConfig, ReferenceInterceptorDefinitionConfig, DeploymentConfiguration } from '../PackageInstallerItemModel';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import packageSchema from './package.schema.json';
 
 export type ConfiguredPackages = {
   [key: string]: Package;
@@ -156,16 +159,45 @@ export function convertConfigToPackage(pack: any): Package {
   };
 }
 
-// Package Registry Class for dynamic package management
+/**
+ * Package Registry Class for dynamic package management
+ */
 export class PackageRegistry {
   private packages: ConfiguredPackages = {};
   private initialized = false;
 
-  // Load packages from asset config files
+  /**
+   * Validates a package JSON object against the schema
+   * @param packageJson The package JSON object to validate
+   * @returns True if valid, throws error if invalid
+   */
+  static validatePackageJson(packageJson: any): boolean {
+    const ajv = new Ajv();
+    addFormats(ajv);
+    const validate = ajv.compile(packageSchema);
+    const valid = validate(packageJson);
+
+    if (!valid) {
+      const errors = validate.errors?.map(err => `${err.instancePath} ${err.message}`).join(', ');
+      throw new Error(`Schema validation failed: ${errors}`);
+    }
+    
+    return true;
+  }
+
+  /**
+   * Loads package configurations from asset files.
+   */
   async loadFromAssets(): Promise<void> {
-    if (this.initialized) return;
+    console.log('PackageRegistry.loadFromAssets() called, initialized:', this.initialized);
+    
+    if (this.initialized) {
+      console.log('PackageRegistry already initialized, skipping asset loading');
+      return;
+    }
 
     try {
+      console.log('Loading packages from assets...');
       // Import config files from assets - adjust paths as needed
       const configModules: (() => Promise<any>)[] = [
         // Add your config file imports here
@@ -197,6 +229,7 @@ export class PackageRegistry {
           try {
             const packageObj = convertConfigToPackage(config);
             this.packages[packageObj.id] = packageObj;
+            console.log('Successfully loaded package:', packageObj.id);
           } catch (error) {
             console.error('Failed to convert package config:', error);
           }
@@ -210,8 +243,11 @@ export class PackageRegistry {
     }
   }
 
-  // Add a package dynamically
-  addPackage(packageConfig: Package | any): void {
+  /**
+   * Adds a package dynamically.
+   * @param packageConfig - The package configuration to add.
+   */
+  addPackage(packageConfig: Package): void {
     try {
       const packageObj = typeof packageConfig.id === 'string' 
         ? packageConfig as Package 
@@ -224,7 +260,11 @@ export class PackageRegistry {
       throw error;
     }
   }
-  // Remove a package
+
+  /**
+   * Removes a package dynamically.
+   * @param id - The ID of the package to remove.
+   */
   removePackage(id: string): boolean {
     if (this.packages[id]) {
       delete this.packages[id];
@@ -234,42 +274,62 @@ export class PackageRegistry {
     return false;
   }
 
-  // Get all packages
+  /**
+   * Gets all packages.
+   */
   getAllPackages(): ConfiguredPackages {
     return { ...this.packages };
   }
 
-  // Get packages as array
+  /**
+   * Gets all packages as an array.
+   */
   getPackagesArray(): Package[] {
     return Object.values(this.packages);
   }
 
-  // Get specific package
+  /**
+   * Gets a specific package.
+   * @param id - The ID of the package to retrieve.
+   * @returns The package if found, or undefined.
+   */
   getPackage(id: string): Package | undefined {
     return this.packages[id];
   }
 
-  // Check if package exists
+  /**
+   * Checks if a package exists.
+   * @param id - The ID of the package to check.
+   * @returns True if the package exists, false otherwise.
+   */
   hasPackage(id: string): boolean {
     return id in this.packages;
   }
 
-  // Clear all packages
+  /**
+   * Clears all packages.
+   */
   clear(): void {
     this.packages = {};
     this.initialized = false;
   }
 }
 
-// Create global registry instance
+/**
+ * Global package registry instance.
+ */
 export const packageRegistry = new PackageRegistry();
 
-// Initialize packages from assets (call this during app startup)
+/**
+ * Initialize packages from assets (call this during app startup)
+ */
 export async function initializePackages(): Promise<void> {
   await packageRegistry.loadFromAssets();
 }
 
-// Utility function to load packages from a specific directory
+/**
+ * Utility function to load packages from a specific directory
+ */
 export async function loadPackagesFromDirectory(packageConfigs: any[]): Promise<void> {
   packageConfigs.forEach(config => {
     try {

@@ -41,7 +41,9 @@ router.get('/manifests_new/metadata', (req, res) => {
     url: "http://127.0.0.1:60006",
     devAADFEAppConfig: {
       appId: process.env.DEV_AAD_CONFIG_FE_APPID,
-    }
+    },
+    //If you enable Sandbox Relaxation, make sure to also enable it in the manifest package and vica versa.
+    devSandboxRelaxation: false
   };
 
   res.end(JSON.stringify({ extension: devParameters }));

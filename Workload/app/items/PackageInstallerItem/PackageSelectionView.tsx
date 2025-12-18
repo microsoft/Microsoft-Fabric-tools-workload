@@ -3,46 +3,34 @@ import { Card, CardHeader, CardPreview, Text, Body1, Button } from "@fluentui/re
 import { Stack } from "@fluentui/react";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { Package } from "./PackageInstallerItemModel";
+import "./PackageInstallerItem.scss";
 
 export interface PackageInstallerSelectionViewProps {
   context: PackageInstallerContext,
   onPackageSelected: (packageId: string) => void;
+  refreshKey?: number; // Optional key to force re-renders when packages change
 }
 export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> = (
   { 
     context,
-    onPackageSelected: onPackageSelected }) => {
+    onPackageSelected: onPackageSelected,
+    refreshKey }) => {
 
   return (
     <Stack>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
-        gap: "20px", 
-        padding: "20px",
-        justifyContent: "center",
-        maxWidth: "1200px",
-        margin: "0 auto"
-      }}>
+      <div className="package-selection-grid">
         {context.packageRegistry.getPackagesArray().map((pack: Package) => (
           <Card
             key={pack.id}
-            style={{ cursor: "pointer", height: "100%", maxWidth: "300px" }}
+            className="package-selection-card"
             onClick={() => onPackageSelected(pack.id)}
           >
             <CardPreview>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "center", 
-                alignItems: "center", 
-                height: "100px",
-                width: "100%",
-                padding: "10px"
-              }}>
+              <div className="package-icon-container">
                 <img
-                  src={pack.icon}
+                  src={pack.icon ? pack.icon : "/assets/items/PackageInstallerItem/PackageDefault-icon.png"}
                   alt={pack.displayName}
-                  style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "4px" }}
+                  className="package-icon"
                 />
               </div>
             </CardPreview>
@@ -56,7 +44,7 @@ export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> 
                 <Body1>{pack.description}</Body1>
               }
             />
-            <div style={{ padding: "0 16px 16px", marginTop: "auto" }}>
+            <div className="package-select-button-container">
               <Button appearance="primary" onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onPackageSelected(pack.id);

@@ -12,8 +12,34 @@ export const TABLE_FOLDER_NAME = "Tables"
 
 /**
  * API wrapper for OneLake operations
- * Provides methods for reading and writing files to OneLake storage
  * 
+ * Provides comprehensive methods for reading and writing files to OneLake storage using the Microsoft Fabric platform.
+ * Supports both text and binary file operations with proper base64 encoding/decoding for binary content.
+ * 
+ * Key features:
+ * - File existence checking
+ * - Text and binary file read/write operations  
+ * - Base64 encoding for binary content
+ * - Folder creation and file deletion
+ * - Path metadata retrieval with shortcut support
+ * - Item-specific wrapper creation for scoped operations
+ * 
+ * @example
+ * ```typescript
+ * const oneLakeClient = new OneLakeStorageClient(workloadClient);
+ * 
+ * // Check if file exists
+ * const exists = await oneLakeClient.checkIfFileExists('workspace/item/Files/data.json');
+ * 
+ * // Read text file
+ * const content = await oneLakeClient.readFileAsText('workspace/item/Files/data.json');
+ * 
+ * // Write binary file as base64
+ * await oneLakeClient.writeFileAsBase64('workspace/item/Files/image.png', base64ImageData);
+ * 
+ * // Create item-scoped wrapper
+ * const itemWrapper = oneLakeClient.createItemWrapper(itemReference);
+ * ```
  */
 export class OneLakeStorageClient extends FabricPlatformClient {
 
@@ -98,9 +124,18 @@ export class OneLakeStorageClient extends FabricPlatformClient {
         headers: { Authorization: `Bearer ${accessToken.token}` }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const content = await response.text();
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Convert binary data to base64
+      let binaryString = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        binaryString += String.fromCharCode(uint8Array[i]);
+      }
+      const base64Content = btoa(binaryString);
+      
       console.log(`readFileAsBase64 succeeded for filePath: ${filePath}`);
-      return Buffer.from(content, "base64").toString("utf8");
+      return base64Content;
     } catch (ex: any) {
       console.error(`readFileAsBase64 failed for filePath: ${filePath}. Error: ${ex.message}`);
       return "";
