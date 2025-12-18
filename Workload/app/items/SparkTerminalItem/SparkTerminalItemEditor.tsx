@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageProps, ContextProps } from "../../App";
@@ -7,7 +7,7 @@ import { callNotificationOpen } from "../../controller/NotificationController";
 import { callOpenSettings } from "../../controller/SettingsController";
 import { callDatahubOpen } from "../../controller/DataHubController";
 import { NotificationType } from "@ms-fabric/workload-client";
-import { ItemEditor } from "../../components/ItemEditor";
+import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 
 import { SparkTerminalItemDefinition, DEFAULT_SPARK_TERMINAL_CONFIG } from "./SparkTerminalItemModel";
 import { SparkTerminalItemEmptyView } from "./SparkTerminalItemEmptyView";
@@ -15,7 +15,7 @@ import { SparkTerminalItemRibbon } from "./SparkTerminalItemRibbon";
 import { SparkTerminalItemDefaultView } from "./SparkTerminalItemDefaultView";
 import { Item } from "../../clients/FabricPlatformTypes";
 
-import "../../styles.scss";
+import "./SparkTerminalItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
   EMPTY: 'empty',
@@ -34,10 +34,7 @@ export function SparkTerminalItemEditor(props: PageProps) {
   const [item, setItem] = useState<ItemWithDefinition<SparkTerminalItemDefinition>>();
   const [selectedLakehouse, setSelectedLakehouse] = useState<Item | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
-  const [currentViewSetter, setCurrentViewSetter] = useState<((view: string) => void) | null>(null);
-
-  // Get storage key for this specific item
-  const getStorageKey = (itemId: string) => `spark-terminal-editor-state-${itemId}`;
+  const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -78,17 +75,13 @@ export function SparkTerminalItemEditor(props: PageProps) {
     setIsLoading(false);
   }
 
-  // Initialize view state from session storage
+  // Set the correct view after loading completes
   useEffect(() => {
-    if (!isLoading && item && currentViewSetter) {
-      const stored = sessionStorage.getItem(getStorageKey(item.id));
-      if (stored === EDITOR_VIEW_TYPES.DEFAULT || stored === EDITOR_VIEW_TYPES.EMPTY) {
-        currentViewSetter(stored);
-      } else {
-        currentViewSetter(EDITOR_VIEW_TYPES.EMPTY);
-      }
+    if (!isLoading && item && viewSetter) {
+      const correctView = item.definition?.selectedLakehouse ? EDITOR_VIEW_TYPES.DEFAULT : EDITOR_VIEW_TYPES.EMPTY;
+      viewSetter(correctView);
     }
-  }, [isLoading, item, currentViewSetter]);
+  }, [isLoading, item, viewSetter]);
 
   // Load data when context changes
   useEffect(() => {
@@ -118,27 +111,21 @@ export function SparkTerminalItemEditor(props: PageProps) {
     }
   };
 
-  const handleStartTerminal = () => {
+  const handleStartSession = () => {
     setSessionActive(true);
-    if (currentViewSetter) {
-      currentViewSetter(EDITOR_VIEW_TYPES.DEFAULT);
-      if (item) {
-        sessionStorage.setItem(getStorageKey(item.id), EDITOR_VIEW_TYPES.DEFAULT);
-      }
+    if (viewSetter) {
+      viewSetter(EDITOR_VIEW_TYPES.DEFAULT);
     }
   };
 
   const handleStopSession = () => {
     setSessionActive(false);
-    if (currentViewSetter) {
-      currentViewSetter(EDITOR_VIEW_TYPES.EMPTY);
-      if (item) {
-        sessionStorage.setItem(getStorageKey(item.id), EDITOR_VIEW_TYPES.EMPTY);
-      }
+    if (viewSetter) {
+      viewSetter(EDITOR_VIEW_TYPES.EMPTY);
     }
   };
 
-  const handleSelectLakehouse = async () => {
+  const handleSelectLakehouse = async (): Promise<boolean> => {
     try {
       const result = await callDatahubOpen(
         workloadClient,
@@ -171,10 +158,12 @@ export function SparkTerminalItemEditor(props: PageProps) {
         callNotificationOpen(
           workloadClient,
           t("SparkTerminalItem_LakehouseSelected_Title", "Lakehouse Selected"),
-          t("SparkTerminalItem_LakehouseSelected_Message", `Selected: ${result.displayName}`),
+          t("SparkTerminalItem_LakehouseSelected_Message", { lakehouseName: result.displayName, defaultValue: `Selected: ${result.displayName}` }),
           NotificationType.Success
         );
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Failed to select lakehouse:', error);
       callNotificationOpen(
@@ -183,6 +172,7 @@ export function SparkTerminalItemEditor(props: PageProps) {
         t("SparkTerminalItem_LakehouseError_Message", "Could not select lakehouse."),
         NotificationType.Error
       );
+      return false;
     }
   };
 
@@ -210,25 +200,34 @@ export function SparkTerminalItemEditor(props: PageProps) {
     // Terminal component will handle clearing
   };
 
+  const EmptyViewWrapper = () => {
+    const { setCurrentView } = useViewNavigation();
+    return (
+      <SparkTerminalItemEmptyView
+        onSelectLakehouse={async () => {
+          const success = await handleSelectLakehouse();
+          if (success) {
+            setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
+          }
+        }}
+      />
+    );
+  };
+
   const views = [
     {
-      id: EDITOR_VIEW_TYPES.EMPTY,
-      component: (
-        <SparkTerminalItemEmptyView
-          workloadClient={workloadClient}
-          item={item}
-          onStartTerminal={handleStartTerminal}
-        />
-      )
+      name: EDITOR_VIEW_TYPES.EMPTY,
+      component: <EmptyViewWrapper />
     },
     {
-      id: EDITOR_VIEW_TYPES.DEFAULT,
+      name: EDITOR_VIEW_TYPES.DEFAULT,
       component: (
         <SparkTerminalItemDefaultView
           workloadClient={workloadClient}
           item={item}
           selectedLakehouse={selectedLakehouse}
           isUnsaved={isUnsaved}
+          sessionActive={sessionActive}
         />
       )
     }
@@ -236,34 +235,27 @@ export function SparkTerminalItemEditor(props: PageProps) {
 
   return (
     <ItemEditor
-      item={item}
       isLoading={isLoading}
-      views={views}
-      ribbon={
+      ribbon={(viewContext) => (
         <SparkTerminalItemRibbon
-          workloadClient={workloadClient}
-          item={item}
-          viewContext={{
-            currentView: EDITOR_VIEW_TYPES.DEFAULT, // Ribbon is always visible, context managed by ItemEditor
-            setView: (view) => { if (currentViewSetter) currentViewSetter(view); }
-          }}
+          {...props}
+          viewContext={viewContext}
           openSettingsCallback={handleOpenSettings}
           saveItemCallback={saveItem}
           isSaveButtonEnabled={isUnsaved}
-          onStartTerminal={handleStartTerminal}
+          onStartTerminal={handleStartSession}
           onStopSession={handleStopSession}
-          onSelectLakehouse={handleSelectLakehouse}
           onShowHistory={handleShowHistory}
           onClearTerminal={handleClearTerminal}
           sessionActive={sessionActive}
         />
-      }
-      onViewChange={(view) => {
-        if (item) {
-          sessionStorage.setItem(getStorageKey(item.id), view);
+      )}
+      views={views}
+      viewSetter={(setCurrentView) => {
+        if (!viewSetter) {
+          setViewSetter(() => setCurrentView);
         }
       }}
-      setViewSetter={setCurrentViewSetter}
     />
   );
 }

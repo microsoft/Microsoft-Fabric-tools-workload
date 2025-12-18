@@ -7,10 +7,10 @@
       "path": "/SparkTerminalItem-editor"
     },
     "icon": {
-      "name": "assets/images/SparkTerminalItem-icon.png"
+      "name": "assets/images/SparkTerminalItem_Icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/SparkTerminalItem-icon.png"
+      "name": "assets/images/SparkTerminalItem_Icon.png"
     },
     "contextMenuItems": [
     ],

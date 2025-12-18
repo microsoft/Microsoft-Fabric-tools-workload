@@ -74,10 +74,10 @@
             "title": "SparkTerminalItem_DisplayName",
             "description": "SparkTerminalItem_Description",
             "icon": {
-              "name": "assets/images/SparkTerminalItem-icon.png"
+              "name": "assets/images/SparkTerminalItem_Icon.png"
             },
             "icon_small": {
-              "name": "assets/images/SparkTerminalItem-icon.png"
+              "name": "assets/images/SparkTerminalItem_Icon.png"
             },
             "availableIn": [
               "home",
@@ -109,6 +109,10 @@
         {
           "mediaType": 0,
           "source": "assets/images/OneLakeExplorerItem_Slideware.png"
+        },
+        {
+          "mediaType": 0,
+          "source": "assets/images/SparkTerminalItem_Slideware.png"
         }
       ],
         "supportLink": {
