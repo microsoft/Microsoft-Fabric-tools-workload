@@ -7,10 +7,10 @@
       "path": "/PackageInstallerItem-editor"
     },
     "icon": {
-      "name": "assets/images/PackageInstallerItem-icon.png"
+      "name": "assets/images/PackageInstallerItem_Icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/PackageInstallerItem-icon.png"
+      "name": "assets/images/PackageInstallerItem_Icon.png"
     },
     "contextMenuItems": [
     ],
