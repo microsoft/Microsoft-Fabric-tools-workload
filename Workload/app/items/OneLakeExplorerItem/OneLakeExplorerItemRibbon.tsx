@@ -59,7 +59,6 @@ export function OneLakeExplorerItemRibbon(props: OneLakeExplorerItemRibbonProps)
       label: t("Open Item", "Open Item"),
       onClick: props.onOpenItem,
       testId: 'ribbon-open-item-btn',
-      showDividerAfter: true
     },
 
     // Custom action: Create New File

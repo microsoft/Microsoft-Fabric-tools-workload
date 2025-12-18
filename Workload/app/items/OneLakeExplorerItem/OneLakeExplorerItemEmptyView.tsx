@@ -21,7 +21,7 @@ export function OneLakeExplorerItemEmptyView({ onCreateNewFile, onUploadFile, on
     {
       id: 'create-file',
       label: 'Create New File',
-      description: 'Start coding with a new file in OneLake with syntax highlighting and IntelliSense',
+      description: 'Start editing a new file in OneLake with syntax highlighting and IntelliSense',
       onClick: onCreateNewFile,
       icon: <DocumentAdd24Regular />
     },

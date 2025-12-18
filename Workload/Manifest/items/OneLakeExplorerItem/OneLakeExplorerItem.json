@@ -7,10 +7,10 @@
       "path": "/OneLakeExplorerItem-editor"
     },
     "icon": {
-      "name": "assets/images/OneLakeExplorerItem-icon.png"
+      "name": "assets/images/OneLakeExplorerItem_Icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/OneLakeExplorerItem-icon.png"
+      "name": "assets/images/OneLakeExplorerItem_Icon.png"
     },
     "contextMenuItems": [
     ],
