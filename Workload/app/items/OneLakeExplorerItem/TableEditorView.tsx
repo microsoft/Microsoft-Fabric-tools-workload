@@ -13,10 +13,12 @@ import {
   CardHeader,
   Body1,
 } from "@fluentui/react-components";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { DatabaseRegular, DocumentRegular, FolderRegular } from "@fluentui/react-icons";
 import { OneLakeExplorerItemDefinition } from "./OneLakeExplorerItemModel";
 import { OneLakeExplorerItemEmptyView } from "./OneLakeExplorerItemEmptyView";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import "./OneLakeExplorerItem.scss";
 
 interface TableEditorViewProps {
@@ -24,6 +26,7 @@ interface TableEditorViewProps {
   tableName: string | undefined;
   oneLakeLink: string | undefined;
   currentTheme: string;
+  workloadClient: WorkloadClientAPI;
   onCreateNewFile: () => Promise<void>;
   onUploadFile: () => Promise<void>;
   onOpenItem: () => Promise<void>;
@@ -59,6 +62,7 @@ export function TableEditorView({
   tableName,
   oneLakeLink,
   currentTheme,
+  workloadClient,
   onCreateNewFile,
   onUploadFile,
   onOpenItem
@@ -78,69 +82,79 @@ export function TableEditorView({
   }, [tableName, oneLakeLink]);
 
   const loadTableMetadata = async () => {
-    if (!tableName || !oneLakeLink) return;
+    if (!tableName || !oneLakeLink || !item.workspaceId || !item.id) return;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      // TODO: Implement actual delta table metadata loading from OneLake
-      // For now, simulate loading with mock delta files
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Initialize OneLake storage client
+      const oneLakeClient = new OneLakeStorageClient(workloadClient);
       
-      // Mock delta files structure
-      const mockDeltaFiles: DeltaFile[] = [
-        {
-          path: "_delta_log/00000000000000000000.json",
-          fileName: "00000000000000000000.json",
-          fileType: 'log',
-          size: 2048,
-          lastModified: new Date(Date.now() - 86400000),
-          partitionInfo: undefined
-        },
-        {
-          path: "_delta_log/00000000000000000001.json", 
-          fileName: "00000000000000000001.json",
-          fileType: 'log',
-          size: 1987,
-          lastModified: new Date(Date.now() - 43200000),
-          partitionInfo: undefined
-        },
-        {
-          path: "_delta_log/00000000000000000002.checkpoint.parquet",
-          fileName: "00000000000000000002.checkpoint.parquet", 
-          fileType: 'checkpoint',
-          size: 15360,
-          lastModified: new Date(Date.now() - 21600000),
-          partitionInfo: undefined
-        },
-        ...Array.from({ length: 25 }, (_, i) => ({
-          path: `part-${i.toString().padStart(5, '0')}-${Math.random().toString(36).substr(2, 8)}.snappy.parquet`,
-          fileName: `part-${i.toString().padStart(5, '0')}-${Math.random().toString(36).substr(2, 8)}.snappy.parquet`,
-          fileType: 'parquet' as const,
-          size: Math.floor(Math.random() * 50000000) + 1000000, // 1MB to 50MB
-          lastModified: new Date(Date.now() - Math.random() * 7 * 86400000), // Within last week
-          partitionInfo: Math.random() > 0.7 ? `year=2024/month=${Math.floor(Math.random() * 12) + 1}` : undefined
-        })),
-        {
-          path: "_delta_log/_last_checkpoint",
-          fileName: "_last_checkpoint",
-          fileType: 'checkpoint',
-          size: 256,
-          lastModified: new Date(Date.now() - 21600000),
-          partitionInfo: undefined
-        }
-      ];
+      // Parse the oneLakeLink to extract workspace ID and directory path
+      // Format: "workspaceId/itemId/Tables/itemId/Tables/tableName/"
+      const linkParts = oneLakeLink.split('/');
+      const workspaceIdFromLink = linkParts[0];
+      const directoryPath = linkParts.slice(1).join('/'); // Everything after workspace ID
       
-      const totalSizeBytes = mockDeltaFiles.reduce((sum, file) => sum + file.size, 0);
+      // Get all files in the specific table directory recursively
+      const oneLakeContainer = await oneLakeClient.getPathMetadata(workspaceIdFromLink, directoryPath, true);
+      
+      // Process the OneLakeStoragePathMetadata objects to create DeltaFile objects
+      const deltaFiles: DeltaFile[] = oneLakeContainer.paths
+        .filter(path => !path.isDirectory && path.name) // Only include files, not directories
+        .map(pathMetadata => {
+          // Extract just the filename (last segment after /)
+          const fileName = pathMetadata.name.split('/').pop() || pathMetadata.name;
+          const fullPath = `${directoryPath}${fileName}`;
+          
+          // Determine file type based on file extension and path
+          let fileType: 'parquet' | 'json' | 'checkpoint' | 'log' | 'other' = 'other';
+          if (fileName.endsWith('.parquet')) {
+            fileType = fileName.includes('checkpoint') ? 'checkpoint' : 'parquet';
+          } else if (fileName.endsWith('.json')) {
+            fileType = fileName.includes('_delta_log') || fullPath.includes('_delta_log') ? 'log' : 'json';
+          } else if (fileName === '_last_checkpoint') {
+            fileType = 'checkpoint';
+          }
+          
+          // Extract partition information from the path metadata if available
+          let partitionInfo: string | undefined;
+          const pathParts = fullPath.split('/');
+          const partitionParts = pathParts.filter((part: string) => 
+            part.includes('=') && (part.startsWith('year=') || part.startsWith('month=') || part.startsWith('day='))
+          );
+          if (partitionParts.length > 0) {
+            partitionInfo = partitionParts.join('/');
+          }
+          
+          return {
+            path: fullPath,
+            fileName: fileName,
+            fileType: fileType,
+            size: Number(pathMetadata.contentLength) || 0,
+            lastModified: new Date(pathMetadata.lastModified),
+            partitionInfo: partitionInfo
+          };
+        })
+        .sort((a, b) => {
+          // Sort by file type first (logs, checkpoints, then parquet), then by name
+          const typeOrder = { 'log': 0, 'checkpoint': 1, 'parquet': 2, 'json': 3, 'other': 4 };
+          const typeComparison = typeOrder[a.fileType] - typeOrder[b.fileType];
+          if (typeComparison !== 0) return typeComparison;
+          return a.fileName.localeCompare(b.fileName);
+        });
+      
+      const totalSizeBytes = deltaFiles.reduce((sum, file) => sum + Number(file.size), 0);
       
       setTableMetadata({
-        deltaFiles: mockDeltaFiles,
-        totalFiles: mockDeltaFiles.length,
+        deltaFiles: deltaFiles,
+        totalFiles: deltaFiles.length,
         totalSizeBytes: totalSizeBytes
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load table metadata');
+      console.error('Error loading table metadata:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load table metadata from OneLake');
     } finally {
       setIsLoading(false);
     }

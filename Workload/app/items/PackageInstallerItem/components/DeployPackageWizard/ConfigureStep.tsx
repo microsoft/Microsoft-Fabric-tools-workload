@@ -26,8 +26,24 @@ export function ConfigureStep(props: ConfigureStepProps) {
         selectedCapacityId,
         workspaceName,
         selectedWorkspaceId,
-        folderName
+        folderName,
+        packageId,
+        selectedPackageId,
+        deploymentId,
     } = wizardContext;
+
+    // Generate a user-friendly default workspace name if not properly set
+    let displayWorkspaceName = workspaceName;
+    if (!displayWorkspaceName || displayWorkspaceName.includes('undefined') || displayWorkspaceName.trim() === '') {
+        const finalPackageId = selectedPackageId || packageId;
+        const packageDisplayName = finalPackageId || 'Package';
+        displayWorkspaceName = `${packageDisplayName} - ${deploymentId}`;
+        
+        // Update the context with the generated name
+        if (updateContext) {
+            updateContext('workspaceName', displayWorkspaceName);
+        }
+    }
 
     const setSelectedCapacityId = (capacityId: string) => updateContext('selectedCapacityId', capacityId);
     const setWorkspaceName = (name: string) => updateContext('workspaceName', name);
@@ -71,7 +87,7 @@ export function ConfigureStep(props: ConfigureStepProps) {
                         {t('Workspace Name')}
                     </Text>
                     <Input
-                        value={workspaceName || ''}
+                        value={displayWorkspaceName || ''}
                         onChange={(ev, data) => setWorkspaceName(data.value)}
                         placeholder={t('Enter workspace name')}
                         style={{ width: '100%' }}

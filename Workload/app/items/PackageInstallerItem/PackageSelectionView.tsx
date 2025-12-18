@@ -8,11 +8,13 @@ import "./PackageInstallerItem.scss";
 export interface PackageInstallerSelectionViewProps {
   context: PackageInstallerContext,
   onPackageSelected: (packageId: string) => void;
+  refreshKey?: number; // Optional key to force re-renders when packages change
 }
 export const PackageSelectionView: React.FC<PackageInstallerSelectionViewProps> = (
   { 
     context,
-    onPackageSelected: onPackageSelected }) => {
+    onPackageSelected: onPackageSelected,
+    refreshKey }) => {
 
   return (
     <Stack>

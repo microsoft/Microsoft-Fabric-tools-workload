@@ -258,18 +258,26 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
     // Handle when the user changes the selected item in the explorer
     if (item) {
       // Store the selected item reference and clear open files since we're switching to a new item
+      // Also reset view mode and clear any selected tables to show empty state
       updateItemDefinition({
         itemReference: {
           ...item,
         },
         openFiles: [],
-        activeFileIndex: 0
+        activeFileIndex: 0,
+        viewMode: undefined, // Reset view mode to show empty state
+        selectedTable: undefined // Clear any selected table
       });
+      
+      // Switch to empty view when changing items
+      if (currentViewSetter) {
+        currentViewSetter(EDITOR_VIEW_TYPES.EMPTY);
+      }
       
       // Refresh the explorer to load files from the new item
       refreshItemExplorer();
     }
-  }, [updateItemDefinition, refreshItemExplorer]);
+  }, [updateItemDefinition, refreshItemExplorer, currentViewSetter]);
 
   const handleOpenItem = useCallback(async () => {
     try {

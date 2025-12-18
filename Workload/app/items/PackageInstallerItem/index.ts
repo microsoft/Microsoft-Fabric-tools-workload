@@ -10,6 +10,7 @@ export { DeploymentDetailView } from './DeploymentDetailView';
 // Export wizards from components
 export { CreatePackageWizardWrapper } from './components/CreatePackageWizard';
 export { DeployPackageWizardWrapper } from './components/DeployPackageWizard';
+export { UploadPackageWizardWrapper } from './components/UploadPackageWizard';
 
 // Export types
 export type { 

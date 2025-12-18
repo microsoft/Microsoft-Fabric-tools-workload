@@ -146,13 +146,12 @@ export async function getWorkloadItem<T>(
 export async function saveWorkloadItem<T>(
     workloadClient: WorkloadClientAPI,
     itemWithDefinition: ItemWithDefinition<T>): Promise<UpdateItemDefinitionResult> {
-    
     if (!itemWithDefinition.id) {
-        throw new Error("Cannot save item: no item ID provided");
+        throw new Error("No item ID provided");
     }
     
     if (!itemWithDefinition.definition) {
-        throw new Error("Cannot save item: no definition provided");
+        throw new Error("No definition provided");
     }
     
     // Start with the main definition as the default part

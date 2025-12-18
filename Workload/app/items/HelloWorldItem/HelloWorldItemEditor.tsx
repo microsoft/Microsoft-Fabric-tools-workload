@@ -7,6 +7,7 @@ import {
   MessageBarActions,
   MessageBarBody
 } from "@fluentui/react-components";
+import { NotificationType } from "@ms-fabric/workload-client";
 import {
   Dismiss20Regular,
   Warning20Filled
@@ -118,32 +119,48 @@ export function HelloWorldItemEditor(props: PageProps) {
 
   async function saveItem() {
     setSaveStatus(SaveStatus.Saving);
-    try {
-      item.definition = {
-        ...currentDefinition,
-        message: currentDefinition.message || "Hello, Fabric!"
-      }
-      setCurrentDefinition(item.definition)
+    item.definition = {
+      ...currentDefinition,
+      message: currentDefinition.message || "Hello, Fabric!"
+    }
+    setCurrentDefinition(item.definition)
 
-      var successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
+    let successResult;
+    let errorMessage = "";
+
+    try {
+      successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
         workloadClient,
         item,
       );
-      const wasSaved = Boolean(successResult);
-
-      if (wasSaved) {
-        setSaveStatus(SaveStatus.Saved);
-        callNotificationOpen(
-          props.workloadClient,
-          t("ItemEditor_Saved_Notification_Title"),
-          t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
-          undefined,
-          undefined
-        );
-      }
     } catch (error) {
-        setSaveStatus(SaveStatus.NotSaved);
-        console.error('Save failed:', error);
+      errorMessage = error?.message;
+    }
+
+    const wasSaved = Boolean(successResult);
+
+    if (wasSaved) {
+      setSaveStatus(SaveStatus.Saved);
+      callNotificationOpen(
+        props.workloadClient,
+        t("ItemEditor_Saved_Notification_Title"),
+        t("ItemEditor_Saved_Notification_Text", { itemName: item.displayName }),
+        undefined,
+        undefined
+      );
+    } else {
+      setSaveStatus(SaveStatus.NotSaved);
+      const failureMessage = errorMessage
+        ? `${t("ItemEditor_SaveFailed_Notification_Text", { itemName: item.displayName })} ${errorMessage}.`
+        : t("ItemEditor_SaveFailed_Notification_Text", { itemName: item.displayName });
+        
+      callNotificationOpen(
+        props.workloadClient,
+        t("ItemEditor_SaveFailed_Notification_Title"),
+        failureMessage,
+        NotificationType.Error,
+        undefined
+      );
     }
   }
 

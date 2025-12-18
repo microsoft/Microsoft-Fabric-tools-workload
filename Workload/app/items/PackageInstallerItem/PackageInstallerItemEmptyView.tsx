@@ -1,40 +1,52 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Rocket24Regular, Box24Regular, ArrowUpload24Regular } from "@fluentui/react-icons";
 import "./PackageInstallerItem.scss";
-import { PackageSelectionView } from "./PackageSelectionView";
-import { PackageInstallerContext } from "./package/PackageInstallerContext";
-import { ItemEditorEmptyView } from "../../components/ItemEditor";
+import { ItemEditorEmptyView, EmptyStateTask } from "../../components/ItemEditor";
 
 interface PackageInstallerItemEmptyViewProps {
-  context: PackageInstallerContext,
-  onPackageSelected: (packageId: string) => void;
+  onDeployPackage: () => void;
+  onCreatePackage: () => void;
+  onUploadPackage: () => void;
+  isDeploymentInProgress?: boolean;
 }
 
 export function PackageInstallerItemEmptyView({
-  context,
-  onPackageSelected: onPackageSelected
+  onDeployPackage,
+  onCreatePackage,
+  onUploadPackage,
 }: PackageInstallerItemEmptyViewProps) {
   const { t } = useTranslation();
 
-  // Handle deployment selection
-  const handlePackageSelected = (packageId: string) => {
-    onPackageSelected(packageId);
-  };
-
-  // Custom content for package selection
-  const packageSelectionContent = (
-    <PackageSelectionView 
-      context={context}
-      onPackageSelected={handlePackageSelected} 
-    />
-  );
+  const tasks: EmptyStateTask[] = [
+    {
+      id: 'deploy-package',
+      label: t('Deploy Package', 'Deploy Package'),
+      description: t('Deploy an existing package to a workspace.', 'Deploy an existing package to a workspace.'),
+      onClick: () => onDeployPackage(),
+      icon: <Rocket24Regular />
+    },
+    {
+      id: 'create-package',
+      label: t('Create Package', 'Create Package'),
+      description: t('Create a new package from selected items.', 'Create a new package from selected items.'),
+      onClick: () => onCreatePackage(),
+      icon: <Box24Regular />
+    },
+    {
+      id: 'upload-package',
+      label: t('Upload JSON Package', 'Upload JSON Package'),
+      description: t('Upload a package from a file.', 'Upload a package from a file.'),
+      onClick: () => onUploadPackage(),
+      icon: <ArrowUpload24Regular />
+    }
+  ];
   
   return (
     <ItemEditorEmptyView
-      title={t('PackageInstallerItemEmptyView_Title', 'What do you want to create?')}
-      description={t('PackageInstallerItemEmptyView_Description', 'Select a package type to get started')}
-      customContent={packageSelectionContent}
-      maxWidth={1000}
+      title={t('PackageInstallerItemEmptyView_Title', 'What would you like to do?')}
+      description={t('PackageInstallerItemEmptyView_Description', 'Choose an action to get started with package management')}
+      tasks={tasks}
     />
   );
 }
