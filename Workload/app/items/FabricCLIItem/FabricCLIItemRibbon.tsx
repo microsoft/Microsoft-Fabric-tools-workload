@@ -44,7 +44,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
   // Create environment dropdown action
   const environmentDropdown: RibbonDropdownAction = {
     key: "select-environment",
-    label: t("FabricCLIItem_SelectEnvironment", "Spark Environment"),
+    label: t("FabricCLIItem_SparkEnvironment", "Spark Environment"),
     icon: ChevronDown24Regular,
     onClick: () => {}, // Required but overridden by dropdown items
     disabled: props.sessionActive || !props.availableEnvironments?.length,
