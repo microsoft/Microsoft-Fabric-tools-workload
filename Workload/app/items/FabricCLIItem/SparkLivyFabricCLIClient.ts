@@ -69,6 +69,7 @@ export class SparkLivyFabricCLIClient {
           if (!foundSession) {
             foundSession = targetSession;
             onProgress(`Session created with ID: ${sid}`);
+            onProgress('Waiting for session to be started...');
           } else {
             // Update the session object with latest state
             foundSession = targetSession;
@@ -83,7 +84,7 @@ export class SparkLivyFabricCLIClient {
           const isIdle = currentLivyState?.toLowerCase() === 'idle';
 
           if (isScheduled && isIdle) {
-            onProgress('Session is ready! You can now execute Fabric CLI commands.');
+            onProgress('Session is ready!');
             sessionReady = true;
           } else {
             // Log state changes periodically
@@ -230,7 +231,7 @@ print(json.dumps(jsonResult));`;
                 // Command failed - return stderr
                 return {
                   success: false,
-                  output: jsonResult.stderr || `Command failed with exit code ${jsonResult.returncode}`,
+                  output: jsonResult.stderr || jsonResult.stdout || `Command failed with exit code ${jsonResult.returncode}`,
                   isError: true
                 };
               }

@@ -5,7 +5,6 @@ import {
   Text, 
   Input, 
   Button, 
-  Divider 
 } from "@fluentui/react-components";
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
@@ -195,7 +194,7 @@ export function FabricCLIItemDefaultView({
                 <span className="timestamp">[{formatTimestamp(entry.timestamp)}]</span>
                 {entry.type === 'command' ? (
                   <React.Fragment>
-                    <span className="prompt-symbol">{'>'}</span>
+                    <span className="prompt-symbol">{'> fab '}</span>
                     <span className="command">{entry.content}</span>
                   </React.Fragment>
                 ) : (
@@ -205,8 +204,6 @@ export function FabricCLIItemDefaultView({
             ))
           )}
         </div>
-        
-        <Divider />
         
         <div className="terminal-input">
           <span className="prompt-symbol">{'> fab '}</span>

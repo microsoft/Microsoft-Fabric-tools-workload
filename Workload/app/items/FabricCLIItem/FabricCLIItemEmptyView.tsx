@@ -27,6 +27,7 @@ export function FabricCLIItemEmptyView({
   return (
     <ItemEditorEmptyView
       title={t('FabricCLIItem_Title', 'Fabric CLI')}
+      imageSrc="/assets/items/FabricCLIItem/EditorEmpty.svg"
       description={t('FabricCLIItem_Description', 'Connect to a Lakehouse and run Fabric CLI commands interactively.')}
       tasks={tasks}
     />

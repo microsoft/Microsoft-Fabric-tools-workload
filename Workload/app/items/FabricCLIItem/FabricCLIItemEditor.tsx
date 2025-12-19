@@ -9,7 +9,7 @@ import { callDatahubOpen } from "../../controller/DataHubController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 
-import { FabricCLIItemDefinition, DEFAULT_FABRIC_CLI_CONFIG } from "./FabricCLIItemModel";
+import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
 import { FabricCLIItemEmptyView } from "./FabricCLIItemEmptyView";
 import { FabricCLIItemRibbon } from "./FabricCLIItemRibbon";
 import { FabricCLIItemDefaultView } from "./FabricCLIItemDefaultView";
@@ -53,7 +53,7 @@ export function FabricCLIItemEditor(props: PageProps) {
         if (!loadedItem.definition) {
           loadedItem = {
             ...loadedItem,
-            definition: { ...DEFAULT_FABRIC_CLI_CONFIG }
+            definition: {  }
           };
           setIsUnsaved(true);
         }
@@ -156,7 +156,7 @@ export function FabricCLIItemEditor(props: PageProps) {
         callNotificationOpen(
           workloadClient,
           t("FabricCLIItem_LakehouseSelected_Title", "Lakehouse Selected"),
-          t("FabricCLIItem_LakehouseSelected_Message", { lakehouseName: result.displayName, defaultValue: `Selected: ${result.displayName}` }),
+          t("FabricCLIItem_LakehouseSelected_Message", `Connected to lakehouse: ${result.displayName}`),
           NotificationType.Success
         );
         return true;

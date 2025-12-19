@@ -18,9 +18,10 @@
 }
 
 .terminal-body {
-    flex-grow: 1;
+    flex: 1;
+    min-height: 0;
     padding: 12px;
-    overflow: auto;
+    overflow-y: auto;
     font-family: Consolas, monospace;
     white-space: pre-wrap;
     font-size: 14px;
