@@ -4,17 +4,17 @@
     "displayName": "Workload_Display_Name",
     "fullDisplayName": "Workload_Full_Display_Name",
     "description": "Workload_Description",
-    "favicon": "assets/images/Workload-icon.png",
+    "favicon": "assets/images/Workload_Icon.png",
     "icon": {
-      "name": "assets/images/Workload-icon.png"
+      "name": "assets/images/Workload_Icon.png"
     },
     "homePage": {
       "learningMaterials": [
         {
-          "title": "FabricTools_Docs_Title",
-          "introduction": "FabricTools_Docs_Introduction",
-          "description": "FabricTools_Docs_Description",
-          "image": "assets/images/Workload-docs.png",
+          "title": "Workload_Hub_GetStarted_Docs_Title",
+          "introduction": "Workload_Hub_GetStarted_Docs_Introduction",
+          "description": "Workload_Hub_GetStarted_Docs_Description",
+          "image": "assets/images/Workload_Hub_GetStarted_Docs.png",
           "link": "https://github.com/microsoft/Microsoft-Fabric-tools-workload"
         }
       ],
@@ -32,10 +32,10 @@
             "title": "PackageInstallerItem_DisplayName",
             "description": "PackageInstallerItem_Description",
             "icon": {
-              "name": "assets/images/PackageInstallerItem-icon.png"
+              "name": "assets/images/PackageInstallerItem_Icon.png"
             },
             "icon_small": {
-              "name": "assets/images/PackageInstallerItem-icon.png"
+              "name": "assets/images/PackageInstallerItem_Icon.png"
             },
             "availableIn": [
               "home",
@@ -53,10 +53,10 @@
             "title": "OneLakeExplorerItem_DisplayName",
             "description": "OneLakeExplorerItem_Description",
             "icon": {
-              "name": "assets/images/OneLakeExplorerItem-icon.png"
+              "name": "assets/images/OneLakeExplorerItem_Icon.png"
             },
             "icon_small": {
-              "name": "assets/images/OneLakeExplorerItem-icon.png"
+              "name": "assets/images/OneLakeExplorerItem_Icon.png"
             },
             "availableIn": [
               "home",
@@ -74,20 +74,20 @@
     },
     "productDetail": {
       "publisher": "Microsoft",
-      "slogan": "Workload_Hub_Workload_Slogan",
-      "description": "Workload_Hub_Workload_Description",
+      "slogan": "Workload_Hub_Slogan",
+      "description": "Workload_Hub_Description",
       "image": {
         "mediaType": 0,
-        "source": "assets/images/Workload-banner.png"
+        "source": "assets/images/Workload_Hub_Banner.png"
       },
       "slideMedia": [
         {
           "mediaType": 0,
-          "source": "assets/images/PackageInstallerItem-slideware.png"
+          "source": "assets/images/PackageInstallerItem_Slideware.png"
         },
         {
           "mediaType": 0,
-          "source": "assets/images/OneLakeExplorerItem-slideware.png"
+          "source": "assets/images/OneLakeExplorerItem_Slideware.png"
         }
       ],
         "supportLink": {
