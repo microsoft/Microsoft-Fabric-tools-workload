@@ -9,20 +9,20 @@ import { callDatahubOpen } from "../../controller/DataHubController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 
-import { SparkTerminalItemDefinition, DEFAULT_SPARK_TERMINAL_CONFIG } from "./SparkTerminalItemModel";
-import { SparkTerminalItemEmptyView } from "./SparkTerminalItemEmptyView";
-import { SparkTerminalItemRibbon } from "./SparkTerminalItemRibbon";
-import { SparkTerminalItemDefaultView } from "./SparkTerminalItemDefaultView";
+import { FabricCLIItemDefinition, DEFAULT_FABRIC_CLI_CONFIG } from "./FabricCLIItemModel";
+import { FabricCLIItemEmptyView } from "./FabricCLIItemEmptyView";
+import { FabricCLIItemRibbon } from "./FabricCLIItemRibbon";
+import { FabricCLIItemDefaultView } from "./FabricCLIItemDefaultView";
 import { Item } from "../../clients/FabricPlatformTypes";
 
-import "./SparkTerminalItem.scss";
+import "./FabricCLIItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
   EMPTY: 'empty',
   DEFAULT: 'default'
 } as const;
 
-export function SparkTerminalItemEditor(props: PageProps) {
+export function FabricCLIItemEditor(props: PageProps) {
   const { workloadClient } = props;
   const pageContext = useParams<ContextProps>();
   const { pathname } = useLocation();
@@ -31,19 +31,20 @@ export function SparkTerminalItemEditor(props: PageProps) {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [isUnsaved, setIsUnsaved] = useState(false);
-  const [item, setItem] = useState<ItemWithDefinition<SparkTerminalItemDefinition>>();
+  const [item, setItem] = useState<ItemWithDefinition<FabricCLIItemDefinition>>();
   const [selectedLakehouse, setSelectedLakehouse] = useState<Item | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
+  const [clearTrigger, setClearTrigger] = useState(0);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
     setIsLoading(true);
-    let loadedItem: ItemWithDefinition<SparkTerminalItemDefinition> = undefined;
+    let loadedItem: ItemWithDefinition<FabricCLIItemDefinition> = undefined;
     
     if (pageContext.itemObjectId) {
       try {
-        loadedItem = await getWorkloadItem<SparkTerminalItemDefinition>(
+        loadedItem = await getWorkloadItem<FabricCLIItemDefinition>(
           workloadClient,
           pageContext.itemObjectId,
         );
@@ -52,18 +53,18 @@ export function SparkTerminalItemEditor(props: PageProps) {
         if (!loadedItem.definition) {
           loadedItem = {
             ...loadedItem,
-            definition: { ...DEFAULT_SPARK_TERMINAL_CONFIG }
+            definition: { ...DEFAULT_FABRIC_CLI_CONFIG }
           };
           setIsUnsaved(true);
         }
 
         setItem(loadedItem);
       } catch (error) {
-        console.error('Failed to load SparkTerminal item:', error);
+        console.error('Failed to load FabricCLI item:', error);
         callNotificationOpen(
           workloadClient,
-          t("SparkTerminalItem_LoadError_Title", "Failed to Load Item"),
-          t("SparkTerminalItem_LoadError_Message", "Could not load the Spark Terminal item."),
+          t("FabricCLIItem_LoadError_Title", "Failed to Load Item"),
+          t("FabricCLIItem_LoadError_Message", "Could not load the Fabric CLI item."),
           NotificationType.Error
         );
         setItem(undefined);
@@ -96,16 +97,16 @@ export function SparkTerminalItemEditor(props: PageProps) {
       setIsUnsaved(false);
       callNotificationOpen(
         workloadClient,
-        t("SparkTerminalItem_SaveSuccess_Title", "Saved"),
-        t("SparkTerminalItem_SaveSuccess_Message", "Item saved successfully."),
+        t("FabricCLIItem_SaveSuccess_Title", "Saved"),
+        t("FabricCLIItem_SaveSuccess_Message", "Item saved successfully."),
         NotificationType.Success
       );
     } catch (error) {
       console.error('Failed to save item:', error);
       callNotificationOpen(
         workloadClient,
-        t("SparkTerminalItem_SaveError_Title", "Save Failed"),
-        t("SparkTerminalItem_SaveError_Message", "Could not save the item."),
+        t("FabricCLIItem_SaveError_Title", "Save Failed"),
+        t("FabricCLIItem_SaveError_Message", "Could not save the item."),
         NotificationType.Error
       );
     }
@@ -120,9 +121,6 @@ export function SparkTerminalItemEditor(props: PageProps) {
 
   const handleStopSession = () => {
     setSessionActive(false);
-    if (viewSetter) {
-      viewSetter(EDITOR_VIEW_TYPES.EMPTY);
-    }
   };
 
   const handleSelectLakehouse = async (): Promise<boolean> => {
@@ -130,7 +128,7 @@ export function SparkTerminalItemEditor(props: PageProps) {
       const result = await callDatahubOpen(
         workloadClient,
         ['Lakehouse'],
-        t("SparkTerminalItem_SelectLakehouse_Title", "Select a Lakehouse"),
+        t("FabricCLIItem_SelectLakehouse_Title", "Select a Lakehouse"),
         false
       );
 
@@ -157,8 +155,8 @@ export function SparkTerminalItemEditor(props: PageProps) {
 
         callNotificationOpen(
           workloadClient,
-          t("SparkTerminalItem_LakehouseSelected_Title", "Lakehouse Selected"),
-          t("SparkTerminalItem_LakehouseSelected_Message", { lakehouseName: result.displayName, defaultValue: `Selected: ${result.displayName}` }),
+          t("FabricCLIItem_LakehouseSelected_Title", "Lakehouse Selected"),
+          t("FabricCLIItem_LakehouseSelected_Message", { lakehouseName: result.displayName, defaultValue: `Selected: ${result.displayName}` }),
           NotificationType.Success
         );
         return true;
@@ -168,8 +166,8 @@ export function SparkTerminalItemEditor(props: PageProps) {
       console.error('Failed to select lakehouse:', error);
       callNotificationOpen(
         workloadClient,
-        t("SparkTerminalItem_LakehouseError_Title", "Selection Failed"),
-        t("SparkTerminalItem_LakehouseError_Message", "Could not select lakehouse."),
+        t("FabricCLIItem_LakehouseError_Title", "Selection Failed"),
+        t("FabricCLIItem_LakehouseError_Message", "Could not select lakehouse."),
         NotificationType.Error
       );
       return false;
@@ -190,20 +188,20 @@ export function SparkTerminalItemEditor(props: PageProps) {
   const handleShowHistory = () => {
     callNotificationOpen(
       workloadClient,
-      t("SparkTerminalItem_History_Title", "Command History"),
-      t("SparkTerminalItem_History_Message", "Command history feature coming soon."),
+      t("FabricCLIItem_History_Title", "Command History"),
+      t("FabricCLIItem_History_Message", "Command history feature coming soon."),
       NotificationType.Info
     );
   };
 
   const handleClearTerminal = () => {
-    // Terminal component will handle clearing
+    setClearTrigger(prev => prev + 1);
   };
 
   const EmptyViewWrapper = () => {
     const { setCurrentView } = useViewNavigation();
     return (
-      <SparkTerminalItemEmptyView
+      <FabricCLIItemEmptyView
         onSelectLakehouse={async () => {
           const success = await handleSelectLakehouse();
           if (success) {
@@ -222,12 +220,13 @@ export function SparkTerminalItemEditor(props: PageProps) {
     {
       name: EDITOR_VIEW_TYPES.DEFAULT,
       component: (
-        <SparkTerminalItemDefaultView
+        <FabricCLIItemDefaultView
           workloadClient={workloadClient}
           item={item}
           selectedLakehouse={selectedLakehouse}
           isUnsaved={isUnsaved}
           sessionActive={sessionActive}
+          clearTrigger={clearTrigger}
         />
       )
     }
@@ -237,7 +236,7 @@ export function SparkTerminalItemEditor(props: PageProps) {
     <ItemEditor
       isLoading={isLoading}
       ribbon={(viewContext) => (
-        <SparkTerminalItemRibbon
+        <FabricCLIItemRibbon
           {...props}
           viewContext={viewContext}
           openSettingsCallback={handleOpenSettings}

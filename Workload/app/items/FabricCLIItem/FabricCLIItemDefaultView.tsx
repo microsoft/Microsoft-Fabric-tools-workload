@@ -10,25 +10,20 @@ import {
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { SparkTerminalItemDefinition } from "./SparkTerminalItemModel";
-import { Item, SessionResponse } from "../../clients/FabricPlatformTypes";
+import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
+import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
-import {
-  SessionRequest,
-  StatementRequest,
-  StatementResponse,
-} from '../../clients/FabricPlatformTypes';
-import { SparkLivyClient } from '../../clients/SparkLivyClient';
-import { LongRunningOperationsClient } from '../../clients/LongRunningOperationsClient';
+import { SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
 
-import "./SparkTerminalItem.scss";
+import "./FabricCLIItem.scss";
 
-interface SparkTerminalItemDefaultViewProps {
+interface FabricCLIItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
-  item?: ItemWithDefinition<SparkTerminalItemDefinition>;
+  item?: ItemWithDefinition<FabricCLIItemDefinition>;
   selectedLakehouse?: Item | null;
   isUnsaved?: boolean;
   sessionActive: boolean;
+  clearTrigger?: number;
 }
 
 interface TerminalEntry {
@@ -37,29 +32,38 @@ interface TerminalEntry {
   timestamp: Date;
 }
 
-export function SparkTerminalItemDefaultView({
+export function FabricCLIItemDefaultView({
   workloadClient,
   item,
   selectedLakehouse,
   isUnsaved,
-  sessionActive
-}: SparkTerminalItemDefaultViewProps) {
+  sessionActive,
+  clearTrigger
+}: FabricCLIItemDefaultViewProps) {
   const { t } = useTranslation();
   
   // Terminal State
   const [command, setCommand] = useState<string>('');
   const [entries, setEntries] = useState<TerminalEntry[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionState, setSessionState] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
 
-  const sparkClient = new SparkLivyClient(workloadClient);
+  const cliClient = new SparkLivyFabricCLIClient(workloadClient);
 
   // Resolve Lakehouse ID and Workspace ID
   const activeLakehouse = item?.definition?.selectedLakehouse || selectedLakehouse;
   const workspaceId = activeLakehouse?.workspaceId;
   const lakehouseId = activeLakehouse?.id;
+
+  // Clear terminal when trigger changes
+  useEffect(() => {
+    if (clearTrigger && clearTrigger > 0) {
+      setEntries([]);
+    }
+  }, [clearTrigger]);
 
   // Auto-scroll
   useEffect(() => {
@@ -90,35 +94,19 @@ export function SparkTerminalItemDefaultView({
     addSystemMessage('Initializing Spark session...');
 
     try {
-      const sessionRequest: SessionRequest = {
-        name: `Terminal Session ${new Date().toISOString()}`,
-        kind: 'python',
-        conf: { "spark.submit.deployMode": "cluster" }
-      };
-
-      // Create session returns AsyncOperationIndicator
-      const asyncIndicator = await sparkClient.createSession(workspaceId, lakehouseId, sessionRequest);
-      addSystemMessage(`Session creation started. Operation ID: ${asyncIndicator.operationId}`);
+      const enviromentID = "13931715-15cc-4059-9012-4939b373cd81";
       
-      // Use LongRunningOperationsClient to poll for result
-      const lroClient = new LongRunningOperationsClient(workloadClient);
-      addSystemMessage('Waiting for session to be created...');
-      
-      const sessionResponse = await lroClient.waitForSuccessAndGetResult<SessionResponse>(
-        asyncIndicator,
-        2000, // poll every 2 seconds
-        600000 // 10 minute timeout
+      const session = await cliClient.initializeSession(
+        {
+          workspaceId,
+          lakehouseId,
+          environmentId: enviromentID
+        },
+        (message) => addSystemMessage(message)
       );
-      
-      if (!sessionResponse.id) {
-        throw new Error("Session created but no ID returned from server");
-      }
 
-      const sid = String(sessionResponse.id);
-      setSessionId(sid);
-      
-      addSystemMessage(`Session created with ID: ${sid}`);
-      addSystemMessage('Session is ready! You can now execute Spark code.');
+      setSessionId(session.id || '');
+      setSessionState(session.schedulerState || '');
     } catch (error: any) {
       console.error('Error initializing session:', error);
       addSystemMessage(`Failed to initialize session: ${error.message}`);
@@ -129,16 +117,20 @@ export function SparkTerminalItemDefaultView({
   };
 
   const cancelCurrentSession = async () => {
-    if (!sessionId || !workspaceId || !lakehouseId) return;
+    if (!sessionId || !workspaceId || !lakehouseId || isCancelling) return;
+    
+    setIsCancelling(true);
+    addSystemMessage(`Cancelling session ${sessionId}...`);
     
     try {
-      setIsCancelling(true);
-      addSystemMessage(`Cancelling session ${sessionId}...`);
-      await sparkClient.cancelSession(workspaceId, lakehouseId, sessionId);
+      await cliClient.cancelSession(workspaceId, lakehouseId, sessionId);
       addSystemMessage(`Session ${sessionId} cancelled successfully.`);
       setSessionId(null);
+      setSessionState(null);
     } catch (error: any) {
       addSystemMessage(`Failed to cancel session: ${error.message}`);
+      setSessionId(null); // Clear session ID even on failure
+      setSessionState(null);
     } finally {
       setIsCancelling(false);
     }
@@ -147,10 +139,11 @@ export function SparkTerminalItemDefaultView({
   const executeCommand = async () => {
     if (!command.trim()) return;
     
-    setEntries(prev => [...prev, { type: 'command', content: command, timestamp: new Date() }]);
+    const userCommand = command;
+    setEntries(prev => [...prev, { type: 'command', content: userCommand, timestamp: new Date() }]);
     setCommand('');
 
-    if (command.toLowerCase() === 'clear') {
+    if (userCommand.toLowerCase() === 'clear') {
       setEntries([]);
       return;
     }
@@ -160,47 +153,24 @@ export function SparkTerminalItemDefaultView({
       return;
     }
 
+    // Check if session is ready (schedulerState should be 'Scheduled')
+    const isSessionReady = sessionState?.toLowerCase() === 'scheduled';
+    if (!isSessionReady) {
+      addSystemMessage(`Session is not ready. Current scheduler state: ${sessionState || 'Unknown'}. Please wait...`);
+      return;
+    }
+
     try {
-      const statementRequest: StatementRequest = { code: command, kind: 'python' };
-      const response = await sparkClient.submitStatement(workspaceId!, lakehouseId!, sessionId, statementRequest);
-      await waitForStatementResult(response);
+      const result = await cliClient.executeCommand(workspaceId!, lakehouseId!, sessionId, userCommand);
+      
+      if (result.isError) {
+        setEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
+      } else {
+        setEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
+      }
     } catch (error: any) {
       setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
     }
-  };
-
-  const waitForStatementResult = async (statement: StatementResponse) => {
-    if (!workspaceId || !lakehouseId || !sessionId) return;
-    
-    let attempts = 0;
-    const maxAttempts = 60;
-    
-    while (attempts < maxAttempts) {
-      try {
-        const statementInfo = await sparkClient.getStatement(workspaceId, lakehouseId, sessionId, statement.id.toString());
-        
-        if (statementInfo.state === 'available') {
-          let output = '';
-          if (statementInfo.output?.data) {
-            output = statementInfo.output.data['text/plain'] || 
-                     JSON.stringify(statementInfo.output.data['application/json'] || statementInfo.output.data, null, 2);
-          }
-          setEntries(prev => [...prev, { type: 'response', content: output || 'Done.', timestamp: new Date() }]);
-          return;
-        } else if (statementInfo.state === 'error') {
-          const errorMessage = statementInfo.output?.data?.['text/plain'] || 'Statement execution failed';
-          setEntries(prev => [...prev, { type: 'error', content: errorMessage, timestamp: new Date() }]);
-          return;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        attempts++;
-      } catch (error: any) {
-        setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
-        return;
-      }
-    }
-    setEntries(prev => [...prev, { type: 'error', content: 'Statement execution timed out', timestamp: new Date() }]);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -208,16 +178,16 @@ export function SparkTerminalItemDefaultView({
   };
 
   const content = (
-    <Stack className="spark-terminal-editor">
+    <Stack className="fabric-cli-editor">
       <div className="terminal-container">
         <div className="terminal-body" ref={terminalBodyRef}>
           {entries.length === 0 ? (
             <div className="system">
-              Welcome to Spark Terminal.
+              Welcome to Fabric CLI.
               <br />
               {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
               {sessionActive && !sessionId && "Initializing session..."}
-              {sessionId && "Session Ready. Type commands to interact with Spark."}
+              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'workspace list', 'lakehouse list')."}
             </div>
           ) : (
             entries.map((entry, index) => (
@@ -239,7 +209,7 @@ export function SparkTerminalItemDefaultView({
         <Divider />
         
         <div className="terminal-input">
-          <span className="prompt-symbol">{'>'}</span>
+          <span className="prompt-symbol">{'> fab '}</span>
           <Input
             className="command-input"
             value={command}
@@ -259,7 +229,7 @@ export function SparkTerminalItemDefaultView({
       {isUnsaved && (
         <Stack horizontal style={{ padding: '8px 16px', backgroundColor: 'var(--colorWarningBackground1)' }}>
           <Text size={200}>
-            {t("SparkTerminalItem_UnsavedChanges", "Configuration changes will be saved automatically...")}
+            {t("FabricCLIItem_UnsavedChanges", "Configuration changes will be saved automatically...")}
           </Text>
         </Stack>
       )}

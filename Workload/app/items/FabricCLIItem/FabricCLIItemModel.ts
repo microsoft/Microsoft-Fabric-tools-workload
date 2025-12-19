@@ -1,10 +1,10 @@
 import { ItemReference } from "../../controller/ItemCRUDController";
 
 /**
- * Data model for SparkTerminalItem
+ * Data model for FabricCLIItem
  * Defines the structure for data that will be persisted in Fabric storage
  */
-export interface SparkTerminalItemDefinition {
+export interface FabricCLIItemDefinition {
   // Selected lakehouse reference
   selectedLakehouse?: ItemReference;
   
@@ -29,9 +29,9 @@ export interface SparkTerminalItemDefinition {
 }
 
 /**
- * Default configuration for new SparkTerminal items
+ * Default configuration for new FabricCLI items
  */
-export const DEFAULT_SPARK_TERMINAL_CONFIG: SparkTerminalItemDefinition = {
+export const DEFAULT_FABRIC_CLI_CONFIG: FabricCLIItemDefinition = {
   sessionSettings: {
     autoStart: false,
     maxExecutors: 2,

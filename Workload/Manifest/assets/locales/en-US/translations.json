@@ -13,8 +13,8 @@
     "OneLakeExplorerItem_DisplayName": "OneLake Explorer",
     "OneLakeExplorerItem_DisplayName_Plural": "OneLake Explorers",
     "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
-    "SparkTerminalItem_DisplayName": "Spark Terminal",
-    "SparkTerminalItem_DisplayName_Plural": "Spark Terminals",
-    "SparkTerminalItem_Description": "Interactive Spark terminal for executing commands and SQL queries against lakehouse data."   
+    "FabricCLIItem_DisplayName": "Fabric CLI",
+    "FabricCLIItem_DisplayName_Plural": "Fabric CLIs",
+    "FabricCLIItem_Description": "Interactive Fabric CLI for executing commands and SQL queries against lakehouse data."   
 }
 

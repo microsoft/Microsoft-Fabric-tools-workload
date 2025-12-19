@@ -14,7 +14,7 @@ import {
   Delete24Regular
 } from "@fluentui/react-icons";
 
-export interface SparkTerminalItemRibbonProps extends PageProps {
+export interface FabricCLIItemRibbonProps extends PageProps {
   viewContext: ViewContext;
   isSaveButtonEnabled?: boolean;
   saveItemCallback: () => Promise<void>;
@@ -28,7 +28,7 @@ export interface SparkTerminalItemRibbonProps extends PageProps {
   sessionActive?: boolean;
 }
 
-export function SparkTerminalItemRibbon(props: SparkTerminalItemRibbonProps) {
+export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
   const { t } = useTranslation();
   const { viewContext } = props;
 
@@ -42,21 +42,21 @@ export function SparkTerminalItemRibbon(props: SparkTerminalItemRibbonProps) {
     ),
     {
       key: "start-terminal",
-      label: t("SparkTerminalItem_StartTerminal", "Start Session"),
+      label: t("FabricCLIItem_StartTerminal", "Start Session"),
       icon: Play24Regular,
       onClick: props.onStartTerminal,
       disabled: props.sessionActive
     },
     {
       key: "stop-terminal",
-      label: t("SparkTerminalItem_StopTerminal", "Stop Session"),
+      label: t("FabricCLIItem_StopTerminal", "Stop Session"),
       icon: Stop24Regular,
       onClick: props.onStopSession,
       disabled: !props.sessionActive
     },
     {
       key: "clear-terminal",
-      label: t("SparkTerminalItem_ClearTerminal", "Clear Terminal"),
+      label: t("FabricCLIItem_ClearTerminal", "Clear Terminal"),
       icon: Delete24Regular,
       onClick: props.onClearTerminal,
       disabled: !props.sessionActive

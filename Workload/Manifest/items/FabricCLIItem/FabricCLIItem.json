@@ -1,16 +1,16 @@
 {
-    "name": "SparkTerminal",
+    "name": "FabricCLI",
     "version": "1.100",
-    "displayName": "SparkTerminalItem_DisplayName",
-    "displayNamePlural": "SparkTerminalItem_DisplayName_Plural",
+    "displayName": "FabricCLIItem_DisplayName",
+    "displayNamePlural": "FabricCLIItem_DisplayName_Plural",
     "editor": {
-      "path": "/SparkTerminalItem-editor"
+      "path": "/FabricCLIItem-editor"
     },
     "icon": {
-      "name": "assets/images/SparkTerminalItem_Icon.png"
+      "name": "assets/images/FabricCLIItem_Icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/SparkTerminalItem_Icon.png"
+      "name": "assets/images/FabricCLIItem_Icon.png"
     },
     "contextMenuItems": [
     ],
