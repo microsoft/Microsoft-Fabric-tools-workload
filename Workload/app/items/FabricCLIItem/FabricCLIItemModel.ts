@@ -10,5 +10,5 @@ export interface FabricCLIItemDefinition {
   // Last used Spark session id
   lastSparkSessionId?: string;
   // Selected Spark environment reference
-  selectedSparkEnvironment?: ItemReference;  
+  selectedSparkEnvironment?: ItemReference;
 }

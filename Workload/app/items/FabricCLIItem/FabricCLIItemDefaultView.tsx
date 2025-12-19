@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack } from "@fluentui/react";
-import { 
-  Text, 
+import {  
   Input, 
   Button, 
 } from "@fluentui/react-components";
@@ -50,7 +49,13 @@ export function FabricCLIItemDefaultView({
   const [sessionState, setSessionState] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
+  // Direct mode - if true, commands are executed directly without 'fab' prefix to test spark session directly 
+  const [useDirectMode] = useState<boolean>(false);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
+  
+  // Command history
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const cliClient = new SparkLivyFabricCLIClient(workloadClient);
 
@@ -105,7 +110,7 @@ export function FabricCLIItemDefaultView({
           lakehouseId,
           environmentId
         },
-        existingSessionId,
+        existingSessionId && existingSessionId.trim() !== '' ? existingSessionId : null,
         (message) => addSystemMessage(message)
       );
 
@@ -151,6 +156,10 @@ export function FabricCLIItemDefaultView({
     
     const userCommand = command;
     setEntries(prev => [...prev, { type: 'command', content: userCommand, timestamp: new Date() }]);
+    
+    // Add to command history
+    setCommandHistory(prev => [...prev, userCommand]);
+    setHistoryIndex(-1);
     setCommand('');
 
     if (userCommand.toLowerCase() === 'clear') {
@@ -171,7 +180,8 @@ export function FabricCLIItemDefaultView({
     }
 
     try {
-      const result = await cliClient.executeCommand(workspaceId!, lakehouseId!, sessionId, userCommand);
+      const result = await cliClient.executeCommand(workspaceId!, lakehouseId!, 
+                                                    sessionId, userCommand, useDirectMode);
       
       if (result.isError) {
         setEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
@@ -184,7 +194,32 @@ export function FabricCLIItemDefaultView({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') executeCommand();
+    if (event.key === 'Enter') {
+      executeCommand();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (commandHistory.length === 0) return;
+      
+      const newIndex = historyIndex === -1 
+        ? commandHistory.length - 1 
+        : Math.max(0, historyIndex - 1);
+      
+      setHistoryIndex(newIndex);
+      setCommand(commandHistory[newIndex]);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (historyIndex === -1) return;
+      
+      const newIndex = historyIndex + 1;
+      
+      if (newIndex >= commandHistory.length) {
+        setHistoryIndex(-1);
+        setCommand('');
+      } else {
+        setHistoryIndex(newIndex);
+        setCommand(commandHistory[newIndex]);
+      }
+    }
   };
 
   const content = (
@@ -193,7 +228,7 @@ export function FabricCLIItemDefaultView({
         <div className="terminal-body" ref={terminalBodyRef}>
           {entries.length === 0 ? (
             <div className="system">
-              Welcome to Fabric CLI.
+              {t('FabricCLIItem_Wellcome', 'Welcome to Fabric CLI.')}
               <br />
               {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
               {sessionActive && !sessionId && "Initializing session..."}
@@ -205,7 +240,7 @@ export function FabricCLIItemDefaultView({
                 <span className="timestamp">[{formatTimestamp(entry.timestamp)}]</span>
                 {entry.type === 'command' ? (
                   <React.Fragment>
-                    <span className="prompt-symbol">{'> fab '}</span>
+                    <span className="prompt-symbol">{useDirectMode ? '> ' : '> fab '}</span>
                     <span className="command">{entry.content}</span>
                   </React.Fragment>
                 ) : (
@@ -217,13 +252,13 @@ export function FabricCLIItemDefaultView({
         </div>
         
         <div className="terminal-input">
-          <span className="prompt-symbol">{'> fab '}</span>
+          <span className="prompt-symbol">{useDirectMode ? '> ' : '> fab '}</span>
           <Input
             className="command-input"
             value={command}
             onChange={(e, data) => setCommand(data.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter Spark/SQL command..."
+            placeholder="Enter command..."
             disabled={!sessionId || isConnecting || isCancelling}
           />
           <Button
@@ -233,14 +268,6 @@ export function FabricCLIItemDefaultView({
           />
         </div>
       </div>
-
-      {isUnsaved && (
-        <Stack horizontal style={{ padding: '8px 16px', backgroundColor: 'var(--colorWarningBackground1)' }}>
-          <Text size={200}>
-            {t("FabricCLIItem_UnsavedChanges", "Configuration changes will be saved automatically...")}
-          </Text>
-        </Stack>
-      )}
     </Stack>
   );
 

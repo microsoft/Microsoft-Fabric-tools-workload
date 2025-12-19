@@ -138,8 +138,29 @@ export function FabricCLIItemEditor(props: PageProps) {
     }
   };
 
-  const handleStopSession = () => {
+  const handleStopSession = async () => {
     setSessionActive(false);
+    
+    // Clear session ID when stopping session
+    if (item) {
+      const updatedItem = {
+        ...item,
+        definition: {
+          ...item.definition,
+          lastSparkSessionId: ''
+        }
+      };
+      setItem(updatedItem);
+      setIsUnsaved(true);
+      
+      // Auto-save the cleared session ID
+      try {
+        await saveItemDefinition(workloadClient, item.id, updatedItem.definition);
+        setIsUnsaved(false);
+      } catch (error) {
+        console.error('Failed to clear session ID:', error);
+      }
+    }
   };
 
   const handleSelectLakehouse = async (): Promise<boolean> => {
@@ -154,7 +175,7 @@ export function FabricCLIItemEditor(props: PageProps) {
       if (result) {
         setSelectedLakehouse(result);
         
-        // Update definition
+        // Update definition and clear session ID since lakehouse changed
         if (item) {
           const updatedItem = {
             ...item,
@@ -165,7 +186,8 @@ export function FabricCLIItemEditor(props: PageProps) {
                 workspaceId: result.workspaceId,
                 displayName: result.displayName,
                 type: result.type
-              }
+              },
+              lastSparkSessionId: '' // Clear session ID when lakehouse changes
             }
           };
           setItem(updatedItem);
@@ -175,7 +197,7 @@ export function FabricCLIItemEditor(props: PageProps) {
         callNotificationOpen(
           workloadClient,
           t("FabricCLIItem_LakehouseSelected_Title", "Lakehouse Selected"),
-          t("FabricCLIItem_LakehouseSelected_Message", `Connected to lakehouse: ${result.displayName}`),
+          t("FabricCLIItem_LakehouseSelected_Message", "Connected to lakehouse: {{lakehouseName}}", { lakehouseName: result.displayName }),
           NotificationType.Success
         );
         return true;
@@ -267,7 +289,7 @@ export function FabricCLIItemEditor(props: PageProps) {
       callNotificationOpen(
         workloadClient,
         t("FabricCLIItem_EnvironmentSelected_Title", "Environment Selected"),
-        t("FabricCLIItem_EnvironmentSelected_Message", `Selected environment: ${selectedEnv.displayName}`),
+        t("FabricCLIItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: selectedEnv.displayName }),
         NotificationType.Success
       );
     } catch (error) {
