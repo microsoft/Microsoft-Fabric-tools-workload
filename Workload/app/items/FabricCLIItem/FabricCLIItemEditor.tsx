@@ -8,6 +8,7 @@ import { callOpenSettings } from "../../controller/SettingsController";
 import { callDatahubOpen } from "../../controller/DataHubController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
+import { ItemClient } from "../../clients/ItemClient";
 
 import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
 import { FabricCLIItemEmptyView } from "./FabricCLIItemEmptyView";
@@ -36,6 +37,7 @@ export function FabricCLIItemEditor(props: PageProps) {
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
   const [clearTrigger, setClearTrigger] = useState(0);
+  const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -88,6 +90,23 @@ export function FabricCLIItemEditor(props: PageProps) {
   useEffect(() => {
     loadDataFromUrl(pageContext, pathname);
   }, [pageContext, pathname]);
+
+  // Load available environments
+  useEffect(() => {
+    const loadEnvironments = async () => {
+      if (!item?.workspaceId) return;
+      
+      try {
+        const itemClient = new ItemClient(workloadClient);
+        const workspaceItems = await itemClient.listItems(item.workspaceId, { type: 'Environment' });
+        setAvailableEnvironments(workspaceItems.value);
+      } catch (error) {
+        console.error('Failed to load environments:', error);
+      }
+    };
+    
+    loadEnvironments();
+  }, [item?.workspaceId]);
 
   const saveItem = async () => {
     if (!item) return;
@@ -198,6 +217,70 @@ export function FabricCLIItemEditor(props: PageProps) {
     setClearTrigger(prev => prev + 1);
   };
 
+  const handleSessionCreated = async (sessionId: string) => {
+    if (!item) return;
+    
+    const updatedItem = {
+      ...item,
+      definition: {
+        ...item.definition,
+        lastSparkSessionId: sessionId
+      }
+    };
+    setItem(updatedItem);
+    setIsUnsaved(true);
+    
+    // Auto-save the session ID
+    try {
+      await saveItemDefinition(workloadClient, item.id, updatedItem.definition);
+      setIsUnsaved(false);
+    } catch (error) {
+      console.error('Failed to save session ID:', error);
+    }
+  };
+
+  const handleSelectEnvironment = async (environmentId: string) => {
+    if (!item) return;
+    
+    const selectedEnv = availableEnvironments.find(env => env.id === environmentId);
+    if (!selectedEnv) return;
+    
+    const updatedItem = {
+      ...item,
+      definition: {
+        ...item.definition,
+        selectedSparkEnvironment: {
+          id: selectedEnv.id,
+          workspaceId: selectedEnv.workspaceId,
+          displayName: selectedEnv.displayName,
+          type: selectedEnv.type
+        }
+      }
+    };
+    setItem(updatedItem);
+    setIsUnsaved(true);
+    
+    // Auto-save the environment selection
+    try {
+      await saveItemDefinition(workloadClient, item.id, updatedItem.definition);
+      setIsUnsaved(false);
+      callNotificationOpen(
+        workloadClient,
+        t("FabricCLIItem_EnvironmentSelected_Title", "Environment Selected"),
+        t("FabricCLIItem_EnvironmentSelected_Message", `Selected environment: ${selectedEnv.displayName}`),
+        NotificationType.Success
+      );
+    } catch (error) {
+      console.error('Failed to save environment selection:', error);
+      callNotificationOpen(
+        workloadClient,
+        t("FabricCLIItem_EnvironmentError_Title", "Selection Failed"),
+        t("FabricCLIItem_EnvironmentError_Message", "Could not save environment selection."),
+        NotificationType.Error
+      );
+    }
+  };
+
   const EmptyViewWrapper = () => {
     const { setCurrentView } = useViewNavigation();
     return (
@@ -227,6 +310,7 @@ export function FabricCLIItemEditor(props: PageProps) {
           isUnsaved={isUnsaved}
           sessionActive={sessionActive}
           clearTrigger={clearTrigger}
+          onSessionCreated={handleSessionCreated}
         />
       )
     }
@@ -247,6 +331,13 @@ export function FabricCLIItemEditor(props: PageProps) {
           onShowHistory={handleShowHistory}
           onClearTerminal={handleClearTerminal}
           sessionActive={sessionActive}
+          onSelectLakehouse={handleSelectLakehouse}
+          onSelectEnvironment={handleSelectEnvironment}
+          availableEnvironments={availableEnvironments.map(env => ({
+            id: env.id,
+            displayName: env.displayName || env.id
+          }))}
+          selectedEnvironmentId={item?.definition?.selectedSparkEnvironment?.id}
         />
       )}
       views={views}

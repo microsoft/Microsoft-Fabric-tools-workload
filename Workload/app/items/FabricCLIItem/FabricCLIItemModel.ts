@@ -7,6 +7,8 @@ import { ItemReference } from "../../controller/ItemCRUDController";
 export interface FabricCLIItemDefinition {
   // Selected lakehouse reference
   selectedLakehouse?: ItemReference;
+  // Last used Spark session id
+  lastSparkSessionId?: string;
   // Selected Spark environment reference
   selectedSparkEnvironment?: ItemReference;  
 }

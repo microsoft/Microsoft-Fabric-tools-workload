@@ -23,6 +23,7 @@ interface FabricCLIItemDefaultViewProps {
   isUnsaved?: boolean;
   sessionActive: boolean;
   clearTrigger?: number;
+  onSessionCreated?: (sessionId: string) => void;
 }
 
 interface TerminalEntry {
@@ -37,7 +38,8 @@ export function FabricCLIItemDefaultView({
   selectedLakehouse,
   isUnsaved,
   sessionActive,
-  clearTrigger
+  clearTrigger,
+  onSessionCreated
 }: FabricCLIItemDefaultViewProps) {
   const { t } = useTranslation();
   
@@ -93,19 +95,28 @@ export function FabricCLIItemDefaultView({
     addSystemMessage('Initializing Spark session...');
 
     try {
-      const enviromentID = "13931715-15cc-4059-9012-4939b373cd81";
+      // Use selected environment from model, or fallback to hardcoded ID
+      const environmentId = item?.definition?.selectedSparkEnvironment?.id;
+      const existingSessionId = item?.definition?.lastSparkSessionId;
       
-      const session = await cliClient.initializeSession(
+      const session = await cliClient.reuseOrCreateSession(
         {
           workspaceId,
           lakehouseId,
-          environmentId: enviromentID
+          environmentId
         },
+        existingSessionId,
         (message) => addSystemMessage(message)
       );
 
-      setSessionId(session.id || '');
+      const newSessionId = session.id || '';
+      setSessionId(newSessionId);
       setSessionState(session.schedulerState || '');
+      
+      // Save session ID to model
+      if (newSessionId && onSessionCreated) {
+        onSessionCreated(newSessionId);
+      }
     } catch (error: any) {
       console.error('Error initializing session:', error);
       addSystemMessage(`Failed to initialize session: ${error.message}`);

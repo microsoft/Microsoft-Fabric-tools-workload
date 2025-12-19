@@ -38,17 +38,42 @@ export class ItemClient extends FabricPlatformClient {
   /**
    * Returns a list of items from the specified workspace
    * @param workspaceId The workspace ID
-   * @param continuationToken Token for pagination
+   * @param options Optional filters and pagination
+   * @param options.continuationToken Token for pagination
+   * @param options.type Filter items by type (e.g., 'Lakehouse', 'Environment', 'Notebook')
+   * @param options.recursive Include items from subfolders
+   * @param options.rootFolderId Filter items within a specific folder
    * @returns Promise<PaginatedResponse<Item>>
    */
   async listItems(
     workspaceId: string,
-    continuationToken?: string
+    options?: {
+      continuationToken?: string;
+      type?: string;
+      recursive?: boolean;
+      rootFolderId?: string;
+    }
   ): Promise<PaginatedResponse<Item>> {
     let endpoint = `/workspaces/${workspaceId}/items`;
-    if (continuationToken) {
-      endpoint += `?continuationToken=${encodeURIComponent(continuationToken)}`;
+    const params: string[] = [];
+    
+    if (options?.continuationToken) {
+      params.push(`continuationToken=${encodeURIComponent(options.continuationToken)}`);
     }
+    if (options?.type) {
+      params.push(`type=${encodeURIComponent(options.type)}`);
+    }
+    if (options?.recursive !== undefined) {
+      params.push(`recursive=${options.recursive}`);
+    }
+    if (options?.rootFolderId) {
+      params.push(`rootFolderId=${encodeURIComponent(options.rootFolderId)}`);
+    }
+    
+    if (params.length > 0) {
+      endpoint += `?${params.join('&')}`;
+    }
+    
     return this.get<PaginatedResponse<Item>>(endpoint);
   }
 

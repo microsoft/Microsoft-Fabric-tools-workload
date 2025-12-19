@@ -145,6 +145,77 @@ export class SparkLivyFabricCLIClient {
   }
 
   /**
+   * Check if an existing session is still valid and can be reused
+   */
+  async validateSession(
+    workspaceId: string,
+    lakehouseId: string,
+    sessionId: string
+  ): Promise<SessionResponse | null> {
+    try {
+      const sessions = await this.sparkClient.listSessions(workspaceId, lakehouseId);
+      const existingSession = sessions.find(s => s.id === sessionId);
+      
+      if (!existingSession) {
+        return null;
+      }
+      
+      // Check if session is in a usable state
+      const isScheduled = existingSession.schedulerState?.toLowerCase() === 'scheduled';
+      const isIdle = existingSession.livyState?.toLowerCase() === 'idle';
+      
+      if (isScheduled && isIdle) {
+        return existingSession;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Error validating session:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Reuse an existing session or create a new one
+   */
+  async reuseOrCreateSession(
+    config: FabricCLISessionConfig,
+    existingSessionId: string | null | undefined,
+    onProgress: (message: string) => void
+  ): Promise<SessionResponse> {
+    const { workspaceId, lakehouseId } = config;
+
+    // Try to reuse existing session
+    if (existingSessionId) {
+      onProgress(`Checking existing session ${existingSessionId}...`);
+      const validSession = await this.validateSession(workspaceId, lakehouseId, existingSessionId);
+      
+      if (validSession) {
+        onProgress(`Reusing existing session ${existingSessionId}`);
+        
+        // Verify CLI is still available
+        try {
+          onProgress('Verifying Fabric CLI installation...');
+          const response = await this.executeCommand(workspaceId, lakehouseId, existingSessionId, "--version");
+          
+          if (!response.isError) {
+            onProgress(`Fabric CLI verified: ${response.output}`);
+            onProgress('Session is ready! You can now execute Fabric CLI commands.');
+            return validSession;
+          }
+        } catch (error) {
+          console.warn('Failed to verify CLI in existing session:', error);
+        }
+      }
+      
+      onProgress('Existing session is not available, creating new session...');
+    }
+
+    // Create new session if reuse failed or no existing session
+    return await this.initializeSession(config, onProgress);
+  }
+
+  /**
    * Cancel an active session
    */
   async cancelSession(workspaceId: string, lakehouseId: string, sessionId: string): Promise<void> {

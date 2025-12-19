@@ -4,6 +4,7 @@ import { PageProps } from "../../App";
 import { 
   Ribbon, 
   RibbonAction,
+  RibbonDropdownAction,
   createSaveAction,
   createSettingsAction,
   ViewContext
@@ -11,7 +12,9 @@ import {
 import {
   Play24Regular,
   Stop24Regular,
-  Delete24Regular
+  Delete24Regular,
+  Database24Regular,
+  ChevronDown24Regular
 } from "@fluentui/react-icons";
 
 export interface FabricCLIItemRibbonProps extends PageProps {
@@ -26,11 +29,33 @@ export interface FabricCLIItemRibbonProps extends PageProps {
   onShowHistory?: () => void;
   onClearTerminal?: () => void;
   sessionActive?: boolean;
+  
+  // Configuration
+  onSelectLakehouse?: () => void;
+  onSelectEnvironment?: (environmentId: string) => void;
+  availableEnvironments?: Array<{ id: string; displayName: string }>;
+  selectedEnvironmentId?: string;
 }
 
 export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
   const { t } = useTranslation();
   const { viewContext } = props;
+
+  // Create environment dropdown action
+  const environmentDropdown: RibbonDropdownAction = {
+    key: "select-environment",
+    label: t("FabricCLIItem_SelectEnvironment", "Spark Environment"),
+    icon: ChevronDown24Regular,
+    onClick: () => {}, // Required but overridden by dropdown items
+    disabled: props.sessionActive || !props.availableEnvironments?.length,
+    dropdownItems: props.availableEnvironments?.map(env => ({
+      key: env.id,
+      label: env.displayName,
+      onClick: () => props.onSelectEnvironment?.(env.id),
+      checked: env.id === props.selectedEnvironmentId
+    })) || [],
+    showDividerAfter: true
+  };
 
   const homeToolbarActions: RibbonAction[] = [
     createSaveAction(
@@ -40,6 +65,14 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     createSettingsAction(
       props.openSettingsCallback,
     ),
+    {
+      key: "select-lakehouse",
+      label: t("FabricCLIItem_SelectLakehouse", "Change Lakehouse"),
+      icon: Database24Regular,
+      onClick: props.onSelectLakehouse,
+      disabled: props.sessionActive
+    },
+    environmentDropdown,
     {
       key: "start-terminal",
       label: t("FabricCLIItem_StartTerminal", "Start Session"),
@@ -52,7 +85,8 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
       label: t("FabricCLIItem_StopTerminal", "Stop Session"),
       icon: Stop24Regular,
       onClick: props.onStopSession,
-      disabled: !props.sessionActive
+      disabled: !props.sessionActive,
+      showDividerAfter: true
     },
     {
       key: "clear-terminal",
