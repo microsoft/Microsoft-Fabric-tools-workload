@@ -25,7 +25,7 @@ This repository contains community-built item types with full documentation:
 
 - **[PackageInstallerItem](docs/items/PackageInstallerItem/)** - Complex deployment and configuration patterns with wizard workflows
 - **[OneLakeExplorerItem](docs/items/OneLakeExplorerItem/)** - OneLake integration and file browsing examples
-- **[ExcelEditorItem](docs/items/ExcelEditorItem/)** - Excel Online integration with OneDrive (coming soon)
+- **[FabricCLIItem](docs/items/FabricCLIItem/)** - Fabric CLI that allows to run interactive Spark commands over the Livy API.
 
 Each item is fully documented in the `docs/items/[ItemName]/` folder with architecture details, usage guides, and implementation notes.
 

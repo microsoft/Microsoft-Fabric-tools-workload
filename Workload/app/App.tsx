@@ -6,6 +6,7 @@ import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWi
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
+import { FabricCLIItemEditor } from "./items/FabricCLIItem/FabricCLIItemEditor";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -82,6 +83,10 @@ export function App({ history, workloadClient }: AppProps) {
                     data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
+            <Route path="/FabricCLIItem-editor/:itemObjectId">
+                <FabricCLIItemEditor
+                    workloadClient={workloadClient} data-testid="FabricCLIItem-editor" />
+            </Route>
 
             {/* Conditionally loaded playground routes (only in development) */}
             <ConditionalPlaygroundRoutes workloadClient={workloadClient} />

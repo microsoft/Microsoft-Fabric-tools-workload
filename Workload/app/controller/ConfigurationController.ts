@@ -102,28 +102,3 @@ export function getWorkloadConfiguration(): WorkloadConfiguration {
 export function getConfiguredWorkloadItemTypes(): string[] {
   return getConfiguredWorkloadItems().map(item => item.fullType);
 }
-
-/**
- * Gets an array of item names only
- * @returns Array of strings like ["OneLakeExplorer", "PackageInstaller"]
- */
-export function getConfiguredWorkloadItemNames(): string[] {
-  return getConfiguredWorkloadItems().map(item => item.name);
-}
-
-/**
- * Checks if a specific item is configured in the workload
- * @param itemName The name of the item to check
- * @returns True if the item is configured, false otherwise
- */
-export function isWorkloadItemConfigured(itemName: string): boolean {
-  return getConfiguredWorkloadItems().some(item => item.name === itemName);
-}
-
-/**
- * Gets the workload name from environment variables
- * @returns The workload name (e.g., "Org.FabricTools")
- */
-export function getWorkloadName(): string {
-  return process.env.WORKLOAD_NAME || '';
-}

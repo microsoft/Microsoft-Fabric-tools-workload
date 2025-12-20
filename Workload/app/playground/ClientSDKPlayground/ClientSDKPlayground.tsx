@@ -21,7 +21,6 @@ import { ApiAuthentication } from './ApiAuthentication';
 import { PageProps } from '../../App';
 import { callNavigationBeforeNavigateAway, callNavigationNavigate } from "../../controller/NavigationController";
 import "../Playground.scss";
-import SampleSparkTerminal from '../../samples/views/SampleSparkTerminal/SampleSparkTerminal';
 import { TabContentProps } from './ClientSDKPlaygroundModel';
 
 
@@ -56,7 +55,6 @@ export function ClientSDKPlayground(props: TabContentProps) {
         <Tab value="dataHub">Data Hub</Tab>
         <Tab value="uiComponents">UI Components</Tab>
         <Tab value="authenticationFrontend">Frontend Authentication</Tab>
-        <Tab value="sparkTerminal">Spark Terminal</Tab>
       </TabList>
 
       <Stack className="main">
@@ -92,9 +90,6 @@ export function ClientSDKPlayground(props: TabContentProps) {
         )}
         {selectedApiTab === 'authenticationFrontend' && (
           <ApiAuthenticationFrontend workloadClient={workloadClient} />
-        )}
-        {selectedApiTab === 'sparkTerminal' && (
-          <SampleSparkTerminal workloadClient={workloadClient} />
         )}
       </Stack>
     </Stack>

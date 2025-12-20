@@ -340,13 +340,14 @@ export function ItemEditor(props: ItemEditorProps) {
   }, [isLoading, props.getInitialView, currentView]);
 
   // Wrapped setCurrentView that manages history and calls the optional callback
+  const { onViewChange } = props;
   const setCurrentView = React.useCallback((view: string) => {
     setViewHistory(prev => [...prev, view]);
     setCurrentViewInternal(view);
     // Clear detail view actions when changing views
     setDetailViewActions([]);
-    props.onViewChange?.(view);
-  }, [props]);
+    onViewChange?.(view);
+  }, [onViewChange]);
 
   // Go back to previous view (for detail views)
   const goBack = React.useCallback(() => {

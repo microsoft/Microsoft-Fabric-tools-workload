@@ -36,7 +36,7 @@ export { Ribbon } from './Ribbon';
 export type { RibbonProps, RibbonTab } from './Ribbon';
 
 export { RibbonToolbar } from './RibbonToolbar';
-export type { RibbonToolbarProps, RibbonAction } from './RibbonToolbar';
+export type { RibbonToolbarProps, RibbonAction, RibbonDropdownAction } from './RibbonToolbar';
 
 export { RibbonToolbarAction } from './RibbonToolbarAction';
 export type { RibbonToolbarActionProps, FluentIconComponent } from './RibbonToolbarAction';

@@ -685,6 +685,9 @@ export interface SessionResponse {
     pluginInfo?: SparkServicePluginInformation;
     schedulerInfo?: SchedulerInformation;
     state?: SessionState;
+    schedulerState?: string;
+    pluginState?: string;
+    livyState?: string;
     tags?: { [key: string]: string };
     result?: JobResult;
     cancellationReason?: string;
@@ -700,6 +703,9 @@ export interface StatementOutput {
     status: string;
     execution_count: number;
     data?: any;
+    ename?: string;
+    evalue?: string;
+    traceback?: string[];
 }
 
 export interface StatementResponse {

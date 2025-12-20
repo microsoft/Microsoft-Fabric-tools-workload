@@ -69,6 +69,27 @@
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
             }        
+          },
+          {
+            "title": "FabricCLIItem_DisplayName",
+            "description": "FabricCLIItem_Description",
+            "icon": {
+              "name": "assets/images/FabricCLIItem_Icon.png"
+            },
+            "icon_small": {
+              "name": "assets/images/FabricCLIItem_Icon.png"
+            },
+            "availableIn": [
+              "home",
+              "create-hub",
+              "workspace-plus-new",
+              "workspace-plus-new-teams"
+            ],
+            "itemType": "FabricCLI",
+            "createItemDialogConfig": {
+              "onCreationFailure": { "action": "item.onCreationFailure" },
+              "onCreationSuccess": { "action": "item.onCreationSuccess" }
+            }
           }
         ]
     },
@@ -88,6 +109,10 @@
         {
           "mediaType": 0,
           "source": "assets/images/OneLakeExplorerItem_Slideware.png"
+        },
+        {
+          "mediaType": 0,
+          "source": "assets/images/FabricCLIItem_Slideware.png"
         }
       ],
         "supportLink": {
