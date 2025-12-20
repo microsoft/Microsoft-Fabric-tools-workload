@@ -85,7 +85,7 @@
               "workspace-plus-new",
               "workspace-plus-new-teams"
             ],
-            "itemType": "SparkTerminal",
+            "itemType": "FabricCLI",
             "createItemDialogConfig": {
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
