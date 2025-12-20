@@ -9,6 +9,7 @@ import { callDatahubOpen } from "../../controller/DataHubController";
 import { NotificationType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 import { ItemClient } from "../../clients/ItemClient";
+import { ExecutionMode } from "./SparkLivyFabricCLIClient";
 
 import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
 import { FabricCLIItemEmptyView } from "./FabricCLIItemEmptyView";
@@ -38,6 +39,7 @@ export function FabricCLIItemEditor(props: PageProps) {
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
   const [clearTrigger, setClearTrigger] = useState(0);
   const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.FAB_CLI);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -303,6 +305,10 @@ export function FabricCLIItemEditor(props: PageProps) {
     }
   };
 
+  const handleSelectExecutionMode = (mode: ExecutionMode) => {
+    setExecutionMode(mode);
+  };
+
   const EmptyViewWrapper = () => {
     const { setCurrentView } = useViewNavigation();
     return (
@@ -333,6 +339,7 @@ export function FabricCLIItemEditor(props: PageProps) {
           sessionActive={sessionActive}
           clearTrigger={clearTrigger}
           onSessionCreated={handleSessionCreated}
+          executionMode={executionMode}
         />
       )
     }
@@ -360,6 +367,8 @@ export function FabricCLIItemEditor(props: PageProps) {
             displayName: env.displayName || env.id
           }))}
           selectedEnvironmentId={item?.definition?.selectedSparkEnvironment?.id}
+          onSelectExecutionMode={handleSelectExecutionMode}
+          selectedExecutionMode={executionMode}
         />
       )}
       views={views}

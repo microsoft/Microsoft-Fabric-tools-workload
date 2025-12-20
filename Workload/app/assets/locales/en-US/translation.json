@@ -51,6 +51,10 @@
     "FabricCLIItem_ClearTerminal": "Clear Terminal",
     "FabricCLIItem_History_Title": "Command History",
     "FabricCLIItem_History_Message": "Command history feature coming soon.",
+    "FabricCLIItem_ExecutionMode_Native": "Native Python",
+    "FabricCLIItem_ExecutionMode_Subprocess": "Subprocess",
+    "FabricCLIItem_ExecutionMode_FabCLI": "Fabric CLI",
+    "FabricCLIItem_CommandSuccess": "Command executed successfully",
     "FabricCLIItem_UnsavedChanges": "Configuration changes will be saved automatically..."
 }
   

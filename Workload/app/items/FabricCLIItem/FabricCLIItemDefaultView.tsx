@@ -11,9 +11,11 @@ import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
-import { SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
+import { ExecutionMode, SessionKind, SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
 
 import "./FabricCLIItem.scss";
+
+
 
 interface FabricCLIItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
@@ -23,12 +25,14 @@ interface FabricCLIItemDefaultViewProps {
   sessionActive: boolean;
   clearTrigger?: number;
   onSessionCreated?: (sessionId: string) => void;
+  executionMode?: ExecutionMode;
 }
 
 interface TerminalEntry {
   type: 'command' | 'response' | 'error' | 'system';
   content: string | React.ReactNode;
   timestamp: Date;
+  executionMode?: ExecutionMode; // Store execution mode for command entries
 }
 
 export function FabricCLIItemDefaultView({
@@ -38,7 +42,8 @@ export function FabricCLIItemDefaultView({
   isUnsaved,
   sessionActive,
   clearTrigger,
-  onSessionCreated
+  onSessionCreated,
+  executionMode: executionModeProp
 }: FabricCLIItemDefaultViewProps) {
   const { t } = useTranslation();
   
@@ -49,9 +54,10 @@ export function FabricCLIItemDefaultView({
   const [sessionState, setSessionState] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
-  // Direct mode - if true, commands are executed directly without 'fab' prefix to test spark session directly 
-  const [useDirectMode] = useState<boolean>(false);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
+  
+  // Execution mode - use from props or default to FAB_CLI
+  const executionMode = executionModeProp || ExecutionMode.FAB_CLI;
   
   // Command history
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -108,7 +114,8 @@ export function FabricCLIItemDefaultView({
         {
           workspaceId,
           lakehouseId,
-          environmentId
+          environmentId,
+          sessionKind: SessionKind.PYTHON
         },
         existingSessionId && existingSessionId.trim() !== '' ? existingSessionId : null,
         (message) => addSystemMessage(message)
@@ -155,7 +162,12 @@ export function FabricCLIItemDefaultView({
     if (!command.trim()) return;
     
     const userCommand = command;
-    setEntries(prev => [...prev, { type: 'command', content: userCommand, timestamp: new Date() }]);
+    setEntries(prev => [...prev, { 
+      type: 'command', 
+      timestamp: new Date(),
+      executionMode: executionMode, // Store the execution mode used for this command
+      content: userCommand, 
+    }]);
     
     // Add to command history
     setCommandHistory(prev => [...prev, userCommand]);
@@ -181,12 +193,15 @@ export function FabricCLIItemDefaultView({
 
     try {
       const result = await cliClient.executeCommand(workspaceId!, lakehouseId!, 
-                                                    sessionId, userCommand, useDirectMode);
+                                                    sessionId, userCommand, executionMode);
       
       if (result.isError) {
         setEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
-      } else {
+      } else if (result.output && result.output.trim()) {
         setEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
+      } else {
+        // No output and no error - show success message
+        setEntries(prev => [...prev, { type: 'system', content: t('FabricCLIItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
       }
     } catch (error: any) {
       setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
@@ -237,14 +252,18 @@ export function FabricCLIItemDefaultView({
           ) : (
             entries.map((entry, index) => (
               <div key={index}>
-                <span className="timestamp">[{formatTimestamp(entry.timestamp)}]</span>
                 {entry.type === 'command' ? (
                   <React.Fragment>
-                    <span className="prompt-symbol">{useDirectMode ? '> ' : '> fab '}</span>
+                    <span className="prompt-symbol">
+                      {entry.executionMode === ExecutionMode.NATIVE ? '>>> ' : 
+                       entry.executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
+                    </span>
                     <span className="command">{entry.content}</span>
                   </React.Fragment>
+                ) : entry.type === 'system' ? (
+                  <span className={entry.type}>{formatTimestamp(entry.timestamp)} {entry.content}</span>
                 ) : (
-                  <span className={entry.type}>{entry.content}</span>
+                  <span className={entry.type} style={{ whiteSpace: 'pre-wrap' }}>{entry.content}</span>
                 )}
               </div>
             ))
@@ -252,7 +271,10 @@ export function FabricCLIItemDefaultView({
         </div>
         
         <div className="terminal-input">
-          <span className="prompt-symbol">{useDirectMode ? '> ' : '> fab '}</span>
+          <span className="prompt-symbol">
+            {executionMode === ExecutionMode.NATIVE ? '>>> ' : 
+             executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
+          </span>
           <Input
             className="command-input"
             value={command}

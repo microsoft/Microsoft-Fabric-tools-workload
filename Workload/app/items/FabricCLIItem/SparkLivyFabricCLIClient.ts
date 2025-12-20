@@ -2,12 +2,38 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { SparkLivyClient } from "../../clients/SparkLivyClient";
 import { SessionRequest, SessionResponse, StatementRequest, StatementResponse } from "../../clients/FabricPlatformTypes";
 
+/**
+ * Execution mode for Fabric CLI commands
+ */
+export enum ExecutionMode {
+  /** Execute native Python code without any wrapper */
+  NATIVE = 'NATIVE',
+  /** Execute shell commands via subprocess */
+  SUBPROCESS = 'SUBPROCESS',
+  /** Execute commands with 'fab' prefix via subprocess */
+  FAB_CLI = 'FAB_CLI'
+}
+
+/**
+ * Session kinds supported by Spark Livy for Fabric CLI
+ */
+export enum SessionKind {
+  PYTHON = 'python',
+}
+
+/**
+ * Configuration for initializing a Fabric CLI session
+ */
 export interface FabricCLISessionConfig {
     workspaceId: string;
     lakehouseId: string;
     environmentId: string;
+    sessionKind: SessionKind;
 }
 
+/**
+ * Result of executing a Fabric CLI command
+ */
 export interface FabricCLICommandResult {
     success: boolean;
     output: string;
@@ -31,11 +57,11 @@ export class SparkLivyFabricCLIClient {
         config: FabricCLISessionConfig,
         onProgress: (message: string) => void
     ): Promise<SessionResponse> {
-        const { workspaceId, lakehouseId, environmentId } = config;
+        const { workspaceId, lakehouseId, environmentId, sessionKind } = config;
 
         const sessionRequest: SessionRequest = {
             name: `Fabric CLI Session ${new Date().toISOString()}`,
-            kind: 'python',
+            kind: sessionKind,
             conf: {
                 "spark.targetLakehouse": lakehouseId,
                 "spark.fabric.environmentDetails": `{"id" : "${environmentId}"}`
@@ -235,27 +261,36 @@ export class SparkLivyFabricCLIClient {
         lakehouseId: string,
         sessionId: string,
         command: string,
-        directMode: boolean = false
+        executionMode: ExecutionMode = ExecutionMode.FAB_CLI
     ): Promise<FabricCLICommandResult> {
-        // Wrap command in Python subprocess format with shell=True to support pipes, redirections, etc.
-        const escapedCommand = command.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        
-        // In direct mode, execute command directly without 'fab' prefix
-        const fullCommand = directMode ? escapedCommand : `fab ${escapedCommand}`;
-        
-        const code =
-            `import subprocess;
+        let code: string;
+        let statementRequest: StatementRequest;
+
+        if (executionMode === ExecutionMode.NATIVE) {
+            // Execute native Python code directly
+            statementRequest = { code: command, kind: SessionKind.PYTHON };
+        } else {
+            // Wrap command in Python subprocess format with shell=True to support pipes, redirections, etc.
+            const escapedCommand = command.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            
+            // Build command based on execution mode
+            const fullCommand = executionMode === ExecutionMode.FAB_CLI 
+                ? `fab ${escapedCommand}` 
+                : escapedCommand;
+            
+            code = `import subprocess;
 import json;
 result = subprocess.run("${fullCommand}", shell=True, capture_output=True, text=True);
 jsonResult = {"returncode": result.returncode, "stdout": result.stdout.strip(), "stderr": result.stderr.strip()};
 print(json.dumps(jsonResult));`;
-        
-        const statementRequest: StatementRequest = { code: code, kind: 'python' };
+            
+            statementRequest = { code: code, kind: SessionKind.PYTHON };
+        }
 
         const response = await this.sparkClient.submitStatement(workspaceId, lakehouseId, sessionId, statementRequest);
 
         // Wait for statement to complete
-        return await this.waitForStatementResult(workspaceId, lakehouseId, sessionId, response);
+        return await this.waitForStatementResult(workspaceId, lakehouseId, sessionId, response, executionMode);
     }
 
     /**
@@ -265,7 +300,8 @@ print(json.dumps(jsonResult));`;
         workspaceId: string,
         lakehouseId: string,
         sessionId: string,
-        statement: StatementResponse
+        statement: StatementResponse,
+        executionMode: ExecutionMode = ExecutionMode.FAB_CLI
     ): Promise<FabricCLICommandResult> {
         let attempts = 0;
         const maxAttempts = 60; // 60 seconds timeout
@@ -291,8 +327,19 @@ print(json.dumps(jsonResult));`;
                             isError: true
                         };
                     }
-                    // Parse JSON response from Fabric CLI
+                    
                     const rawOutput = statementInfo.output?.data?.['text/plain'] || '';
+                    
+                    // In NATIVE mode, return output directly without JSON parsing
+                    if (executionMode === ExecutionMode.NATIVE) {
+                        return {
+                            success: true,
+                            output: rawOutput,
+                            isError: false
+                        };
+                    }
+                    
+                    // Parse JSON response from Fabric CLI
                     
                     try {
                         // Extract JSON from output
