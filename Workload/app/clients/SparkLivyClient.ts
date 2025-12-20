@@ -123,7 +123,7 @@ export class SparkLivyClient extends FabricPlatformClient {
     batchId: string
   ): Promise<BatchResponse> {
     try {
-      const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/batches/${batchId}/state`;
+      const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/batches/${batchId}`;
       return this.delete<BatchResponse>(endpoint);
     } catch (error: any) {
       console.error(`Error cancelling batch job ${batchId}: ${error.message}`);
@@ -287,7 +287,7 @@ export class SparkLivyClient extends FabricPlatformClient {
     sessionId: string
   ): Promise<SessionResponse> {
     try {
-      const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/sessions/${sessionId}/state`;
+      const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/sessions/${sessionId}`;
       return this.delete<SessionResponse>(endpoint);
     } catch (error: any) {
       console.error(`Error cancelling session ${sessionId}: ${error.message}`);

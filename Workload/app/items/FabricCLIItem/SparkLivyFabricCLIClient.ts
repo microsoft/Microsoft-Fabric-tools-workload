@@ -65,6 +65,9 @@ export class SparkLivyFabricCLIClient {
             conf: {
                 "spark.targetLakehouse": lakehouseId,
                 "spark.fabric.environmentDetails": `{"id" : "${environmentId}"}`
+            },
+            tags: {
+                source: "Fabric CLI Item",
             }
         };
 
