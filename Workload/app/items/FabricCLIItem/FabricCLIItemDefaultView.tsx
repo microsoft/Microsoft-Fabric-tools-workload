@@ -25,6 +25,7 @@ interface FabricCLIItemDefaultViewProps {
   sessionActive: boolean;
   clearTrigger?: number;
   onSessionCreated?: (sessionId: string) => void;
+  showSystemMessage?: { message: string; timestamp: number };
   executionMode?: ExecutionMode;
 }
 
@@ -43,6 +44,7 @@ export function FabricCLIItemDefaultView({
   sessionActive,
   clearTrigger,
   onSessionCreated,
+  showSystemMessage: systemMessage,
   executionMode: executionModeProp
 }: FabricCLIItemDefaultViewProps) {
   const { t } = useTranslation();
@@ -84,18 +86,31 @@ export function FabricCLIItemDefaultView({
     }
   }, [entries]);
 
+  // Add system message when prop changes
+  useEffect(() => {
+    if (systemMessage) {
+      setEntries(prev => [...prev, { type: 'system', content: systemMessage.message, timestamp: new Date() }]);
+    }
+  }, [systemMessage]);
+
+  // Helper function for adding system messages
+  const addSystemMessage = (message: string) => {
+    setEntries(prev => [...prev, { type: 'system', content: message, timestamp: new Date() }]);
+  };
+
   // Session Management Effect
   useEffect(() => {
     if (sessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
+      // Check if environment is selected before initializing session
+      if (!item?.definition?.selectedSparkEnvironment?.id) {
+        addSystemMessage(t('FabricCLIItem_NoEnvironmentSelected', 'Please select a Spark environment before starting the session.'));
+        return;
+      }
       initializeSession();
     } else if (!sessionActive && sessionId && !isCancelling) {
       cancelCurrentSession();
     }
   }, [sessionActive, sessionId, isConnecting, isCancelling, workspaceId, lakehouseId]);
-
-  const addSystemMessage = (message: string) => {
-    setEntries(prev => [...prev, { type: 'system', content: message, timestamp: new Date() }]);
-  };
 
   const formatTimestamp = (date: Date) => date.toLocaleTimeString();
 

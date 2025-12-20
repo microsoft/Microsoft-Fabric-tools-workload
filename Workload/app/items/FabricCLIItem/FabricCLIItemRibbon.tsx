@@ -13,7 +13,7 @@ import {
 import {
   Play24Regular,
   Stop24Regular,
-  Delete24Regular,
+  Eraser24Regular,
   Database24Regular,
   ChevronDown24Regular
 } from "@fluentui/react-icons";
@@ -27,7 +27,6 @@ export interface FabricCLIItemRibbonProps extends PageProps {
   // Custom actions
   onStartTerminal?: () => void;
   onStopSession?: () => void;
-  onShowHistory?: () => void;
   onClearTerminal?: () => void;
   sessionActive?: boolean;
   
@@ -142,7 +141,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     {
       key: "clear-terminal",
       label: t("FabricCLIItem_ClearTerminal", "Clear Terminal"),
-      icon: Delete24Regular,
+      icon: Eraser24Regular,
       onClick: props.onClearTerminal,
       disabled: !props.sessionActive
     }

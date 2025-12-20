@@ -40,6 +40,7 @@ export function FabricCLIItemEditor(props: PageProps) {
   const [clearTrigger, setClearTrigger] = useState(0);
   const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.FAB_CLI);
+  const [systemMessage, setSystemMessage] = useState<{ message: string; timestamp: number }>();
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -96,11 +97,13 @@ export function FabricCLIItemEditor(props: PageProps) {
   // Load available environments
   useEffect(() => {
     const loadEnvironments = async () => {
-      if (!item?.workspaceId) return;
+      // Load environments from the lakehouse's workspace, not the item's workspace
+      const workspaceId = item?.definition?.selectedLakehouse?.workspaceId;
+      if (!workspaceId) return;
       
       try {
         const itemClient = new ItemClient(workloadClient);
-        const workspaceItems = await itemClient.listItems(item.workspaceId, { type: 'Environment' });
+        const workspaceItems = await itemClient.listItems(workspaceId, { type: 'Environment' });
         setAvailableEnvironments(workspaceItems.value);
       } catch (error) {
         console.error('Failed to load environments:', error);
@@ -108,7 +111,7 @@ export function FabricCLIItemEditor(props: PageProps) {
     };
     
     loadEnvironments();
-  }, [item?.workspaceId]);
+  }, [item?.definition?.selectedLakehouse?.workspaceId]);
 
   const saveItem = async () => {
     if (!item) return;
@@ -195,24 +198,22 @@ export function FabricCLIItemEditor(props: PageProps) {
           setItem(updatedItem);
           setIsUnsaved(true);
         }
-
-        callNotificationOpen(
-          workloadClient,
-          t("FabricCLIItem_LakehouseSelected_Title", "Lakehouse Selected"),
-          t("FabricCLIItem_LakehouseSelected_Message", "Connected to lakehouse: {{lakehouseName}}", { lakehouseName: result.displayName }),
-          NotificationType.Success
-        );
+        
+        // Add system message to terminal
+        setSystemMessage({
+          message: t("FabricCLIItem_SelectLakehouse_Success", "Connected to lakehouse: {{lakehouseName}}", { lakehouseName: result.displayName }),
+          timestamp: Date.now()
+        });
+        
         return true;
       }
       return false;
     } catch (error) {
       console.error('Failed to select lakehouse:', error);
-      callNotificationOpen(
-        workloadClient,
-        t("FabricCLIItem_LakehouseError_Title", "Selection Failed"),
-        t("FabricCLIItem_LakehouseError_Message", "Could not select lakehouse."),
-        NotificationType.Error
-      );
+      setSystemMessage({
+        message: t("FabricCLIItem_SelectLakehouse_Error", "Could not select lakehouse."),
+        timestamp: Date.now()
+      });
       return false;
     }
   };
@@ -226,15 +227,6 @@ export function FabricCLIItemEditor(props: PageProps) {
         console.error('Failed to open settings:', error);
       }
     }
-  };
-
-  const handleShowHistory = () => {
-    callNotificationOpen(
-      workloadClient,
-      t("FabricCLIItem_History_Title", "Command History"),
-      t("FabricCLIItem_History_Message", "Command history feature coming soon."),
-      NotificationType.Info
-    );
   };
 
   const handleClearTerminal = () => {
@@ -288,20 +280,18 @@ export function FabricCLIItemEditor(props: PageProps) {
     try {
       await saveItemDefinition(workloadClient, item.id, updatedItem.definition);
       setIsUnsaved(false);
-      callNotificationOpen(
-        workloadClient,
-        t("FabricCLIItem_EnvironmentSelected_Title", "Environment Selected"),
-        t("FabricCLIItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: selectedEnv.displayName }),
-        NotificationType.Success
-      );
+      
+      // Add system message to terminal
+      setSystemMessage({
+        message: t("FabricCLIItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: selectedEnv.displayName }),
+        timestamp: Date.now()
+      });
     } catch (error) {
       console.error('Failed to save environment selection:', error);
-      callNotificationOpen(
-        workloadClient,
-        t("FabricCLIItem_EnvironmentError_Title", "Selection Failed"),
-        t("FabricCLIItem_EnvironmentError_Message", "Could not save environment selection."),
-        NotificationType.Error
-      );
+      setSystemMessage({
+        message: t("FabricCLIItem_SelectEnvironment_Error", "Could not save environment selection."),
+        timestamp: Date.now()
+      });
     }
   };
 
@@ -339,6 +329,7 @@ export function FabricCLIItemEditor(props: PageProps) {
           sessionActive={sessionActive}
           clearTrigger={clearTrigger}
           onSessionCreated={handleSessionCreated}
+          showSystemMessage={systemMessage}
           executionMode={executionMode}
         />
       )
@@ -357,7 +348,6 @@ export function FabricCLIItemEditor(props: PageProps) {
           isSaveButtonEnabled={isUnsaved}
           onStartTerminal={handleStartSession}
           onStopSession={handleStopSession}
-          onShowHistory={handleShowHistory}
           onClearTerminal={handleClearTerminal}
           sessionActive={sessionActive}
           onSelectLakehouse={handleSelectLakehouse}
