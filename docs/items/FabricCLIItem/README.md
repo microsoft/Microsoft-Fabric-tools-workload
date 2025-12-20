@@ -1,43 +1,55 @@
 # Fabric CLI Item
 
-The Fabric CLI Item provides an interactive terminal interface for executing Fabric CLI commands, native Python code, and shell commands through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history and flexible execution modes.
+The Fabric CLI Item provides an interactive terminal interface for executing Fabric CLI commands through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history.
+
+**Advanced Features**: Optionally supports native Python code execution and shell commands through execution mode switching.
 
 ## Overview
 
 The Fabric CLI Item enables users to:
 
 - **Execute Fabric CLI commands** through an integrated terminal interface
-- **Run native Python code** directly in Spark sessions
-- **Execute shell commands** with subprocess support
 - **Manage Spark sessions** with automatic reuse and validation
 - **Select lakehouse and environment** for command execution context
 - **Track command history** with arrow key navigation
-- **Switch execution modes** dynamically between Native Python, Subprocess, and Fabric CLI
+
+**Advanced Features** (optional):
+
+- **Switch execution modes** to run native Python code or shell commands
+- **Execute Python directly** in Spark sessions for data processing
+- **Run shell commands** with subprocess support
 
 For technical architecture details, see [Architecture.md](./Architecture.md).
 
 ## Key Features
 
-### Multiple Execution Modes
+### Fabric CLI Execution (Default)
 
-The Fabric CLI Item supports three distinct execution modes:
+**Fabric CLI (`FAB_CLI`)** - Default Mode
 
-**Native Python (`NATIVE`)**
-- Execute Python code directly in the Spark session
-- Best for: Data processing, Spark operations, Python scripts
-- Example: `df = spark.read.parquet("Files/data.parquet")`
-
-**Subprocess (`SUBPROCESS`)**
-- Execute shell commands via Python subprocess
-- Supports pipes (`|`), redirections (`>`, `>>`), and complex shell operations
-- Best for: File operations, system commands, shell scripts
-- Example: `echo "Hello World" > myfile.txt`
-
-**Fabric CLI (`FAB_CLI`)**
 - Execute Fabric CLI commands with automatic `fab` prefix
 - Integrated access to Fabric platform capabilities
 - Best for: Fabric resource management, platform operations
 - Example: `workspace list` (executed as `fab workspace list`)
+
+### Advanced Execution Modes (Optional)
+
+To use Python or shell commands, select a different execution mode from the ribbon dropdown:
+
+**Native Python (`NATIVE`)**
+
+- Execute Python code directly in the Spark session
+- Must be activated via ribbon execution mode dropdown
+- Best for: Data processing, Spark operations, Python scripts
+- Example: `df = spark.read.parquet("Files/data.parquet")`
+
+**Subprocess (`SUBPROCESS`)**
+
+- Execute shell commands via Python subprocess
+- Must be activated via ribbon execution mode dropdown
+- Supports pipes (`|`), redirections (`>`, `>>`), and complex shell operations
+- Best for: File operations, system commands, shell scripts
+- Example: `echo "Hello World" > myfile.txt`
 
 ### Session Management
 
@@ -59,8 +71,8 @@ The Fabric CLI Item supports three distinct execution modes:
 
 - **Lakehouse Selection**: Change target lakehouse dynamically
 - **Environment Selection**: Choose from available Spark environments
-- **Execution Mode Toggle**: Switch between execution modes via ribbon
 - **Session Control**: Start/stop sessions from the ribbon
+- **Execution Mode Toggle** (Advanced): Switch to Python or shell modes via ribbon dropdown
 
 ## Architecture
 
@@ -80,25 +92,15 @@ FabricCLIItem/
 ### Execution Flow
 
 ```text
-User Command → Execution Mode Selection → Command Wrapper → Spark Session
+User Command → Fabric CLI Wrapper (default) → Spark Session
      ↓
-NATIVE Mode → Direct Python Code → Spark Execution
-     ↓
-SUBPROCESS/FAB_CLI → subprocess.run(shell=True) → JSON Response
+FAB_CLI Mode (default) → subprocess.run("fab command", shell=True) → JSON Response
      ↓
 Result Processing → Terminal Display → Command History
-```
 
-### Data Flow
-
-```text
-Session Creation → Environment + Lakehouse Selection → Session Validation
-     ↓
-Command Input → Mode-specific Wrapper → executeCommand()
-     ↓
-Spark Livy API → Statement Execution → Result Parsing
-     ↓
-Terminal Entry → Display with Formatting → History Storage
+Advanced Modes (when activated):
+NATIVE Mode → Direct Python Code → Spark Execution
+SUBPROCESS Mode → subprocess.run(shell=True) → JSON Response
 ```
 
 ## Component Details
@@ -106,6 +108,7 @@ Terminal Entry → Display with Formatting → History Storage
 ### FabricCLIItemDefaultView
 
 The main terminal component that:
+
 - Renders the terminal interface with command input
 - Manages command history and navigation
 - Handles execution mode per command
@@ -127,6 +130,7 @@ The main terminal component that:
 ### FabricCLIItemEditor
 
 The main orchestrator component that:
+
 - Manages item loading and saving
 - Coordinates session state and configuration
 - Handles lakehouse and environment selection
@@ -136,15 +140,17 @@ The main orchestrator component that:
 ### FabricCLIItemRibbon
 
 Ribbon integration providing:
+
 - **Start/Stop Session**: Session lifecycle management
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
-- **Execution Mode Dropdown**: Switch between Native, Subprocess, and Fabric CLI modes
+- **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Fabric CLI)
 - **Clear Terminal**: Clear all terminal entries
 
 ### SparkLivyFabricCLIClient
 
 Session management client that:
+
 - Creates and validates Spark Livy sessions
 - Executes commands with mode-specific wrapping
 - Handles session reuse logic
@@ -167,9 +173,9 @@ interface FabricCLIItemDefinition {
 
 ```typescript
 enum ExecutionMode {
-  NATIVE = 'NATIVE',          // Native Python execution
-  SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess
-  FAB_CLI = 'FAB_CLI'        // Fabric CLI with fab prefix
+  FAB_CLI = 'FAB_CLI',        // Fabric CLI with fab prefix (DEFAULT)
+  NATIVE = 'NATIVE',          // Native Python execution (Advanced)
+  SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess (Advanced)
 }
 ```
 
@@ -211,19 +217,49 @@ async reuseOrCreateSession(config, existingSessionId, onProgress) {
 ```
 
 **Validation Criteria**:
+
 - `schedulerState === 'Scheduled'`
 - `livyState === 'idle'`
 
 ### Session Clearing
 
 Session IDs are automatically cleared when:
+
 - User changes the selected lakehouse
 - User stops the session manually
 - Session validation fails
 
 ## Command Execution
 
-### Native Mode (NATIVE)
+### Fabric CLI Mode (FAB_CLI) - Default
+
+Fabric CLI commands with automatic `fab` prefix:
+
+```python
+# User input
+auth status
+
+# List all workspaces
+ls -l
+
+# List the content in a MyWorkspace
+ls MyWorkspace.Workspace -l
+
+```
+
+**Example Commands**:
+
+- `workspace list` - List all workspaces
+- `item list --workspace-id <id>` - List items in a workspace
+- `lakehouse get --workspace-id <id> --item-id <id>` - Get lakehouse details
+
+For more examples, see the [Fabric CLI Examples Documentation](https://microsoft.github.io/fabric-cli/examples/item_examples/).
+
+### Advanced Modes (Must be Activated in code)
+
+These modes require manual activation via the ribbon execution mode dropdown.
+
+#### Native Python Mode (NATIVE)
 
 Direct Python code execution in Spark session:
 
@@ -235,7 +271,7 @@ df.show()
 # Executed as-is in Spark session
 ```
 
-### Subprocess Mode (SUBPROCESS)
+#### Subprocess Mode (SUBPROCESS)
 
 Shell commands via Python subprocess:
 
@@ -246,20 +282,6 @@ ls -la | grep txt
 # Wrapped as
 import subprocess
 result = subprocess.run("ls -la | grep txt", shell=True, capture_output=True, text=True)
-print(json.dumps({"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode}))
-```
-
-### Fabric CLI Mode (FAB_CLI)
-
-Fabric CLI commands with automatic prefix:
-
-```python
-# User input
-workspace list
-
-# Wrapped as
-import subprocess
-result = subprocess.run("fab workspace list", shell=True, capture_output=True, text=True)
 print(json.dumps({"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode}))
 ```
 
@@ -276,12 +298,14 @@ The component includes comprehensive error handling for:
 ## Performance Considerations
 
 ### Optimization Strategies
+
 - **Session Reuse**: Validates and reuses sessions instead of creating new ones
 - **Lazy Session Creation**: Sessions created only when needed
-- **Command History**: In-memory storage with efficient navigation
+- **Command History**: In-memory storage with efficient navigation (Up- and Down- Key)
 - **Debounced Input**: Optimized command entry handling
 
 ### Resource Management
+
 - **Session Cleanup**: Proper session lifecycle management
 - **Memory Management**: Command history with reasonable limits
 - **Connection Pooling**: Efficient Spark Livy client reuse
@@ -289,19 +313,18 @@ The component includes comprehensive error handling for:
 ## Integration Points
 
 ### Fabric Platform
+
 - **Authentication**: Integrated with Fabric authentication system (Service Principal required)
 - **Permissions**: Respects workspace and item-level permissions
 - **Spark Integration**: Native Spark Livy session management
+- **Monitoring Hub**: Livy API sessions appear in the Fabric Monitoring Hub for tracking and diagnostics
 
 ### Spark Livy
+
 - **Session API**: Session creation, listing, and cancellation
 - **Statement API**: Command execution and result retrieval
 - **Batch Processing**: Support for long-running operations
-
-### OneLake
 - **Lakehouse Context**: Commands execute against selected lakehouse
-- **File Operations**: Full access to lakehouse files and tables
-- **Data Access**: Read/write operations through Spark
 
 ## Limitations
 
@@ -312,6 +335,7 @@ The component includes comprehensive error handling for:
 The Fabric CLI Item currently **only supports Service Principal authentication**. User-based authentication is not yet supported.
 
 **Setup Requirements**:
+
 1. Configure Service Principal in Azure AD
 2. Assign appropriate Fabric workspace permissions
 3. Configure client credentials in environment variables
@@ -330,44 +354,32 @@ For detailed setup instructions, see the [CreateFabricCLIServicePrincipal.ps1](.
 
 ### Common Issues
 
-**Session Creation Fails**
-- Verify Service Principal credentials are configured
-- Check workspace permissions for Service Principal
-- Ensure Spark environment is available
-- Validate lakehouse access permissions
-
 **Commands Not Executing**
+
 - Verify session is in 'Scheduled' state
 - Check lakehouse selection is valid
 - Ensure execution mode is appropriate for command type
 - Review error messages in terminal
 
 **Authentication Errors**
+
 - Confirm Service Principal is properly configured
 - Verify client credentials in environment variables
 - Check API permissions in Azure AD
 - Ensure workspace has Service Principal access
 
-**Performance Issues**
-- Clear terminal history with `clear` command
-- Stop and restart session
-- Check Spark environment capacity
-- Review command complexity
-
 ## Future Enhancements
 
 - **User Authentication**: Support for user-based authentication
-- **Interactive Login**: Browser-based authentication flow
-- **Multi-session Support**: Manage multiple concurrent sessions
 - **Command Autocomplete**: IntelliSense for Fabric CLI commands
-- **Output Export**: Save command results to files
-- **Script Execution**: Run multi-line scripts from files
-- **Session Templates**: Pre-configured session profiles
-- **Advanced History**: Searchable command history with filters
+- **Data Integration**: Integration to leverage data in the Fabric CLI
+- **Output Export**: Save command results to item
+- **Spark Enviroment setup**: Set up spark Enviroment and configure it correctly
 
 ## Related Resources
 
 - [Fabric CLI Documentation](https://learn.microsoft.com/en-us/fabric/cicd/fabric-cli)
+- [Fabric CLI Examples](https://microsoft.github.io/fabric-cli/examples/item_examples/)
 - [Spark Livy REST API](https://learn.microsoft.com/en-us/azure/synapse-analytics/spark/apache-spark-livy-rest-interface)
 - [Service Principal Setup](../../../scripts/Setup/CreateFabricCLIServicePrincipal.ps1)
 - [Architecture Documentation](./Architecture.md)
