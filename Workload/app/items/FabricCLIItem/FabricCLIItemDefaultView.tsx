@@ -361,7 +361,7 @@ export function FabricCLIItemDefaultView({
               <br />
               {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
               {sessionActive && !sessionId && "Initializing session..."}
-              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'workspace list', 'lakehouse list')."}
+              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'ls -l', 'cd ws1.Workspace')."}
             </div>
           ) : (
             entries.map((entry, index) => (
