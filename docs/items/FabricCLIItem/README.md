@@ -1,14 +1,21 @@
 # Fabric CLI Item
 
-The Fabric CLI Item provides an interactive terminal interface for executing Fabric CLI commands through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history.
+The Fabric CLI Item provides an interactive terminal interface for executing Fabric CLI commands and Python scripts through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history and script management capabilities.
 
-**Advanced Features**: Optionally supports native Python code execution and shell commands through execution mode switching.
+**Key Features**:
+
+- **Interactive Terminal** for Fabric CLI commands
+- **Python Script Management** with parameterized execution
+- **Batch Job Execution** for scripts with monitoring
+- **Session Management** with automatic reuse
 
 ## Overview
 
 The Fabric CLI Item enables users to:
 
 - **Execute Fabric CLI commands** through an integrated terminal interface
+- **Create and manage Python scripts** with parameter support
+- **Run scripts as batch jobs** with Spark configuration
 - **Manage Spark sessions** with automatic reuse and validation
 - **Select lakehouse and environment** for command execution context
 - **Track command history** with arrow key navigation
@@ -18,10 +25,66 @@ The Fabric CLI Item enables users to:
 - **Switch execution modes** to run native Python code or shell commands
 - **Execute Python directly** in Spark sessions for data processing
 - **Run shell commands** with subprocess support
+- **Parameterized scripts** with type-safe parameter injection
 
 For technical architecture details, see [Architecture.md](./Architecture.md).
 
 ## Key Features
+
+### Script Management
+
+Create, edit, and manage Python scripts with full parameter support:
+
+**Script Creation & Editing**
+
+- **Create Scripts**: Add new Python scripts with automatic `.py` extension
+- **Monaco Editor**: Full-featured code editor with syntax highlighting
+- **Script Parameters**: Define typed parameters (string, int, float, bool, date)
+- **Parameter Panel**: Collapsible left panel for parameter configuration
+- **Auto-save**: Changes are automatically saved with notifications
+- **Delete Protection**: Confirmation dialog prevents accidental deletions
+
+**Script Parameters**
+
+Scripts support parameterized execution with type-safe configuration:
+
+- **Parameter Types**: string, int, float, bool, date
+- **Spark Configuration**: Parameters passed as `spark.script.param.<name>`
+- **Type Information**: Parameter types available as `spark.script.param.<name>.type`
+- **Reusable Scripts**: Same script file with different parameter values
+
+**Example Parameter Access**:
+
+```python
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+# Read parameter with type conversion
+def get_parameter(param_name, param_type="string", default_value=None):
+    value = spark.conf.get(f"spark.script.param.{param_name}", default_value)
+    
+    if param_type == "int":
+        return int(value)
+    elif param_type == "float":
+        return float(value)
+    elif param_type == "bool":
+        return value.lower() == "true"
+    else:  # string or date
+        return value
+
+# Access parameters
+batch_size = get_parameter("batch_size", "int", "100")
+input_path = get_parameter("input_path", "string", "Files/data")
+enable_logging = get_parameter("enable_logging", "bool", "true")
+```
+
+**Batch Execution**
+
+- **Run as Batch Job**: Execute scripts as Spark batch jobs
+- **Job Monitoring**: Track batch job creation and state
+- **Parameter Injection**: Parameters automatically configured in Spark conf
+- **Progress Notifications**: Real-time feedback during job submission
+- **Job ID Tracking**: Batch job ID returned for monitoring
 
 ### Fabric CLI Execution (Default)
 
@@ -81,11 +144,14 @@ To use Python or shell commands, select a different execution mode from the ribb
 ```text
 FabricCLIItem/
 ├── FabricCLIItemDefaultView.tsx          # Terminal UI and command execution
-├── FabricCLIItemEditor.tsx               # Main editor orchestrator
+├── FabricCLIItemEditor.tsx               # Main editor orchestrator with script management
 ├── FabricCLIItemEmptyView.tsx            # Empty state component
 ├── FabricCLIItemRibbon.tsx               # Ribbon actions and controls
 ├── FabricCLIItemModel.ts                 # Data models and interfaces
-├── SparkLivyFabricCLIClient.ts           # Spark Livy session management
+├── ScriptDetailView.tsx                  # Script editor with parameter panel
+├── ScriptsList.tsx                       # Script list component
+├── CreateScriptDialog.tsx                # Script creation dialog
+├── SparkLivyFabricCLIClient.ts           # Spark Livy session and batch management
 └── FabricCLIItem.scss                    # Centralized styling
 ```
 
@@ -141,20 +207,47 @@ The main orchestrator component that:
 
 Ribbon integration providing:
 
-- **Start/Stop Session**: Session lifecycle management
+- **Save**: Save script changes and item definition
+- **Settings**: Open item settings panel
+- **Start/Stop Session**: Session lifecycle management for terminal
+- **Clear Terminal**: Clear all terminal entries
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
 - **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Fabric CLI)
-- **Clear Terminal**: Clear all terminal entries
+- **Create Script**: Create new Python script
+
+### ScriptDetailView
+
+Script editor component that:
+
+- Provides Monaco editor for Python code editing
+- Displays collapsible parameter panel on the left
+- Manages script save with auto-save functionality
+- Executes scripts as batch jobs with parameters
+- Shows dirty indicator for unsaved changes
+- Includes Save and Run toolbar actions
+
+### ScriptsList
+
+Script list component that:
+
+- Displays all Python scripts in a vertical list
+- Shows script selection state
+- Provides delete action with confirmation dialog
+- Handles empty state with create script button
+- Supports script navigation
 
 ### SparkLivyFabricCLIClient
 
-Session management client that:
+Session and batch management client that:
 
 - Creates and validates Spark Livy sessions
 - Executes commands with mode-specific wrapping
 - Handles session reuse logic
 - Manages statement lifecycle
+- **Runs scripts as batch jobs** with parameter configuration
+- **Polls for batch creation** and state updates
+- **Uploads scripts to OneLake** for batch execution
 - Parses results based on execution mode
 
 ## Data Models
@@ -163,9 +256,31 @@ Session management client that:
 
 ```typescript
 interface FabricCLIItemDefinition {
-  selectedLakehouse?: ItemReference;      // Selected lakehouse context
-  lastSparkSessionId?: string;             // Last used session ID for reuse
-  selectedSparkEnvironment?: ItemReference; // Selected Spark environment
+  selectedLakehouse?: ItemReference;          // Selected lakehouse context
+  lastSparkSessionId?: string;                 // Last used session ID for reuse
+  selectedSparkEnvironment?: ItemReference;    // Selected Spark environment
+  scripts?: PythonScriptMetadata[];            // Python script metadata
+}
+```
+
+### PythonScriptMetadata
+
+```typescript
+interface PythonScriptMetadata {
+  name: string;                    // Script name (includes .py extension, used as identifier)
+  parameters?: ScriptParameter[];  // Script parameters
+  createdAt?: string;              // Creation timestamp
+  modifiedAt?: string;             // Last modification timestamp
+}
+```
+
+### ScriptParameter
+
+```typescript
+interface ScriptParameter {
+  name: string;                                    // Parameter name
+  type: 'string' | 'int' | 'float' | 'bool' | 'date';  // Parameter type
+  value: string;                                   // Parameter value
 }
 ```
 
@@ -372,9 +487,15 @@ For detailed setup instructions, see the [CreateFabricCLIServicePrincipal.ps1](.
 
 - **User Authentication**: Support for user-based authentication
 - **Command Autocomplete**: IntelliSense for Fabric CLI commands
+- **Script Templates**: Pre-built templates for common data operations
+- **Script Versioning**: Track script changes with version history
+- **Output Export**: Save command and script results to item
+- **Parameter Validation**: Client-side validation for parameter types
+- **Script Dependencies**: Manage Python package requirements per script
+- **Batch Job Monitoring**: Real-time log streaming for running batch jobs
+- **Script Scheduling**: Schedule scripts for automated execution
 - **Data Integration**: Integration to leverage data in the Fabric CLI
-- **Output Export**: Save command results to item
-- **Spark Enviroment setup**: Set up spark Enviroment and configure it correctly
+- **Spark Environment Setup**: Set up Spark environment and configure it correctly
 
 ## Related Resources
 

@@ -8,10 +8,11 @@ import {
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { FabricCLIItemDefinition } from "./FabricCLIItemModel";
+import { FabricCLIItemDefinition, PythonScriptMetadata } from "./FabricCLIItemModel";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
 import { ExecutionMode, SessionKind, SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
+import { ScriptsList } from "./ScriptsList";
 
 import "./FabricCLIItem.scss";
 
@@ -27,6 +28,10 @@ interface FabricCLIItemDefaultViewProps {
   onSessionCreated?: (sessionId: string) => void;
   showSystemMessage?: { message: string; timestamp: number };
   executionMode?: ExecutionMode;
+  onScriptSelect?: (scriptId: string) => void;
+  onScriptCreate?: () => void;
+  onScriptDelete?: (scriptId: string) => void;
+  onScriptRun?: (scriptId: string) => void | Promise<void>;
 }
 
 interface TerminalEntry {
@@ -45,9 +50,16 @@ export function FabricCLIItemDefaultView({
   clearTrigger,
   onSessionCreated,
   showSystemMessage: systemMessage,
-  executionMode: executionModeProp
+  executionMode: executionModeProp,
+  onScriptSelect,
+  onScriptCreate,
+  onScriptDelete,
+  onScriptRun
 }: FabricCLIItemDefaultViewProps) {
   const { t } = useTranslation();
+  
+  // Get scripts from item definition
+  const scripts: PythonScriptMetadata[] = item?.definition?.scripts || [];
   
   // Terminal State
   const [command, setCommand] = useState<string>('');
@@ -173,29 +185,87 @@ export function FabricCLIItemDefaultView({
     }
   };
 
-  const executeCommand = async () => {
-    if (!command.trim()) return;
-    
-    const userCommand = command;
-    setEntries(prev => [...prev, { 
-      type: 'command', 
-      timestamp: new Date(),
-      executionMode: executionMode, // Store the execution mode used for this command
-      content: userCommand, 
-    }]);
-    
-    // Add to command history
-    setCommandHistory(prev => [...prev, userCommand]);
-    setHistoryIndex(-1);
-    setCommand('');
+  /**
+   * Command handler type
+   */
+  type CommandHandler = (args: string) => Promise<void> | void;
 
-    if (userCommand.toLowerCase() === 'clear') {
-      setEntries([]);
+  /**
+   * Handle the "run {ScriptName}" command
+   */
+  const handleRunCommand = async (scriptName: string) => {
+    const script = scripts.find(s => s.name === scriptName);
+    
+    if (!script) {
+      addSystemMessage(`Script "${scriptName}" not found. Available scripts: ${scripts.map(s => s.name).join(', ') || 'none'}`);
+      return;
+    }
+    
+    if (!onScriptRun) {
+      addSystemMessage('Script execution is not available.');
       return;
     }
 
+    addSystemMessage(`Executing script: ${scriptName}`);
+    try {
+      await onScriptRun(script.name);
+    } catch (error: any) {
+      setEntries(prev => [...prev, { 
+        type: 'error', 
+        content: `Failed to run script: ${error.message}`, 
+        timestamp: new Date() 
+      }]);
+    }
+  };
+
+  /**
+   * Handle the "clear" command
+   */
+  const handleClearCommand = () => {
+    setEntries([]);
+  };
+
+  /**
+   * Map of special commands to their handlers
+   * Key is the command prefix (case-insensitive)
+   * Value is the handler function that receives the remaining arguments
+   */
+  const specialCommands: Record<string, CommandHandler> = {
+    'clear': handleClearCommand,
+    'run': handleRunCommand,
+  };
+
+  /**
+   * Try to handle special local commands
+   * Returns true if the command was handled, false otherwise
+   */
+  const tryHandleSpecialCommand = async (userCommand: string): Promise<boolean> => {
+    const trimmedCommand = userCommand.trim();
+    const commandLower = trimmedCommand.toLowerCase();
+
+    // Check each registered special command
+    for (const [commandPrefix, handler] of Object.entries(specialCommands)) {
+      if (commandLower === commandPrefix) {
+        // Exact match, no arguments
+        await handler('');
+        return true;
+      } else if (commandLower.startsWith(commandPrefix + ' ')) {
+        // Command with arguments
+        const args = trimmedCommand.substring(commandPrefix.length).trim();
+        await handler(args);
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  /**
+   * Execute a Fabric CLI command via the active Spark session
+   */
+  const executeFabricCLICommand = async (userCommand: string) => {
     if (!sessionId) {
-      addSystemMessage('No active session. Please start the terminal from the ribbon.');
+      addSystemMessage('Session needs to be started first. Click \'Start Terminal\' in the ribbon.');
       return;
     }
 
@@ -221,6 +291,35 @@ export function FabricCLIItemDefaultView({
     } catch (error: any) {
       setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
     }
+  };
+
+  /**
+   * Main command execution entry point
+   */
+  const executeCommand = async () => {
+    if (!command.trim()) return;
+    
+    const userCommand = command;
+    setEntries(prev => [...prev, { 
+      type: 'command', 
+      timestamp: new Date(),
+      executionMode: executionMode,
+      content: userCommand, 
+    }]);
+    
+    // Add to command history
+    setCommandHistory(prev => [...prev, userCommand]);
+    setHistoryIndex(-1);
+    setCommand('');
+
+    // Try to handle as a special command first
+    const wasHandled = await tryHandleSpecialCommand(userCommand);
+    if (wasHandled) {
+      return;
+    }
+
+    // Execute as a regular Fabric CLI command
+    await executeFabricCLICommand(userCommand);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -262,7 +361,7 @@ export function FabricCLIItemDefaultView({
               <br />
               {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
               {sessionActive && !sessionId && "Initializing session..."}
-              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'workspace list', 'lakehouse list')."}
+              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'ls -l', 'cd ws1.Workspace')."}
             </div>
           ) : (
             entries.map((entry, index) => (
@@ -278,7 +377,7 @@ export function FabricCLIItemDefaultView({
                 ) : entry.type === 'system' ? (
                   <span className={entry.type}>{formatTimestamp(entry.timestamp)} {entry.content}</span>
                 ) : (
-                  <span className={entry.type} style={{ whiteSpace: 'pre-wrap' }}>{entry.content}</span>
+                  <span className={`${entry.type} terminal-entry-content`}>{entry.content}</span>
                 )}
               </div>
             ))
@@ -296,20 +395,35 @@ export function FabricCLIItemDefaultView({
             onChange={(e, data) => setCommand(data.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter command..."
-            disabled={!sessionId || isConnecting || isCancelling}
           />
           <Button
             icon={<Send24Regular />}
             onClick={executeCommand}
-            disabled={!sessionId || isConnecting || isCancelling}
           />
         </div>
       </div>
     </Stack>
   );
 
+  const leftPanel = (
+    <ScriptsList
+      scripts={scripts}
+      onScriptSelect={onScriptSelect || (() => {})}
+      onScriptCreate={onScriptCreate || (() => {})}
+      onScriptDelete={onScriptDelete || (() => {})}
+    />
+  );
+
   return (
     <ItemEditorDefaultView
+      left={{
+        content: leftPanel,
+        title: t('FabricCLIItem_Scripts_Panel_Title', 'Scripts'),
+        collapsible: true,
+        minWidth: 200,
+        maxWidth: 400,
+        width: 250
+      }}
       center={{
         content: content
       }}
