@@ -72,7 +72,7 @@ export function CreateScriptDialog(props: PageProps) {
       isConfirmDisabled={!scriptName.trim() || isDuplicate}
       minWidth={400}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="create-script-dialog-content">
         <Label htmlFor="script-name-input">
           {t("FabricCLIItem_Scripts_CreateDialog_Label", "Script Name")}
         </Label>
@@ -85,7 +85,7 @@ export function CreateScriptDialog(props: PageProps) {
           autoFocus
         />
         {isDuplicate && (
-          <Text style={{ color: 'var(--colorPaletteRedForeground1)', fontSize: '12px' }}>
+          <Text className="create-script-dialog-error">
             {t('FabricCLIItem_Scripts_CreateDialog_DuplicateError', 'A script with this name already exists')}
           </Text>
         )}

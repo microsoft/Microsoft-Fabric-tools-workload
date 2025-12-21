@@ -12,9 +12,7 @@ import {
   Option,
   Tooltip,
   Card,
-  CardHeader,
-  makeStyles,
-  tokens
+  CardHeader
 } from "@fluentui/react-components";
 import "./FabricCLIItem.scss";
 
@@ -25,39 +23,6 @@ export interface ScriptDetailViewProps {
   onRun?: (script: PythonScript) => void;
   isRunning?: boolean;
 }
-
-const useStyles = makeStyles({
-  parametersPanel: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalM,
-    padding: tokens.spacingVerticalM
-  },
-  parameterCard: {
-    marginBottom: tokens.spacingVerticalS
-  },
-  parameterFields: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalS,
-    paddingTop: tokens.spacingVerticalS
-  },
-  fieldRow: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS
-  },
-  typeDropdown: {
-    minWidth: 'auto',
-    width: '100%'
-  },
-  deleteButton: {
-    alignSelf: 'flex-end'
-  },
-  addButton: {
-    marginTop: tokens.spacingVerticalM
-  }
-});
 
 /**
  * ScriptDetailView component
@@ -72,7 +37,6 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   isRunning = false
 }) => {
   const { t } = useTranslation();
-  const styles = useStyles();
   const [content, setContent] = useState(script.content || "");
   const [parameters, setParameters] = useState<ScriptParameter[]>(script.parameters || []);
   const [isDirty, setIsDirty] = useState(false);
@@ -134,10 +98,10 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   // Left panel with parameter configuration
   const parametersPanel = (
-    <div className={styles.parametersPanel}>
+    <div className="parameters-panel">
       
       {parameters.map((param, index) => (
-        <Card key={index} className={styles.parameterCard}>
+        <Card key={index} className="parameter-card">
           <CardHeader
             header={<strong>{param.name || t('FabricCLIItem_Script_NewParameter', 'New Parameter')}</strong>}
             action={
@@ -152,8 +116,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
               </Tooltip>
             }
           />
-          <div className={styles.parameterFields}>
-            <div className={styles.fieldRow}>
+          <div className="parameter-fields">
+            <div className="field-row">
               <Label size="small">{t('FabricCLIItem_Script_ParameterName', 'Name')}</Label>
               <Input
                 size="small"
@@ -163,10 +127,10 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
               />
             </div>
             
-            <div className={styles.fieldRow}>
+            <div className="field-row">
               <Label size="small">{t('FabricCLIItem_Script_ParameterType', 'Type')}</Label>
               <Dropdown
-                className={styles.typeDropdown}
+                className="type-dropdown"
                 size="small"
                 value={param.type}
                 selectedOptions={[param.type]}
@@ -180,7 +144,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
               </Dropdown>
             </div>
             
-            <div className={styles.fieldRow}>
+            <div className="field-row">
               <Label size="small">{t('FabricCLIItem_Script_ParameterValue', 'Value')}</Label>
               <Input
                 size="small"
@@ -194,7 +158,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       ))}
       
       <Button
-        className={styles.addButton}
+        className="add-button"
         icon={<Add20Regular />}
         appearance="secondary"
         onClick={handleAddParameter}

@@ -377,7 +377,7 @@ export function FabricCLIItemDefaultView({
                 ) : entry.type === 'system' ? (
                   <span className={entry.type}>{formatTimestamp(entry.timestamp)} {entry.content}</span>
                 ) : (
-                  <span className={entry.type} style={{ whiteSpace: 'pre-wrap' }}>{entry.content}</span>
+                  <span className={`${entry.type} terminal-entry-content`}>{entry.content}</span>
                 )}
               </div>
             ))
