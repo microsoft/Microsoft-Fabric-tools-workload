@@ -79,8 +79,10 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
       batchRequest
     );
 
+    throw new Error("Deployment not implemented" + batchResponse.operationId);
+
     // Map BatchState to DeploymentStatus
-    const deploymentStatus = this.mapBatchStateToDeploymentStatus(batchResponse.state);
+    /*const deploymentStatus = this.mapBatchStateToDeploymentStatus(batchResponse.state);
     
     depContext.deployment.job = {
         id: batchResponse.id,
@@ -91,7 +93,7 @@ export class SparkLivyDeploymentStrategy extends DeploymentStrategy {
       };
       depContext.deployment.status = deploymentStatus
 
-    return depContext.deployment;
+    return depContext.deployment;*/
   }
 
   async updateDeploymentStatus(): Promise<PackageDeployment> {

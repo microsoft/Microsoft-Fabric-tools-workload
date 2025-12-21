@@ -15,7 +15,8 @@ import {
   Stop24Regular,
   Eraser24Regular,
   Database24Regular,
-  ChevronDown24Regular
+  ChevronDown24Regular,
+  DocumentAdd24Regular
 } from "@fluentui/react-icons";
 
 export interface FabricCLIItemRibbonProps extends PageProps {
@@ -39,6 +40,9 @@ export interface FabricCLIItemRibbonProps extends PageProps {
   // Execution mode
   onSelectExecutionMode?: (mode: ExecutionMode) => void;
   selectedExecutionMode?: ExecutionMode;
+  
+  // Script management
+  onCreateScript?: () => void;
 }
 
 export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
@@ -143,7 +147,14 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
       label: t("FabricCLIItem_ClearTerminal", "Clear Terminal"),
       icon: Eraser24Regular,
       onClick: props.onClearTerminal,
-      disabled: !props.sessionActive
+      disabled: !props.sessionActive,
+      showDividerAfter: true
+    },
+    {
+      key: "create-script",
+      label: t("FabricCLIItem_CreateScript", "Create Script"),
+      icon: DocumentAdd24Regular,
+      onClick: () => props.onCreateScript?.()
     }
   ];
 

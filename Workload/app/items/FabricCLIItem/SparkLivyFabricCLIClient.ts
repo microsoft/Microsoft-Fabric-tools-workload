@@ -1,6 +1,9 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { SparkLivyClient } from "../../clients/SparkLivyClient";
-import { SessionRequest, SessionResponse, StatementRequest, StatementResponse } from "../../clients/FabricPlatformTypes";
+import { SessionRequest, SessionResponse, StatementRequest, StatementResponse, BatchRequest, BatchResponse } from "../../clients/FabricPlatformTypes";
+import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
+import { EnvironmentConstants } from "../../constants";
+import { ScriptParameter } from "./FabricCLIItemModel";
 
 /**
  * Execution mode for Fabric CLI commands
@@ -45,9 +48,11 @@ export interface FabricCLICommandResult {
  */
 export class SparkLivyFabricCLIClient {
     private sparkClient: SparkLivyClient;
+    private oneLakeClient: OneLakeStorageClient;
 
     constructor(workloadClient: WorkloadClientAPI) {
         this.sparkClient = new SparkLivyClient(workloadClient);
+        this.oneLakeClient = new OneLakeStorageClient(workloadClient);
     }
 
     /**
@@ -398,5 +403,249 @@ print(json.dumps(jsonResult));`;
         }
 
         throw new Error('Statement execution timed out after 60 seconds');
+    }
+
+    /**
+     * Run a Python script as a batch job
+     * @param workspaceId The workspace ID
+     * @param lakehouseId The lakehouse ID
+     * @param environmentId The Spark environment ID
+     * @param scriptName The name of the script
+     * @param scriptContent The Python script content
+     * @param parameters Optional parameter definitions with name, type, and value
+     * @param onProgress Optional callback for progress updates
+     * @returns Promise resolving to the batch response with job details
+     */
+    async runScriptAsBatch(
+        workspaceId: string,
+        lakehouseId: string,
+        environmentId: string,
+        scriptName: string,
+        scriptContent: string,
+        parameters?: ScriptParameter[],
+        onProgress?: (message: string) => void
+    ): Promise<BatchResponse> {
+        // Upload the script to OneLake first
+        // Use a timestamp to ensure uniqueness
+        const timestamp = new Date().getTime();
+        const sanitizedScriptName = scriptName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const destinationSubPath = `Scripts/${timestamp}_${sanitizedScriptName}`;
+        const destinationPath = OneLakeStorageClient.getFilePath(workspaceId, lakehouseId, destinationSubPath);
+        
+        if (onProgress) {
+            onProgress(`Uploading script to OneLake: ${destinationSubPath}`);
+        }
+        
+        // Write the script content to OneLake (unchanged, no parameter injection)
+        await this.oneLakeClient.writeFileAsText(destinationPath, scriptContent);
+        
+        // Convert OneLake path to ABFSS URL format for Spark
+        const oneLakeUrl = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${destinationPath}`;
+        const abfssUrl = this.convertOneLakeLinkToABFSSLink(oneLakeUrl, workspaceId);
+        
+        // Convert parameters to Spark configuration entries
+        // Each parameter becomes spark.script.param.<name> and spark.script.param.<name>.type
+        // The script can access these via spark.conf.get("spark.script.param.<name>")
+        const parameterConf: Record<string, string> = {};
+        if (parameters && parameters.length > 0) {
+            parameters.forEach(param => {
+                parameterConf[`spark.script.param.${param.name}`] = param.value;
+                //parameterConf[`spark.script.param.${param.name}.type`] = param.type;
+            });
+            
+            if (onProgress) {
+                onProgress(`Configured ${parameters.length} parameter(s) in Spark config`);
+            }
+        }
+        
+        // Create a batch request
+        const batchRequest: BatchRequest = {
+            name: `Fabric CLI Script: ${scriptName} - ${new Date().toISOString()}`,
+            file: abfssUrl,
+            conf: {
+                "spark.targetLakehouse": lakehouseId,
+                "spark.fabric.environmentDetails": `{"id" : "${environmentId}"}`,
+                ...parameterConf
+            },
+            tags: {
+                source: "Fabric CLI Item",
+                scriptName: scriptName,
+            }
+        };
+
+        // Create the batch job
+        const asyncIndicator = await this.sparkClient.createBatch(
+            workspaceId,
+            lakehouseId,
+            batchRequest
+        );
+        
+        console.log(`[FabricCLI] Batch creation operation ID: ${asyncIndicator.operationId}`);
+        if (onProgress) {
+            onProgress(`Batch job creation started. Operation ID: ${asyncIndicator.operationId}`);
+            onProgress('Waiting for batch job to be created...');
+        }
+
+        // Poll for batch to be created and appear in the list
+        let batchFound = false;
+        let foundBatch: BatchResponse | null = null;
+        let attempts = 0;
+        const maxAttempts = 30; // 1 minute with 2 second intervals
+
+        while (!batchFound && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            attempts++;
+
+            try {
+                const batches = await this.sparkClient.listBatches(workspaceId, lakehouseId);
+                const targetBatch = batches.find(b => b.name === batchRequest.name);
+
+                if (targetBatch && targetBatch.id) {
+                    const bid = String(targetBatch.id);
+                    
+                    if (!foundBatch) {
+                        foundBatch = targetBatch;
+                        if (onProgress) {
+                            onProgress(`Batch job created with ID: ${bid}`);
+                            onProgress(`Batch job state: ${targetBatch.state}`);
+                        }
+                    } else {
+                        // Update the batch object with latest state
+                        foundBatch = targetBatch;
+                    }
+                    
+                    // Batch is created and found - we can return it
+                    // The caller can use waitForBatchCompletion if they want to wait for it to finish
+                    batchFound = true;
+                } else if (attempts % 5 === 0 && onProgress) {
+                    // Log every 10 seconds that we're still waiting
+                    onProgress('Still waiting for batch job to be created...');
+                }
+            } catch (listError: any) {
+                console.warn('Error listing batches:', listError);
+            }
+        }
+
+        if (!batchFound || !foundBatch) {
+            throw new Error('Batch job creation timed out - batch did not appear in the list');
+        }
+
+        if (onProgress) {
+            onProgress('Batch job created successfully!');
+        }
+
+        return foundBatch;
+    }
+
+    /**
+     * Get the status of a batch job
+     * @param workspaceId The workspace ID
+     * @param lakehouseId The lakehouse ID
+     * @param batchId The batch job ID
+     * @returns Promise resolving to the batch response
+     */
+    async getBatchStatus(
+        workspaceId: string,
+        lakehouseId: string,
+        batchId: string
+    ): Promise<BatchResponse> {
+        return await this.sparkClient.getBatch(workspaceId, lakehouseId, batchId);
+    }
+
+    /**
+     * Get the logs for a batch job
+     * @param workspaceId The workspace ID
+     * @param lakehouseId The lakehouse ID
+     * @param batchId The batch job ID
+     * @param from Optional starting line for logs
+     * @param size Optional number of lines to retrieve
+     * @returns Promise resolving to an object containing log lines
+     */
+    async getBatchLogs(
+        workspaceId: string,
+        lakehouseId: string,
+        batchId: string,
+        from?: number,
+        size?: number
+    ): Promise<{ id: string, log: string[] }> {
+        return await this.sparkClient.getBatchLogs(workspaceId, lakehouseId, batchId, from, size);
+    }
+
+    /**
+     * Cancel a running batch job
+     * @param workspaceId The workspace ID
+     * @param lakehouseId The lakehouse ID
+     * @param batchId The batch job ID
+     * @returns Promise resolving to the batch response
+     */
+    async cancelBatch(
+        workspaceId: string,
+        lakehouseId: string,
+        batchId: string
+    ): Promise<BatchResponse> {
+        return await this.sparkClient.cancelBatch(workspaceId, lakehouseId, batchId);
+    }
+
+    /**
+     * Wait for a batch job to complete
+     * @param workspaceId The workspace ID
+     * @param lakehouseId The lakehouse ID
+     * @param batchId The batch job ID
+     * @param onProgress Optional callback for progress updates
+     * @param maxWaitMinutes Maximum time to wait in minutes (default: 30)
+     * @returns Promise resolving to the final batch response
+     */
+    async waitForBatchCompletion(
+        workspaceId: string,
+        lakehouseId: string,
+        batchId: string,
+        onProgress?: (message: string) => void,
+        maxWaitMinutes: number = 30
+    ): Promise<BatchResponse> {
+        const maxAttempts = (maxWaitMinutes * 60) / 5; // Check every 5 seconds
+        let attempts = 0;
+
+        while (attempts < maxAttempts) {
+            const batchStatus = await this.getBatchStatus(workspaceId, lakehouseId, batchId);
+            
+            const state = batchStatus.state;
+            const schedulerState = batchStatus.schedulerInfo?.state;
+            
+            if (onProgress) {
+                onProgress(`Batch job status: ${state} (Scheduler: ${schedulerState})`);
+            }
+
+            // Check for terminal states
+            if (state === 'success' || batchStatus.result === 'Succeeded') {
+                if (onProgress) {
+                    onProgress('Batch job completed successfully!');
+                }
+                return batchStatus;
+            } else if (state === 'dead' || state === 'error' || state === 'killed' || 
+                       batchStatus.result === 'Failed' || batchStatus.result === 'Cancelled') {
+                if (onProgress) {
+                    onProgress(`Batch job failed with state: ${state}, result: ${batchStatus.result}`);
+                }
+                throw new Error(`Batch job failed with state: ${state}, result: ${batchStatus.result}`);
+            }
+
+            // Wait before next poll
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            attempts++;
+        }
+
+        throw new Error(`Batch job did not complete within ${maxWaitMinutes} minutes`);
+    }
+
+    /**
+     * Convert OneLake URL to ABFSS URL format required by Spark
+     * @param oneLakeLink The OneLake HTTPS URL
+     * @param workspaceId The workspace ID
+     * @returns ABFSS formatted URL
+     */
+    private convertOneLakeLinkToABFSSLink(oneLakeLink: string, workspaceId: string): string {
+        let retVal = oneLakeLink.replace(`${workspaceId}/`, "");
+        retVal = retVal.replace("https://", `abfss://${workspaceId}@`);
+        return retVal;
     }
 }

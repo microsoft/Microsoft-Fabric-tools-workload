@@ -51,6 +51,26 @@
     "FabricCLIItem_ExecutionMode_FabCLI": "Fabric CLI",
     "FabricCLIItem_CommandSuccess": "Command executed successfully",
     "FabricCLIItem_NoEnvironmentSelected": "Please select a Spark environment before starting the session.",
-    "FabricCLIItem_UnsavedChanges": "Configuration changes will be saved automatically..."
+    "FabricCLIItem_UnsavedChanges": "Configuration changes will be saved automatically...",
+    "FabricCLIItem_Scripts_Panel_Title": "Scripts",
+    "FabricCLIItem_Scripts_Title": "Scripts",
+    "FabricCLIItem_Scripts_Description": "Python scripts for execution",
+    "FabricCLIItem_Scripts_CreateNew": "Create new script",
+    "FabricCLIItem_Scripts_CreateDialog_Title": "Create New Python Script",
+    "FabricCLIItem_Scripts_CreateDialog_Placeholder": "script_name.py",
+    "FabricCLIItem_Scripts_CreateDialog_Cancel": "Cancel",
+    "FabricCLIItem_Scripts_CreateDialog_Create": "Create",
+    "FabricCLIItem_Scripts_Delete": "Delete script",
+    "FabricCLIItem_Scripts_DeleteDialog_Title": "Delete Script?",
+    "FabricCLIItem_Scripts_DeleteDialog_Message": "Are you sure you want to delete \"{{scriptName}}\"? This action cannot be undone.",
+    "FabricCLIItem_Scripts_DeleteDialog_Cancel": "Cancel",
+    "FabricCLIItem_Scripts_DeleteDialog_Delete": "Delete",
+    "FabricCLIItem_Script_Save": "Save",
+    "FabricCLIItem_Script_SaveTooltip": "Save script changes",
+    "FabricCLIItem_Script_NoChanges": "No changes to save",
+    "FabricCLIItem_Script_Run": "Run",
+    "FabricCLIItem_Script_Running": "Running...",
+    "FabricCLIItem_Script_RunTooltip": "Run this script in the terminal",
+    "FabricCLIItem_Script_Running_Message": "Running script: {{scriptName}}"
 }
   

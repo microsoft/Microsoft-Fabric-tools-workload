@@ -39,10 +39,10 @@ export class SparkLivyClient extends FabricPlatformClient {
     workspaceId: string,
     lakehouseId: string,
     batchRequest: BatchRequest
-  ): Promise<BatchResponse> {
+  ): Promise<AsyncOperationIndicator> {
     try {
       const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/batches`;
-      return this.post<BatchResponse>(endpoint, batchRequest);
+      return this.post<AsyncOperationIndicator>(endpoint, batchRequest);
     } catch (error: any) {
       console.error(`Error creating batch job: ${error.message}`);
       throw error;

@@ -62,3 +62,12 @@ export type {
   FileMetadata,
   LoadingStatus
 } from './OneLakeView/';
+
+// Dialog Component - Simple dialog with wizard-like styling
+export {
+  DialogControl
+} from './Dialog/';
+
+export type {
+  DialogControlProps
+} from './Dialog/';
