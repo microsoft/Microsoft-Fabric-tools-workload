@@ -28,10 +28,10 @@ export interface PythonScript extends PythonScriptMetadata {
 }
 
 /**
- * Data model for FabricCLIItem
+ * Data model for CloudShellItem
  * Defines the structure for data that will be persisted in Fabric storage
  */
-export interface FabricCLIItemDefinition {
+export interface CloudShellItemDefinition {
   // Selected lakehouse reference
   selectedLakehouse?: ItemReference;
   // Last used Spark session id

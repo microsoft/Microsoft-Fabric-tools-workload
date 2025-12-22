@@ -71,13 +71,13 @@
             }        
           },
           {
-            "title": "FabricCLIItem_DisplayName",
-            "description": "FabricCLIItem_Description",
+            "title": "CloudShellItem_DisplayName",
+            "description": "CloudShellItem_Description",
             "icon": {
-              "name": "assets/images/FabricCLIItem_Icon.png"
+              "name": "assets/images/CloudShellItem_Icon.png"
             },
             "icon_small": {
-              "name": "assets/images/FabricCLIItem_Icon.png"
+              "name": "assets/images/CloudShellItem_Icon.png"
             },
             "availableIn": [
               "home",
@@ -85,7 +85,7 @@
               "workspace-plus-new",
               "workspace-plus-new-teams"
             ],
-            "itemType": "FabricCLI",
+            "itemType": "CloudShell",
             "createItemDialogConfig": {
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
@@ -112,7 +112,7 @@
         },
         {
           "mediaType": 0,
-          "source": "assets/images/FabricCLIItem_Slideware.png"
+          "source": "assets/images/CloudShellItem_Slideware.png"
         }
       ],
         "supportLink": {

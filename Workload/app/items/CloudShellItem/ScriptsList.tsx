@@ -17,8 +17,8 @@ import {
   Document20Regular,
   DocumentAdd20Regular,
 } from "@fluentui/react-icons";
-import { PythonScriptMetadata } from "./FabricCLIItemModel";
-import "./FabricCLIItem.scss";
+import { PythonScriptMetadata } from "./CloudShellItemModel";
+import "./CloudShellItem.scss";
 
 export interface ScriptsListProps {
   scripts: PythonScriptMetadata[];
@@ -31,7 +31,7 @@ export interface ScriptsListProps {
 /**
  * ScriptsList component
  * Displays a list of Python scripts with create/delete actions
- * Used in the left panel of the FabricCLI item editor
+ * Used in the left panel of the CloudShell item editor
  */
 export const ScriptsList: React.FC<ScriptsListProps> = ({
   scripts,
@@ -55,14 +55,14 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
         {scripts.length === 0 ? (
           <div className="scripts-list-empty">
             <Caption1 className="scripts-list-description">
-                {t('FabricCLIItem_Scripts_Description', 'Python scripts for execution')}
+                {t('CloudShellItem_Scripts_Description', 'Python scripts for execution')}
             </Caption1>
             <Button
               appearance="primary"
               icon={<DocumentAdd20Regular />}
               onClick={onScriptCreate}
             >
-              {t('FabricCLIItem_Scripts_CreateFirst', 'Create Script')}
+              {t('CloudShellItem_Scripts_CreateFirst', 'Create Script')}
             </Button>
           </div>
         ) : (
@@ -94,16 +94,16 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
                       e.stopPropagation();
                       setDeleteConfirmScriptName(script.name);
                     }}
-                    title={t('FabricCLIItem_Scripts_Delete', 'Delete script')}
+                    title={t('CloudShellItem_Scripts_Delete', 'Delete script')}
                   />
                 </DialogTrigger>
                 <DialogSurface>
                   <DialogBody>
                     <DialogTitle>
-                      {t('FabricCLIItem_Scripts_DeleteDialog_Title', 'Delete Script?')}
+                      {t('CloudShellItem_Scripts_DeleteDialog_Title', 'Delete Script?')}
                     </DialogTitle>
                     <DialogContent>
-                      {t('FabricCLIItem_Scripts_DeleteDialog_Message', 
+                      {t('CloudShellItem_Scripts_DeleteDialog_Message', 
                         'Are you sure you want to delete "{{scriptName}}"? This action cannot be undone.',
                         { scriptName: script.name }
                       )}
@@ -111,7 +111,7 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
                     <DialogActions>
                       <DialogTrigger disableButtonEnhancement>
                         <Button appearance="secondary">
-                          {t('FabricCLIItem_Scripts_DeleteDialog_Cancel', 'Cancel')}
+                          {t('CloudShellItem_Scripts_DeleteDialog_Cancel', 'Cancel')}
                         </Button>
                       </DialogTrigger>
                       <Button
@@ -121,7 +121,7 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
                           handleDeleteScript(script.name);
                         }}
                       >
-                        {t('FabricCLIItem_Scripts_DeleteDialog_Delete', 'Delete')}
+                        {t('CloudShellItem_Scripts_DeleteDialog_Delete', 'Delete')}
                       </Button>
                     </DialogActions>
                   </DialogBody>

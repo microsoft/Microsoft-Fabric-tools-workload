@@ -1,16 +1,16 @@
 {
-    "name": "FabricCLI",
+    "name": "CloudShell",
     "version": "1.100",
-    "displayName": "FabricCLIItem_DisplayName",
-    "displayNamePlural": "FabricCLIItem_DisplayName_Plural",
+    "displayName": "CloudShellItem_DisplayName",
+    "displayNamePlural": "CloudShellItem_DisplayName_Plural",
     "editor": {
-      "path": "/FabricCLIItem-editor"
+      "path": "/CloudShellItem-editor"
     },
     "icon": {
-      "name": "assets/images/FabricCLIItem_Icon.png"
+      "name": "assets/images/CloudShellItem_Icon.png"
     },
     "activeIcon": {
-      "name": "assets/images/FabricCLIItem_Icon.png"
+      "name": "assets/images/CloudShellItem_Icon.png"
     },
     "contextMenuItems": [
     ],

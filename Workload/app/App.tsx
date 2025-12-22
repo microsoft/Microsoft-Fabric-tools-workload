@@ -6,7 +6,7 @@ import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWi
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
-import { FabricCLIItemEditor, CreateScriptDialog } from "./items/FabricCLIItem/";
+import { CloudShellItemEditor, CreateScriptDialog } from "./items/CloudShellItem/";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -83,12 +83,12 @@ export function App({ history, workloadClient }: AppProps) {
                     data-testid="OneLakeExplorerItem-editor" />
             </Route>
 
-            <Route path="/FabricCLIItem-editor/:itemObjectId">
-                <FabricCLIItemEditor
-                    workloadClient={workloadClient} data-testid="FabricCLIItem-editor" />
+            <Route path="/CloudShellItem-editor/:itemObjectId">
+                <CloudShellItemEditor
+                    workloadClient={workloadClient} data-testid="CloudShellItem-editor" />
             </Route>
 
-            <Route path="/FabricCLIItem-create-script/:itemObjectId">
+            <Route path="/CloudShellItem-create-script/:itemObjectId">
                 <CreateScriptDialog
                     workloadClient={workloadClient} />
             </Route>
