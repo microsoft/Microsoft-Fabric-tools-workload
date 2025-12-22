@@ -24,7 +24,13 @@ interface FabricCLIItemDefaultViewProps {
   selectedLakehouse?: Item | null;
   isUnsaved?: boolean;
   sessionActive: boolean;
-  clearTrigger?: number;
+  setSessionActive: (active: boolean) => void;
+  sessionId: string | null;
+  setSessionId: (id: string | null) => void;
+  terminalEntries: TerminalEntry[];
+  setTerminalEntries: (terminalEntries: TerminalEntry[] | ((prev: TerminalEntry[]) => TerminalEntry[])) => void;
+  commandHistory: string[];
+  setCommandHistory: (history: string[] | ((prev: string[]) => string[])) => void;
   onSessionCreated?: (sessionId: string) => void;
   showSystemMessage?: { message: string; timestamp: number };
   executionMode?: ExecutionMode;
@@ -47,7 +53,13 @@ export function FabricCLIItemDefaultView({
   selectedLakehouse,
   isUnsaved,
   sessionActive,
-  clearTrigger,
+  setSessionActive,
+  sessionId,
+  setSessionId,
+  terminalEntries,
+  setTerminalEntries,
+  commandHistory,
+  setCommandHistory,
   onSessionCreated,
   showSystemMessage: systemMessage,
   executionMode: executionModeProp,
@@ -61,10 +73,8 @@ export function FabricCLIItemDefaultView({
   // Get scripts from item definition
   const scripts: PythonScriptMetadata[] = item?.definition?.scripts || [];
   
-  // Terminal State
+  // Terminal State (local only)
   const [command, setCommand] = useState<string>('');
-  const [entries, setEntries] = useState<TerminalEntry[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionState, setSessionState] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
@@ -73,8 +83,7 @@ export function FabricCLIItemDefaultView({
   // Execution mode - use from props or default to FAB_CLI
   const executionMode = executionModeProp || ExecutionMode.FAB_CLI;
   
-  // Command history
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  // Command history navigation
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const cliClient = new SparkLivyFabricCLIClient(workloadClient);
@@ -84,45 +93,39 @@ export function FabricCLIItemDefaultView({
   const workspaceId = activeLakehouse?.workspaceId;
   const lakehouseId = activeLakehouse?.id;
 
-  // Clear terminal when trigger changes
-  useEffect(() => {
-    if (clearTrigger && clearTrigger > 0) {
-      setEntries([]);
-    }
-  }, [clearTrigger]);
-
   // Auto-scroll
   useEffect(() => {
     if (terminalBodyRef.current) {
       terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
     }
-  }, [entries]);
+  }, [terminalEntries]);
 
   // Add system message when prop changes
   useEffect(() => {
     if (systemMessage) {
-      setEntries(prev => [...prev, { type: 'system', content: systemMessage.message, timestamp: new Date() }]);
+      setTerminalEntries(prev => [...prev, { type: 'system', content: systemMessage.message, timestamp: new Date() }]);
     }
   }, [systemMessage]);
 
   // Helper function for adding system messages
   const addSystemMessage = (message: string) => {
-    setEntries(prev => [...prev, { type: 'system', content: message, timestamp: new Date() }]);
+    setTerminalEntries(prev => [...prev, { type: 'system', content: message, timestamp: new Date() }]);
   };
 
   // Session Management Effect
   useEffect(() => {
-    if (sessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
+    if (setSessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
       // Check if environment is selected before initializing session
       if (!item?.definition?.selectedSparkEnvironment?.id) {
         addSystemMessage(t('FabricCLIItem_NoEnvironmentSelected', 'Please select a Spark environment before starting the session.'));
+        setSessionActive(false);
         return;
       }
       initializeSession();
-    } else if (!sessionActive && sessionId && !isCancelling) {
+    } else if (!setSessionActive && sessionId && !isCancelling) {
       cancelCurrentSession();
     }
-  }, [sessionActive, sessionId, isConnecting, isCancelling, workspaceId, lakehouseId]);
+  }, [setSessionActive, sessionId, isConnecting, isCancelling, workspaceId, lakehouseId]);
 
   const formatTimestamp = (date: Date) => date.toLocaleTimeString();
 
@@ -159,7 +162,8 @@ export function FabricCLIItemDefaultView({
     } catch (error: any) {
       console.error('Error initializing session:', error);
       addSystemMessage(`Failed to initialize session: ${error.message}`);
-      setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
+      setTerminalEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
+      setSessionActive(false);
     } finally {
       setIsConnecting(false);
     }
@@ -210,7 +214,7 @@ export function FabricCLIItemDefaultView({
     try {
       await onScriptRun(script.name);
     } catch (error: any) {
-      setEntries(prev => [...prev, { 
+      setTerminalEntries(prev => [...prev, { 
         type: 'error', 
         content: `Failed to run script: ${error.message}`, 
         timestamp: new Date() 
@@ -222,7 +226,7 @@ export function FabricCLIItemDefaultView({
    * Handle the "clear" command
    */
   const handleClearCommand = () => {
-    setEntries([]);
+    setTerminalEntries([]);
   };
 
   /**
@@ -281,15 +285,15 @@ export function FabricCLIItemDefaultView({
                                                     sessionId, userCommand, executionMode);
       
       if (result.isError) {
-        setEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
+        setTerminalEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
       } else if (result.output && result.output.trim()) {
-        setEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
+        setTerminalEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
       } else {
         // No output and no error - show success message
-        setEntries(prev => [...prev, { type: 'system', content: t('FabricCLIItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
+        setTerminalEntries(prev => [...prev, { type: 'system', content: t('FabricCLIItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
       }
     } catch (error: any) {
-      setEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
+      setTerminalEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
     }
   };
 
@@ -300,7 +304,7 @@ export function FabricCLIItemDefaultView({
     if (!command.trim()) return;
     
     const userCommand = command;
-    setEntries(prev => [...prev, { 
+    setTerminalEntries(prev => [...prev, { 
       type: 'command', 
       timestamp: new Date(),
       executionMode: executionMode,
@@ -355,16 +359,16 @@ export function FabricCLIItemDefaultView({
     <Stack className="fabric-cli-editor">
       <div className="terminal-container">
         <div className="terminal-body" ref={terminalBodyRef}>
-          {entries.length === 0 ? (
+          {terminalEntries.length === 0 ? (
             <div className="system">
               {t('FabricCLIItem_Wellcome', 'Welcome to Fabric CLI.')}
               <br />
-              {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
-              {sessionActive && !sessionId && "Initializing session..."}
+              {!setSessionActive && "Click 'Start Terminal' in the ribbon to begin."}
+              {setSessionActive && !sessionId && "Initializing session..."}
               {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'ls -l', 'cd ws1.Workspace')."}
             </div>
           ) : (
-            entries.map((entry, index) => (
+            terminalEntries.map((entry, index) => (
               <div key={index}>
                 {entry.type === 'command' ? (
                   <React.Fragment>
@@ -430,3 +434,4 @@ export function FabricCLIItemDefaultView({
     />
   );
 }
+

@@ -236,6 +236,10 @@
 .type-dropdown {
     min-width: auto;
     width: 100%;
+
+    & > button {
+        width: 100%;
+    }
 }
 
 .delete-button {

@@ -41,12 +41,16 @@ export function FabricCLIItemEditor(props: PageProps) {
   const [selectedLakehouse, setSelectedLakehouse] = useState<Item | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
-  const [clearTrigger, setClearTrigger] = useState(0);
   const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.FAB_CLI);
   const [systemMessage, setSystemMessage] = useState<{ message: string; timestamp: number }>();
   const [selectedScript, setSelectedScript] = useState<PythonScript | undefined>();
   const [scriptsMap, setScriptsMap] = useState<Map<string, string>>(new Map()); // scriptName -> content
+  
+  // Session state (lifted from DefaultView to persist across view changes)
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [terminalEntries, setTerminalEntries] = useState<Array<{ type: 'command' | 'response' | 'error' | 'system'; content: string | React.ReactNode; timestamp: Date; executionMode?: ExecutionMode }>>([]);
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -195,6 +199,7 @@ export function FabricCLIItemEditor(props: PageProps) {
 
   const handleStopSession = async () => {
     setSessionActive(false);
+    setSessionId(null);
     
     // Clear session ID when stopping session
     if (item) {
@@ -274,11 +279,12 @@ export function FabricCLIItemEditor(props: PageProps) {
   };
 
   const handleClearTerminal = () => {
-    setClearTrigger(prev => prev + 1);
+    setTerminalEntries([]);
   };
 
-  const handleSessionCreated = async (sessionId: string) => {
-    if (!item) return;
+  const handleSessionCreated = async (newSessionId: string) => {
+    setSessionId(newSessionId);
+        if (!item) return;
     
     const updatedItem = {
       ...item,
@@ -620,7 +626,13 @@ export function FabricCLIItemEditor(props: PageProps) {
           selectedLakehouse={selectedLakehouse}
           isUnsaved={isUnsaved}
           sessionActive={sessionActive}
-          clearTrigger={clearTrigger}
+          setSessionActive={setSessionActive}
+          sessionId={sessionId}
+          setSessionId={setSessionId}
+          terminalEntries={terminalEntries}
+          setTerminalEntries={setTerminalEntries}
+          commandHistory={commandHistory}
+          setCommandHistory={setCommandHistory}
           onSessionCreated={handleSessionCreated}
           showSystemMessage={systemMessage}
           executionMode={executionMode}
