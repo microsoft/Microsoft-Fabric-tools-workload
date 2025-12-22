@@ -234,10 +234,13 @@
 }
 
 .type-dropdown {
-    min-width: auto;
+    min-width: auto !important;
+    max-width: 100%;
     width: 100%;
 
     & > button {
+        min-width: auto !important;
+        max-width: 100%;
         width: 100%;
     }
 }

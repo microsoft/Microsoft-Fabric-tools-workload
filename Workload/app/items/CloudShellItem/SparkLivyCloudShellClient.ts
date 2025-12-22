@@ -65,7 +65,7 @@ export class SparkLivyCloudShellClient {
         const { workspaceId, lakehouseId, environmentId, sessionKind } = config;
 
         const sessionRequest: SessionRequest = {
-            name: `Cloud Shell Session ${new Date().toISOString()}`,
+            name: `CloudShell Session: ${new Date().toISOString()}`,
             kind: sessionKind,
             conf: {
                 "spark.targetLakehouse": lakehouseId,
@@ -460,7 +460,7 @@ print(json.dumps(jsonResult));`;
         
         // Create a batch request
         const batchRequest: BatchRequest = {
-            name: `Cloud Shell Script: ${scriptName} - ${new Date().toISOString()}`,
+            name: `CloudShell Script: ${scriptName} - ${new Date().toISOString()}`,
             file: abfssUrl,
             conf: {
                 "spark.targetLakehouse": lakehouseId,

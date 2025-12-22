@@ -22,7 +22,7 @@ The Cloud Shell Item enables users to:
 
 **Advanced Features** (optional):
 
-- **Switch execution modes** to run native Python code or shell commands
+- **Switch execution modes** to run Python code or Bash commands
 - **Execute Python directly** in Spark sessions for data processing
 - **Run shell commands** with subprocess support
 - **Parameterized scripts** with type-safe parameter injection
@@ -95,21 +95,21 @@ enable_logging = get_parameter("enable_logging", "bool", "true")
 - Best for: Fabric resource management, platform operations
 - Example: `workspace list` (executed as `fab workspace list`)
 
-### Advanced Execution Modes (Optional)
+### Execution Modes
 
 To use Python or shell commands, select a different execution mode from the ribbon dropdown:
 
-**Native Python (`NATIVE`)**
+**Python (`PYTHON`)**
 
 - Execute Python code directly in the Spark session
-- Must be activated via ribbon execution mode dropdown
+- Activate via ribbon execution mode dropdown
 - Best for: Data processing, Spark operations, Python scripts
 - Example: `df = spark.read.parquet("Files/data.parquet")`
 
-**Subprocess (`SUBPROCESS`)**
+**Bash (`BASH`)**
 
 - Execute shell commands via Python subprocess
-- Must be activated via ribbon execution mode dropdown
+- Activate via ribbon execution mode dropdown
 - Supports pipes (`|`), redirections (`>`, `>>`), and complex shell operations
 - Best for: File operations, system commands, shell scripts
 - Example: `echo "Hello World" > myfile.txt`
@@ -128,14 +128,26 @@ To use Python or shell commands, select a different execution mode from the ribb
 - **Multi-line Output**: Proper formatting for complex command results
 - **System Messages**: Clear distinction between commands, results, and system notifications
 - **Error Handling**: Comprehensive error display with detailed messages
-- **Clear Command**: Reset terminal view with `clear` command
+
+### Special Commands
+
+The terminal supports special built-in commands that are processed locally without sending to the Spark session:
+
+- **`clear`**: Clears all terminal entries and resets the terminal view
+- **`run {scriptName}`**: Executes a saved Python script as a Spark batch job with configured parameters
+  - Example: `run MyAnalysis` executes the script named "MyAnalysis"
+  - Scripts must be created and saved in the Scripts panel first
+  - Parameters are automatically injected from the script configuration
+- **`help`**: Displays a list of available special commands
+
+These commands are case-insensitive and take precedence over Cloud Shell commands.
 
 ### Workspace Integration
 
 - **Lakehouse Selection**: Change target lakehouse dynamically
 - **Environment Selection**: Choose from available Spark environments
 - **Session Control**: Start/stop sessions from the ribbon
-- **Execution Mode Toggle** (Advanced): Switch to Python or shell modes via ribbon dropdown
+- **Execution Mode Toggle**: Switch between Cloud Shell, Python, and shell modes via ribbon dropdown
 
 ## Architecture
 
@@ -213,7 +225,7 @@ Ribbon integration providing:
 - **Clear Terminal**: Clear all terminal entries
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
-- **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Cloud Shell)
+- **Execution Mode Dropdown**: Switch between Python, Bash, and Cloud Shell modes (default: Cloud Shell)
 - **Create Script**: Create new Python script
 
 ### ScriptDetailView
@@ -370,11 +382,11 @@ ls MyWorkspace.Workspace -l
 
 For more examples, see the [Cloud Shell Examples Documentation](https://microsoft.github.io/fabric-cli/examples/item_examples/).
 
-### Advanced Modes (Must be Activated in code)
+### Alternative Execution Modes
 
-These modes require manual activation via the ribbon execution mode dropdown.
+These modes can be activated via the ribbon execution mode dropdown.
 
-#### Native Python Mode (NATIVE)
+#### Python Mode (PYTHON)
 
 Direct Python code execution in Spark session:
 
@@ -386,7 +398,7 @@ df.show()
 # Executed as-is in Spark session
 ```
 
-#### Subprocess Mode (SUBPROCESS)
+#### Bash Mode (BASH)
 
 Shell commands via Python subprocess:
 
