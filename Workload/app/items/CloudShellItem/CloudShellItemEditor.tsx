@@ -10,17 +10,17 @@ import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType, ItemDefinitionPart, PayloadType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 import { ItemClient } from "../../clients/ItemClient";
-import { ExecutionMode, SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
+import { ExecutionMode, SparkLivyCloudShellClient } from "./SparkLivyCloudShellClient";
 
-import { FabricCLIItemDefinition, PythonScript, PythonScriptMetadata } from "./FabricCLIItemModel";
-import { FabricCLIItemEmptyView } from "./FabricCLIItemEmptyView";
-import { FabricCLIItemRibbon } from "./FabricCLIItemRibbon";
-import { FabricCLIItemDefaultView } from "./FabricCLIItemDefaultView";
+import { CloudShellItemDefinition, PythonScript, PythonScriptMetadata } from "./CloudShellItemModel";
+import { CloudShellItemEmptyView } from "./CloudShellItemEmptyView";
+import { CloudShellItemRibbon } from "./CloudShellItemRibbon";
+import { CloudShellItemDefaultView } from "./CloudShellItemDefaultView";
 import { ScriptDetailView } from "./ScriptDetailView";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { CreateScriptDialogResult } from "./CreateScriptDialog";
 
-import "./FabricCLIItem.scss";
+import "./CloudShellItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
   EMPTY: 'empty',
@@ -28,7 +28,7 @@ export const EDITOR_VIEW_TYPES = {
   SCRIPT: 'script'
 } as const;
 
-export function FabricCLIItemEditor(props: PageProps) {
+export function CloudShellItemEditor(props: PageProps) {
   const { workloadClient } = props;
   const pageContext = useParams<ContextProps>();
   const { pathname } = useLocation();
@@ -37,7 +37,7 @@ export function FabricCLIItemEditor(props: PageProps) {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [isUnsaved, setIsUnsaved] = useState(false);
-  const [item, setItem] = useState<ItemWithDefinition<FabricCLIItemDefinition>>();
+  const [item, setItem] = useState<ItemWithDefinition<CloudShellItemDefinition>>();
   const [selectedLakehouse, setSelectedLakehouse] = useState<Item | null>(null);
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
@@ -55,11 +55,11 @@ export function FabricCLIItemEditor(props: PageProps) {
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
     setIsLoading(true);
-    let loadedItem: ItemWithDefinition<FabricCLIItemDefinition> = undefined;
+    let loadedItem: ItemWithDefinition<CloudShellItemDefinition> = undefined;
     
     if (pageContext.itemObjectId) {
       try {
-        loadedItem = await getWorkloadItem<FabricCLIItemDefinition>(
+        loadedItem = await getWorkloadItem<CloudShellItemDefinition>(
           workloadClient,
           pageContext.itemObjectId,
         );
@@ -75,11 +75,11 @@ export function FabricCLIItemEditor(props: PageProps) {
 
         setItem(loadedItem);
       } catch (error) {
-        console.error('Failed to load FabricCLI item:', error);
+        console.error('Failed to load CloudShell item:', error);
         callNotificationOpen(
           workloadClient,
-          t("FabricCLIItem_LoadError_Title", "Failed to Load Item"),
-          t("FabricCLIItem_LoadError_Message", "Could not load the Fabric CLI item."),
+          t("CloudShellItem_LoadError_Title", "Failed to Load Item"),
+          t("CloudShellItem_LoadError_Message", "Could not load the Cloud Shell item."),
           NotificationType.Error
         );
         setItem(undefined);
@@ -131,7 +131,7 @@ export function FabricCLIItemEditor(props: PageProps) {
    * @param scriptsMapOverride Optional scriptsMap to use instead of state (for handling async state updates)
    */
   const saveItemInternal = async (
-    itemToSave: ItemWithDefinition<FabricCLIItemDefinition>,
+    itemToSave: ItemWithDefinition<CloudShellItemDefinition>,
     showNotification: boolean = false,
     scriptsMapOverride?: Map<string, string>
   ): Promise<boolean> => {
@@ -149,10 +149,10 @@ export function FabricCLIItemEditor(props: PageProps) {
           payload: btoa(scriptContent),
           payloadType: PayloadType.InlineBase64
         });
-        console.log(`[FabricCLI] Saving script ${scriptMeta.name}: ${scriptContent.length} chars`);
+        console.log(`[CloudShell] Saving script ${scriptMeta.name}: ${scriptContent.length} chars`);
       });
 
-      const itemWithParts: ItemWithDefinition<FabricCLIItemDefinition> = {
+      const itemWithParts: ItemWithDefinition<CloudShellItemDefinition> = {
         ...itemToSave,
         additionalDefinitionParts: additionalParts
       };
@@ -163,8 +163,8 @@ export function FabricCLIItemEditor(props: PageProps) {
       if (showNotification) {
         callNotificationOpen(
           workloadClient,
-          t("FabricCLIItem_SaveSuccess_Title", "Saved"),
-          t("FabricCLIItem_SaveSuccess_Message", "Item saved successfully."),
+          t("CloudShellItem_SaveSuccess_Title", "Saved"),
+          t("CloudShellItem_SaveSuccess_Message", "Item saved successfully."),
           NotificationType.Success
         );
       }
@@ -176,8 +176,8 @@ export function FabricCLIItemEditor(props: PageProps) {
       if (showNotification) {
         callNotificationOpen(
           workloadClient,
-          t("FabricCLIItem_SaveError_Title", "Save Failed"),
-          t("FabricCLIItem_SaveError_Message", "Could not save the item."),
+          t("CloudShellItem_SaveError_Title", "Save Failed"),
+          t("CloudShellItem_SaveError_Message", "Could not save the item."),
           NotificationType.Error
         );
       }
@@ -222,7 +222,7 @@ export function FabricCLIItemEditor(props: PageProps) {
       const result = await callDatahubOpen(
         workloadClient,
         ['Lakehouse'],
-        t("FabricCLIItem_SelectLakehouse_Title", "Select a Lakehouse"),
+        t("CloudShellItem_SelectLakehouse_Title", "Select a Lakehouse"),
         false
       );
 
@@ -250,7 +250,7 @@ export function FabricCLIItemEditor(props: PageProps) {
         
         // Add system message to terminal
         setSystemMessage({
-          message: t("FabricCLIItem_SelectLakehouse_Success", "Connected to lakehouse: {{lakehouseName}}", { lakehouseName: result.displayName }),
+          message: t("CloudShellItem_SelectLakehouse_Success", "Connected to lakehouse: {{lakehouseName}}", { lakehouseName: result.displayName }),
           timestamp: Date.now()
         });
         
@@ -260,7 +260,7 @@ export function FabricCLIItemEditor(props: PageProps) {
     } catch (error) {
       console.error('Failed to select lakehouse:', error);
       setSystemMessage({
-        message: t("FabricCLIItem_SelectLakehouse_Error", "Could not select lakehouse."),
+        message: t("CloudShellItem_SelectLakehouse_Error", "Could not select lakehouse."),
         timestamp: Date.now()
       });
       return false;
@@ -325,8 +325,8 @@ export function FabricCLIItemEditor(props: PageProps) {
     // Add system message to terminal
     setSystemMessage({
       message: success 
-        ? t("FabricCLIItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: selectedEnv.displayName })
-        : t("FabricCLIItem_SelectEnvironment_Error", "Could not save environment selection."),
+        ? t("CloudShellItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: selectedEnv.displayName })
+        : t("CloudShellItem_SelectEnvironment_Error", "Could not save environment selection."),
       timestamp: Date.now()
     });
   };
@@ -340,7 +340,7 @@ export function FabricCLIItemEditor(props: PageProps) {
     
     // Pass existing script names to prevent duplicates
     const existingNames = (item.definition?.scripts || []).map(s => s.name).join(',');
-    const path = `/FabricCLIItem-create-script/${item.id}?existing=${encodeURIComponent(existingNames)}`;
+    const path = `/CloudShellItem-create-script/${item.id}?existing=${encodeURIComponent(existingNames)}`;
     
     const dialogResult = await callDialogOpen(
       workloadClient,
@@ -378,7 +378,7 @@ export function FabricCLIItemEditor(props: PageProps) {
     // Load default script template
     let defaultScriptContent = "# New Python script\n";
     try {
-      const response = await fetch('/assets/items/FabricCLIItem/DefaultScript.py');
+      const response = await fetch('/assets/items/CloudShellItem/DefaultScript.py');
       if (response.ok) {
         defaultScriptContent = await response.text();
       }
@@ -408,8 +408,8 @@ export function FabricCLIItemEditor(props: PageProps) {
     const scriptMeta = item.definition?.scripts?.find(s => s.name === scriptName);
     if (scriptMeta) {
       const content = scriptsMap.get(scriptName) || "";
-      console.log(`[FabricCLI] handleScriptSelect - scriptName: ${scriptName}, content length: ${content.length}`);
-      console.log(`[FabricCLI] handleScriptSelect - scriptsMap size: ${scriptsMap.size}, keys:`, Array.from(scriptsMap.keys()));
+      console.log(`[CloudShell] handleScriptSelect - scriptName: ${scriptName}, content length: ${content.length}`);
+      console.log(`[CloudShell] handleScriptSelect - scriptsMap size: ${scriptsMap.size}, keys:`, Array.from(scriptsMap.keys()));
       setSelectedScript({ ...scriptMeta, content });
       if (viewSetter) {
         viewSetter(EDITOR_VIEW_TYPES.SCRIPT);
@@ -493,8 +493,8 @@ export function FabricCLIItemEditor(props: PageProps) {
     if (!item?.definition?.selectedLakehouse || !item?.definition?.selectedSparkEnvironment) {
       callNotificationOpen(
         workloadClient,
-        t("FabricCLIItem_Script_Run_Error_Title", "Cannot Run Script"),
-        t("FabricCLIItem_Script_Run_Error_Message", "Please select a lakehouse and Spark environment before running scripts."),
+        t("CloudShellItem_Script_Run_Error_Title", "Cannot Run Script"),
+        t("CloudShellItem_Script_Run_Error_Message", "Please select a lakehouse and Spark environment before running scripts."),
         NotificationType.Error
       );
       return;
@@ -506,7 +506,7 @@ export function FabricCLIItemEditor(props: PageProps) {
 
     try {
       // Create batch job to run the script
-      const cliClient = new SparkLivyFabricCLIClient(workloadClient);
+      const cliClient = new SparkLivyCloudShellClient(workloadClient);
       const batchResponse = await cliClient.runScriptAsBatch(
         workspaceId,
         lakehouseId,
@@ -520,8 +520,8 @@ export function FabricCLIItemEditor(props: PageProps) {
       
       callNotificationOpen(
         workloadClient,
-        t("FabricCLIItem_Script_Run_Started_Title", "Script Execution Started"),
-        t("FabricCLIItem_Script_Run_Started_Message", "Script '{{scriptName}}' submitted as batch job. Job ID: {{jobId}}", 
+        t("CloudShellItem_Script_Run_Started_Title", "Script Execution Started"),
+        t("CloudShellItem_Script_Run_Started_Message", "Script '{{scriptName}}' submitted as batch job. Job ID: {{jobId}}", 
           { scriptName: script.name, jobId }),
         NotificationType.Success
       );
@@ -533,8 +533,8 @@ export function FabricCLIItemEditor(props: PageProps) {
       console.error('Failed to run script:', error);
       callNotificationOpen(
         workloadClient,
-        t("FabricCLIItem_Script_Run_Failed_Title", "Script Execution Failed"),
-        t("FabricCLIItem_Script_Run_Failed_Message", "Could not run script: {{error}}", { error: error.message }),
+        t("CloudShellItem_Script_Run_Failed_Title", "Script Execution Failed"),
+        t("CloudShellItem_Script_Run_Failed_Message", "Could not run script: {{error}}", { error: error.message }),
         NotificationType.Error
       );
     }
@@ -544,9 +544,9 @@ export function FabricCLIItemEditor(props: PageProps) {
   useEffect(() => {
     if (!item) return;
 
-    console.log('[FabricCLI] Loading scripts - metadata:', item.definition?.scripts);
-    console.log('[FabricCLI] Loading scripts - definition parts:', item.additionalDefinitionParts);
-    console.log('[FabricCLI] Available paths:', item.additionalDefinitionParts?.map(p => p.path));
+    console.log('[CloudShell] Loading scripts - metadata:', item.definition?.scripts);
+    console.log('[CloudShell] Loading scripts - definition parts:', item.additionalDefinitionParts);
+    console.log('[CloudShell] Available paths:', item.additionalDefinitionParts?.map(p => p.path));
 
     setScriptsMap(prevMap => {
       const newScriptsMap = new Map<string, string>(prevMap);
@@ -555,17 +555,17 @@ export function FabricCLIItemEditor(props: PageProps) {
         // Find the corresponding definition part using the same path format as save
         const expectedPath = `scripts/${scriptMeta.name}`;
         const part = item.additionalDefinitionParts?.find(p => p.path === expectedPath);
-        console.log(`[FabricCLI] Script ${scriptMeta.name}: looking for '${expectedPath}', found:`, part ? 'YES' : 'NO');
+        console.log(`[CloudShell] Script ${scriptMeta.name}: looking for '${expectedPath}', found:`, part ? 'YES' : 'NO');
         
         if (part && part.payload) {
           try {
             const content = atob(part.payload);
-            console.log(`[FabricCLI] Script ${scriptMeta.name}: loaded ${content.length} chars from definition part`);
+            console.log(`[CloudShell] Script ${scriptMeta.name}: loaded ${content.length} chars from definition part`);
             // Only update if we don't already have content for this script
             if (!newScriptsMap.has(scriptMeta.name) || newScriptsMap.get(scriptMeta.name) === "") {
               newScriptsMap.set(scriptMeta.name, content);
             } else {
-              console.log(`[FabricCLI] Script ${scriptMeta.name}: keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
+              console.log(`[CloudShell] Script ${scriptMeta.name}: keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
             }
           } catch (error) {
             console.error(`Failed to decode script ${scriptMeta.name}:`, error);
@@ -576,10 +576,10 @@ export function FabricCLIItemEditor(props: PageProps) {
         } else {
           // No definition part found
           if (!newScriptsMap.has(scriptMeta.name)) {
-            console.warn(`[FabricCLI] Script ${scriptMeta.name}: NO CONTENT FOUND at path '${expectedPath}', setting empty`);
+            console.warn(`[CloudShell] Script ${scriptMeta.name}: NO CONTENT FOUND at path '${expectedPath}', setting empty`);
             newScriptsMap.set(scriptMeta.name, "");
           } else {
-            console.log(`[FabricCLI] Script ${scriptMeta.name}: NO DEFINITION PART but keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
+            console.log(`[CloudShell] Script ${scriptMeta.name}: NO DEFINITION PART but keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
           }
         }
       });
@@ -588,12 +588,12 @@ export function FabricCLIItemEditor(props: PageProps) {
       const currentScriptNames = new Set(item.definition?.scripts?.map(s => s.name) || []);
       for (const [name] of newScriptsMap) {
         if (!currentScriptNames.has(name)) {
-          console.log(`[FabricCLI] Removing script ${name} from map (no longer in metadata)`);
+          console.log(`[CloudShell] Removing script ${name} from map (no longer in metadata)`);
           newScriptsMap.delete(name);
         }
       }
 
-      console.log(`[FabricCLI] Final scriptsMap:`, Array.from(newScriptsMap.entries()).map(([name, content]) => ({name, contentLength: content.length})));
+      console.log(`[CloudShell] Final scriptsMap:`, Array.from(newScriptsMap.entries()).map(([name, content]) => ({name, contentLength: content.length})));
       return newScriptsMap;
     });
   }, [item?.definition?.scripts, item?.additionalDefinitionParts]); // Re-run when scripts metadata or definition parts change
@@ -601,7 +601,7 @@ export function FabricCLIItemEditor(props: PageProps) {
   const EmptyViewWrapper = () => {
     const { setCurrentView } = useViewNavigation();
     return (
-      <FabricCLIItemEmptyView
+      <CloudShellItemEmptyView
         onSelectLakehouse={async () => {
           const success = await handleSelectLakehouse();
           if (success) {
@@ -620,11 +620,10 @@ export function FabricCLIItemEditor(props: PageProps) {
     {
       name: EDITOR_VIEW_TYPES.DEFAULT,
       component: (
-        <FabricCLIItemDefaultView
+        <CloudShellItemDefaultView
           workloadClient={workloadClient}
           item={item}
           selectedLakehouse={selectedLakehouse}
-          isUnsaved={isUnsaved}
           sessionActive={sessionActive}
           setSessionActive={setSessionActive}
           sessionId={sessionId}
@@ -661,7 +660,7 @@ export function FabricCLIItemEditor(props: PageProps) {
     <ItemEditor
       isLoading={isLoading}
       ribbon={(viewContext) => (
-        <FabricCLIItemRibbon
+        <CloudShellItemRibbon
           {...props}
           viewContext={viewContext}
           openSettingsCallback={handleOpenSettings}

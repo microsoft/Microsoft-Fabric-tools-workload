@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { PageProps } from "../../App";
-import { ExecutionMode } from "./SparkLivyFabricCLIClient";
+import { ExecutionMode } from "./SparkLivyCloudShellClient";
 import { 
   Ribbon, 
   RibbonAction,
@@ -19,7 +19,7 @@ import {
   DocumentAdd24Regular
 } from "@fluentui/react-icons";
 
-export interface FabricCLIItemRibbonProps extends PageProps {
+export interface CloudShellItemRibbonProps extends PageProps {
   viewContext: ViewContext;
   isSaveButtonEnabled?: boolean;
   saveItemCallback: () => Promise<void>;
@@ -45,7 +45,7 @@ export interface FabricCLIItemRibbonProps extends PageProps {
   onCreateScript?: () => void;
 }
 
-export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
+export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
   const { t } = useTranslation();
   const { viewContext } = props;
 
@@ -53,13 +53,13 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
   const selectedEnvironment = props.availableEnvironments?.find(env => env.id === props.selectedEnvironmentId);
   const environmentLabel = selectedEnvironment 
     ? selectedEnvironment.displayName 
-    : t("FabricCLIItem_SparkEnvironment", "Spark Environment");
+    : t("CloudShellItem_SparkEnvironment", "Spark Environment");
 
   // Get execution mode label
   const executionModeLabels = {
-    [ExecutionMode.NATIVE]: t("FabricCLIItem_ExecutionMode_Native", "Native Python"),
-    [ExecutionMode.SUBPROCESS]: t("FabricCLIItem_ExecutionMode_Subprocess", "Subprocess"),
-    [ExecutionMode.FAB_CLI]: t("FabricCLIItem_ExecutionMode_FabCLI", "Fabric CLI")
+    [ExecutionMode.PYTHON]: t("CloudShellItem_ExecutionMode_Python", "Python"),
+    [ExecutionMode.BASH]: t("CloudShellItem_ExecutionMode_Bash", "Bash"),
+    [ExecutionMode.FAB_CLI]: t("CloudShellItem_ExecutionMode_FabCLI", "Cloud Shell")
   };
   
   const currentExecutionMode = props.selectedExecutionMode || ExecutionMode.FAB_CLI;
@@ -87,9 +87,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     label: executionModeLabel,
     icon: ChevronDown24Regular,
     onClick: () => {},
-    //enable for debugging or if you want to execute different commands from fab cli in the spark session
-    hidden: true,
-    //disabled: props.sessionActive,
+    //hidden: true,
     dropdownItems: [
       {
         key: ExecutionMode.FAB_CLI,
@@ -97,14 +95,14 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
         onClick: () => props.onSelectExecutionMode?.(ExecutionMode.FAB_CLI)
       },
       {
-        key: ExecutionMode.SUBPROCESS,
-        label: executionModeLabels[ExecutionMode.SUBPROCESS],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.SUBPROCESS)
+        key: ExecutionMode.BASH,
+        label: executionModeLabels[ExecutionMode.BASH],
+        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.BASH)
       },
       {
-        key: ExecutionMode.NATIVE,
-        label: executionModeLabels[ExecutionMode.NATIVE],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.NATIVE)
+        key: ExecutionMode.PYTHON,
+        label: executionModeLabels[ExecutionMode.PYTHON],
+        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.PYTHON)
       }
     ],
     showDividerAfter: true
@@ -120,7 +118,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     ),
     {
       key: "select-lakehouse",
-      label: t("FabricCLIItem_SelectLakehouse", "Change Lakehouse"),
+      label: t("CloudShellItem_SelectLakehouse", "Change Lakehouse"),
       icon: Database24Regular,
       onClick: props.onSelectLakehouse,
       disabled: props.sessionActive
@@ -129,14 +127,14 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     executionModeDropdown,
     {
       key: "start-terminal",
-      label: t("FabricCLIItem_StartTerminal", "Start Session"),
+      label: t("CloudShellItem_StartTerminal", "Start Session"),
       icon: Play24Regular,
       onClick: props.onStartTerminal,
       disabled: props.sessionActive
     },
     {
       key: "stop-terminal",
-      label: t("FabricCLIItem_StopTerminal", "Stop Session"),
+      label: t("CloudShellItem_StopTerminal", "Stop Session"),
       icon: Stop24Regular,
       onClick: props.onStopSession,
       disabled: !props.sessionActive,
@@ -144,7 +142,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     },
     {
       key: "clear-terminal",
-      label: t("FabricCLIItem_ClearTerminal", "Clear Terminal"),
+      label: t("CloudShellItem_ClearTerminal", "Clear Terminal"),
       icon: Eraser24Regular,
       onClick: props.onClearTerminal,
       disabled: !props.sessionActive,
@@ -152,7 +150,7 @@ export function FabricCLIItemRibbon(props: FabricCLIItemRibbonProps) {
     },
     {
       key: "create-script",
-      label: t("FabricCLIItem_CreateScript", "Create Script"),
+      label: t("CloudShellItem_CreateScript", "Create Script"),
       icon: DocumentAdd24Regular,
       onClick: () => props.onCreateScript?.()
     }

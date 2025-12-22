@@ -8,21 +8,20 @@ import {
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { FabricCLIItemDefinition, PythonScriptMetadata } from "./FabricCLIItemModel";
+import { CloudShellItemDefinition, PythonScriptMetadata } from "./CloudShellItemModel";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
-import { ExecutionMode, SessionKind, SparkLivyFabricCLIClient } from "./SparkLivyFabricCLIClient";
+import { ExecutionMode, SessionKind, SparkLivyCloudShellClient } from "./SparkLivyCloudShellClient";
 import { ScriptsList } from "./ScriptsList";
 
-import "./FabricCLIItem.scss";
+import "./CloudShellItem.scss";
 
 
 
-interface FabricCLIItemDefaultViewProps {
+interface CloudShellItemDefaultViewProps {
   workloadClient: WorkloadClientAPI;
-  item?: ItemWithDefinition<FabricCLIItemDefinition>;
+  item?: ItemWithDefinition<CloudShellItemDefinition>;
   selectedLakehouse?: Item | null;
-  isUnsaved?: boolean;
   sessionActive: boolean;
   setSessionActive: (active: boolean) => void;
   sessionId: string | null;
@@ -47,11 +46,10 @@ interface TerminalEntry {
   executionMode?: ExecutionMode; // Store execution mode for command entries
 }
 
-export function FabricCLIItemDefaultView({
+export function CloudShellItemDefaultView({
   workloadClient,
   item,
   selectedLakehouse,
-  isUnsaved,
   sessionActive,
   setSessionActive,
   sessionId,
@@ -67,7 +65,7 @@ export function FabricCLIItemDefaultView({
   onScriptCreate,
   onScriptDelete,
   onScriptRun
-}: FabricCLIItemDefaultViewProps) {
+}: CloudShellItemDefaultViewProps) {
   const { t } = useTranslation();
   
   // Get scripts from item definition
@@ -86,7 +84,7 @@ export function FabricCLIItemDefaultView({
   // Command history navigation
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
-  const cliClient = new SparkLivyFabricCLIClient(workloadClient);
+  const cliClient = new SparkLivyCloudShellClient(workloadClient);
 
   // Resolve Lakehouse ID and Workspace ID
   const activeLakehouse = item?.definition?.selectedLakehouse || selectedLakehouse;
@@ -114,18 +112,18 @@ export function FabricCLIItemDefaultView({
 
   // Session Management Effect
   useEffect(() => {
-    if (setSessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
+    if (sessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
       // Check if environment is selected before initializing session
       if (!item?.definition?.selectedSparkEnvironment?.id) {
-        addSystemMessage(t('FabricCLIItem_NoEnvironmentSelected', 'Please select a Spark environment before starting the session.'));
+        addSystemMessage(t('CloudShellItem_NoEnvironmentSelected', 'Please select a Spark environment before starting the session.'));
         setSessionActive(false);
         return;
       }
       initializeSession();
-    } else if (!setSessionActive && sessionId && !isCancelling) {
+    } else if (!sessionActive && sessionId && !isCancelling) {
       cancelCurrentSession();
     }
-  }, [setSessionActive, sessionId, isConnecting, isCancelling, workspaceId, lakehouseId]);
+  }, [sessionActive, sessionId, isConnecting, isCancelling, workspaceId, lakehouseId]);
 
   const formatTimestamp = (date: Date) => date.toLocaleTimeString();
 
@@ -230,6 +228,14 @@ export function FabricCLIItemDefaultView({
   };
 
   /**
+   * Handle the "help" command
+   */
+  const handleHelpCommand = () => {
+    addSystemMessage('Available commands: fab, clear, run {scriptName}, help');
+  };
+
+
+  /**
    * Map of special commands to their handlers
    * Key is the command prefix (case-insensitive)
    * Value is the handler function that receives the remaining arguments
@@ -237,6 +243,7 @@ export function FabricCLIItemDefaultView({
   const specialCommands: Record<string, CommandHandler> = {
     'clear': handleClearCommand,
     'run': handleRunCommand,
+    'help': handleHelpCommand,
   };
 
   /**
@@ -265,9 +272,9 @@ export function FabricCLIItemDefaultView({
   };
 
   /**
-   * Execute a Fabric CLI command via the active Spark session
+   * Execute a Cloud Shell command via the active Spark session
    */
-  const executeFabricCLICommand = async (userCommand: string) => {
+  const executeCloudShellCommand = async (userCommand: string) => {
     if (!sessionId) {
       addSystemMessage('Session needs to be started first. Click \'Start Terminal\' in the ribbon.');
       return;
@@ -290,7 +297,7 @@ export function FabricCLIItemDefaultView({
         setTerminalEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
       } else {
         // No output and no error - show success message
-        setTerminalEntries(prev => [...prev, { type: 'system', content: t('FabricCLIItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
+        setTerminalEntries(prev => [...prev, { type: 'system', content: t('CloudShellItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
       }
     } catch (error: any) {
       setTerminalEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
@@ -322,8 +329,8 @@ export function FabricCLIItemDefaultView({
       return;
     }
 
-    // Execute as a regular Fabric CLI command
-    await executeFabricCLICommand(userCommand);
+    // Execute as a regular Cloud Shell command
+    await executeCloudShellCommand(userCommand);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -356,16 +363,16 @@ export function FabricCLIItemDefaultView({
   };
 
   const content = (
-    <Stack className="fabric-cli-editor">
+    <Stack className="cloud-shell-editor">
       <div className="terminal-container">
         <div className="terminal-body" ref={terminalBodyRef}>
           {terminalEntries.length === 0 ? (
             <div className="system">
-              {t('FabricCLIItem_Wellcome', 'Welcome to Fabric CLI.')}
+              {t('CloudShellItem_Wellcome', 'Welcome to Cloud Shell.')}
               <br />
-              {!setSessionActive && "Click 'Start Terminal' in the ribbon to begin."}
-              {setSessionActive && !sessionId && "Initializing session..."}
-              {sessionId && "Session Ready. Type Fabric CLI commands (e.g., 'ls -l', 'cd ws1.Workspace')."}
+              {!sessionActive && "Click 'Start Terminal' in the ribbon to begin."}
+              {sessionActive && !sessionId && "Initializing session..."}
+              {sessionId && "Session Ready. Type Cloud Shell commands (e.g., 'ls -l', 'cd ws1.Workspace')."}
             </div>
           ) : (
             terminalEntries.map((entry, index) => (
@@ -373,7 +380,7 @@ export function FabricCLIItemDefaultView({
                 {entry.type === 'command' ? (
                   <React.Fragment>
                     <span className="prompt-symbol">
-                      {entry.executionMode === ExecutionMode.NATIVE ? '>>> ' : 
+                      {entry.executionMode === ExecutionMode.PYTHON ? '>>> ' : 
                        entry.executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
                     </span>
                     <span className="command">{entry.content}</span>
@@ -390,7 +397,7 @@ export function FabricCLIItemDefaultView({
         
         <div className="terminal-input">
           <span className="prompt-symbol">
-            {executionMode === ExecutionMode.NATIVE ? '>>> ' : 
+            {executionMode === ExecutionMode.PYTHON ? '>>> ' : 
              executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
           </span>
           <Input
@@ -422,7 +429,7 @@ export function FabricCLIItemDefaultView({
     <ItemEditorDefaultView
       left={{
         content: leftPanel,
-        title: t('FabricCLIItem_Scripts_Panel_Title', 'Scripts'),
+        title: t('CloudShellItem_Scripts_Panel_Title', 'Scripts'),
         collapsible: true,
         minWidth: 200,
         maxWidth: 400,

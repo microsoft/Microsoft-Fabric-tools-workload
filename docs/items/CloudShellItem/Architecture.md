@@ -1,16 +1,16 @@
-# Fabric CLI Item Architecture
+# Cloud Shell Item Architecture
 
-This document describes the architecture and design patterns of the Fabric CLI Item.
+This document describes the architecture and design patterns of the Cloud Shell Item.
 
 ## Overview
 
-The Fabric CLI Item provides an interactive terminal interface for executing commands through Spark Livy sessions, along with Python script management and parameterized batch execution. It supports multiple execution modes with automatic session management, command history, and reusable scripts.
+The Cloud Shell Item provides an interactive terminal interface for executing commands through Spark Livy sessions, along with Python script management and parameterized batch execution. It supports multiple execution modes with automatic session management, command history, and reusable scripts.
 
 ## Architecture Diagram
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Fabric CLI Item                             │
+│                    Cloud Shell Item                             │
 ├─────────────────────────────────────────────────────────────────┤
 │                        UI Layer                                │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
@@ -41,14 +41,14 @@ The Fabric CLI Item provides an interactive terminal interface for executing com
 
 ## Core Components
 
-### FabricCLIItemDefaultView
+### CloudShellItemDefaultView
 
 - Terminal interface with command input/output
 - Scripts panel with list and management
 - Command history with arrow key navigation
 - Multi-line output formatting
 - Real-time session status indicators
-- Integration with SparkLivyFabricCLIClient
+- Integration with SparkLivycloudShellClient
 
 ### ScriptsList
 
@@ -65,7 +65,7 @@ The Fabric CLI Item provides an interactive terminal interface for executing com
 - Save and Run Script actions
 - Type-safe parameter validation
 
-### FabricCLIItemEditor
+### CloudShellItemEditor
 
 - Main orchestrator for item lifecycle
 - Script CRUD operations with scriptsMap state
@@ -74,7 +74,7 @@ The Fabric CLI Item provides an interactive terminal interface for executing com
 - Item save with definition parts for scripts
 - View coordination
 
-### FabricCLIItemRibbon
+### CloudShellItemRibbon
 
 - Session controls (Start/Stop)
 - Create Script action
@@ -83,7 +83,7 @@ The Fabric CLI Item provides an interactive terminal interface for executing com
 - Settings and quick access actions
 - Terminal actions
 
-### SparkLivyFabricCLIClient
+### SparkLivycloudShellClient
 
 - Spark Livy session management
 - Command execution with mode-specific wrapping
@@ -156,7 +156,7 @@ interface ScriptParameter {
 
 **Storage Strategy**:
 
-- **Metadata**: Stored in item definition as JSON (`fabricCLIDefinition.scripts`)
+- **Metadata**: Stored in item definition as JSON (`cloudShellDefinition.scripts`)
 - **Content**: Stored in OneLake at `{workspaceId}/{itemId}/Scripts/{name}.py`
 - **Parameters**: Stored with metadata, injected at batch execution
 
@@ -261,7 +261,7 @@ Three distinct execution modes:
 enum ExecutionMode {
   NATIVE = 'NATIVE',          // Direct Python code
   SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess
-  FAB_CLI = 'FAB_CLI'        // Fabric CLI with "fab" prefix
+  FAB_CLI = 'FAB_CLI'        // Cloud Shell with "fab" prefix
 }
 ```
 
@@ -288,7 +288,7 @@ async reuseOrCreateSession(config, existingSessionId, onProgress) {
 ### State Management
 
 ```typescript
-interface FabricCLIItemDefinition {
+interface CloudShellItemDefinition {
   selectedLakehouse?: ItemReference;      // Persisted
   lastSparkSessionId?: string;            // Persisted for reuse
   selectedSparkEnvironment?: ItemReference; // Persisted

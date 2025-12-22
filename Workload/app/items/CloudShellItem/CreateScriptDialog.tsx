@@ -64,21 +64,21 @@ export function CreateScriptDialog(props: PageProps) {
 
   return (
     <DialogControl
-      title={t("FabricCLIItem_Scripts_CreateDialog_Title", "Create New Python Script")}
+      title={t("CloudShellItem_Scripts_CreateDialog_Title", "Create New Python Script")}
       onConfirm={handleCreate}
       onCancel={handleCancel}
-      confirmLabel={t('FabricCLIItem_Scripts_CreateDialog_Create', 'Create')}
-      cancelLabel={t('FabricCLIItem_Scripts_CreateDialog_Cancel', 'Cancel')}
+      confirmLabel={t('CloudShellItem_Scripts_CreateDialog_Create', 'Create')}
+      cancelLabel={t('CloudShellItem_Scripts_CreateDialog_Cancel', 'Cancel')}
       isConfirmDisabled={!scriptName.trim() || isDuplicate}
       minWidth={400}
     >
       <div className="create-script-dialog-content">
         <Label htmlFor="script-name-input">
-          {t("FabricCLIItem_Scripts_CreateDialog_Label", "Script Name")}
+          {t("CloudShellItem_Scripts_CreateDialog_Label", "Script Name")}
         </Label>
         <Input
           id="script-name-input"
-          placeholder={t('FabricCLIItem_Scripts_CreateDialog_Placeholder', 'script_name.py')}
+          placeholder={t('CloudShellItem_Scripts_CreateDialog_Placeholder', 'script_name.py')}
           value={scriptName}
           onChange={(e, data) => setScriptName(data.value)}
           onKeyDown={handleKeyDown}
@@ -86,7 +86,7 @@ export function CreateScriptDialog(props: PageProps) {
         />
         {isDuplicate && (
           <Text className="create-script-dialog-error">
-            {t('FabricCLIItem_Scripts_CreateDialog_DuplicateError', 'A script with this name already exists')}
+            {t('CloudShellItem_Scripts_CreateDialog_DuplicateError', 'A script with this name already exists')}
           </Text>
         )}
       </div>

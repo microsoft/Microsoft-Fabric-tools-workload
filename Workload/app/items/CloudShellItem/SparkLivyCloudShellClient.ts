@@ -3,31 +3,31 @@ import { SparkLivyClient } from "../../clients/SparkLivyClient";
 import { SessionRequest, SessionResponse, StatementRequest, StatementResponse, BatchRequest, BatchResponse } from "../../clients/FabricPlatformTypes";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { EnvironmentConstants } from "../../constants";
-import { ScriptParameter } from "./FabricCLIItemModel";
+import { ScriptParameter } from "./CloudShellItemModel";
 
 /**
- * Execution mode for Fabric CLI commands
+ * Execution mode for Cloud Shell commands
  */
 export enum ExecutionMode {
   /** Execute native Python code without any wrapper */
-  NATIVE = 'NATIVE',
+  PYTHON = 'NATIVE',
   /** Execute shell commands via subprocess */
-  SUBPROCESS = 'SUBPROCESS',
+  BASH = 'SUBPROCESS',
   /** Execute commands with 'fab' prefix via subprocess */
   FAB_CLI = 'FAB_CLI'
 }
 
 /**
- * Session kinds supported by Spark Livy for Fabric CLI
+ * Session kinds supported by Spark Livy for Cloud Shell
  */
 export enum SessionKind {
   PYTHON = 'python',
 }
 
 /**
- * Configuration for initializing a Fabric CLI session
+ * Configuration for initializing a Cloud Shell session
  */
-export interface FabricCLISessionConfig {
+export interface CloudShellSessionConfig {
     workspaceId: string;
     lakehouseId: string;
     environmentId: string;
@@ -35,18 +35,18 @@ export interface FabricCLISessionConfig {
 }
 
 /**
- * Result of executing a Fabric CLI command
+ * Result of executing a Cloud Shell command
  */
-export interface FabricCLICommandResult {
+export interface CloudShellCommandResult {
     success: boolean;
     output: string;
     isError: boolean;
 }
 
 /**
- * Client for managing Fabric CLI commands through Spark Livy sessions
+ * Client for managing Cloud Shell commands through Spark Livy sessions
  */
-export class SparkLivyFabricCLIClient {
+export class SparkLivyCloudShellClient {
     private sparkClient: SparkLivyClient;
     private oneLakeClient: OneLakeStorageClient;
 
@@ -56,29 +56,29 @@ export class SparkLivyFabricCLIClient {
     }
 
     /**
-     * Initialize a new Spark session for Fabric CLI execution
+     * Initialize a new Spark session for Cloud Shell execution
      */
     async initializeSession(
-        config: FabricCLISessionConfig,
+        config: CloudShellSessionConfig,
         onProgress: (message: string) => void
     ): Promise<SessionResponse> {
         const { workspaceId, lakehouseId, environmentId, sessionKind } = config;
 
         const sessionRequest: SessionRequest = {
-            name: `Fabric CLI Session ${new Date().toISOString()}`,
+            name: `Cloud Shell Session ${new Date().toISOString()}`,
             kind: sessionKind,
             conf: {
                 "spark.targetLakehouse": lakehouseId,
                 "spark.fabric.environmentDetails": `{"id" : "${environmentId}"}`
             },
             tags: {
-                source: "Fabric CLI Item",
+                source: "Cloud Shell Item",
             }
         };
 
         // Create session
         const asyncIndicator = await this.sparkClient.createSession(workspaceId, lakehouseId, sessionRequest);
-        console.log(`[FabricCLI] Session creation operation ID: ${asyncIndicator.operationId}`);
+        console.log(`[CloudShell] Session creation operation ID: ${asyncIndicator.operationId}`);
         onProgress(`Session creation started. Operation ID: ${asyncIndicator.operationId}`);
         onProgress('Waiting for session to be created...');
 
@@ -137,25 +137,25 @@ export class SparkLivyFabricCLIClient {
             throw new Error('Session creation timed out - session did not reach ready state');
         }
 
-        // Verify Fabric CLI is available in the environment (only in fab mode)
-        onProgress('Verifying Fabric CLI installation...');
+        // Verify Cloud Shell is available in the environment (only in fab mode)
+        onProgress('Verifying Cloud Shell installation...');
         try {
             const response = await this.executeCommand(workspaceId, 
                 lakehouseId, foundSession.id!.toString(), "--version");
 
             if (response.isError) {
                 throw new Error(
-                    'Fabric CLI is not available in this environment.\n\n' +
-                    'Please add the "ms-fabric-cli" package to the Spark environment being used.\n' +
+                    'Cloud Shell is not available in this environment.\n\n' +
+                    'Please add the "ms-cloud-shell" package to the Spark environment being used.\n' +
                     'You can do this by:\n' +
                     '1. Opening your Spark environment settings\n' +
-                    '2. Adding "ms-fabric-cli" to the Python packages list\n' +
+                    '2. Adding "ms-cloud-shell" to the Python packages list\n' +
                     '3. Saving the environment and waiting for it to be ready' +
                     '4. Publishing the environment and retrying\n\n'
                 );
             }
 
-            onProgress(`Fabric CLI verified: ${response.output}`);
+            onProgress(`Cloud Shell verified: ${response.output}`);
         } catch (error: any) {
             // Cancel the session since it's not usable
             try {
@@ -165,11 +165,11 @@ export class SparkLivyFabricCLIClient {
             }
 
             throw new Error(
-                'Fabric CLI is not available in this environment.\n\n' +
-                'Please add the "ms-fabric-cli" package to the Spark environment being used.\n' +
+                'Cloud Shell is not available in this environment.\n\n' +
+                'Please add the "ms-cloud-shell" package to the Spark environment being used.\n' +
                 'You can do this by:\n' +
                 '1. Opening your Spark environment settings\n' +
-                '2. Adding "ms-fabric-cli" to the Python packages list\n' +
+                '2. Adding "ms-cloud-shell" to the Python packages list\n' +
                 '3. Saving the environment and waiting for it to be ready\n\n' +
                 `Original error: ${error.message}`
             );
@@ -213,7 +213,7 @@ export class SparkLivyFabricCLIClient {
      * Reuse an existing session or create a new one
      */
     async reuseOrCreateSession(
-        config: FabricCLISessionConfig,
+        config: CloudShellSessionConfig,
         existingSessionId: string | null | undefined,
         onProgress: (message: string) => void
     ): Promise<SessionResponse> {
@@ -230,15 +230,15 @@ export class SparkLivyFabricCLIClient {
                 // Verify CLI is still available (only in fab mode)
 
                 try {
-                    onProgress('Verifying Fabric CLI installation...');
+                    onProgress('Verifying Cloud Shell installation...');
                     const response = await this.executeCommand(workspaceId, 
                         lakehouseId, 
                         existingSessionId,  
                         "--version");
 
                     if (!response.isError) {
-                        onProgress(`Fabric CLI verified: ${response.output}`);
-                        onProgress('Session is ready! You can now execute Fabric CLI commands.');
+                        onProgress(`Cloud Shell verified: ${response.output}`);
+                        onProgress('Session is ready! You can now execute Cloud Shell commands.');
                         return validSession;
                     }
                 } catch (error) {
@@ -262,7 +262,7 @@ export class SparkLivyFabricCLIClient {
     }
 
     /**
-     * Execute a Fabric CLI command through the Spark session
+     * Execute a Cloud Shell command through the Spark session
      */
     async executeCommand(
         workspaceId: string,
@@ -270,11 +270,11 @@ export class SparkLivyFabricCLIClient {
         sessionId: string,
         command: string,
         executionMode: ExecutionMode = ExecutionMode.FAB_CLI
-    ): Promise<FabricCLICommandResult> {
+    ): Promise<CloudShellCommandResult> {
         let code: string;
         let statementRequest: StatementRequest;
 
-        if (executionMode === ExecutionMode.NATIVE) {
+        if (executionMode === ExecutionMode.PYTHON) {
             // Execute native Python code directly
             statementRequest = { code: command, kind: SessionKind.PYTHON };
         } else {
@@ -310,7 +310,7 @@ print(json.dumps(jsonResult));`;
         sessionId: string,
         statement: StatementResponse,
         executionMode: ExecutionMode = ExecutionMode.FAB_CLI
-    ): Promise<FabricCLICommandResult> {
+    ): Promise<CloudShellCommandResult> {
         let attempts = 0;
         const maxAttempts = 60; // 60 seconds timeout
 
@@ -339,7 +339,7 @@ print(json.dumps(jsonResult));`;
                     const rawOutput = statementInfo.output?.data?.['text/plain'] || '';
                     
                     // In NATIVE mode, return output directly without JSON parsing
-                    if (executionMode === ExecutionMode.NATIVE) {
+                    if (executionMode === ExecutionMode.PYTHON) {
                         return {
                             success: true,
                             output: rawOutput,
@@ -347,7 +347,7 @@ print(json.dumps(jsonResult));`;
                         };
                     }
                     
-                    // Parse JSON response from Fabric CLI
+                    // Parse JSON response from Cloud Shell
                     
                     try {
                         // Extract JSON from output
@@ -460,7 +460,7 @@ print(json.dumps(jsonResult));`;
         
         // Create a batch request
         const batchRequest: BatchRequest = {
-            name: `Fabric CLI Script: ${scriptName} - ${new Date().toISOString()}`,
+            name: `Cloud Shell Script: ${scriptName} - ${new Date().toISOString()}`,
             file: abfssUrl,
             conf: {
                 "spark.targetLakehouse": lakehouseId,
@@ -468,7 +468,7 @@ print(json.dumps(jsonResult));`;
                 ...parameterConf
             },
             tags: {
-                source: "Fabric CLI Item",
+                source: "Cloud Shell Item",
                 scriptName: scriptName,
             }
         };
@@ -480,7 +480,7 @@ print(json.dumps(jsonResult));`;
             batchRequest
         );
         
-        console.log(`[FabricCLI] Batch creation operation ID: ${asyncIndicator.operationId}`);
+        console.log(`[CloudShell] Batch creation operation ID: ${asyncIndicator.operationId}`);
         if (onProgress) {
             onProgress(`Batch job creation started. Operation ID: ${asyncIndicator.operationId}`);
             onProgress('Waiting for batch job to be created...');

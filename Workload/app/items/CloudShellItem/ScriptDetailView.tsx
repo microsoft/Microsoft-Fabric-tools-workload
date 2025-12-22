@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
-import { PythonScript, ScriptParameter } from "./FabricCLIItemModel";
+import { PythonScript, ScriptParameter } from "./CloudShellItemModel";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular } from "@fluentui/react-icons";
 import { 
@@ -14,7 +14,7 @@ import {
   Card,
   CardHeader
 } from "@fluentui/react-components";
-import "./FabricCLIItem.scss";
+import "./CloudShellItem.scss";
 
 export interface ScriptDetailViewProps {
   script: PythonScript;
@@ -103,22 +103,22 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       {parameters.map((param, index) => (
         <Card key={index} className="parameter-card">
           <CardHeader
-            header={<strong>{param.name || t('FabricCLIItem_Script_NewParameter', 'New Parameter')}</strong>}
+            header={<strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>}
             action={
-              <Tooltip content={t('FabricCLIItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
+              <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
                 <Button
                   icon={<Delete20Regular />}
                   appearance="subtle"
                   size="small"
                   onClick={() => handleDeleteParameter(index)}
-                  aria-label={t('FabricCLIItem_Script_DeleteParameter', 'Delete parameter')}
+                  aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
                 />
               </Tooltip>
             }
           />
           <div className="parameter-fields">
             <div className="field-row">
-              <Label size="small">{t('FabricCLIItem_Script_ParameterName', 'Name')}</Label>
+              <Label size="small">{t('CloudShellItem_Script_ParameterName', 'Name')}</Label>
               <Input
                 size="small"
                 value={param.name}
@@ -128,7 +128,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
             </div>
             
             <div className="field-row">
-              <Label size="small">{t('FabricCLIItem_Script_ParameterType', 'Type')}</Label>
+              <Label size="small">{t('CloudShellItem_Script_ParameterType', 'Type')}</Label>
               <Dropdown
                 className="type-dropdown"
                 size="small"
@@ -145,12 +145,12 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
             </div>
             
             <div className="field-row">
-              <Label size="small">{t('FabricCLIItem_Script_ParameterValue', 'Value')}</Label>
+              <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
               <Input
                 size="small"
                 value={param.value}
                 onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
-                placeholder={t('FabricCLIItem_Script_ParameterValuePlaceholder', 'Parameter value')}
+                placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
         appearance="secondary"
         onClick={handleAddParameter}
       >
-        {t('FabricCLIItem_Script_AddParameter', 'Add Parameter')}
+        {t('CloudShellItem_Script_AddParameter', 'Add Parameter')}
       </Button>
     </div>
   );
@@ -172,25 +172,25 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const toolbarActions: DetailViewAction[] = [
     {
       key: 'save',
-      label: t('FabricCLIItem_Script_Save', 'Save'),
+      label: t('CloudShellItem_Script_Save', 'Save'),
       icon: Save20Regular,
       onClick: handleSave,
       appearance: 'primary',
       disabled: !isDirty,
       tooltip: isDirty 
-        ? t('FabricCLIItem_Script_SaveTooltip', 'Save script changes')
-        : t('FabricCLIItem_Script_NoChanges', 'No changes to save')
+        ? t('CloudShellItem_Script_SaveTooltip', 'Save script changes')
+        : t('CloudShellItem_Script_NoChanges', 'No changes to save')
     },
     {
       key: 'run',
       label: isRunning 
-        ? t('FabricCLIItem_Script_Running', 'Running...') 
-        : t('FabricCLIItem_Script_Run', 'Run'),
+        ? t('CloudShellItem_Script_Running', 'Running...') 
+        : t('CloudShellItem_Script_Run', 'Run'),
       icon: Play20Regular,
       onClick: handleRun,
       appearance: 'subtle',
       disabled: !onRun || isRunning,
-      tooltip: t('FabricCLIItem_Script_RunTooltip', 'Run this script in the terminal')
+      tooltip: t('CloudShellItem_Script_RunTooltip', 'Run this script in the terminal')
     }
   ];
 
@@ -229,7 +229,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       toolbarActions={toolbarActions}
       left={{
         content: parametersPanel,
-        title: t('FabricCLIItem_Script_ParametersPanel', 'Parameters'),
+        title: t('CloudShellItem_Script_ParametersPanel', 'Parameters'),
         minWidth: 250,
         maxWidth: 500,
         collapsible: true

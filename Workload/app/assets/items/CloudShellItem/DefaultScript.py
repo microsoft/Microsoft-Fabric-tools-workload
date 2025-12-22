@@ -6,7 +6,7 @@ This script demonstrates how to access parameters and use PySpark in Fabric.
 from pyspark.sql import SparkSession
 
 # Initialize Spark session
-spark = SparkSession.builder.appName("FabricCLIScript").getOrCreate()
+spark = SparkSession.builder.appName("CloudShellScript").getOrCreate()
 
 # Access script parameters from Spark configuration
 # Parameters are passed as spark.script.param.<parameter_name>

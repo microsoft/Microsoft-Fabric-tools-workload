@@ -1,19 +1,19 @@
-# Fabric CLI Item
+# Cloud Shell Item
 
-The Fabric CLI Item provides an interactive terminal interface for executing Fabric CLI commands and Python scripts through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history and script management capabilities.
+The Cloud Shell Item provides an interactive terminal interface for executing Cloud Shell commands and Python scripts through Spark Livy sessions within Microsoft Fabric. It enables developers and data engineers to interact with Fabric resources directly from the browser with full command history and script management capabilities.
 
 **Key Features**:
 
-- **Interactive Terminal** for Fabric CLI commands
+- **Interactive Terminal** for Cloud Shell commands
 - **Python Script Management** with parameterized execution
 - **Batch Job Execution** for scripts with monitoring
 - **Session Management** with automatic reuse
 
 ## Overview
 
-The Fabric CLI Item enables users to:
+The Cloud Shell Item enables users to:
 
-- **Execute Fabric CLI commands** through an integrated terminal interface
+- **Execute Cloud Shell commands** through an integrated terminal interface
 - **Create and manage Python scripts** with parameter support
 - **Run scripts as batch jobs** with Spark configuration
 - **Manage Spark sessions** with automatic reuse and validation
@@ -86,11 +86,11 @@ enable_logging = get_parameter("enable_logging", "bool", "true")
 - **Progress Notifications**: Real-time feedback during job submission
 - **Job ID Tracking**: Batch job ID returned for monitoring
 
-### Fabric CLI Execution (Default)
+### Cloud Shell Execution (Default)
 
-**Fabric CLI (`FAB_CLI`)** - Default Mode
+**Cloud Shell (`FAB_CLI`)** - Default Mode
 
-- Execute Fabric CLI commands with automatic `fab` prefix
+- Execute Cloud Shell commands with automatic `fab` prefix
 - Integrated access to Fabric platform capabilities
 - Best for: Fabric resource management, platform operations
 - Example: `workspace list` (executed as `fab workspace list`)
@@ -142,23 +142,23 @@ To use Python or shell commands, select a different execution mode from the ribb
 ### Component Structure
 
 ```text
-FabricCLIItem/
-├── FabricCLIItemDefaultView.tsx          # Terminal UI and command execution
-├── FabricCLIItemEditor.tsx               # Main editor orchestrator with script management
-├── FabricCLIItemEmptyView.tsx            # Empty state component
-├── FabricCLIItemRibbon.tsx               # Ribbon actions and controls
-├── FabricCLIItemModel.ts                 # Data models and interfaces
+CloudShellItem/
+├── CloudShellItemDefaultView.tsx          # Terminal UI and command execution
+├── CloudShellItemEditor.tsx               # Main editor orchestrator with script management
+├── CloudShellItemEmptyView.tsx            # Empty state component
+├── CloudShellItemRibbon.tsx               # Ribbon actions and controls
+├── CloudShellItemModel.ts                 # Data models and interfaces
 ├── ScriptDetailView.tsx                  # Script editor with parameter panel
 ├── ScriptsList.tsx                       # Script list component
 ├── CreateScriptDialog.tsx                # Script creation dialog
-├── SparkLivyFabricCLIClient.ts           # Spark Livy session and batch management
-└── FabricCLIItem.scss                    # Centralized styling
+├── SparkLivycloudShellClient.ts           # Spark Livy session and batch management
+└── CloudShellItem.scss                    # Centralized styling
 ```
 
 ### Execution Flow
 
 ```text
-User Command → Fabric CLI Wrapper (default) → Spark Session
+User Command → Cloud Shell Wrapper (default) → Spark Session
      ↓
 FAB_CLI Mode (default) → subprocess.run("fab command", shell=True) → JSON Response
      ↓
@@ -171,7 +171,7 @@ SUBPROCESS Mode → subprocess.run(shell=True) → JSON Response
 
 ## Component Details
 
-### FabricCLIItemDefaultView
+### CloudShellItemDefaultView
 
 The main terminal component that:
 
@@ -179,10 +179,10 @@ The main terminal component that:
 - Manages command history and navigation
 - Handles execution mode per command
 - Displays command results with appropriate formatting
-- Integrates with SparkLivyFabricCLIClient for execution
+- Integrates with SparkLivycloudShellClient for execution
 
 ```tsx
-<FabricCLIItemDefaultView
+<CloudShellItemDefaultView
   item={item}
   workloadClient={workloadClient}
   workspaceId={workspaceId}
@@ -193,7 +193,7 @@ The main terminal component that:
 />
 ```
 
-### FabricCLIItemEditor
+### CloudShellItemEditor
 
 The main orchestrator component that:
 
@@ -203,7 +203,7 @@ The main orchestrator component that:
 - Provides ribbon integration
 - Controls execution mode switching
 
-### FabricCLIItemRibbon
+### CloudShellItemRibbon
 
 Ribbon integration providing:
 
@@ -213,7 +213,7 @@ Ribbon integration providing:
 - **Clear Terminal**: Clear all terminal entries
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
-- **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Fabric CLI)
+- **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Cloud Shell)
 - **Create Script**: Create new Python script
 
 ### ScriptDetailView
@@ -237,7 +237,7 @@ Script list component that:
 - Handles empty state with create script button
 - Supports script navigation
 
-### SparkLivyFabricCLIClient
+### SparkLivycloudShellClient
 
 Session and batch management client that:
 
@@ -252,10 +252,10 @@ Session and batch management client that:
 
 ## Data Models
 
-### FabricCLIItemDefinition
+### CloudShellItemDefinition
 
 ```typescript
-interface FabricCLIItemDefinition {
+interface CloudShellItemDefinition {
   selectedLakehouse?: ItemReference;          // Selected lakehouse context
   lastSparkSessionId?: string;                 // Last used session ID for reuse
   selectedSparkEnvironment?: ItemReference;    // Selected Spark environment
@@ -288,7 +288,7 @@ interface ScriptParameter {
 
 ```typescript
 enum ExecutionMode {
-  FAB_CLI = 'FAB_CLI',        // Fabric CLI with fab prefix (DEFAULT)
+  FAB_CLI = 'FAB_CLI',        // Cloud Shell with fab prefix (DEFAULT)
   NATIVE = 'NATIVE',          // Native Python execution (Advanced)
   SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess (Advanced)
 }
@@ -346,9 +346,9 @@ Session IDs are automatically cleared when:
 
 ## Command Execution
 
-### Fabric CLI Mode (FAB_CLI) - Default
+### Cloud Shell Mode (FAB_CLI) - Default
 
-Fabric CLI commands with automatic `fab` prefix:
+Cloud Shell commands with automatic `fab` prefix:
 
 ```python
 # User input
@@ -368,7 +368,7 @@ ls MyWorkspace.Workspace -l
 - `item list --workspace-id <id>` - List items in a workspace
 - `lakehouse get --workspace-id <id> --item-id <id>` - Get lakehouse details
 
-For more examples, see the [Fabric CLI Examples Documentation](https://microsoft.github.io/fabric-cli/examples/item_examples/).
+For more examples, see the [Cloud Shell Examples Documentation](https://microsoft.github.io/fabric-cli/examples/item_examples/).
 
 ### Advanced Modes (Must be Activated in code)
 
@@ -447,7 +447,7 @@ The component includes comprehensive error handling for:
 
 **⚠️ Service Principal Authentication Only**
 
-The Fabric CLI Item currently **only supports Service Principal authentication**. User-based authentication is not yet supported.
+The Cloud Shell Item currently **only supports Service Principal authentication**. User-based authentication is not yet supported.
 
 **Setup Requirements**:
 
@@ -456,7 +456,7 @@ The Fabric CLI Item currently **only supports Service Principal authentication**
 3. Configure client credentials in environment variables
 4. Grant necessary API permissions (Workspace.ReadWrite.All, Item.ReadWrite.All)
 
-For detailed setup instructions, see the [CreateFabricCLIServicePrincipal.ps1](../../../scripts/Setup/CreateFabricCLIServicePrincipal.ps1) script.
+For detailed setup instructions, see the [CreatecloudShellServicePrincipal.ps1](../../../scripts/Setup/CreatecloudShellServicePrincipal.ps1) script.
 
 ### Known Limitations
 
@@ -486,7 +486,7 @@ For detailed setup instructions, see the [CreateFabricCLIServicePrincipal.ps1](.
 ## Future Enhancements
 
 - **User Authentication**: Support for user-based authentication
-- **Command Autocomplete**: IntelliSense for Fabric CLI commands
+- **Command Autocomplete**: IntelliSense for Cloud Shell commands
 - **Script Templates**: Pre-built templates for common data operations
 - **Script Versioning**: Track script changes with version history
 - **Output Export**: Save command and script results to item
@@ -494,13 +494,13 @@ For detailed setup instructions, see the [CreateFabricCLIServicePrincipal.ps1](.
 - **Script Dependencies**: Manage Python package requirements per script
 - **Batch Job Monitoring**: Real-time log streaming for running batch jobs
 - **Script Scheduling**: Schedule scripts for automated execution
-- **Data Integration**: Integration to leverage data in the Fabric CLI
+- **Data Integration**: Integration to leverage data in the Cloud Shell
 - **Spark Environment Setup**: Set up Spark environment and configure it correctly
 
 ## Related Resources
 
-- [Fabric CLI Documentation](https://learn.microsoft.com/en-us/fabric/cicd/fabric-cli)
-- [Fabric CLI Examples](https://microsoft.github.io/fabric-cli/examples/item_examples/)
+- [Cloud Shell Documentation](https://learn.microsoft.com/en-us/fabric/cicd/fabric-cli)
+- [Cloud Shell Examples](https://microsoft.github.io/fabric-cli/examples/item_examples/)
 - [Spark Livy REST API](https://learn.microsoft.com/en-us/azure/synapse-analytics/spark/apache-spark-livy-rest-interface)
-- [Service Principal Setup](../../../scripts/Setup/CreateFabricCLIServicePrincipal.ps1)
+- [Service Principal Setup](../../../scripts/Setup/CreatecloudShellServicePrincipal.ps1)
 - [Architecture Documentation](./Architecture.md)
