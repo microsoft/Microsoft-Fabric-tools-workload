@@ -90,11 +90,6 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
     //hidden: true,
     dropdownItems: [
       {
-        key: ExecutionMode.FAB_CLI,
-        label: executionModeLabels[ExecutionMode.FAB_CLI],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.FAB_CLI)
-      },
-      {
         key: ExecutionMode.BASH,
         label: executionModeLabels[ExecutionMode.BASH],
         onClick: () => props.onSelectExecutionMode?.(ExecutionMode.BASH)
@@ -103,6 +98,11 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
         key: ExecutionMode.PYTHON,
         label: executionModeLabels[ExecutionMode.PYTHON],
         onClick: () => props.onSelectExecutionMode?.(ExecutionMode.PYTHON)
+      },
+      {
+        key: ExecutionMode.FAB_CLI,
+        label: executionModeLabels[ExecutionMode.FAB_CLI],
+        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.FAB_CLI)
       }
     ],
     showDividerAfter: true
@@ -145,14 +145,12 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
       label: t("CloudShellItem_ClearTerminal", "Clear Terminal"),
       icon: Eraser24Regular,
       onClick: props.onClearTerminal,
-      disabled: !props.sessionActive,
-      showDividerAfter: true
     },
     {
       key: "create-script",
       label: t("CloudShellItem_CreateScript", "Create Script"),
       icon: DocumentAdd24Regular,
-      onClick: () => props.onCreateScript?.()
+      onClick: () => props.onCreateScript,
     }
   ];
 

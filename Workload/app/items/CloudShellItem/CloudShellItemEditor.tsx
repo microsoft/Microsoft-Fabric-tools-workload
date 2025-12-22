@@ -42,7 +42,7 @@ export function CloudShellItemEditor(props: PageProps) {
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
   const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
-  const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.FAB_CLI);
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.BASH);
   const [systemMessage, setSystemMessage] = useState<{ message: string; timestamp: number }>();
   const [selectedScript, setSelectedScript] = useState<PythonScript | undefined>();
   const [scriptsMap, setScriptsMap] = useState<Map<string, string>>(new Map()); // scriptName -> content
