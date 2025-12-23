@@ -104,6 +104,20 @@
     min-height: 0;
 }
 
+.scripts-list-category {
+    margin-bottom: 16px;
+}
+
+.scripts-list-category-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 600;
+}
+
 .scripts-list-empty {
     display: flex;
     flex-direction: column;

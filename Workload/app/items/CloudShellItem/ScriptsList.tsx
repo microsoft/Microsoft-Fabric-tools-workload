@@ -16,6 +16,7 @@ import {
   Delete20Regular,
   Document20Regular,
   DocumentAdd20Regular,
+  Folder20Regular,
 } from "@fluentui/react-icons";
 import type { ScriptMetadata } from "./CloudShellItemModel";
 
@@ -138,17 +139,23 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
           <>
             {fabcliScripts.length > 0 && (
               <div className="scripts-list-category">
-                <Caption1 className="scripts-list-category-title">
-                  {t('CloudShellItem_Scripts_FabCLI', 'Fabric CLI Scripts')}
-                </Caption1>
+                <div className="scripts-list-category-title">
+                  <Folder20Regular />
+                  <Caption1>
+                    {t('CloudShellItem_Scripts_FabCLI', 'Fabric CLI Scripts')}
+                  </Caption1>
+                </div>
                 {fabcliScripts.map(renderScriptItem)}
               </div>
             )}
             {pythonScripts.length > 0 && (
               <div className="scripts-list-category">
-                <Caption1 className="scripts-list-category-title">
-                  {t('CloudShellItem_Scripts_Python', 'Python Scripts')}
-                </Caption1>
+                <div className="scripts-list-category-title">
+                  <Folder20Regular />
+                  <Caption1>
+                    {t('CloudShellItem_Scripts_Python', 'Python Scripts')}
+                  </Caption1>
+                </div>
                 {pythonScripts.map(renderScriptItem)}
               </div>
             )}
