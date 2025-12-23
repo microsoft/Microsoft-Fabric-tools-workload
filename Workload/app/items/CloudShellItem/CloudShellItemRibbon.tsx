@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { PageProps } from "../../App";
-import { ExecutionMode } from "./SparkLivyCloudShellClient";
+import { CommandType } from "./CloudShellItemModel";
 import { 
   Ribbon, 
   RibbonAction,
@@ -15,7 +15,6 @@ import {
   Stop24Regular,
   Eraser24Regular,
   Database24Regular,
-  ChevronDown24Regular,
   DocumentAdd24Regular
 } from "@fluentui/react-icons";
 
@@ -38,8 +37,8 @@ export interface CloudShellItemRibbonProps extends PageProps {
   selectedEnvironmentId?: string;
   
   // Execution mode
-  onSelectExecutionMode?: (mode: ExecutionMode) => void;
-  selectedExecutionMode?: ExecutionMode;
+  onSelectExecutionMode?: (mode: CommandType) => void;
+  selectedExecutionMode?: CommandType;
   
   // Script management
   onCreateScript?: () => void;
@@ -57,21 +56,19 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
 
   // Get execution mode label
   const executionModeLabels = {
-    [ExecutionMode.PYTHON]: t("CloudShellItem_ExecutionMode_Python", "Python"),
-    [ExecutionMode.BASH]: t("CloudShellItem_ExecutionMode_Bash", "Bash"),
-    [ExecutionMode.FAB_CLI]: t("CloudShellItem_ExecutionMode_FabCLI", "Cloud Shell")
+    [CommandType.PYTHON]: t("CloudShellItem_ExecutionMode_Python", "Python"),
+    [CommandType.SHELL]: t("CloudShellItem_ExecutionMode_Bash", "Bash"),
+    [CommandType.FAB_CLI]: t("CloudShellItem_ExecutionMode_FabCLI", "Cloud Shell")
   };
   
-  const currentExecutionMode = props.selectedExecutionMode || ExecutionMode.FAB_CLI;
+  const currentExecutionMode = props.selectedExecutionMode || CommandType.FAB_CLI;
   const executionModeLabel = executionModeLabels[currentExecutionMode];
 
   // Create environment dropdown action
   const environmentDropdown: RibbonDropdownAction = {
     key: "select-environment",
     label: environmentLabel,
-    icon: ChevronDown24Regular,
     onClick: () => {}, // Required but overridden by dropdown items
-    disabled: props.sessionActive || !props.availableEnvironments?.length,
     dropdownItems: props.availableEnvironments?.map(env => ({
       key: env.id,
       label: env.displayName,
@@ -85,24 +82,21 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
   const executionModeDropdown: RibbonDropdownAction = {
     key: "select-execution-mode",
     label: executionModeLabel,
-    icon: ChevronDown24Regular,
     onClick: () => {},
-    //hidden: true,
     dropdownItems: [
       {
-        key: ExecutionMode.BASH,
-        label: executionModeLabels[ExecutionMode.BASH],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.BASH)
+        key: CommandType.FAB_CLI,
+        label: executionModeLabels[CommandType.FAB_CLI],
+        onClick: () => props.onSelectExecutionMode?.(CommandType.FAB_CLI)
       },
       {
-        key: ExecutionMode.PYTHON,
-        label: executionModeLabels[ExecutionMode.PYTHON],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.PYTHON)
-      },
-      {
-        key: ExecutionMode.FAB_CLI,
-        label: executionModeLabels[ExecutionMode.FAB_CLI],
-        onClick: () => props.onSelectExecutionMode?.(ExecutionMode.FAB_CLI)
+        key: CommandType.PYTHON,
+        label: executionModeLabels[CommandType.PYTHON],
+        onClick: () => props.onSelectExecutionMode?.(CommandType.PYTHON)
+      },      {
+        key: CommandType.SHELL,
+        label: executionModeLabels[CommandType.SHELL],
+        onClick: () => props.onSelectExecutionMode?.(CommandType.SHELL)
       }
     ],
     showDividerAfter: true
@@ -150,7 +144,7 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
       key: "create-script",
       label: t("CloudShellItem_CreateScript", "Create Script"),
       icon: DocumentAdd24Regular,
-      onClick: () => props.onCreateScript,
+      onClick: props.onCreateScript,
     }
   ];
 

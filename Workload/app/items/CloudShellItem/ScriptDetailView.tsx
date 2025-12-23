@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
-import { PythonScript, ScriptParameter } from "./CloudShellItemModel";
+import { Script, ScriptParameter, ScriptType } from "./CloudShellItemModel";
+import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular } from "@fluentui/react-icons";
 import { 
@@ -17,10 +18,10 @@ import {
 import "./CloudShellItem.scss";
 
 export interface ScriptDetailViewProps {
-  script: PythonScript;
+  script: Script;
   currentTheme: string;
-  onSave: (script: PythonScript) => void;
-  onRun?: (script: PythonScript) => void;
+  onSave: (script: Script) => void;
+  onRun?: (script: Script) => void;
   isRunning?: boolean;
 }
 
@@ -41,6 +42,10 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const [parameters, setParameters] = useState<ScriptParameter[]>(script.parameters || []);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Get editor language from centralized configuration
+  const scriptType = script.type ?? ScriptType.PYTHON;
+  const language = getScriptTypeConfig(scriptType).editorLanguage;
+
   // Update content and parameters when script changes
   useEffect(() => {
     setContent(script.content || "");
@@ -54,7 +59,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   };
 
   const handleSave = () => {
-    const updatedScript: PythonScript = {
+    const updatedScript: Script = {
       ...script,
       content,
       parameters,
@@ -203,7 +208,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       <div className="script-editor-container">
         <Editor
           height="100%"
-          language="python"
+          language={language}
           value={content}
           theme={currentTheme}
           onChange={handleEditorChange}
@@ -237,7 +242,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       center={{
         content: editorContent,
         className: "script-detail-view-center",
-        ariaLabel: `Python script editor for ${script.name}`
+        ariaLabel: `${language.charAt(0).toUpperCase() + language.slice(1)} script editor for ${script.name}`
       }}
     />
   );

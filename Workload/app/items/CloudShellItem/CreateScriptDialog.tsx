@@ -5,19 +5,21 @@ import { PageProps } from "../../App";
 import { callDialogClose } from "../../controller/DialogController";
 import { CloseMode } from "@ms-fabric/workload-client";
 import { DialogControl } from "../../components";
-import { Input, Label, Text } from "@fluentui/react-components";
+import { Input, Label, Text, Dropdown, Option } from "@fluentui/react-components";
+import { SCRIPT_TYPE_CONFIGS, getAllScriptTypes, ensureCorrectExtension } from "./engine/scripts/ScriptTypeConfig";
+import { ScriptType } from "./CloudShellItemModel";
 
 export interface CreateScriptDialogResult {
   state: 'created' | 'cancel';
   scriptName?: string;
 }
-
 export function CreateScriptDialog(props: PageProps) {
   const { workloadClient } = props;
   const { t } = useTranslation();
   const location = useLocation();
   const [scriptName, setScriptName] = useState("");
-  
+  const [scriptType, setScriptType] = useState<ScriptType>(ScriptType.FABCLI);
+
   // Parse existing script names from URL query params
   const existingScriptNames = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -25,25 +27,28 @@ export function CreateScriptDialog(props: PageProps) {
     return existing ? existing.split(',').filter(n => n) : [];
   }, [location.search]);
 
-  // Check if current name would be a duplicate
+  // Sanitize script name to remove special characters, spaces, and dots
+  const sanitizeScriptName = (name: string): string => {
+    // Allow only alphanumeric characters, hyphens, and underscores (no dots)
+    return name.replace(/[^a-zA-Z0-9_-]/g, '');
+  };
+
+  // Use centralized extension handling
+  const getFinalName = () => ensureCorrectExtension(scriptName, scriptType);
+
   const isDuplicate = useMemo(() => {
     if (!scriptName.trim()) return false;
-    const finalName = scriptName.trim().endsWith('.py') 
-      ? scriptName.trim() 
-      : `${scriptName.trim()}.py`;
-    return existingScriptNames.some(name => name.toLowerCase() === finalName.toLowerCase());
-  }, [scriptName, existingScriptNames]);
+    const name = getFinalName();
+    return existingScriptNames.some(n => n.toLowerCase() === name.toLowerCase());
+  }, [scriptName, scriptType, existingScriptNames]);
 
   const handleCreate = () => {
     if (scriptName.trim() && !isDuplicate) {
-      // Ensure .py extension
-      const finalName = scriptName.trim().endsWith('.py') 
-        ? scriptName.trim() 
-        : `${scriptName.trim()}.py`;
-      
-      const result: CreateScriptDialogResult = { 
+      const name = getFinalName();
+      const result: CreateScriptDialogResult & { scriptType: ScriptType } = { 
         state: 'created',
-        scriptName: finalName
+        scriptName: name,
+        scriptType: scriptType
       };
       callDialogClose(workloadClient, CloseMode.PopOne, result);
     }
@@ -64,7 +69,7 @@ export function CreateScriptDialog(props: PageProps) {
 
   return (
     <DialogControl
-      title={t("CloudShellItem_Scripts_CreateDialog_Title", "Create New Python Script")}
+      title={t("CloudShellItem_Scripts_CreateDialog_Title", "Create New Script")}
       onConfirm={handleCreate}
       onCancel={handleCancel}
       confirmLabel={t('CloudShellItem_Scripts_CreateDialog_Create', 'Create')}
@@ -73,14 +78,36 @@ export function CreateScriptDialog(props: PageProps) {
       minWidth={400}
     >
       <div className="create-script-dialog-content">
-        <Label htmlFor="script-name-input">
+        <Label htmlFor="script-type-selector">
+          {t("CloudShellItem_Scripts_CreateDialog_TypeLabel", "Script Type")}
+        </Label>
+        <Dropdown
+          id="script-type-selector"
+          value={SCRIPT_TYPE_CONFIGS[scriptType].defaultLabel}
+          selectedOptions={[scriptType]}
+          onOptionSelect={(_, data) => setScriptType(data.optionValue as ScriptType)}
+        >
+          {getAllScriptTypes().map(type => {
+            const config = SCRIPT_TYPE_CONFIGS[type];
+            return (
+              <Option 
+                key={type} 
+                value={type}
+                text={t(config.labelKey, config.defaultLabel)}
+              >
+                {t(config.labelKey, config.defaultLabel)}
+              </Option>
+            );
+          })}
+        </Dropdown>
+        <Label htmlFor="script-name-input" style={{ marginTop: 12 }}>
           {t("CloudShellItem_Scripts_CreateDialog_Label", "Script Name")}
         </Label>
         <Input
           id="script-name-input"
-          placeholder={t('CloudShellItem_Scripts_CreateDialog_Placeholder', 'script_name.py')}
+          placeholder={SCRIPT_TYPE_CONFIGS[scriptType].defaultScriptName}
           value={scriptName}
-          onChange={(e, data) => setScriptName(data.value)}
+          onChange={(e, data) => setScriptName(sanitizeScriptName(data.value))}
           onKeyDown={handleKeyDown}
           autoFocus
         />

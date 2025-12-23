@@ -1,0 +1,16 @@
+# Default Fabric CLI Script Template
+# This script demonstrates common Fabric CLI commands
+
+# Make sure this script can run and you are logged in
+
+##########################################################
+# Add your Fabric CLI commands below
+##########################################################
+
+# List all workspaces
+ls -l
+
+# List all items in a workspace
+ls -l $param1
+
+

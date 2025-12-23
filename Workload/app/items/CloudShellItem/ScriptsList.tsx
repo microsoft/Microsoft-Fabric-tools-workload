@@ -17,20 +17,21 @@ import {
   Document20Regular,
   DocumentAdd20Regular,
 } from "@fluentui/react-icons";
-import { PythonScriptMetadata } from "./CloudShellItemModel";
-import "./CloudShellItem.scss";
+import type { ScriptMetadata } from "./CloudShellItemModel";
 
 export interface ScriptsListProps {
-  scripts: PythonScriptMetadata[];
+  scripts: ScriptMetadata[];
   selectedScriptName?: string;
   onScriptSelect: (scriptName: string) => void;
   onScriptCreate: () => void;
   onScriptDelete: (scriptName: string) => void;
 }
 
+import "./CloudShellItem.scss";
+
 /**
  * ScriptsList component
- * Displays a list of Python scripts with create/delete actions
+ * Displays a list of scripts (Python or Shell) with create/delete actions
  * Used in the left panel of the CloudShell item editor
  */
 export const ScriptsList: React.FC<ScriptsListProps> = ({
@@ -43,11 +44,79 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
   const { t } = useTranslation();
   const [deleteConfirmScriptName, setDeleteConfirmScriptName] = useState<string | null>(null);
 
+  // Group scripts by type (default to 'python' if type not specified)
+  const pythonScripts = scripts.filter(script => (script.type ?? 'python') === 'python');
+  //const shellScripts = scripts.filter(script => (script.type ?? 'python') === 'shell');
+  const fabcliScripts = scripts.filter(script => (script.type ?? 'python') === 'fabcli');
 
   const handleDeleteScript = (scriptName: string) => {
     onScriptDelete(scriptName);
     setDeleteConfirmScriptName(null);
   };
+
+  const renderScriptItem = (script: ScriptMetadata) => (
+    <div
+      key={script.name}
+      className={`script-list-item ${selectedScriptName === script.name ? 'selected' : ''}`}
+      onClick={() => onScriptSelect(script.name)}
+    >
+      <div className="script-list-item-icon">
+        <Document20Regular />
+      </div>
+      <div className="script-list-item-content">
+        <Body1 className="script-list-item-name">{script.name}</Body1>
+      </div>
+      <Dialog
+        open={deleteConfirmScriptName === script.name}
+        onOpenChange={(_, data) => {
+          if (!data.open) setDeleteConfirmScriptName(null);
+        }}
+      >
+        <DialogTrigger disableButtonEnhancement>
+          <Button
+            icon={<Delete20Regular />}
+            appearance="subtle"
+            size="small"
+            className="script-list-item-delete"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setDeleteConfirmScriptName(script.name);
+            }}
+            title={t('CloudShellItem_Scripts_Delete', 'Delete script')}
+          />
+        </DialogTrigger>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>
+              {t('CloudShellItem_Scripts_DeleteDialog_Title', 'Delete Script?')}
+            </DialogTitle>
+            <DialogContent>
+              {t('CloudShellItem_Scripts_DeleteDialog_Message', 
+                'Are you sure you want to delete "{{scriptName}}"? This action cannot be undone.',
+                { scriptName: script.name }
+              )}
+            </DialogContent>
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">
+                  {t('CloudShellItem_Scripts_DeleteDialog_Cancel', 'Cancel')}
+                </Button>
+              </DialogTrigger>
+              <Button
+                appearance="primary"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleDeleteScript(script.name);
+                }}
+              >
+                {t('CloudShellItem_Scripts_DeleteDialog_Delete', 'Delete')}
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+    </div>
+  );
 
   return (
     <div className="scripts-list-container">
@@ -55,7 +124,7 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
         {scripts.length === 0 ? (
           <div className="scripts-list-empty">
             <Caption1 className="scripts-list-description">
-                {t('CloudShellItem_Scripts_Description', 'Python scripts for execution')}
+              {t('CloudShellItem_Scripts_Description', 'Scripts for execution (.py, .sh, .fab)')}
             </Caption1>
             <Button
               appearance="primary"
@@ -66,69 +135,32 @@ export const ScriptsList: React.FC<ScriptsListProps> = ({
             </Button>
           </div>
         ) : (
-          scripts.map((script) => (
-            <div
-              key={script.name}
-              className={`script-list-item ${selectedScriptName === script.name ? 'selected' : ''}`}
-              onClick={() => onScriptSelect(script.name)}
-            >
-              <div className="script-list-item-icon">
-                <Document20Regular />
+          <>
+            {fabcliScripts.length > 0 && (
+              <div className="scripts-list-category">
+                <Caption1 className="scripts-list-category-title">
+                  {t('CloudShellItem_Scripts_FabCLI', 'Fabric CLI Scripts')}
+                </Caption1>
+                {fabcliScripts.map(renderScriptItem)}
               </div>
-              <div className="script-list-item-content">
-                <Body1 className="script-list-item-name">{script.name}</Body1>
+            )}
+            {pythonScripts.length > 0 && (
+              <div className="scripts-list-category">
+                <Caption1 className="scripts-list-category-title">
+                  {t('CloudShellItem_Scripts_Python', 'Python Scripts')}
+                </Caption1>
+                {pythonScripts.map(renderScriptItem)}
               </div>
-              <Dialog
-                open={deleteConfirmScriptName === script.name}
-                onOpenChange={(_, data) => {
-                  if (!data.open) setDeleteConfirmScriptName(null);
-                }}
-              >
-                <DialogTrigger disableButtonEnhancement>
-                  <Button
-                    icon={<Delete20Regular />}
-                    appearance="subtle"
-                    size="small"
-                    className="script-list-item-delete"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setDeleteConfirmScriptName(script.name);
-                    }}
-                    title={t('CloudShellItem_Scripts_Delete', 'Delete script')}
-                  />
-                </DialogTrigger>
-                <DialogSurface>
-                  <DialogBody>
-                    <DialogTitle>
-                      {t('CloudShellItem_Scripts_DeleteDialog_Title', 'Delete Script?')}
-                    </DialogTitle>
-                    <DialogContent>
-                      {t('CloudShellItem_Scripts_DeleteDialog_Message', 
-                        'Are you sure you want to delete "{{scriptName}}"? This action cannot be undone.',
-                        { scriptName: script.name }
-                      )}
-                    </DialogContent>
-                    <DialogActions>
-                      <DialogTrigger disableButtonEnhancement>
-                        <Button appearance="secondary">
-                          {t('CloudShellItem_Scripts_DeleteDialog_Cancel', 'Cancel')}
-                        </Button>
-                      </DialogTrigger>
-                      <Button
-                        appearance="primary"
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
-                          handleDeleteScript(script.name);
-                        }}
-                      >
-                        {t('CloudShellItem_Scripts_DeleteDialog_Delete', 'Delete')}
-                      </Button>
-                    </DialogActions>
-                  </DialogBody>
-                </DialogSurface>
-              </Dialog>
-            </div>
-          ))
+            )}
+            {/*shellScripts.length > 0 && (
+              <div className="scripts-list-category">
+                <Caption1 className="scripts-list-category-title">
+                  {t('CloudShellItem_Scripts_Shell', 'Shell Scripts')}
+                </Caption1>
+                {shellScripts.map(renderScriptItem)}
+              </div>
+            )*/}
+          </>
         )}
       </div>
     </div>

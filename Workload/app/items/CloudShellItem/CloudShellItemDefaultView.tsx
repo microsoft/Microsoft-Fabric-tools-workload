@@ -8,14 +8,14 @@ import {
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { CloudShellItemDefinition, PythonScriptMetadata } from "./CloudShellItemModel";
+import { CloudShellItemDefinition, ScriptMetadata, Command, CommandType, Script } from "./CloudShellItemModel";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
-import { ExecutionMode, SessionKind, SparkLivyCloudShellClient } from "./SparkLivyCloudShellClient";
+import { SessionKind, SparkLivyCloudShellClient } from "./engine/SparkLivyCloudShellClient";
 import { ScriptsList } from "./ScriptsList";
-
+import { CloudShellItemEngine } from "./engine/CloudShellItemEngine";
+import { ConsoleCommandContext } from "./engine/index";
 import "./CloudShellItem.scss";
-
 
 
 interface CloudShellItemDefaultViewProps {
@@ -30,9 +30,12 @@ interface CloudShellItemDefaultViewProps {
   setTerminalEntries: (terminalEntries: TerminalEntry[] | ((prev: TerminalEntry[]) => TerminalEntry[])) => void;
   commandHistory: string[];
   setCommandHistory: (history: string[] | ((prev: string[]) => string[])) => void;
+  isConnecting: boolean;
+  setIsConnecting: (connecting: boolean) => void;
   onSessionCreated?: (sessionId: string) => void;
   showSystemMessage?: { message: string; timestamp: number };
-  executionMode?: ExecutionMode;
+  executionMode?: CommandType;
+  scriptsMap?: Map<string, string>;
   onScriptSelect?: (scriptId: string) => void;
   onScriptCreate?: () => void;
   onScriptDelete?: (scriptId: string) => void;
@@ -43,7 +46,7 @@ interface TerminalEntry {
   type: 'command' | 'response' | 'error' | 'system';
   content: string | React.ReactNode;
   timestamp: Date;
-  executionMode?: ExecutionMode; // Store execution mode for command entries
+  executionMode?: CommandType; // Store execution mode for command entries
 }
 
 export function CloudShellItemDefaultView({
@@ -58,10 +61,11 @@ export function CloudShellItemDefaultView({
   setTerminalEntries,
   commandHistory,
   setCommandHistory,
+  isConnecting,
+  setIsConnecting,
   onSessionCreated,
   showSystemMessage: systemMessage,
-  executionMode: executionModeProp,
-  onScriptSelect,
+  executionMode: executionModeProp,  scriptsMap = new Map(),  onScriptSelect,
   onScriptCreate,
   onScriptDelete,
   onScriptRun
@@ -69,17 +73,16 @@ export function CloudShellItemDefaultView({
   const { t } = useTranslation();
   
   // Get scripts from item definition
-  const scripts: PythonScriptMetadata[] = item?.definition?.scripts || [];
+  const scripts: ScriptMetadata[] = item?.definition?.scripts || [];
   
   // Terminal State (local only)
   const [command, setCommand] = useState<string>('');
-  const [sessionState, setSessionState] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
+  const isInitializingRef = useRef<boolean>(false);
   
   // Execution mode - use from props or default to FAB_CLI
-  const executionMode = executionModeProp || ExecutionMode.FAB_CLI;
+  const executionMode = executionModeProp || CommandType.FAB_CLI;
   
   // Command history navigation
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
@@ -112,7 +115,7 @@ export function CloudShellItemDefaultView({
 
   // Session Management Effect
   useEffect(() => {
-    if (sessionActive && !sessionId && !isConnecting && workspaceId && lakehouseId) {
+    if (sessionActive && !sessionId && !isConnecting && !isInitializingRef.current && workspaceId && lakehouseId) {
       // Check if environment is selected before initializing session
       if (!item?.definition?.selectedSparkEnvironment?.id) {
         addSystemMessage(t('CloudShellItem_NoEnvironmentSelected', 'Please select a Spark environment before starting the session.'));
@@ -128,8 +131,9 @@ export function CloudShellItemDefaultView({
   const formatTimestamp = (date: Date) => date.toLocaleTimeString();
 
   const initializeSession = async () => {
-    if (!workspaceId || !lakehouseId) return;
+    if (!workspaceId || !lakehouseId || isInitializingRef.current) return;
     
+    isInitializingRef.current = true;
     setIsConnecting(true);
     addSystemMessage('Initializing Spark session...');
 
@@ -151,7 +155,6 @@ export function CloudShellItemDefaultView({
 
       const newSessionId = session.id || '';
       setSessionId(newSessionId);
-      setSessionState(session.schedulerState || '');
       
       // Save session ID to model
       if (newSessionId && onSessionCreated) {
@@ -164,6 +167,7 @@ export function CloudShellItemDefaultView({
       setSessionActive(false);
     } finally {
       setIsConnecting(false);
+      isInitializingRef.current = false;
     }
   };
 
@@ -177,135 +181,16 @@ export function CloudShellItemDefaultView({
       await cliClient.cancelSession(workspaceId, lakehouseId, sessionId);
       addSystemMessage(`Session ${sessionId} cancelled successfully.`);
       setSessionId(null);
-      setSessionState(null);
     } catch (error: any) {
       addSystemMessage(`Failed to cancel session: ${error.message}`);
       setSessionId(null); // Clear session ID even on failure
-      setSessionState(null);
     } finally {
       setIsCancelling(false);
     }
   };
 
   /**
-   * Command handler type
-   */
-  type CommandHandler = (args: string) => Promise<void> | void;
-
-  /**
-   * Handle the "run {ScriptName}" command
-   */
-  const handleRunCommand = async (scriptName: string) => {
-    const script = scripts.find(s => s.name === scriptName);
-    
-    if (!script) {
-      addSystemMessage(`Script "${scriptName}" not found. Available scripts: ${scripts.map(s => s.name).join(', ') || 'none'}`);
-      return;
-    }
-    
-    if (!onScriptRun) {
-      addSystemMessage('Script execution is not available.');
-      return;
-    }
-
-    addSystemMessage(`Executing script: ${scriptName}`);
-    try {
-      await onScriptRun(script.name);
-    } catch (error: any) {
-      setTerminalEntries(prev => [...prev, { 
-        type: 'error', 
-        content: `Failed to run script: ${error.message}`, 
-        timestamp: new Date() 
-      }]);
-    }
-  };
-
-  /**
-   * Handle the "clear" command
-   */
-  const handleClearCommand = () => {
-    setTerminalEntries([]);
-  };
-
-  /**
-   * Handle the "help" command
-   */
-  const handleHelpCommand = () => {
-    addSystemMessage('Available commands: fab, clear, run {scriptName}, help');
-  };
-
-
-  /**
-   * Map of special commands to their handlers
-   * Key is the command prefix (case-insensitive)
-   * Value is the handler function that receives the remaining arguments
-   */
-  const specialCommands: Record<string, CommandHandler> = {
-    'clear': handleClearCommand,
-    'run': handleRunCommand,
-    'help': handleHelpCommand,
-  };
-
-  /**
-   * Try to handle special local commands
-   * Returns true if the command was handled, false otherwise
-   */
-  const tryHandleSpecialCommand = async (userCommand: string): Promise<boolean> => {
-    const trimmedCommand = userCommand.trim();
-    const commandLower = trimmedCommand.toLowerCase();
-
-    // Check each registered special command
-    for (const [commandPrefix, handler] of Object.entries(specialCommands)) {
-      if (commandLower === commandPrefix) {
-        // Exact match, no arguments
-        await handler('');
-        return true;
-      } else if (commandLower.startsWith(commandPrefix + ' ')) {
-        // Command with arguments
-        const args = trimmedCommand.substring(commandPrefix.length).trim();
-        await handler(args);
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  /**
-   * Execute a Cloud Shell command via the active Spark session
-   */
-  const executeCloudShellCommand = async (userCommand: string) => {
-    if (!sessionId) {
-      addSystemMessage('Session needs to be started first. Click \'Start Terminal\' in the ribbon.');
-      return;
-    }
-
-    // Check if session is ready (schedulerState should be 'Scheduled')
-    const isSessionReady = sessionState?.toLowerCase() === 'scheduled';
-    if (!isSessionReady) {
-      addSystemMessage(`Session is not ready. Current scheduler state: ${sessionState || 'Unknown'}. Please wait...`);
-      return;
-    }
-
-    try {
-      const result = await cliClient.executeCommand(workspaceId!, lakehouseId!, 
-                                                    sessionId, userCommand, executionMode);
-      
-      if (result.isError) {
-        setTerminalEntries(prev => [...prev, { type: 'error', content: result.output, timestamp: new Date() }]);
-      } else if (result.output && result.output.trim()) {
-        setTerminalEntries(prev => [...prev, { type: 'response', content: result.output, timestamp: new Date() }]);
-      } else {
-        // No output and no error - show success message
-        setTerminalEntries(prev => [...prev, { type: 'system', content: t('CloudShellItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
-      }
-    } catch (error: any) {
-      setTerminalEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
-    }
-  };
-
-  /**
-   * Main command execution entry point
+   * Main command execution entry point using CloudShellItemEngine
    */
   const executeCommand = async () => {
     if (!command.trim()) return;
@@ -323,14 +208,47 @@ export function CloudShellItemDefaultView({
     setHistoryIndex(-1);
     setCommand('');
 
-    // Try to handle as a special command first
-    const wasHandled = await tryHandleSpecialCommand(userCommand);
-    if (wasHandled) {
-      return;
-    }
+    // Create engine instance
+    const engine = new CloudShellItemEngine(workloadClient);
 
-    // Execute as a regular Cloud Shell command
-    await executeCloudShellCommand(userCommand);
+    // Build console command context
+    const consoleContext: ConsoleCommandContext = {
+      item: item!,
+      commandType: executionMode,
+      sessionInfo: {
+        id: sessionId,
+        state: sessionActive ? 'Scheduled' : null
+      },
+      engine: engine,
+      onClearTerminal: () => setTerminalEntries([]),
+      getScriptByName: async (scriptName: string): Promise<Script | null> => {
+        const scriptMeta = scripts.find(s => s.name === scriptName);
+        if (!scriptMeta) return null;
+        const content = scriptsMap.get(scriptName) || "";
+        return { ...scriptMeta, content };
+      }
+    };
+
+    try {
+      // Create Command object
+      const commandObj: Command = {
+        text: userCommand,
+        timestamp: new Date(),
+        type: executionMode
+      };
+
+      // Try to handle as a console command first (help, clear, run, etc.)
+      let consoleResult = await engine.executeConsoleCommand(commandObj, consoleContext);
+      
+      if (consoleResult !== null) {
+        setTerminalEntries(prev => [...prev, { type: 'response', content: consoleResult, timestamp: new Date() }]);
+      } else {
+        // No output and no error - show success message
+        setTerminalEntries(prev => [...prev, { type: 'system', content: t('CloudShellItem_CommandSuccess', "Command executed successfully"), timestamp: new Date() }]);
+      }
+    } catch (error: any) {
+      setTerminalEntries(prev => [...prev, { type: 'error', content: `Error: ${error.message}`, timestamp: new Date() }]);
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -380,8 +298,8 @@ export function CloudShellItemDefaultView({
                 {entry.type === 'command' ? (
                   <React.Fragment>
                     <span className="prompt-symbol">
-                      {entry.executionMode === ExecutionMode.PYTHON ? '>>> ' : 
-                       entry.executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
+                      {entry.executionMode === CommandType.PYTHON ? '>>> ' : 
+                       entry.executionMode === CommandType.FAB_CLI ? '> fab ' : '> '}
                     </span>
                     <span className="command">{entry.content}</span>
                   </React.Fragment>
@@ -397,8 +315,8 @@ export function CloudShellItemDefaultView({
         
         <div className="terminal-input">
           <span className="prompt-symbol">
-            {executionMode === ExecutionMode.PYTHON ? '>>> ' : 
-             executionMode === ExecutionMode.FAB_CLI ? '> fab ' : '> '}
+            {executionMode === CommandType.PYTHON ? '>>> ' : 
+             executionMode === CommandType.FAB_CLI ? '> fab ' : '> '}
           </span>
           <Input
             className="command-input"

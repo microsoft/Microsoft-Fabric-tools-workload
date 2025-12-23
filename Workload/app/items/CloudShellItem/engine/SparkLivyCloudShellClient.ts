@@ -1,62 +1,126 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { SparkLivyClient } from "../../clients/SparkLivyClient";
-import { SessionRequest, SessionResponse, StatementRequest, StatementResponse, BatchRequest, BatchResponse } from "../../clients/FabricPlatformTypes";
-import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
-import { EnvironmentConstants } from "../../constants";
-import { ScriptParameter } from "./CloudShellItemModel";
+import { SparkLivyClient } from "../../../clients/SparkLivyClient";
+import { SessionRequest, SessionResponse, StatementRequest, StatementResponse, BatchRequest, BatchResponse } from "../../../clients/FabricPlatformTypes";
 
 /**
- * Execution mode for Cloud Shell commands
- */
-export enum ExecutionMode {
-  /** Execute native Python code without any wrapper */
-  PYTHON = 'NATIVE',
-  /** Execute shell commands via subprocess */
-  BASH = 'SUBPROCESS',
-  /** Execute commands with 'fab' prefix via subprocess */
-  FAB_CLI = 'FAB_CLI'
-}
-
-/**
- * Session kinds supported by Spark Livy for Cloud Shell
+ * Session kinds supported by Spark Livy for Cloud Shell.
+ * Currently only Python sessions are supported for Cloud Shell execution.
  */
 export enum SessionKind {
   PYTHON = 'python',
 }
 
 /**
- * Configuration for initializing a Cloud Shell session
+ * Configuration for initializing a Cloud Shell Spark session.
+ * 
+ * Sessions are created with lakehouse context and environment binding.
+ * Session IDs are cached in item definition for automatic reuse.
  */
 export interface CloudShellSessionConfig {
+    /** Workspace containing the lakehouse and environment */
     workspaceId: string;
+    /** Lakehouse ID providing data context and OneLake access */
     lakehouseId: string;
+    /** Spark environment ID (determines Python packages and configuration) */
     environmentId: string;
+    /** Session kind (currently only PYTHON supported) */
     sessionKind: SessionKind;
 }
 
 /**
- * Result of executing a Cloud Shell command
+ * Result of executing a Cloud Shell command or statement.
+ * 
+ * Commands are wrapped based on execution mode:
+ * - FAB_CLI/SHELL: Wrapped with subprocess.run() returning JSON
+ * - PYTHON: Executed directly, returns plain text output
  */
 export interface CloudShellCommandResult {
+    /** Whether execution completed successfully (exit code 0 or no error) */
     success: boolean;
+    /** Command output (stdout for success, stderr for errors) */
     output: string;
+    /** Whether the result represents an error state */
     isError: boolean;
 }
 
 /**
- * Client for managing Cloud Shell commands through Spark Livy sessions
+ * Client for managing Cloud Shell execution through Spark Livy sessions.
+ * 
+ * **Key Responsibilities**:
+ * - Session lifecycle: Create, validate, reuse, and cancel Spark sessions
+ * - Command execution: Execute statements with mode-specific wrapping
+ * - Batch jobs: Submit scripts as Spark batch jobs with parameter injection
+ * - Session validation: Ensure sessions are ready before reuse
+ * - Fabric CLI verification: Check CLI availability in Spark environment
+ * 
+ * **Session Management**:
+ * - Sessions created with lakehouse and environment context
+ * - Automatic validation before reuse (schedulerState='Scheduled', livyState='idle')
+ * - Session IDs cached in item definition for cross-reload reuse
+ * - CLI availability verified on session creation/reuse
+ * 
+ * **Batch Execution**:
+ * - Scripts uploaded to OneLake before batch creation
+ * - Parameters injected via Spark configuration (spark.script.param.*)
+ * - Polling for batch creation with 60-second timeout
+ * - Returns BatchResponse with ID for monitoring
+ * 
+ * **Performance Optimizations**:
+ * - Static caching of FabCliCheckWrapper.py content
+ * - Session reuse to avoid creation overhead (5+ minute startup)
+ * - Efficient polling strategies for session/batch creation
  */
 export class SparkLivyCloudShellClient {
     private sparkClient: SparkLivyClient;
-    private oneLakeClient: OneLakeStorageClient;
+    private static fabCliCheckWrapperContent: string | null = null;
 
     constructor(workloadClient: WorkloadClientAPI) {
         this.sparkClient = new SparkLivyClient(workloadClient);
-        this.oneLakeClient = new OneLakeStorageClient(workloadClient);
     }
 
     /**
-     * Initialize a new Spark session for Cloud Shell execution
+     * Get the FabCliCheckWrapper.py content (cached).
+     * 
+     * This wrapper verifies Fabric CLI availability in the Spark environment.
+     * Static caching prevents repeated file fetches across instances.
+     * 
+     * @returns Promise resolving to Python wrapper script content
+     * @throws Error if wrapper file cannot be loaded
+     */
+    private static async getFabCliCheckWrapperContent(): Promise<string> {
+        if (SparkLivyCloudShellClient.fabCliCheckWrapperContent === null) {
+            const response = await fetch('/assets/items/CloudShellItem/FabCliCheckWrapper.py');
+            if (!response.ok) {
+                throw new Error('Failed to load FabCliCheckWrapper.py');
+            }
+            SparkLivyCloudShellClient.fabCliCheckWrapperContent = await response.text();
+        }
+        return SparkLivyCloudShellClient.fabCliCheckWrapperContent;
+    }
+
+    /**
+     * Initialize a new Spark session for Cloud Shell execution.
+     * 
+     * **Session Creation Flow**:
+     * 1. Create session request with lakehouse and environment binding
+     * 2. Poll for session to reach 'Scheduled' + 'idle' state (max 5 minutes)
+     * 3. Verify Fabric CLI availability using FabCliCheckWrapper.py
+     * 4. Return ready session or throw error
+     * 
+     * **State Monitoring**:
+     * - Progress updates provided via onProgress callback every 5 poll attempts
+     * - Final states: schedulerState='Scheduled' AND livyState='idle'
+     * - Timeout: 150 attempts × 2 seconds = 5 minutes
+     * 
+     * **CLI Verification**:
+     * - Runs "fab --version" to verify ms-cloud-shell package
+     * - Session cancelled if CLI not available
+     * - Provides setup instructions on failure
+     * 
+     * @param config Session configuration with workspace, lakehouse, and environment
+     * @param onProgress Callback for progress updates (session creation status messages)
+     * @returns Promise resolving to ready SessionResponse
+     * @throws Error if session creation times out, CLI not available, or other failures
      */
     async initializeSession(
         config: CloudShellSessionConfig,
@@ -140,8 +204,19 @@ export class SparkLivyCloudShellClient {
         // Verify Cloud Shell is available in the environment (only in fab mode)
         onProgress('Verifying Cloud Shell installation...');
         try {
-            const response = await this.executeCommand(workspaceId, 
-                lakehouseId, foundSession.id!.toString(), "--version");
+            // Build verification statement
+            const wrapperCode = await SparkLivyCloudShellClient.getFabCliCheckWrapperContent();
+            const verifyStatement: StatementRequest = {
+                code: wrapperCode,
+                kind: SessionKind.PYTHON
+            };
+            
+            const response = await this.executeStatement(
+                workspaceId,
+                lakehouseId,
+                foundSession.id!.toString(),
+                verifyStatement
+            );
 
             if (response.isError) {
                 throw new Error(
@@ -179,7 +254,18 @@ export class SparkLivyCloudShellClient {
     }
 
     /**
-     * Check if an existing session is still valid and can be reused
+     * Check if an existing session is still valid and can be reused.
+     * 
+     * Validation ensures session is in ready state before reuse:
+     * - schedulerState must be 'Scheduled' (session allocated to cluster)
+     * - livyState must be 'idle' (ready to accept new statements)
+     * 
+     * Returns null if session not found or not in valid state.
+     * 
+     * @param workspaceId Workspace containing the session
+     * @param lakehouseId Lakehouse bound to the session
+     * @param sessionId Session ID to validate
+     * @returns Promise resolving to SessionResponse if valid, null otherwise
      */
     async validateSession(
         workspaceId: string,
@@ -210,7 +296,29 @@ export class SparkLivyCloudShellClient {
     }
 
     /**
-     * Reuse an existing session or create a new one
+     * Reuse an existing session or create a new one.
+     * 
+     * **Session Reuse Logic**:
+     * 1. If existingSessionId provided, attempt validation
+     * 2. If valid, verify CLI availability and return session
+     * 3. If invalid or CLI check fails, create new session
+     * 4. If no existingSessionId, create new session immediately
+     * 
+     * **Benefits of Reuse**:
+     * - Avoids 5+ minute session startup time
+     * - Preserves session state and loaded packages
+     * - Reduces resource consumption
+     * 
+     * **Validation Criteria**:
+     * - Session exists in list
+     * - schedulerState = 'Scheduled'
+     * - livyState = 'idle'
+     * - CLI verification passes (fab --version succeeds)
+     * 
+     * @param config Session configuration for new session if needed
+     * @param existingSessionId Optional session ID to attempt reuse
+     * @param onProgress Callback for progress updates
+     * @returns Promise resolving to ready SessionResponse (reused or new)
      */
     async reuseOrCreateSession(
         config: CloudShellSessionConfig,
@@ -231,10 +339,20 @@ export class SparkLivyCloudShellClient {
 
                 try {
                     onProgress('Verifying Cloud Shell installation...');
-                    const response = await this.executeCommand(workspaceId, 
-                        lakehouseId, 
-                        existingSessionId,  
-                        "--version");
+                    
+                    // Build verification statement
+                    const wrapperCode = await SparkLivyCloudShellClient.getFabCliCheckWrapperContent();
+                    const verifyStatement: StatementRequest = {
+                        code: wrapperCode,
+                        kind: SessionKind.PYTHON
+                    };
+                    
+                    const response = await this.executeStatement(
+                        workspaceId,
+                        lakehouseId,
+                        existingSessionId,
+                        verifyStatement
+                    );
 
                     if (!response.isError) {
                         onProgress(`Cloud Shell verified: ${response.output}`);
@@ -255,50 +373,55 @@ export class SparkLivyCloudShellClient {
     }
 
     /**
-     * Cancel an active session
+     * Cancel an active Spark session.
+     * 
+     * Sends cancellation request to Spark Livy API.
+     * Session will transition to 'dead' state and resources will be released.
+     * 
+     * Note: Cancellation is async - session may not terminate immediately.
+     * 
+     * @param workspaceId Workspace containing the session
+     * @param lakehouseId Lakehouse bound to the session
+     * @param sessionId Session ID to cancel
+     * @returns Promise resolving when cancellation request is sent
      */
     async cancelSession(workspaceId: string, lakehouseId: string, sessionId: string): Promise<void> {
         await this.sparkClient.cancelSession(workspaceId, lakehouseId, sessionId);
     }
 
     /**
-     * Execute a Cloud Shell command through the Spark session
+     * Execute a statement through the Spark session.
+     * 
+     * **Execution Flow**:
+     * 1. Submit statement via Livy API
+     * 2. Poll for result (1-second intervals, 60-second timeout)
+     * 3. Parse output based on mode:
+     *    - FAB_CLI/SHELL: Extract JSON with returncode, stdout, stderr
+     *    - PYTHON: Return plain text output
+     * 
+     * **Result Handling**:
+     * - state='available' + status='ok': Success with output
+     * - state='available' + status='error': Python exception with traceback
+     * - state='error': Statement execution failed
+     * - Timeout after 60 attempts: Throws error
+     * 
+     * This is a lightweight proxy - does not block terminal UI.
+     * 
+     * @param workspaceId Workspace containing the session
+     * @param lakehouseId Lakehouse bound to the session
+     * @param sessionId Active session ID
+     * @param statementRequest Statement to execute with code and kind
+     * @returns Promise resolving to CloudShellCommandResult
+     * @throws Error if statement execution times out
      */
-    async executeCommand(
+    async executeStatement(
         workspaceId: string,
         lakehouseId: string,
         sessionId: string,
-        command: string,
-        executionMode: ExecutionMode = ExecutionMode.FAB_CLI
+        statementRequest: StatementRequest
     ): Promise<CloudShellCommandResult> {
-        let code: string;
-        let statementRequest: StatementRequest;
-
-        if (executionMode === ExecutionMode.PYTHON) {
-            // Execute native Python code directly
-            statementRequest = { code: command, kind: SessionKind.PYTHON };
-        } else {
-            // Wrap command in Python subprocess format with shell=True to support pipes, redirections, etc.
-            const escapedCommand = command.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-            
-            // Build command based on execution mode
-            const fullCommand = executionMode === ExecutionMode.FAB_CLI 
-                ? `fab ${escapedCommand}` 
-                : escapedCommand;
-            
-            code = `import subprocess;
-import json;
-result = subprocess.run("${fullCommand}", shell=True, capture_output=True, text=True);
-jsonResult = {"returncode": result.returncode, "stdout": result.stdout.strip(), "stderr": result.stderr.strip()};
-print(json.dumps(jsonResult));`;
-            
-            statementRequest = { code: code, kind: SessionKind.PYTHON };
-        }
-
         const response = await this.sparkClient.submitStatement(workspaceId, lakehouseId, sessionId, statementRequest);
-
-        // Wait for statement to complete
-        return await this.waitForStatementResult(workspaceId, lakehouseId, sessionId, response, executionMode);
+        return await this.waitForStatementResult(workspaceId, lakehouseId, sessionId, response);
     }
 
     /**
@@ -308,8 +431,7 @@ print(json.dumps(jsonResult));`;
         workspaceId: string,
         lakehouseId: string,
         sessionId: string,
-        statement: StatementResponse,
-        executionMode: ExecutionMode = ExecutionMode.FAB_CLI
+        statement: StatementResponse
     ): Promise<CloudShellCommandResult> {
         let attempts = 0;
         const maxAttempts = 60; // 60 seconds timeout
@@ -338,17 +460,7 @@ print(json.dumps(jsonResult));`;
                     
                     const rawOutput = statementInfo.output?.data?.['text/plain'] || '';
                     
-                    // In NATIVE mode, return output directly without JSON parsing
-                    if (executionMode === ExecutionMode.PYTHON) {
-                        return {
-                            success: true,
-                            output: rawOutput,
-                            isError: false
-                        };
-                    }
-                    
-                    // Parse JSON response from Cloud Shell
-                    
+                    // Try to parse as JSON subprocess result
                     try {
                         // Extract JSON from output
                         const jsonMatch = rawOutput.match(/\{"returncode":.+\}/);
@@ -370,22 +482,17 @@ print(json.dumps(jsonResult));`;
                                     isError: true
                                 };
                             }
-                        } else {
-                            // Fallback to raw output
-                            return {
-                                success: true,
-                                output: rawOutput || 'Command executed successfully',
-                                isError: false
-                            };
                         }
                     } catch (parseError) {
-                        // If JSON parsing fails, return raw output
-                        return {
-                            success: true,
-                            output: rawOutput || 'Command executed successfully',
-                            isError: false
-                        };
+                        // Not a JSON subprocess result, treat as direct output
                     }
+                    
+                    // Direct output (Python NATIVE mode or fallback)
+                    return {
+                        success: true,
+                        output: rawOutput || 'Command executed successfully',
+                        isError: false
+                    };
                 } else if (statementInfo.state === 'error') {
                     const errorMessage = statementInfo.output?.data?.['text/plain'] || 'Statement execution failed';
                     return {
@@ -406,132 +513,63 @@ print(json.dumps(jsonResult));`;
     }
 
     /**
-     * Run a Python script as a batch job
-     * @param workspaceId The workspace ID
-     * @param lakehouseId The lakehouse ID
-     * @param environmentId The Spark environment ID
-     * @param scriptName The name of the script
-     * @param scriptContent The Python script content
-     * @param parameters Optional parameter definitions with name, type, and value
-     * @param onProgress Optional callback for progress updates
-     * @returns Promise resolving to the batch response with job details
+     * Submit a batch job for script execution.
+     * 
+     * **Batch Job Flow**:
+     * 1. Script already uploaded to OneLake by caller
+     * 2. Create batch with Spark configuration including parameters
+     * 3. Poll for batch to appear in list (2-second intervals, 20-second timeout)
+     * 4. Return BatchResponse with ID for monitoring
+     * 
+     * **Parameter Injection**:
+     * Parameters passed via Spark conf as:
+     * - spark.script.param.<name> = value
+     * - spark.script.param.<name>.type = type
+     * 
+     * **Polling Strategy**:
+     * - Check every 2 seconds for batch creation
+     * - Match by batch name
+     * - Max 10 attempts (20 seconds total)
+     * - Throws error if batch not found in time
+     * 
+     * **Public Access**: Shared by script execution commands (FabricCLIScriptCommand, etc.)
+     * 
+     * @param workspaceId Workspace for batch execution
+     * @param lakehouseId Lakehouse providing data context
+     * @param batchRequest Batch configuration with file path, name, and Spark conf
+     * @returns Promise resolving to BatchResponse with batch ID
+     * @throws Error if batch creation times out or fails
      */
-    async runScriptAsBatch(
+    async submitBatchJob(
         workspaceId: string,
         lakehouseId: string,
-        environmentId: string,
-        scriptName: string,
-        scriptContent: string,
-        parameters?: ScriptParameter[],
-        onProgress?: (message: string) => void
-    ): Promise<BatchResponse> {
-        // Upload the script to OneLake first
-        // Use a timestamp to ensure uniqueness
-        const timestamp = new Date().getTime();
-        const sanitizedScriptName = scriptName.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const destinationSubPath = `Scripts/${timestamp}_${sanitizedScriptName}`;
-        const destinationPath = OneLakeStorageClient.getFilePath(workspaceId, lakehouseId, destinationSubPath);
-        
-        if (onProgress) {
-            onProgress(`Uploading script to OneLake: ${destinationSubPath}`);
-        }
-        
-        // Write the script content to OneLake (unchanged, no parameter injection)
-        await this.oneLakeClient.writeFileAsText(destinationPath, scriptContent);
-        
-        // Convert OneLake path to ABFSS URL format for Spark
-        const oneLakeUrl = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${destinationPath}`;
-        const abfssUrl = this.convertOneLakeLinkToABFSSLink(oneLakeUrl, workspaceId);
-        
-        // Convert parameters to Spark configuration entries
-        // Each parameter becomes spark.script.param.<name> and spark.script.param.<name>.type
-        // The script can access these via spark.conf.get("spark.script.param.<name>")
-        const parameterConf: Record<string, string> = {};
-        if (parameters && parameters.length > 0) {
-            parameters.forEach(param => {
-                parameterConf[`spark.script.param.${param.name}`] = param.value;
-                //parameterConf[`spark.script.param.${param.name}.type`] = param.type;
-            });
-            
-            if (onProgress) {
-                onProgress(`Configured ${parameters.length} parameter(s) in Spark config`);
-            }
-        }
-        
-        // Create a batch request
-        const batchRequest: BatchRequest = {
-            name: `CloudShell Script: ${scriptName} - ${new Date().toISOString()}`,
-            file: abfssUrl,
-            conf: {
-                "spark.targetLakehouse": lakehouseId,
-                "spark.fabric.environmentDetails": `{"id" : "${environmentId}"}`,
-                ...parameterConf
-            },
-            tags: {
-                source: "Cloud Shell Item",
-                scriptName: scriptName,
-            }
-        };
+        batchRequest: BatchRequest): Promise<BatchResponse> {
+        await this.sparkClient.createBatch(workspaceId, lakehouseId, batchRequest);
 
-        // Create the batch job
-        const asyncIndicator = await this.sparkClient.createBatch(
-            workspaceId,
-            lakehouseId,
-            batchRequest
-        );
-        
-        console.log(`[CloudShell] Batch creation operation ID: ${asyncIndicator.operationId}`);
-        if (onProgress) {
-            onProgress(`Batch job creation started. Operation ID: ${asyncIndicator.operationId}`);
-            onProgress('Waiting for batch job to be created...');
-        }
-
-        // Poll for batch to be created and appear in the list
-        let batchFound = false;
         let foundBatch: BatchResponse | null = null;
         let attempts = 0;
-        const maxAttempts = 30; // 1 minute with 2 second intervals
+        const maxAttempts = 10;
 
-        while (!batchFound && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            attempts++;
-
+        while (!foundBatch && attempts < maxAttempts) {
             try {
                 const batches = await this.sparkClient.listBatches(workspaceId, lakehouseId);
                 const targetBatch = batches.find(b => b.name === batchRequest.name);
 
-                if (targetBatch && targetBatch.id) {
-                    const bid = String(targetBatch.id);
-                    
-                    if (!foundBatch) {
-                        foundBatch = targetBatch;
-                        if (onProgress) {
-                            onProgress(`Batch job created with ID: ${bid}`);
-                            onProgress(`Batch job state: ${targetBatch.state}`);
-                        }
-                    } else {
-                        // Update the batch object with latest state
-                        foundBatch = targetBatch;
-                    }
-                    
-                    // Batch is created and found - we can return it
-                    // The caller can use waitForBatchCompletion if they want to wait for it to finish
-                    batchFound = true;
-                } else if (attempts % 5 === 0 && onProgress) {
-                    // Log every 10 seconds that we're still waiting
-                    onProgress('Still waiting for batch job to be created...');
+                if (targetBatch && (targetBatch.id || targetBatch.artifactId)) {
+                    foundBatch = targetBatch;
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    attempts++;
                 }
             } catch (listError: any) {
                 console.warn('Error listing batches:', listError);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
             }
         }
 
-        if (!batchFound || !foundBatch) {
+        if (!foundBatch) {
             throw new Error('Batch job creation timed out - batch did not appear in the list');
-        }
-
-        if (onProgress) {
-            onProgress('Batch job created successfully!');
         }
 
         return foundBatch;
@@ -635,17 +673,5 @@ print(json.dumps(jsonResult));`;
         }
 
         throw new Error(`Batch job did not complete within ${maxWaitMinutes} minutes`);
-    }
-
-    /**
-     * Convert OneLake URL to ABFSS URL format required by Spark
-     * @param oneLakeLink The OneLake HTTPS URL
-     * @param workspaceId The workspace ID
-     * @returns ABFSS formatted URL
-     */
-    private convertOneLakeLinkToABFSSLink(oneLakeLink: string, workspaceId: string): string {
-        let retVal = oneLakeLink.replace(`${workspaceId}/`, "");
-        retVal = retVal.replace("https://", `abfss://${workspaceId}@`);
-        return retVal;
     }
 }

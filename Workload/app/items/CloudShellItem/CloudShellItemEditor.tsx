@@ -10,16 +10,15 @@ import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType, ItemDefinitionPart, PayloadType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 import { ItemClient } from "../../clients/ItemClient";
-import { ExecutionMode, SparkLivyCloudShellClient } from "./SparkLivyCloudShellClient";
-
-import { CloudShellItemDefinition, PythonScript, PythonScriptMetadata } from "./CloudShellItemModel";
+import { CloudShellItemDefinition, Script, ScriptMetadata, CommandType, ScriptType } from "./CloudShellItemModel";
 import { CloudShellItemEmptyView } from "./CloudShellItemEmptyView";
 import { CloudShellItemRibbon } from "./CloudShellItemRibbon";
 import { CloudShellItemDefaultView } from "./CloudShellItemDefaultView";
 import { ScriptDetailView } from "./ScriptDetailView";
 import { Item } from "../../clients/FabricPlatformTypes";
 import { CreateScriptDialogResult } from "./CreateScriptDialog";
-
+import { loadDefaultTemplate } from "./engine/scripts/ScriptTypeConfig";
+import { CloudShellItemEngine } from "./engine/CloudShellItemEngine";import { ScriptCommandContext } from './engine/scripts/IScriptCommand';
 import "./CloudShellItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
@@ -42,15 +41,16 @@ export function CloudShellItemEditor(props: PageProps) {
   const [sessionActive, setSessionActive] = useState(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
   const [availableEnvironments, setAvailableEnvironments] = useState<Item[]>([]);
-  const [executionMode, setExecutionMode] = useState<ExecutionMode>(ExecutionMode.BASH);
+  const [executionMode, setExecutionMode] = useState<CommandType>(CommandType.FAB_CLI);
   const [systemMessage, setSystemMessage] = useState<{ message: string; timestamp: number }>();
-  const [selectedScript, setSelectedScript] = useState<PythonScript | undefined>();
+  const [selectedScript, setSelectedScript] = useState<Script | undefined>();
   const [scriptsMap, setScriptsMap] = useState<Map<string, string>>(new Map()); // scriptName -> content
   
   // Session state (lifted from DefaultView to persist across view changes)
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [terminalEntries, setTerminalEntries] = useState<Array<{ type: 'command' | 'response' | 'error' | 'system'; content: string | React.ReactNode; timestamp: Date; executionMode?: ExecutionMode }>>([]);
+  const [terminalEntries, setTerminalEntries] = useState<Array<{ type: 'command' | 'response' | 'error' | 'system'; content: string | React.ReactNode; timestamp: Date; executionMode?: CommandType }>>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
@@ -331,7 +331,7 @@ export function CloudShellItemEditor(props: PageProps) {
     });
   };
 
-  const handleSelectExecutionMode = (mode: ExecutionMode) => {
+  const handleSelectExecutionMode = (mode: CommandType) => {
     setExecutionMode(mode);
   };
 
@@ -341,7 +341,6 @@ export function CloudShellItemEditor(props: PageProps) {
     // Pass existing script names to prevent duplicates
     const existingNames = (item.definition?.scripts || []).map(s => s.name).join(',');
     const path = `/CloudShellItem-create-script/${item.id}?existing=${encodeURIComponent(existingNames)}`;
-    
     const dialogResult = await callDialogOpen(
       workloadClient,
       process.env.WORKLOAD_NAME,
@@ -350,19 +349,19 @@ export function CloudShellItemEditor(props: PageProps) {
       300,
       true
     );
-    
-    const result = dialogResult?.value as CreateScriptDialogResult;
+    const result = dialogResult?.value as (CreateScriptDialogResult & { scriptType?: ScriptType });
     if (result?.state === 'created' && result.scriptName) {
-      await handleScriptCreate(result.scriptName);
+      await handleScriptCreate(result.scriptName, result.scriptType || ScriptType.PYTHON);
     }
   };
 
   // Script management handlers
-  const handleScriptCreate = async (name: string) => {
+  const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.PYTHON) => {
     if (!item) return;
 
-    const newScript: PythonScriptMetadata = {
+    const newScript: ScriptMetadata = {
       name,
+      type,
       createdAt: new Date().toISOString(),
       modifiedAt: new Date().toISOString()
     };
@@ -375,20 +374,12 @@ export function CloudShellItemEditor(props: PageProps) {
       }
     };
 
-    // Load default script template
-    let defaultScriptContent = "# New Python script\n";
-    try {
-      const response = await fetch('/assets/items/CloudShellItem/DefaultScript.py');
-      if (response.ok) {
-        defaultScriptContent = await response.text();
-      }
-    } catch (error) {
-      console.warn('Failed to load default script template, using fallback', error);
-    }
+
+    // Load default script template using centralized config
+    const defaultScriptContent = await loadDefaultTemplate(type);
 
     // Create updated scriptsMap with new script content
     const updatedScriptsMap = new Map(scriptsMap).set(newScript.name, defaultScriptContent);
-    
     setItem(updatedItem);
     setScriptsMap(updatedScriptsMap);
 
@@ -404,12 +395,9 @@ export function CloudShellItemEditor(props: PageProps) {
 
   const handleScriptSelect = (scriptName: string) => {
     if (!item) return;
-
     const scriptMeta = item.definition?.scripts?.find(s => s.name === scriptName);
     if (scriptMeta) {
       const content = scriptsMap.get(scriptName) || "";
-      console.log(`[CloudShell] handleScriptSelect - scriptName: ${scriptName}, content length: ${content.length}`);
-      console.log(`[CloudShell] handleScriptSelect - scriptsMap size: ${scriptsMap.size}, keys:`, Array.from(scriptsMap.keys()));
       setSelectedScript({ ...scriptMeta, content });
       if (viewSetter) {
         viewSetter(EDITOR_VIEW_TYPES.SCRIPT);
@@ -419,7 +407,6 @@ export function CloudShellItemEditor(props: PageProps) {
 
   const handleScriptDelete = (scriptName: string) => {
     if (!item) return;
-
     const updatedItem = {
       ...item,
       definition: {
@@ -427,7 +414,6 @@ export function CloudShellItemEditor(props: PageProps) {
         scripts: item.definition?.scripts?.filter(s => s.name !== scriptName) || []
       }
     };
-
     setItem(updatedItem);
     setScriptsMap(prev => {
       const newMap = new Map(prev);
@@ -435,7 +421,6 @@ export function CloudShellItemEditor(props: PageProps) {
       return newMap;
     });
     setIsUnsaved(true);
-
     // If we deleted the currently selected script, go back to default view
     if (selectedScript?.name === scriptName) {
       setSelectedScript(undefined);
@@ -445,14 +430,12 @@ export function CloudShellItemEditor(props: PageProps) {
     }
   };
 
-  const handleScriptSave = async (script: PythonScript) => {
+  const handleScriptSave = async (script: Script) => {
     if (!item) return;
-
     // Update the script content in the map
     const updatedScriptsMap = new Map(scriptsMap).set(script.name, script.content);
     setScriptsMap(updatedScriptsMap);
-
-    // Update script metadata including parameters
+    // Update script metadata including parameters and type
     const updatedItem = {
       ...item,
       definition: {
@@ -462,34 +445,31 @@ export function CloudShellItemEditor(props: PageProps) {
             ? { 
                 ...s, 
                 modifiedAt: script.modifiedAt,
-                parameters: script.parameters 
+                parameters: script.parameters,
+                type: script.type
               }
             : s
         ) || []
       }
     };
-
     setItem(updatedItem);
     setSelectedScript(script);
-    
     // Auto-save the script changes with notification
     await saveItemInternal(updatedItem, true, updatedScriptsMap);
   };
 
   const handleScriptRunByName = async (scriptName: string) => {
     if (!item) return;
-
     const scriptMeta = item.definition?.scripts?.find(s => s.name === scriptName);
     if (!scriptMeta) {
       console.error('Script not found:', scriptName);
       return;
     }
-
     const content = scriptsMap.get(scriptName) || "";
     await handleScriptRun({ ...scriptMeta, content });
   };
 
-  const handleScriptRun = async (script: PythonScript) => {
+  const handleScriptRun = async (script: Script) => {
     if (!item?.definition?.selectedLakehouse || !item?.definition?.selectedSparkEnvironment) {
       callNotificationOpen(
         workloadClient,
@@ -499,25 +479,16 @@ export function CloudShellItemEditor(props: PageProps) {
       );
       return;
     }
-
-    const lakehouseId = item.definition.selectedLakehouse.id;
-    const workspaceId = item.definition.selectedLakehouse.workspaceId;
-    const environmentId = item.definition.selectedSparkEnvironment.id;
-
     try {
-      // Create batch job to run the script
-      const cliClient = new SparkLivyCloudShellClient(workloadClient);
-      const batchResponse = await cliClient.runScriptAsBatch(
-        workspaceId,
-        lakehouseId,
-        environmentId,
-        script.name,
-        script.content,
-        script.parameters // Pass full parameter objects with type info
-      );
-
+      const engine = new CloudShellItemEngine(workloadClient);
+      const scriptContext: ScriptCommandContext = {
+        item,
+        engine,
+        workloadClient: workloadClient,
+        cloudShellClient: engine.getCloudShellClient()
+      };
+      const batchResponse = await engine.executeScript(script, scriptContext);
       const jobId = batchResponse.id || batchResponse.artifactId || 'unknown';
-      
       callNotificationOpen(
         workloadClient,
         t("CloudShellItem_Script_Run_Started_Title", "Script Execution Started"),
@@ -525,10 +496,8 @@ export function CloudShellItemEditor(props: PageProps) {
           { scriptName: script.name, jobId }),
         NotificationType.Success
       );
-
       // Optional: Wait for completion in the background and show result
       // You could add this as an enhancement
-      
     } catch (error: any) {
       console.error('Failed to run script:', error);
       callNotificationOpen(
@@ -632,9 +601,12 @@ export function CloudShellItemEditor(props: PageProps) {
           setTerminalEntries={setTerminalEntries}
           commandHistory={commandHistory}
           setCommandHistory={setCommandHistory}
+          isConnecting={isConnecting}
+          setIsConnecting={setIsConnecting}
           onSessionCreated={handleSessionCreated}
           showSystemMessage={systemMessage}
           executionMode={executionMode}
+          scriptsMap={scriptsMap}
           onScriptSelect={handleScriptSelect}
           onScriptCreate={handleCreateScriptDialog}
           onScriptDelete={handleScriptDelete}

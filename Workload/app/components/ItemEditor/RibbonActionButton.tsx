@@ -48,9 +48,9 @@ export interface RibbonActionButton {
   key: string;
   
   /**
-   * The icon to display in the button
+   * The icon to display in the button (optional for dropdowns)
    */
-  icon: FluentIconComponent;
+  icon?: FluentIconComponent;
   
   /**
    * The label/text to display in the button
@@ -213,7 +213,7 @@ export const RibbonActionButtonImpl: React.FC<RibbonActionButtonImplProps> = ({
           data-testid={testId}
           data-appearance={appearance}
           aria-label={buttonAriaLabel}
-          icon={<Icon />}
+          icon={Icon ? <Icon /> : undefined}
         >
           {label}
         </Button>
@@ -233,7 +233,7 @@ export const RibbonActionButtonImpl: React.FC<RibbonActionButtonImplProps> = ({
             data-testid={testId}
             data-appearance={appearance}
             aria-label={buttonAriaLabel}
-            icon={<Icon />}
+            icon={Icon ? <Icon /> : undefined}
             iconPosition="before"
           >
             {label}

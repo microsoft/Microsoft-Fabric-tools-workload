@@ -61,7 +61,8 @@ export class SparkLivyClient extends FabricPlatformClient {
   ): Promise<BatchResponse[]> {
     try {
       const endpoint = `/workspaces/${workspaceId}/lakehouses/${lakehouseId}/livyApi/versions/${LIVY_API_VERSION}/batches`;
-      return this.get<BatchResponse[]>(endpoint);
+      const response = await this.get<{ value: BatchResponse[] }>(endpoint);
+      return response.value || [];
     } catch (error: any) {
       console.error(`Error listing batch jobs: ${error.message}`);
       throw error;
