@@ -41,6 +41,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const [content, setContent] = useState(script.content || "");
   const [parameters, setParameters] = useState<ScriptParameter[]>(script.parameters || []);
   const [isDirty, setIsDirty] = useState(false);
+  const [expandedParams, setExpandedParams] = useState<Set<number>>(new Set());
 
   // Get editor language from centralized configuration
   const scriptType = script.type ?? ScriptType.PYTHON;
@@ -51,6 +52,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
     setContent(script.content || "");
     setParameters(script.parameters || []);
     setIsDirty(false);
+    // Collapse all parameters when script changes
+    setExpandedParams(new Set());
   }, [script.name, script.content, script.parameters]);
 
   const handleEditorChange = (value: string | undefined) => {
@@ -75,8 +78,21 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       type: 'string',
       value: ""
     };
+    const newIndex = parameters.length;
     setParameters([...parameters, newParameter]);
+    // Expand the newly added parameter
+    setExpandedParams(new Set([...expandedParams, newIndex]));
     setIsDirty(true);
+  };
+
+  const toggleParameterExpansion = (index: number) => {
+    const newExpanded = new Set(expandedParams);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedParams(newExpanded);
   };
 
   const handleUpdateParameter = (index: number, field: keyof ScriptParameter, value: string | boolean) => {
@@ -88,6 +104,16 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   const handleDeleteParameter = (index: number) => {
     setParameters(parameters.filter((_, i) => i !== index));
+    // Update expanded indices after deletion
+    const newExpanded = new Set<number>();
+    expandedParams.forEach(idx => {
+      if (idx < index) {
+        newExpanded.add(idx);
+      } else if (idx > index) {
+        newExpanded.add(idx - 1);
+      }
+    });
+    setExpandedParams(newExpanded);
     setIsDirty(true);
   };
 
@@ -105,62 +131,72 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const parametersPanel = (
     <div className="parameters-panel">
       
-      {parameters.map((param, index) => (
-        <Card key={index} className="parameter-card">
-          <CardHeader
-            header={<strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>}
-            action={
-              <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
-                <Button
-                  icon={<Delete20Regular />}
-                  appearance="subtle"
-                  size="small"
-                  onClick={() => handleDeleteParameter(index)}
-                  aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
-                />
-              </Tooltip>
-            }
-          />
-          <div className="parameter-fields">
-            <div className="field-row">
-              <Label size="small">{t('CloudShellItem_Script_ParameterName', 'Name')}</Label>
-              <Input
-                size="small"
-                value={param.name}
-                onChange={(e) => handleUpdateParameter(index, 'name', e.target.value)}
-                placeholder="parameter_name"
-              />
-            </div>
-            
-            <div className="field-row">
-              <Label size="small">{t('CloudShellItem_Script_ParameterType', 'Type')}</Label>
-              <Dropdown
-                className="type-dropdown"
-                size="small"
-                value={param.type}
-                selectedOptions={[param.type]}
-                onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
-              >
-                <Option value="string">String</Option>
-                <Option value="int">Integer</Option>
-                <Option value="float">Float</Option>
-                <Option value="bool">Boolean</Option>
-                <Option value="date">Date</Option>
-              </Dropdown>
-            </div>
-            
-            <div className="field-row">
-              <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
-              <Input
-                size="small"
-                value={param.value}
-                onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
-                placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
-              />
-            </div>
-          </div>
-        </Card>
-      ))}
+      {parameters.map((param, index) => {
+        const isExpanded = expandedParams.has(index);
+        return (
+          <Card key={index} className="parameter-card">
+            <CardHeader
+              header={<strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>}
+              action={
+                <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
+                  <Button
+                    icon={<Delete20Regular />}
+                    appearance="subtle"
+                    size="small"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleDeleteParameter(index);
+                    }}
+                    aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
+                  />
+                </Tooltip>
+              }
+              onClick={() => toggleParameterExpansion(index)}
+              style={{ cursor: 'pointer' }}
+            />
+            {isExpanded && (
+              <div className="parameter-fields">
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterName', 'Name')}</Label>
+                  <Input
+                    size="small"
+                    value={param.name}
+                    onChange={(e) => handleUpdateParameter(index, 'name', e.target.value)}
+                    placeholder="parameter_name"
+                  />
+                </div>
+                
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterType', 'Type')}</Label>
+                  <Dropdown
+                    className="type-dropdown"
+                    size="small"
+                    value={param.type}
+                    selectedOptions={[param.type]}
+                    onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
+                  >
+                    <Option value="string">String</Option>
+                    <Option value="int">Integer</Option>
+                    <Option value="float">Float</Option>
+                    <Option value="bool">Boolean</Option>
+                    <Option value="date">Date</Option>
+                  </Dropdown>
+                </div>
+                
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
+                  <Input
+                    size="small"
+                    value={param.value}
+                    onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
+                    placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
+                  />
+                </div>
+              </div>
+            )}
+          </Card>
+        );
+      })}
       
       <Button
         className="add-button"
