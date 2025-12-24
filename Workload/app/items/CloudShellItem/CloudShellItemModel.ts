@@ -44,7 +44,46 @@ export interface ScriptParameter {
   type: 'string' | 'int' | 'float' | 'bool' | 'date';
   /** Parameter value (stored as string, converted by type during script execution) */
   value: string;
+  /** Optional description of the parameter's purpose */
+  description?: string;
+  /** If true, parameter is a system parameter that cannot be deleted or renamed */
+  isSystemParameter?: boolean;
 }
+
+/**
+ * Default system parameters available in all scripts.
+ * These parameters are automatically populated and cannot be deleted or renamed.
+ */
+export const DEFAULT_SCRIPT_PARAMETERS: ScriptParameter[] = [
+  {
+    name: 'WORKSPACE_NAME',
+    type: 'string',
+    value: '',
+    description: 'Name of the current workspace',
+    isSystemParameter: true
+  },
+  {
+    name: 'WORKSPACE_ID',
+    type: 'string',
+    value: '',
+    description: 'ID of the current workspace',
+    isSystemParameter: true
+  },
+  {
+    name: 'ITEM_NAME',
+    type: 'string',
+    value: '',
+    description: 'Name of the current Cloud Shell item',
+    isSystemParameter: true
+  },
+  {
+    name: 'ITEM_ID',
+    type: 'string',
+    value: '',
+    description: 'ID of the current Cloud Shell item',
+    isSystemParameter: true
+  }
+];
 
 /**
  * Supported script types for batch job execution.

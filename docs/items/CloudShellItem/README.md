@@ -49,12 +49,19 @@ Create, edit, and manage Python and Fabric CLI scripts with full parameter suppo
 Scripts support parameterized execution with type-safe configuration:
 
 - **Parameter Types**: string, int, float, bool, date
+- **Parameter Description**: Optional description field for documentation
+- **System Parameters**: Pre-configured read-only parameters available in all scripts:
+  - `WORKSPACE_NAME` - Name of the current workspace
+  - `WORKSPACE_ID` - ID of the current workspace
+  - `ITEM_NAME` - Name of the current Cloud Shell item
+  - `ITEM_ID` - ID of the current Cloud Shell item
 - **Spark Configuration**: Python scripts access parameters via `spark.script.param.<name>`
 - **Variable Substitution**: Fabric CLI scripts support two formats:
   - `$paramName` - Unix/Linux style (e.g., `$workspaceId`)
   - `%paramName%` - Windows batch style (e.g., `%workspaceId%`)
 - **Reusable Scripts**: Same script with different parameter values per execution
 - **Batch Execution**: Both Python and Fabric CLI scripts can be executed as Spark batch jobs
+- **Parameter Naming**: Only alphanumeric characters and underscores allowed (no spaces, dots, or special characters)
 
 **Example Parameter Access**:
 
@@ -77,10 +84,15 @@ def get_parameter(param_name, param_type="string", default_value=None):
     else:  # string or date
         return value
 
-# Access parameters
+# Access custom parameters
 batch_size = get_parameter("batch_size", "int", "100")
 input_path = get_parameter("input_path", "string", "Files/data")
 enable_logging = get_parameter("enable_logging", "bool", "true")
+
+# Access system parameters (always available)
+workspace_id = get_parameter("WORKSPACE_ID", "string")
+item_name = get_parameter("ITEM_NAME", "string")
+print(f"Running in workspace: {workspace_id}, item: {item_name}")
 ```
 
 **Fabric CLI Scripts** - Use `$param` or `%param%` notation:
@@ -93,6 +105,10 @@ fab ls -l %workspaceName%.Workspace
 # Example with multiple parameters:
 fab item get --workspace-id $workspaceId --item-id $itemId
 fab item get --workspace-id %workspaceId% --item-id %itemId%
+
+# Use system parameters (always available):
+fab ls -l $WORKSPACE_NAME.Workspace
+fab item get --workspace-id $WORKSPACE_ID --item-id $ITEM_ID
 
 # Parameters are replaced before execution
 # $workspaceId → actual-workspace-guid

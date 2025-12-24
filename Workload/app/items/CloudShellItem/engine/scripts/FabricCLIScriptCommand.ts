@@ -118,9 +118,12 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
             commands = commands.map(cmd => {
                 let processedCmd = cmd;
                 script.parameters?.forEach(param => {
+                    // Get parameter value (uses context for system parameters)
+                    const value = this.getParameterValue(param, context);
+                    
                     // Support both $paramName and %paramName% formats
                     const variablePattern = new RegExp(`(\\$${param.name}\\b|%${param.name}%)`, 'g');
-                    processedCmd = processedCmd.replace(variablePattern, param.value);
+                    processedCmd = processedCmd.replace(variablePattern, value);
                 });
                 return processedCmd;
             });

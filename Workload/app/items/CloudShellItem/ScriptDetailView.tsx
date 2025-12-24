@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
-import { Script, ScriptParameter, ScriptType } from "./CloudShellItemModel";
+import { Script, ScriptParameter, ScriptType, DEFAULT_SCRIPT_PARAMETERS } from "./CloudShellItemModel";
 import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular } from "@fluentui/react-icons";
+import { ItemWithDefinition } from "../../controller/ItemCRUDController";
+import { CloudShellItemDefinition } from "./CloudShellItemModel";
 import { 
   Button, 
   Input, 
@@ -13,7 +15,8 @@ import {
   Option,
   Tooltip,
   Card,
-  CardHeader
+  CardHeader,
+  Textarea
 } from "@fluentui/react-components";
 import "./CloudShellItem.scss";
 
@@ -23,6 +26,7 @@ export interface ScriptDetailViewProps {
   onSave: (script: Script) => void;
   onRun?: (script: Script) => void;
   isRunning?: boolean;
+  item?: ItemWithDefinition<CloudShellItemDefinition>;
 }
 
 /**
@@ -35,7 +39,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   currentTheme,
   onSave,
   onRun,
-  isRunning = false
+  isRunning = false,
+  item
 }) => {
   const { t } = useTranslation();
   const [content, setContent] = useState(script.content || "");
@@ -46,6 +51,26 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   // Get editor language from centralized configuration
   const scriptType = script.type ?? ScriptType.PYTHON;
   const language = getScriptTypeConfig(scriptType).editorLanguage;
+
+  // Helper to get display value for system parameters (not saved)
+  const getDisplayValue = (param: ScriptParameter): string => {
+    if (!param.isSystemParameter) {
+      return param.value;
+    }
+    // Return current context value for system parameters
+    switch (param.name) {
+      case 'WORKSPACE_NAME':
+        return 'TODO_WorkspaceName';
+      case 'WORKSPACE_ID':
+        return item?.workspaceId || '';
+      case 'ITEM_NAME':
+        return item?.displayName || '';
+      case 'ITEM_ID':
+        return item?.id || '';
+      default:
+        return param.value;
+    }
+  };
 
   // Update content and parameters when script changes
   useEffect(() => {
@@ -110,6 +135,12 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   };
 
   const handleDeleteParameter = (index: number) => {
+    const param = parameters[index];
+    // Prevent deletion of system parameters
+    if (param.isSystemParameter) {
+      return;
+    }
+    
     setParameters(parameters.filter((_, i) => i !== index));
     // Update expanded indices after deletion
     const newExpanded = new Set<number>();
@@ -140,23 +171,32 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       
       {parameters.map((param, index) => {
         const isExpanded = expandedParams.has(index);
+        const isSystemParam = param.isSystemParameter === true;
         return (
           <Card key={index} className="parameter-card">
             <CardHeader
-              header={<strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>}
+              header={
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>
+                  {isSystemParam && <span style={{ fontSize: '10px', opacity: 0.7 }}>(System)</span>}
+                </div>
+              }
+              description={param.description && !isExpanded ? param.description : undefined}
               action={
-                <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
-                  <Button
-                    icon={<Delete20Regular />}
-                    appearance="subtle"
-                    size="small"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      handleDeleteParameter(index);
-                    }}
-                    aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
-                  />
-                </Tooltip>
+                !isSystemParam && (
+                  <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
+                    <Button
+                      icon={<Delete20Regular />}
+                      appearance="subtle"
+                      size="small"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        handleDeleteParameter(index);
+                      }}
+                      aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
+                    />
+                  </Tooltip>
+                )
               }
               onClick={() => toggleParameterExpansion(index)}
               style={{ cursor: 'pointer' }}
@@ -170,6 +210,19 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                     value={param.name}
                     onChange={(e) => handleUpdateParameter(index, 'name', e.target.value)}
                     placeholder="parameter_name"
+                    disabled={isSystemParam}
+                  />
+                </div>
+
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterDescription', 'Description')}</Label>
+                  <Textarea
+                    size="small"
+                    value={param.description || ''}
+                    onChange={(e) => handleUpdateParameter(index, 'description', e.target.value)}
+                    placeholder={t('CloudShellItem_Script_ParameterDescriptionPlaceholder', 'Describe this parameter')}
+                    disabled={isSystemParam}
+                    rows={2}
                   />
                 </div>
                 
@@ -181,6 +234,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                     value={param.type}
                     selectedOptions={[param.type]}
                     onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
+                    disabled={isSystemParam}
                   >
                     <Option value="string">String</Option>
                     <Option value="int">Integer</Option>
@@ -194,11 +248,13 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
                   <Input
                     size="small"
-                    value={param.value}
+                    value={getDisplayValue(param)}
                     onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
                     placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
+                    disabled={isSystemParam}
                   />
-                </div>
+                </div>                
+
               </div>
             )}
           </Card>

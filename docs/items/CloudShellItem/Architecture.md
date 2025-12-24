@@ -166,6 +166,21 @@ Parameters follow type-safe injection pattern:
 - No spaces, dots, or special characters
 - Validated in UI during parameter creation
 
+**System Parameters** (Read-only, auto-populated):
+- `WORKSPACE_NAME` - Name of current workspace
+- `WORKSPACE_ID` - ID of current workspace
+- `ITEM_NAME` - Name of current Cloud Shell item
+- `ITEM_ID` - ID of current Cloud Shell item
+- Cannot be deleted or renamed by users
+- Values automatically populated from item context
+
+**Parameter Fields**:
+- `name` - Parameter identifier
+- `type` - Data type (string, int, float, bool, date)
+- `value` - Current value
+- `description` - Optional documentation
+- `isSystemParameter` - Marks read-only system parameters
+
 **Python Script Parameter Access**:
 ```python
 # In Python script - use get_parameter() helper

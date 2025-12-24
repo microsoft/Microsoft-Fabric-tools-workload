@@ -10,7 +10,7 @@ import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType, ItemDefinitionPart, PayloadType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 import { ItemClient } from "../../clients/ItemClient";
-import { CloudShellItemDefinition, Script, ScriptMetadata, CommandType, ScriptType } from "./CloudShellItemModel";
+import { CloudShellItemDefinition, Script, ScriptMetadata, CommandType, ScriptType, DEFAULT_SCRIPT_PARAMETERS, ScriptParameter } from "./CloudShellItemModel";
 import { CloudShellItemEmptyView } from "./CloudShellItemEmptyView";
 import { CloudShellItemRibbon } from "./CloudShellItemRibbon";
 import { CloudShellItemDefaultView } from "./CloudShellItemDefaultView";
@@ -359,9 +359,16 @@ export function CloudShellItemEditor(props: PageProps) {
   const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.PYTHON) => {
     if (!item) return;
 
+    // Create default system parameters without values (populated at runtime)
+    const systemParameters: ScriptParameter[] = DEFAULT_SCRIPT_PARAMETERS.map(param => ({
+      ...param,
+      value: '' // Don't save values, they're populated from context at runtime
+    }));
+
     const newScript: ScriptMetadata = {
       name,
       type,
+      parameters: systemParameters,
       createdAt: new Date().toISOString(),
       modifiedAt: new Date().toISOString()
     };
@@ -623,6 +630,7 @@ export function CloudShellItemEditor(props: PageProps) {
           currentTheme="light"
           onSave={handleScriptSave}
           onRun={handleScriptRun}
+          item={item}
         />
       ) : null
     }
