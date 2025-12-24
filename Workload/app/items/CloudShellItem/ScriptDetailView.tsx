@@ -97,6 +97,13 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   const handleUpdateParameter = (index: number, field: keyof ScriptParameter, value: string | boolean) => {
     const updated = [...parameters];
+    
+    // Validate parameter name: only alphanumeric and underscores allowed
+    if (field === 'name' && typeof value === 'string') {
+      // Remove any characters that are not alphanumeric or underscore
+      value = value.replace(/[^a-zA-Z0-9_]/g, '');
+    }
+    
     updated[index] = { ...updated[index], [field]: value };
     setParameters(updated);
     setIsDirty(true);
