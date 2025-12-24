@@ -50,11 +50,15 @@ Scripts support parameterized execution with type-safe configuration:
 
 - **Parameter Types**: string, int, float, bool, date
 - **Spark Configuration**: Python scripts access parameters via `spark.script.param.<name>`
-- **Variable Substitution**: Fabric CLI scripts use `$variableName` replacement for parameters
+- **Variable Substitution**: Fabric CLI scripts support two formats:
+  - `$paramName` - Unix/Linux style (e.g., `$workspaceId`)
+  - `%paramName%` - Windows batch style (e.g., `%workspaceId%`)
 - **Reusable Scripts**: Same script with different parameter values per execution
 - **Batch Execution**: Both Python and Fabric CLI scripts can be executed as Spark batch jobs
 
 **Example Parameter Access**:
+
+**Python Scripts** - Use `get_parameter()` method:
 
 ```python
 from pyspark.sql import SparkSession
@@ -77,6 +81,22 @@ def get_parameter(param_name, param_type="string", default_value=None):
 batch_size = get_parameter("batch_size", "int", "100")
 input_path = get_parameter("input_path", "string", "Files/data")
 enable_logging = get_parameter("enable_logging", "bool", "true")
+```
+
+**Fabric CLI Scripts** - Use `$param` or `%param%` notation:
+
+```bash
+# Both formats are supported:
+fab ls -l $workspaceName.Workspace
+fab ls -l %workspaceName%.Workspace
+
+# Example with multiple parameters:
+fab item get --workspace-id $workspaceId --item-id $itemId
+fab item get --workspace-id %workspaceId% --item-id %itemId%
+
+# Parameters are replaced before execution
+# $workspaceId → actual-workspace-guid
+# %workspaceId% → actual-workspace-guid
 ```
 
 **Batch Execution**

@@ -15,7 +15,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
  * Script content format:
  * - One fab command per line
  * - Comments (#) ignored
- * - Variable substitution: $paramName replaced with parameter values
+ * - Variable substitution: $paramName or %paramName% replaced with parameter values
  * 
  * Authentication:
  * - OBO Token: Acquired from current user session (useFrontendToken=true)
@@ -68,8 +68,9 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * 2. Commands array (with variable substitution applied)
      * 
      * Variable Substitution:
-     * - $paramName in commands replaced with parameter values
-     * - Uses word boundary matching to avoid partial replacements
+     * - $paramName or %paramName% in commands replaced with parameter values
+     * - Uses word boundary matching for $ format to avoid partial replacements
+     * - Uses exact % delimiters for % format
      * 
      * Authentication Priority:
      * - If useFrontendToken=true: Acquire DEFAULT and ONELAKE tokens
@@ -112,12 +113,13 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
             throw new Error('No executable commands found in Fabric CLI script');
         }
 
-        // Replace variables $variableName with the actual value from script parameters
+        // Replace variables $variableName or %variableName% with the actual value from script parameters
         if (script.parameters && script.parameters.length > 0) {
             commands = commands.map(cmd => {
                 let processedCmd = cmd;
                 script.parameters?.forEach(param => {
-                    const variablePattern = new RegExp(`\\$${param.name}\\b`, 'g');
+                    // Support both $paramName and %paramName% formats
+                    const variablePattern = new RegExp(`(\\$${param.name}\\b|%${param.name}%)`, 'g');
                     processedCmd = processedCmd.replace(variablePattern, param.value);
                 });
                 return processedCmd;

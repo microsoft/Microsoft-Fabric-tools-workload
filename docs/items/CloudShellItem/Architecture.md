@@ -156,12 +156,36 @@ Parameters follow type-safe injection pattern:
 2. **Storage**: Parameters persist in CloudShellItemDefinition.scripts[]
 3. **Injection**: At batch execution, converted to Spark config:
    - `spark.script.param.{name}` = value
-4. **Variable Substitution**: Fabric CLI scripts support $paramName replacement
-5. **Access**: Scripts use helper functions for type-safe retrieval
+4. **Variable Substitution**: 
+   - **Fabric CLI scripts**: Support both `$paramName` and `%paramName%` notation
+   - **Python scripts**: Use `get_parameter()` helper function for type-safe retrieval
+5. **Access**: Scripts use notation or helper functions based on script type
 
+**Parameter Naming Rules**:
+- Only alphanumeric characters and underscores allowed
+- No spaces, dots, or special characters
+- Validated in UI during parameter creation
+
+**Python Script Parameter Access**:
 ```python
-# In script
-value = spark.conf.get("spark.script.param.myParam")
+# In Python script - use get_parameter() helper
+def get_parameter(param_name, param_type="string", default_value=None):
+    value = spark.conf.get(f"spark.script.param.{param_name}", default_value)
+    # Type conversion logic...
+    return value
+
+value = get_parameter("myParam", "string")
+```
+
+**Fabric CLI Script Parameter Access**:
+```bash
+# In Fabric CLI script - use $param or %param% notation
+fab ls -l $workspaceName.Workspace
+fab item get --workspace-id %workspaceId%
+
+# Both formats supported:
+# $paramName - Unix/Linux style
+# %paramName% - Windows batch style
 ```
 
 ## Batch Execution Flow
