@@ -1,5 +1,9 @@
 # Default Fabric CLI Script Template
 # This script demonstrates common Fabric CLI commands
+# 
+# Variables can be used with either syntax:
+#   $PARAM_NAME  or  %PARAM_NAME%
+# System parameters: WORKSPACE, WORKSPACE_NAME, WORKSPACE_ID, ITEM, ITEM_NAME, ITEM_ID
 
 # Make sure this script can run and you are logged in
 
@@ -11,6 +15,7 @@
 ls -l
 
 # List all items in a workspace
-ls -l $param1
+ls -l %WORKSPACE%
+
 
 

@@ -3,6 +3,7 @@ import { OneLakeStorageClient } from "../../../../clients/OneLakeStorageClient";
 import { EnvironmentConstants } from "../../../../constants";
 import { Script } from "../../CloudShellItemModel";
 import { IScriptCommand, ScriptCommandContext } from "./IScriptCommand";
+import { getParameterValue } from "./ScriptSystemParameters";
 
 /**
  * Base class for script commands that upload content to OneLake and submit Spark batch jobs.
@@ -78,7 +79,7 @@ export abstract class BaseScriptCommand implements IScriptCommand {
             conf: {
                 "spark.targetLakehouse": context.item.definition.selectedLakehouse.id!,
                 "spark.fabric.environmentDetails": `{"id" : "${context.item.definition.selectedSparkEnvironment.id!}"}`,
-                ...this.getParameterConf(script, context),
+                ...await this.getParameterConf(script, context),
                 ...await this.getAdditionalConf(script, context)
             },
             tags: {
@@ -110,13 +111,17 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      * @param context Execution context with item information for system parameters
      * @returns Record of Spark configuration keys and values
      */
-    private getParameterConf(script: Script, context: ScriptCommandContext): Record<string, string> {
+    private async getParameterConf(script: Script, context: ScriptCommandContext): Promise<Record<string, string>> {
         const parameterConf: Record<string, string> = {};
         
         if (script.parameters && script.parameters.length > 0) {
-            script.parameters.forEach(param => {
-                const value = this.getParameterValue(param, context);
-                parameterConf[this.getParameterConfName(param.name)] = value;
+            // Parallelize parameter value resolution for better performance
+            const parameterValues = await Promise.all(
+                script.parameters.map(param => getParameterValue(param, context.item, context.workloadClient))
+            );
+            
+            script.parameters.forEach((param, index) => {
+                parameterConf[this.getParameterConfName(param.name)] = parameterValues[index];
             });
         }
         
@@ -133,36 +138,6 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      */
     protected getParameterConfName(paramName: string): string {
         return `spark.script.param.${paramName}`;
-    }
-
-    /**
-     * Get the runtime value for a parameter.
-     * 
-     * System parameters (isSystemParameter=true) are populated from context at runtime.
-     * Regular parameters use their saved value.
-     * 
-     * @param param Parameter to get value for
-     * @param context Execution context with item information
-     * @returns Parameter value (from context for system params, from param.value for others)
-     */
-    protected getParameterValue(param: { name: string; value: string; isSystemParameter?: boolean }, context: ScriptCommandContext): string {
-        if (!param.isSystemParameter) {
-            return param.value;
-        }
-        
-        // Populate system parameters from context at runtime
-        switch (param.name) {
-            case 'WORKSPACE_NAME':
-                return 'TODO_WorkspaceName';
-            case 'WORKSPACE_ID':
-                return context.item?.workspaceId || '';
-            case 'ITEM_NAME':
-                return context.item?.displayName || '';
-            case 'ITEM_ID':
-                return context.item?.id || '';
-            default:
-                return param.value;
-        }
     }
 
     /**

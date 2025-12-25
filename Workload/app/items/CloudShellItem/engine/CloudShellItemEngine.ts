@@ -70,7 +70,7 @@ export class CloudShellItemEngine {
         script: Script,
         context: ScriptCommandContext
     ): Promise<BatchResponse> {
-        const scriptType = script.type ?? ScriptType.PYTHON;
+        const scriptType = script.type ?? ScriptType.FABCLI;
         const command = this.scriptCommands.get(scriptType);
         if (!command) {
             throw new Error(`Unsupported script type: ${scriptType}`);

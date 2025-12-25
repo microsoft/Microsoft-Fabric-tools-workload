@@ -49,28 +49,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const [expandedParams, setExpandedParams] = useState<Set<number>>(new Set());
 
   // Get editor language from centralized configuration
-  const scriptType = script.type ?? ScriptType.PYTHON;
+  const scriptType = script.type ?? ScriptType.FABCLI;
   const language = getScriptTypeConfig(scriptType).editorLanguage;
-
-  // Helper to get display value for system parameters (not saved)
-  const getDisplayValue = (param: ScriptParameter): string => {
-    if (!param.isSystemParameter) {
-      return param.value;
-    }
-    // Return current context value for system parameters
-    switch (param.name) {
-      case 'WORKSPACE_NAME':
-        return 'TODO_WorkspaceName';
-      case 'WORKSPACE_ID':
-        return item?.workspaceId || '';
-      case 'ITEM_NAME':
-        return item?.displayName || '';
-      case 'ITEM_ID':
-        return item?.id || '';
-      default:
-        return param.value;
-    }
-  };
 
   // Update content and parameters when script changes
   useEffect(() => {
@@ -99,7 +79,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   const handleAddParameter = () => {
     const newParameter: ScriptParameter = {
-      name: `param${parameters.length + 1}`,
+      name: `myParameter`,
       type: 'string',
       value: ""
     };
@@ -244,17 +224,18 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   </Dropdown>
                 </div>
                 
+                
                 <div className="field-row">
                   <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
                   <Input
                     size="small"
-                    value={getDisplayValue(param)}
+                    value={(param.value || '')}
                     onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
                     placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
                     disabled={isSystemParam}
                   />
-                </div>                
-
+                </div>
+            
               </div>
             )}
           </Card>

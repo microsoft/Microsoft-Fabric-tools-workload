@@ -10,7 +10,7 @@ import { callDialogOpen } from "../../controller/DialogController";
 import { NotificationType, ItemDefinitionPart, PayloadType } from "@ms-fabric/workload-client";
 import { ItemEditor, useViewNavigation } from "../../components/ItemEditor";
 import { ItemClient } from "../../clients/ItemClient";
-import { CloudShellItemDefinition, Script, ScriptMetadata, CommandType, ScriptType, DEFAULT_SCRIPT_PARAMETERS, ScriptParameter } from "./CloudShellItemModel";
+import { CloudShellItemDefinition, Script, ScriptMetadata, CommandType, ScriptType, ScriptParameter } from "./CloudShellItemModel";
 import { CloudShellItemEmptyView } from "./CloudShellItemEmptyView";
 import { CloudShellItemRibbon } from "./CloudShellItemRibbon";
 import { CloudShellItemDefaultView } from "./CloudShellItemDefaultView";
@@ -19,6 +19,7 @@ import { Item } from "../../clients/FabricPlatformTypes";
 import { CreateScriptDialogResult } from "./CreateScriptDialog";
 import { loadDefaultTemplate } from "./engine/scripts/ScriptTypeConfig";
 import { CloudShellItemEngine } from "./engine/CloudShellItemEngine";import { ScriptCommandContext } from './engine/scripts/IScriptCommand';
+import { getSystemParametersForScriptType } from "./engine/scripts/ScriptSystemParameters";
 import "./CloudShellItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
@@ -351,16 +352,16 @@ export function CloudShellItemEditor(props: PageProps) {
     );
     const result = dialogResult?.value as (CreateScriptDialogResult & { scriptType?: ScriptType });
     if (result?.state === 'created' && result.scriptName) {
-      await handleScriptCreate(result.scriptName, result.scriptType || ScriptType.PYTHON);
+      await handleScriptCreate(result.scriptName, result.scriptType || ScriptType.FABCLI);
     }
   };
 
   // Script management handlers
-  const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.PYTHON) => {
+  const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.FABCLI) => {
     if (!item) return;
 
-    // Create default system parameters without values (populated at runtime)
-    const systemParameters: ScriptParameter[] = DEFAULT_SCRIPT_PARAMETERS.map(param => ({
+    // Get system parameters based on script type
+    const systemParameters: ScriptParameter[] = getSystemParametersForScriptType(type).map(param => ({
       ...param,
       value: '' // Don't save values, they're populated from context at runtime
     }));

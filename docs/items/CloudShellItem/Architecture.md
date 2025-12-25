@@ -167,17 +167,29 @@ Parameters follow type-safe injection pattern:
 - Validated in UI during parameter creation
 
 **System Parameters** (Read-only, auto-populated):
-- `WORKSPACE_NAME` - Name of current workspace
-- `WORKSPACE_ID` - ID of current workspace
-- `ITEM_NAME` - Name of current Cloud Shell item
-- `ITEM_ID` - ID of current Cloud Shell item
+
+System parameters are automatically configured based on script type to match the language's idiomatic usage patterns:
+
+**Fabric CLI Scripts** (.fab):
+- `WORKSPACE` - Workspace name in Fabric CLI format (e.g., "MyWorkspace.Workspace")
+- `ITEM` - Item name in Fabric CLI format (e.g., "MyItem.CloudShellItem")
+
+**Python Scripts** (.py):
+- `WORKSPACE_NAME` - Plain workspace display name (e.g., "MyWorkspace")
+- `WORKSPACE_ID` - Workspace GUID
+- `ITEM_NAME` - Plain item display name (e.g., "MyItem")
+- `ITEM_ID` - Item GUID
+
+**Common Properties**:
 - Cannot be deleted or renamed by users
-- Values automatically populated from item context
+- Values automatically populated from item context at runtime
+- Not saved in item definition (values are ephemeral)
+- Fetched dynamically for each script execution
 
 **Parameter Fields**:
 - `name` - Parameter identifier
 - `type` - Data type (string, int, float, bool, date)
-- `value` - Current value
+- `value` - Current value (empty string for system parameters)
 - `description` - Optional documentation
 - `isSystemParameter` - Marks read-only system parameters
 
@@ -189,14 +201,29 @@ def get_parameter(param_name, param_type="string", default_value=None):
     # Type conversion logic...
     return value
 
+# System parameters for Python scripts
+workspace_name = get_parameter("WORKSPACE_NAME", "string")  # "MyWorkspace"
+workspace_id = get_parameter("WORKSPACE_ID", "string")      # "abc123-..."
+item_name = get_parameter("ITEM_NAME", "string")            # "MyItem"
+item_id = get_parameter("ITEM_ID", "string")                # "def456-..."
+
+# User-defined parameters
 value = get_parameter("myParam", "string")
 ```
 
 **Fabric CLI Script Parameter Access**:
 ```bash
 # In Fabric CLI script - use $param or %param% notation
-fab ls -l $workspaceName.Workspace
-fab item get --workspace-id %workspaceId%
+
+# System parameters for Fabric CLI scripts
+ls -l $WORKSPACE              # Lists items in "MyWorkspace.Workspace"
+ls -l %WORKSPACE%             # Alternative notation
+
+item get --item $ITEM         # References "MyItem.CloudShellItem"
+item get --item %ITEM%        # Alternative notation
+
+# User-defined parameters
+fab item get --workspace-id $workspaceId
 
 # Both formats supported:
 # $paramName - Unix/Linux style

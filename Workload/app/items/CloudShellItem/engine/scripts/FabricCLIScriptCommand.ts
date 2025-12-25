@@ -3,6 +3,7 @@ import { ScriptCommandContext } from "./IScriptCommand";
 import { BaseScriptCommand } from "./BaseScriptCommand";
 import { SCOPES } from "../../../../clients/FabricPlatformScopes";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { getParameterValue } from "./ScriptSystemParameters";
 
 /**
  * Command for executing Fabric CLI scripts as Spark batch jobs.
@@ -115,11 +116,15 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
 
         // Replace variables $variableName or %variableName% with the actual value from script parameters
         if (script.parameters && script.parameters.length > 0) {
+            // Parallelize parameter value resolution for better performance
+            const parameterValues = await Promise.all(
+                script.parameters.map(param => getParameterValue(param, context.item, context.workloadClient))
+            );
+            
             commands = commands.map(cmd => {
                 let processedCmd = cmd;
-                script.parameters?.forEach(param => {
-                    // Get parameter value (uses context for system parameters)
-                    const value = this.getParameterValue(param, context);
+                script.parameters?.forEach((param, index) => {
+                    const value = parameterValues[index];
                     
                     // Support both $paramName and %paramName% formats
                     const variablePattern = new RegExp(`(\\$${param.name}\\b|%${param.name}%)`, 'g');

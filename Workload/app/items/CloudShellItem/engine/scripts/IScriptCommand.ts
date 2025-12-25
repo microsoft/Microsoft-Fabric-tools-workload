@@ -61,7 +61,6 @@ export interface ScriptCommandContext extends CommandContext {
     
     /** Spark Livy client for batch job submission and session management */
     cloudShellClient: SparkLivyCloudShellClient;
-    
 }
 
 /**

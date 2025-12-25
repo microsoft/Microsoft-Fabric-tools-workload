@@ -26,6 +26,16 @@ export interface ScriptTypeConfig {
  * Centralized configuration for all supported script types
  */
 export const SCRIPT_TYPE_CONFIGS: Record<ScriptType, ScriptTypeConfig> = {
+  fabcli: {
+    type: ScriptType.FABCLI,
+    extension: '.fab',
+    defaultTemplatePath: '/assets/items/CloudShellItem/DefaultScript.fab',
+    fallbackContent: '# Fabric CLI script\nfab workspace list\n',
+    labelKey: 'CloudShellItem_Scripts_Type_FabCLI',
+    defaultLabel: 'Fabric CLI (.fab)',
+    defaultScriptName: 'my_script',
+    editorLanguage: 'shell'
+  },
   python: {
     type: ScriptType.PYTHON,
     extension: '.py',
@@ -35,7 +45,7 @@ export const SCRIPT_TYPE_CONFIGS: Record<ScriptType, ScriptTypeConfig> = {
     defaultLabel: 'Python (.py)',
     defaultScriptName: 'my_script',
     editorLanguage: 'python'
-  },
+  }
   /*shell: {
     type: ScriptType.SHELL,
     extension: '.sh',
@@ -46,16 +56,6 @@ export const SCRIPT_TYPE_CONFIGS: Record<ScriptType, ScriptTypeConfig> = {
     defaultScriptName: 'my_script',
     editorLanguage: 'shell'
   },*/
-  fabcli: {
-    type: ScriptType.FABCLI,
-    extension: '.fab',
-    defaultTemplatePath: '/assets/items/CloudShellItem/DefaultScript.fab',
-    fallbackContent: '# Fabric CLI script\nfab workspace list\n',
-    labelKey: 'CloudShellItem_Scripts_Type_FabCLI',
-    defaultLabel: 'Fabric CLI (.fab)',
-    defaultScriptName: 'my_script',
-    editorLanguage: 'shell'
-  }
 };
 
 /**
