@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
-import { Script, ScriptParameter, ScriptType, DEFAULT_SCRIPT_PARAMETERS } from "./CloudShellItemModel";
+import { Script, ScriptParameter, ScriptType } from "./CloudShellItemModel";
 import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular } from "@fluentui/react-icons";
