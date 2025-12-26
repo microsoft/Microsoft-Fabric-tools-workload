@@ -1,9 +1,10 @@
-import { Script } from "../../CloudShellItemModel";
+import { Script, ScriptParameterType } from "../../CloudShellItemModel";
 import { ScriptCommandContext } from "./IScriptCommand";
 import { BaseScriptCommand } from "./BaseScriptCommand";
 import { SCOPES } from "../../../../clients/FabricPlatformScopes";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { getParameterValue } from "./ScriptSystemParameters";
+import { getParameterValue, parameterValueToItemReference } from "./ScriptParameters";
+import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";
 
 /**
  * Command for executing Fabric CLI scripts as Spark batch jobs.
@@ -116,9 +117,16 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
 
         // Replace variables $variableName or %variableName% with the actual value from script parameters
         if (script.parameters && script.parameters.length > 0) {
-            // Parallelize parameter value resolution for better performance
+            // Parallelize parameter value resolution and conversion for better performance
             const parameterValues = await Promise.all(
-                script.parameters.map(param => getParameterValue(param, context.item, context.workloadClient))
+                script.parameters.map(async param => {
+                    return await getParameterValue(
+                        param, 
+                        context.item, 
+                        context.workloadClient, 
+                        FabricCLIScriptCommand.convertParameterValueForCLI
+                    );
+                })
             );
             
             commands = commands.map(cmd => {
@@ -154,5 +162,57 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
         });
         return result.token;
     }
-    
+
+    /**
+     * Convert parameter value to Fabric CLI format.
+     * 
+     * - WORKSPACE_REFERENCE (GUID) → [WorkspaceName].Workspace
+     * - ITEM_REFERENCE (workspaceId/ItemId) → [ItemWorkspaceName].Workspace/[ItemName].[ItemType]
+     * - Other types: Returns value as-is
+     * 
+     * @param paramType Type of parameter (WORKSPACE_REFERENCE, ITEM_REFERENCE, etc.)
+     * @param value Current parameter value to convert
+     * @param workloadClient Workload client for API calls
+     * @returns Converted parameter value
+     */
+    private static async convertParameterValueForCLI(
+        paramType: ScriptParameterType,
+        value: string,
+        workloadClient: WorkloadClientAPI
+    ): Promise<string> {
+        const fabricAPI = new FabricPlatformAPIClient(workloadClient);
+
+        try {
+            switch (paramType) {
+                case ScriptParameterType.WORKSPACE_REFERENCE: {
+                    // Convert GUID to [WorkspaceName].Workspace
+                    if (!value) return '';
+                    
+                    const workspace = await fabricAPI.workspaces.getWorkspace(value);
+                    return `${workspace.displayName}.Workspace`;
+                }
+
+                case ScriptParameterType.ITEM_REFERENCE: {
+                    
+                    const itemReference = parameterValueToItemReference(value);
+                    
+                    // Fetch workspace and item details
+                    const [workspace, item] = await Promise.all([
+                        fabricAPI.workspaces.getWorkspace(itemReference.workspaceId),
+                        fabricAPI.items.getItem(itemReference.workspaceId, itemReference.id)
+                    ]);
+
+                    return `${workspace.displayName}.Workspace/${item.displayName}.${item.type}`;
+                }
+
+                default:
+                    return value;
+            }
+        } catch (error) {
+            console.error(`Failed to convert parameter value:`, error);
+            return value; // Fallback to original value on error
+        }
+    }
+
+
 }

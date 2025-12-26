@@ -22,6 +22,36 @@ export enum CommandType {
 }
 
 /**
+ * Parameter types for script execution.
+ * 
+ * Types determine how values are converted during script execution:
+ * - STRING: Text values, no conversion
+ * - INT: Integer numbers
+ * - FLOAT: Decimal numbers
+ * - BOOL: Boolean true/false
+ * - DATE: ISO date strings
+ * - ITEM_REFERENCE: Reference to a Fabric item (stored as item ID)
+ */
+export enum ScriptParameterType {
+  /** Text string parameter */
+  STRING = 'string',
+  /** Integer number parameter */
+  INT = 'int',
+  /** Floating point number parameter */
+  FLOAT = 'float',
+  /** Boolean parameter */
+  BOOL = 'bool',
+  /** Date parameter (ISO string format) */
+  DATE = 'date',
+  /** GUID parameter (UUID format) */
+  GUID = 'guid',
+  /** Item reference parameter (Fabric item ID) */
+  ITEM_REFERENCE = 'itemReference',
+  /** Workspace reference parameter (Fabric workspace ID) */
+  WORKSPACE_REFERENCE = 'workspaceReference'
+}
+
+/**
  * Parameter definition for a script (Python, Shell, or Fabric CLI).
  * 
  * Parameters are injected into batch job execution via Spark configuration:
@@ -41,7 +71,7 @@ export interface ScriptParameter {
   /** Parameter name (used as key in Spark configuration) */
   name: string;
   /** Parameter type for type-safe conversion in scripts */
-  type: 'string' | 'int' | 'float' | 'bool' | 'date';
+  type: ScriptParameterType;
   /** Parameter value (stored as string, converted by type during script execution) */
   value: string;
   /** Optional description of the parameter's purpose */

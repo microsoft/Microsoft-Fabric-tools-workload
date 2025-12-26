@@ -3,7 +3,7 @@ import { OneLakeStorageClient } from "../../../../clients/OneLakeStorageClient";
 import { EnvironmentConstants } from "../../../../constants";
 import { Script } from "../../CloudShellItemModel";
 import { IScriptCommand, ScriptCommandContext } from "./IScriptCommand";
-import { getParameterValue } from "./ScriptSystemParameters";
+import { getParameterValue } from "./ScriptParameters";
 
 /**
  * Base class for script commands that upload content to OneLake and submit Spark batch jobs.

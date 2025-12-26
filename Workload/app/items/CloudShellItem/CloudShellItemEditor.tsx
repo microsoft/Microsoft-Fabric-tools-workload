@@ -19,7 +19,7 @@ import { Item } from "../../clients/FabricPlatformTypes";
 import { CreateScriptDialogResult } from "./CreateScriptDialog";
 import { loadDefaultTemplate } from "./engine/scripts/ScriptTypeConfig";
 import { CloudShellItemEngine } from "./engine/CloudShellItemEngine";import { ScriptCommandContext } from './engine/scripts/IScriptCommand';
-import { getSystemParametersForScriptType } from "./engine/scripts/ScriptSystemParameters";
+import { getSystemParametersForScriptType } from "./engine/scripts/ScriptParameters";
 import "./CloudShellItem.scss";
 
 export const EDITOR_VIEW_TYPES = {
@@ -521,10 +521,6 @@ export function CloudShellItemEditor(props: PageProps) {
   useEffect(() => {
     if (!item) return;
 
-    console.log('[CloudShell] Loading scripts - metadata:', item.definition?.scripts);
-    console.log('[CloudShell] Loading scripts - definition parts:', item.additionalDefinitionParts);
-    console.log('[CloudShell] Available paths:', item.additionalDefinitionParts?.map(p => p.path));
-
     setScriptsMap(prevMap => {
       const newScriptsMap = new Map<string, string>(prevMap);
       
@@ -632,6 +628,7 @@ export function CloudShellItemEditor(props: PageProps) {
           onSave={handleScriptSave}
           onRun={handleScriptRun}
           item={item}
+          workloadClient={workloadClient}
         />
       ) : null
     }

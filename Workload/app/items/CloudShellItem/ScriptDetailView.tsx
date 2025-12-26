@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
-import { Script, ScriptParameter, ScriptType } from "./CloudShellItemModel";
+import { Script, ScriptParameter, ScriptType, ScriptParameterType } from "./CloudShellItemModel";
 import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
-import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular } from "@fluentui/react-icons";
+import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular, Search20Regular } from "@fluentui/react-icons";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { CloudShellItemDefinition } from "./CloudShellItemModel";
+import { callDatahubOpen } from "../../controller/DataHubController";
+import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
+import { FABRIC_CORE_ITEM_TYPES } from "../../components/FabricCoreItemTypes";
+import { WorkspaceDropdown } from "../../components/WorkspaceDropdown";
 import { 
   Button, 
   Input, 
@@ -19,6 +23,7 @@ import {
   Textarea
 } from "@fluentui/react-components";
 import "./CloudShellItem.scss";
+import { itemReferenceToParameterValue } from "./engine/scripts/ScriptParameters";
 
 export interface ScriptDetailViewProps {
   script: Script;
@@ -27,6 +32,7 @@ export interface ScriptDetailViewProps {
   onRun?: (script: Script) => void;
   isRunning?: boolean;
   item?: ItemWithDefinition<CloudShellItemDefinition>;
+  workloadClient?: any;
 }
 
 /**
@@ -40,7 +46,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   onSave,
   onRun,
   isRunning = false,
-  item
+  item,
+  workloadClient
 }) => {
   const { t } = useTranslation();
   const [content, setContent] = useState(script.content || "");
@@ -80,7 +87,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const handleAddParameter = () => {
     const newParameter: ScriptParameter = {
       name: `myParameter`,
-      type: 'string',
+      type: ScriptParameterType.STRING,
       value: ""
     };
     const newIndex = parameters.length;
@@ -135,6 +142,30 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
     setIsDirty(true);
   };
 
+  const handleSelectItemReference = async (index: number) => {
+    if (!workloadClient) {
+      return;
+    }
+
+    try {
+      const allowedItemTypes = [...FABRIC_CORE_ITEM_TYPES, ...getConfiguredWorkloadItemTypes()];
+      const result = await callDatahubOpen(
+        workloadClient,
+        allowedItemTypes, // All Fabric core items + workload items
+        t('CloudShellItem_Script_SelectItem_Title', 'Select an Item'),
+        false
+      );
+
+      if (result) {
+        // Store the item reference as a formatted string: workspaceId/ItemId
+        const itemReference = itemReferenceToParameterValue(result);
+        handleUpdateParameter(index, 'value', itemReference);
+      }
+    } catch (error) {
+      console.error('Failed to select item:', error);
+    }
+  };
+
   const handleRun = () => {
     if (onRun) {
       // Save before running
@@ -148,12 +179,18 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   // Left panel with parameter configuration
   const parametersPanel = (
     <div className="parameters-panel">
-      
-      {parameters.map((param, index) => {
-        const isExpanded = expandedParams.has(index);
-        const isSystemParam = param.isSystemParameter === true;
-        return (
-          <Card key={index} className="parameter-card">
+      {/* System Parameters Section */}
+      {parameters.some(p => p.isSystemParameter) && (
+        <>
+          <div className="parameters-section-header">
+            <strong>{t('CloudShellItem_Script_SystemParameters', 'System Parameters')}</strong>
+          </div>
+          {parameters.filter(p => p.isSystemParameter).map((param, originalIndex) => {
+            const index = parameters.indexOf(param);
+            const isExpanded = expandedParams.has(index);
+            const isSystemParam = true;
+            return (
+              <Card key={index} className="parameter-card system-parameter">
             <CardHeader
               header={
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -216,24 +253,73 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                     onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
                     disabled={isSystemParam}
                   >
-                    <Option value="string">String</Option>
-                    <Option value="int">Integer</Option>
-                    <Option value="float">Float</Option>
-                    <Option value="bool">Boolean</Option>
-                    <Option value="date">Date</Option>
+                    <Option value={ScriptParameterType.STRING}>String</Option>
+                    <Option value={ScriptParameterType.INT}>Integer</Option>
+                    <Option value={ScriptParameterType.FLOAT}>Float</Option>
+                    <Option value={ScriptParameterType.BOOL}>Boolean</Option>
+                    <Option value={ScriptParameterType.DATE}>Date</Option>
+                    <Option value={ScriptParameterType.GUID}>GUID</Option>
+                    <Option value={ScriptParameterType.ITEM_REFERENCE}>Item Reference</Option>
+                    <Option value={ScriptParameterType.WORKSPACE_REFERENCE}>Workspace Reference</Option>
                   </Dropdown>
                 </div>
                 
                 
                 <div className="field-row">
                   <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
-                  <Input
-                    size="small"
-                    value={(param.value || '')}
-                    onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
-                    placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
-                    disabled={isSystemParam}
-                  />
+                  {param.type === ScriptParameterType.ITEM_REFERENCE ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Input
+                        size="small"
+                        value={(param.value || '')}
+                        placeholder={t('CloudShellItem_Script_ItemReferencePlaceholder', 'Select an item...')}
+                        disabled={true}
+                        style={{ flex: 1 }}
+                      />
+                      <Tooltip content={t('CloudShellItem_Script_SelectItem', 'Select')} relationship="label">
+                        <Button
+                          icon={<Search20Regular />}
+                          size="small"
+                          appearance="secondary"
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectItemReference(index);
+                          }}
+                          disabled={isSystemParam}
+                          aria-label={t('CloudShellItem_Script_SelectItem', 'Select')}
+                        />
+                      </Tooltip>
+                    </div>
+                  ) : param.type === ScriptParameterType.WORKSPACE_REFERENCE ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {workloadClient ? (
+                        <WorkspaceDropdown
+                          key={`workspace-dropdown-${index}`}
+                          workloadClient={workloadClient}
+                          selectedWorkspaceId={param.value || ''}
+                          onWorkspaceSelect={(workspaceId) => handleUpdateParameter(index, 'value', workspaceId)}
+                          placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
+                          disabled={isSystemParam}
+                        />
+                      ) : (
+                        <Input
+                          size="small"
+                          value={(param.value || '')}
+                          placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
+                          disabled={true}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <Input
+                      size="small"
+                      value={(param.value || '')}
+                      onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
+                      placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
+                      disabled={isSystemParam}
+                    />
+                  )}
                 </div>
             
               </div>
@@ -241,6 +327,133 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
           </Card>
         );
       })}
+        </>
+      )}
+
+      {/* User-Defined Parameters Section */}
+      {parameters.some(p => !p.isSystemParameter) && (
+        <>
+          <div className="parameters-section-header">
+            <strong>{t('CloudShellItem_Script_UserParameters', 'User-Defined Parameters')}</strong>
+          </div>
+          {parameters.filter(p => !p.isSystemParameter).map((param, originalIndex) => {
+            const index = parameters.indexOf(param);
+            const isExpanded = expandedParams.has(index);
+            return (
+              <Card key={index} className="parameter-card user-parameter">
+            <CardHeader
+              header={
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>
+                </div>
+              }
+              description={param.description && !isExpanded ? param.description : undefined}
+              action={
+                <Tooltip content={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')} relationship="label">
+                  <Button
+                    icon={<Delete20Regular />}
+                    appearance="subtle"
+                    size="small"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleDeleteParameter(index);
+                    }}
+                    aria-label={t('CloudShellItem_Script_DeleteParameter', 'Delete parameter')}
+                  />
+                </Tooltip>
+              }
+              onClick={() => toggleParameterExpansion(index)}
+              style={{ cursor: 'pointer' }}
+            />
+            {isExpanded && (
+              <div className="parameter-fields">
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterName', 'Name')}</Label>
+                  <Input
+                    size="small"
+                    value={param.name}
+                    onChange={(e) => handleUpdateParameter(index, 'name', e.target.value)}
+                    placeholder="parameter_name"
+                  />
+                </div>
+
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterDescription', 'Description')}</Label>
+                  <Textarea
+                    size="small"
+                    value={param.description || ''}
+                    onChange={(e) => handleUpdateParameter(index, 'description', e.target.value)}
+                    placeholder={t('CloudShellItem_Script_ParameterDescriptionPlaceholder', 'Describe this parameter')}
+                    rows={2}
+                  />
+                </div>
+                
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterType', 'Type')}</Label>
+                  <Dropdown
+                    className="type-dropdown"
+                    size="small"
+                    value={param.type}
+                    selectedOptions={[param.type]}
+                    onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
+                  >
+                    <Option value={ScriptParameterType.STRING}>String</Option>
+                    <Option value={ScriptParameterType.INT}>Integer</Option>
+                    <Option value={ScriptParameterType.FLOAT}>Float</Option>
+                    <Option value={ScriptParameterType.BOOL}>Boolean</Option>
+                    <Option value={ScriptParameterType.GUID}>GUID</Option>
+                    <Option value={ScriptParameterType.WORKSPACE_REFERENCE}>Workspace Reference</Option>
+                    <Option value={ScriptParameterType.ITEM_REFERENCE}>Item Reference</Option>
+                  </Dropdown>
+                </div>
+
+                <div className="field-row">
+                  <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
+                  {param.type === ScriptParameterType.WORKSPACE_REFERENCE ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <WorkspaceDropdown
+                        workloadClient={workloadClient}
+                        selectedWorkspaceId={param.value}
+                        onWorkspaceSelect={(workspaceId: string) => handleUpdateParameter(index, 'value', workspaceId)}
+                        placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
+                      />
+                    </div>
+                  ) : param.type === ScriptParameterType.ITEM_REFERENCE ? (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <Button
+                        size="small"
+                        icon={<Search20Regular />}
+                        onClick={() => handleSelectItemReference(index)}
+                        disabled={!workloadClient}
+                      >
+                        {t('CloudShellItem_Script_SelectItem', 'Select Item')}
+                      </Button>
+                      {param.value && (
+                        <Input
+                          size="small"
+                          value={(param.value || '')}
+                          placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
+                          disabled={true}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <Input
+                      size="small"
+                      value={(param.value || '')}
+                      onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
+                      placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
+                    />
+                  )}
+                </div>
+            
+              </div>
+            )}
+          </Card>
+        );
+      })}
+        </>
+      )}
       
       <Button
         className="add-button"

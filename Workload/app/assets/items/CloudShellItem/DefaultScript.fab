@@ -3,7 +3,6 @@
 # 
 # Variables can be used with either syntax:
 #   $PARAM_NAME  or  %PARAM_NAME%
-# System parameters: WORKSPACE, WORKSPACE_NAME, WORKSPACE_ID, ITEM, ITEM_NAME, ITEM_ID
 
 # Make sure this script can run and you are logged in
 
@@ -14,8 +13,18 @@
 # List all workspaces
 ls -l
 
-# List all items in a workspace
+# List all items in the current workspace
 ls -l %WORKSPACE%
+
+# Create a new Lakehouse using a parameter (newLakehouseName) for the name 
+# create %WORKSPACE%/%newLakehouseName%.Lakehouse
+
+# Get the details of the newly created lakehouse
+# get %WORKSPACE%/%newLakehouseName%.Lakehouse -q .
+
+
+
+
 
 
 

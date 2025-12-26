@@ -228,10 +228,27 @@
     flex-direction: column;
     gap: 12px;
     padding: 12px;
+
+    .parameters-section-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--colorNeutralForeground2);
+        padding: 8px 0 4px 0;
+        border-bottom: 1px solid var(--colorNeutralStroke2);
+        margin-bottom: 4px;
+
+        &:not(:first-child) {
+            margin-top: 8px;
+        }
+    }
 }
 
 .parameter-card {
     margin-bottom: 8px;
+
+    &.system-parameter {
+        opacity: 0.9;
+    }
 }
 
 .parameter-fields {

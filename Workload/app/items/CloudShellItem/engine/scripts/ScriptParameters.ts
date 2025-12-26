@@ -1,8 +1,8 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";
-import { ScriptParameter, ScriptType } from "../../CloudShellItemModel";
-import { ItemWithDefinition } from "../../../../controller/ItemCRUDController";
+import { ScriptParameter, ScriptType, ScriptParameterType } from "../../CloudShellItemModel";
+import { ItemWithDefinition, ItemReference } from "../../../../controller/ItemCRUDController";
 import { CloudShellItemDefinition } from "../../CloudShellItemModel";
+import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";
 
 /**
  * System parameters configuration for Fabric CLI scripts.
@@ -11,14 +11,14 @@ import { CloudShellItemDefinition } from "../../CloudShellItemModel";
 export const FABCLI_SYSTEM_PARAMETERS: ScriptParameter[] = [
     {
         name: 'WORKSPACE',
-        type: 'string',
+        type: ScriptParameterType.WORKSPACE_REFERENCE,
         value: '',
         description: 'Current workspace in Fabric CLI format (Name.Workspace)',
         isSystemParameter: true
     },
     {
         name: 'ITEM',
-        type: 'string',
+        type: ScriptParameterType.ITEM_REFERENCE,
         value: '',
         description: 'Current item in Fabric CLI format (Name.ItemType)',
         isSystemParameter: true
@@ -32,28 +32,28 @@ export const FABCLI_SYSTEM_PARAMETERS: ScriptParameter[] = [
 export const PYTHON_SYSTEM_PARAMETERS: ScriptParameter[] = [
     {
         name: 'WORKSPACE_NAME',
-        type: 'string',
+        type: ScriptParameterType.STRING,
         value: '',
         description: 'Name of the current workspace',
         isSystemParameter: true
     },
     {
         name: 'WORKSPACE_ID',
-        type: 'string',
+        type: ScriptParameterType.GUID,
         value: '',
         description: 'ID of the current workspace',
         isSystemParameter: true
     },
     {
         name: 'ITEM_NAME',
-        type: 'string',
+        type: ScriptParameterType.STRING,
         value: '',
         description: 'Name of the current Cloud Shell item',
         isSystemParameter: true
     },
     {
         name: 'ITEM_ID',
-        type: 'string',
+        type: ScriptParameterType.GUID,
         value: '',
         description: 'ID of the current Cloud Shell item',
         isSystemParameter: true
@@ -94,41 +94,91 @@ export function getSystemParametersForScriptType(scriptType: ScriptType): Script
 export async function getParameterValue(
     param: ScriptParameter, 
     item: ItemWithDefinition<CloudShellItemDefinition> | undefined, 
-    workloadClient: WorkloadClientAPI
+    workloadClient: WorkloadClientAPI,
+    convertValue?: (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => Promise<string>
 ): Promise<string> {
-    if (!param.isSystemParameter) {
-        return param.value;
-    }
-    
+
+    let paramValue = param.value;
     // Populate system parameters from context at runtime
     switch (param.name) {
         case 'WORKSPACE':
-            try {
-                const fabricAPI = new FabricPlatformAPIClient(workloadClient);
-                const workspace = await fabricAPI.workspaces.getWorkspace(item?.workspaceId || '');
-                return workspace.displayName + ".Workspace" || '';
-            } catch (error) {
-                console.error('Failed to fetch workspace name:', error);
-                return '';
-            }
+            paramValue = item?.workspaceId || '';
+            break;
         case 'WORKSPACE_NAME':
             try {
+                if (!item?.workspaceId) return '';
                 const fabricAPI = new FabricPlatformAPIClient(workloadClient);
-                const workspace = await fabricAPI.workspaces.getWorkspace(item?.workspaceId || '');
-                return workspace.displayName || '';
+                const workspace = await fabricAPI.workspaces.getWorkspace(item.workspaceId);
+                paramValue = workspace.displayName;
+                break;
             } catch (error) {
                 console.error('Failed to fetch workspace name:', error);
                 return '';
             }
         case 'WORKSPACE_ID':
-            return item?.workspaceId || '';
+            paramValue =  item?.workspaceId || '';
+            break;
         case 'ITEM':
-            return item?.displayName + "." + item?.type || '';
+            paramValue =  itemReferenceToParameterValue(item);
+            break;
         case 'ITEM_NAME':
-            return item?.displayName || '';
+            paramValue =  item?.displayName || '';
+            break;
         case 'ITEM_ID':
-            return item?.id || '';
+            paramValue =  item?.id || '';
+            break;
         default:
-            return param.value;
+            paramValue = param.value;
+            break
     }
+
+    if (convertValue) {
+        return await convertValue(param.type, paramValue, workloadClient);
+    }
+    return paramValue;
 }
+
+/**
+ * Convert an ItemReference to parameter value format.
+ * 
+ * Format: workspaceId/itemType/itemId
+ * 
+ * @param itemReference The item reference to convert
+ * @returns String in format "workspaceId/itemType/itemId"
+ */
+export function itemReferenceToParameterValue(itemReference: ItemReference): string {
+    if (!itemReference.workspaceId || !itemReference.id) {
+        throw new Error('Invalid ItemReference: workspaceId and id are required');
+    }
+    return `${itemReference.workspaceId}/${itemReference.id}`;
+}
+
+/**
+ * Parse parameter value format to ItemReference object.
+ * 
+ * Format: workspaceId/itemType/itemId
+ * 
+ * @param parameterValue String in format "workspaceId/itemType/itemId"
+ * @returns ItemReference object
+ * @throws Error if format is invalid
+ */
+export function parameterValueToItemReference(parameterValue: string): ItemReference {
+    const parts = parameterValue.split('/');
+    if (parts.length !== 3) {
+        throw new Error(`Invalid parameter value format: ${parameterValue}. Expected: workspaceId/itemId`);
+    }
+    
+    const [workspaceId, type, id] = parts;
+    
+    if (!workspaceId || !type || !id) {
+        throw new Error(`Invalid parameter value: all parts (workspaceId, itemId) must be non-empty`);
+    }
+    
+    return {
+        workspaceId,
+        id
+    };
+}
+
+
+
