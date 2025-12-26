@@ -21,10 +21,16 @@ console.log('*******************************************************************
 
 module.exports = merge(baseConfig, {
     mode: "development",
-    devtool: "source-map",
+    devtool: "eval-cheap-module-source-map",
     cache: {
         type: 'filesystem',
         allowCollectingMemory: true,
+        compression: 'gzip',
+    },
+    optimization: {
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
     },
     plugins: [
         new Webpack.DefinePlugin({
