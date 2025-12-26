@@ -135,7 +135,10 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                     const value = parameterValues[index];
                     
                     // Support both $paramName and %paramName% formats
-                    const variablePattern = new RegExp(`(\\$${param.name}\\b|%${param.name}%)`, 'g');
+                    // Pattern aligned with MonacoFabricCLILanguage: /[%$][a-zA-Z_][a-zA-Z0-9_]*%?/
+                    // $paramName must be followed by non-alphanumeric/underscore character or end of string
+                    // %paramName% must have both % delimiters
+                    const variablePattern = new RegExp(`(\\$${ param.name}(?=[^a-zA-Z0-9_]|$)|%${ param.name}%)`, 'g');
                     processedCmd = processedCmd.replace(variablePattern, value);
                 });
                 return processedCmd;

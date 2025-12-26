@@ -34,7 +34,7 @@ export const SCRIPT_TYPE_CONFIGS: Record<ScriptType, ScriptTypeConfig> = {
     labelKey: 'CloudShellItem_Scripts_Type_FabCLI',
     defaultLabel: 'Fabric CLI (.fab)',
     defaultScriptName: 'my_script',
-    editorLanguage: 'shell'
+    editorLanguage: 'fabriccli'
   },
   python: {
     type: ScriptType.PYTHON,

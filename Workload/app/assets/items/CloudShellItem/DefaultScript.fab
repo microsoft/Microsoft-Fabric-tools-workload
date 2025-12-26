@@ -26,7 +26,3 @@ ls -l %WORKSPACE%
 # rm %WORKSPACE%/%newLakehouseName%.Lakehouse -f
 
 
-
-
-
-

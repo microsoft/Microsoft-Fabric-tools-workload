@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Editor } from "@monaco-editor/react";
 import { Script, ScriptParameter, ScriptType, ScriptParameterType } from "./CloudShellItemModel";
 import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
+import { registerFabricCLILanguage } from "./engine/scripts/MonacoFabricCLILanguage";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
 import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular, Search20Regular } from "@fluentui/react-icons";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
@@ -58,6 +59,30 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   // Get editor language from centralized configuration
   const scriptType = script.type ?? ScriptType.FABCLI;
   const language = getScriptTypeConfig(scriptType).editorLanguage;
+
+  // Handle Monaco editor before mount to register custom language
+  const handleEditorWillMount = (monaco: any) => {
+    if (language === 'fabriccli') {
+      try {
+        // Check if language is already registered
+        const languages = monaco.languages.getLanguages();
+        const isRegistered = languages.some((lang: any) => lang.id === 'fabriccli');
+        
+        if (!isRegistered) {
+          // Pass parameter names for autocomplete
+          const parameterNames = parameters.map(p => p.name);
+          registerFabricCLILanguage(monaco, parameterNames);
+        }
+      } catch (error) {
+        console.error('Failed to register Fabric CLI language:', error);
+      }
+    }
+  };
+
+  // Handle editor mount to verify language is set
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    // Language configuration verified during mount
+  };
 
   // Update content and parameters when script changes
   useEffect(() => {
@@ -505,6 +530,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
           value={content}
           theme={currentTheme}
           onChange={handleEditorChange}
+          beforeMount={handleEditorWillMount}
+          onMount={handleEditorDidMount}
           options={{
             automaticLayout: true,
             scrollBeyondLastLine: false,

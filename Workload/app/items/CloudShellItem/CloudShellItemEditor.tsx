@@ -150,7 +150,6 @@ export function CloudShellItemEditor(props: PageProps) {
           payload: btoa(scriptContent),
           payloadType: PayloadType.InlineBase64
         });
-        console.log(`[CloudShell] Saving script ${scriptMeta.name}: ${scriptContent.length} chars`);
       });
 
       const itemWithParts: ItemWithDefinition<CloudShellItemDefinition> = {
@@ -528,17 +527,13 @@ export function CloudShellItemEditor(props: PageProps) {
         // Find the corresponding definition part using the same path format as save
         const expectedPath = `scripts/${scriptMeta.name}`;
         const part = item.additionalDefinitionParts?.find(p => p.path === expectedPath);
-        console.log(`[CloudShell] Script ${scriptMeta.name}: looking for '${expectedPath}', found:`, part ? 'YES' : 'NO');
         
         if (part && part.payload) {
           try {
             const content = atob(part.payload);
-            console.log(`[CloudShell] Script ${scriptMeta.name}: loaded ${content.length} chars from definition part`);
             // Only update if we don't already have content for this script
             if (!newScriptsMap.has(scriptMeta.name) || newScriptsMap.get(scriptMeta.name) === "") {
               newScriptsMap.set(scriptMeta.name, content);
-            } else {
-              console.log(`[CloudShell] Script ${scriptMeta.name}: keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
             }
           } catch (error) {
             console.error(`Failed to decode script ${scriptMeta.name}:`, error);
@@ -549,10 +544,7 @@ export function CloudShellItemEditor(props: PageProps) {
         } else {
           // No definition part found
           if (!newScriptsMap.has(scriptMeta.name)) {
-            console.warn(`[CloudShell] Script ${scriptMeta.name}: NO CONTENT FOUND at path '${expectedPath}', setting empty`);
             newScriptsMap.set(scriptMeta.name, "");
-          } else {
-            console.log(`[CloudShell] Script ${scriptMeta.name}: NO DEFINITION PART but keeping existing content (${newScriptsMap.get(scriptMeta.name)?.length} chars)`);
           }
         }
       });
@@ -561,12 +553,10 @@ export function CloudShellItemEditor(props: PageProps) {
       const currentScriptNames = new Set(item.definition?.scripts?.map(s => s.name) || []);
       for (const [name] of newScriptsMap) {
         if (!currentScriptNames.has(name)) {
-          console.log(`[CloudShell] Removing script ${name} from map (no longer in metadata)`);
           newScriptsMap.delete(name);
         }
       }
 
-      console.log(`[CloudShell] Final scriptsMap:`, Array.from(newScriptsMap.entries()).map(([name, content]) => ({name, contentLength: content.length})));
       return newScriptsMap;
     });
   }, [item?.definition?.scripts, item?.additionalDefinitionParts]); // Re-run when scripts metadata or definition parts change
