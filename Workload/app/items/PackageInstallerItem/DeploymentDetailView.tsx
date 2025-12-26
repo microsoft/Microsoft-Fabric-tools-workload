@@ -8,9 +8,9 @@ import { Play20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, DeploymentStatus, PackageInstallerItemDefinition, DeployedItem } from "./PackageInstallerItemModel";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { getItemTypeIcon } from "./components/UIHelper";
-import { WorkspaceDisplayNameLabel } from "./components/WorkspaceDisplayName";
-import { FolderDisplayNameLabel } from "./components/FolderDisplayName";
+import { getItemTypeIcon } from "../../components/FabricCoreItemTypes";
+import { WorkspaceDisplayNameLabel } from "../../components/WorkspaceDisplayName";
+import { FolderDisplayNameLabel } from "../../components/FolderDisplayName";
 import { DeploymentJobLabel } from "./components/DeploymentJob";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { navigateToItem } from "../../controller/NavigationController";
@@ -109,7 +109,7 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
               <span className="label">{t('PackageInstallerDetailView_WorkspaceName', 'Workspace Name')}</span>
               <div className="value">
                 <WorkspaceDisplayNameLabel
-                  context={context}
+                  workloadClient={context.workloadClientAPI}
                   workspaceId={deployment.workspace?.id} />
               </div>
             </div>
@@ -117,7 +117,7 @@ export const DeploymentDetailView: React.FC<DeploymentDetailViewProps> = ({
               <span className="label">{t('PackageInstallerDetailView_FolderName', 'Folder Name')}</span>
               <div className="value">
                 <FolderDisplayNameLabel
-                  context={context}
+                  workloadClient={context.workloadClientAPI}
                   workspaceId={deployment.workspace?.id}
                   folderId={deployment.workspace?.folder?.id} />
               </div>

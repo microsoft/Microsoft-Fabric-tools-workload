@@ -2,63 +2,70 @@ import React, { useState, useEffect } from "react";
 import { Dropdown, Option, Spinner, Text } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
-import { FabricPlatformAPIClient } from "../../../clients/FabricPlatformAPIClient";
-import { Workspace } from "../../../clients/FabricPlatformTypes";
+import { FabricPlatformAPIClient } from "../clients/FabricPlatformAPIClient";
+import { Capacity } from "../clients/FabricPlatformTypes";
 
-export interface WorkspaceDropdownProps {
+export interface CapacityDropdownProps {
     workloadClient: WorkloadClientAPI;
-    selectedWorkspaceId: string;
-    onWorkspaceSelect: (workspaceId: string) => void;
+    selectedCapacityId: string;
+    onCapacitySelect: (capacityId: string) => void;
     placeholder?: string;
     disabled?: boolean;
 }
 
-export function WorkspaceDropdown({ 
+export function CapacityDropdown({ 
     workloadClient, 
-    selectedWorkspaceId, 
-    onWorkspaceSelect, 
+    selectedCapacityId, 
+    onCapacitySelect, 
     placeholder,
     disabled = false 
-}: WorkspaceDropdownProps) {
+}: CapacityDropdownProps) {
     const { t } = useTranslation();
-    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [capacities, setCapacities] = useState<Capacity[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
     const [filterText, setFilterText] = useState<string>("");
 
     useEffect(() => {
-        loadWorkspaces();
+        loadCapacities();
     }, []);
 
-    const loadWorkspaces = async () => {
+
+    const loadCapacities = async () => {
         try {
             setIsLoading(true);
             setError("");
             const fabricAPI = new FabricPlatformAPIClient(workloadClient);
-            const workspaceList = await fabricAPI.workspaces.getAllWorkspaces();
-            setWorkspaces(workspaceList);
+            const capacityList = await fabricAPI.capacities.getActiveCapacities();
+            setCapacities(capacityList);
         } catch (err) {
-            setError(t('Failed to load workspaces. Please try again.'));
-            console.error('Error loading workspaces:', err);
+            setError(t('Failed to load capacities. Please try again.'));
+            console.error('Error loading capacities:', err);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Filter workspaces based on filter text
-    const filteredWorkspaces = workspaces.filter(workspace => {
+    // Filter capacities based on filter text and SKU starting with "F"
+    const filteredCapacities = capacities.filter(capacity => {
+        // First filter: SKU must start with "F"
+        const sku = capacity.sku || '';
+        if (!sku.toLowerCase().startsWith('f')) {
+            return false;
+        }
+        
+        // Second filter: text filtering if filterText is provided
         if (!filterText) return true;
-        const displayText = workspace.displayName || workspace.id || '';
-        const description = workspace.description || '';
+        const displayText = capacity.displayName || capacity.id || '';
         return displayText.toLowerCase().includes(filterText.toLowerCase()) ||
-               description.toLowerCase().includes(filterText.toLowerCase());
+               sku.toLowerCase().includes(filterText.toLowerCase());
     });
 
     if (isLoading) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Spinner size="tiny" />
-                <Text>{t('Loading workspaces...')}</Text>
+                <Text>{t('Loading capacities...')}</Text>
             </div>
         );
     }
@@ -69,10 +76,10 @@ export function WorkspaceDropdown({
 
     return (
         <Dropdown
-            placeholder={placeholder || t('Select a workspace')}
-            value={selectedWorkspaceId}
-            selectedOptions={selectedWorkspaceId ? [selectedWorkspaceId] : []}
-            onOptionSelect={(_, data) => onWorkspaceSelect(data.optionValue || "")}
+            placeholder={placeholder || t('Select a capacity')}
+            value={selectedCapacityId}
+            selectedOptions={selectedCapacityId ? [selectedCapacityId] : []}
+            onOptionSelect={(_, data) => onCapacitySelect(data.optionValue || "")}
             disabled={disabled}
             style={{ width: '100%' }}
             listbox={{ 
@@ -84,14 +91,14 @@ export function WorkspaceDropdown({
             onInput={(ev) => setFilterText((ev.target as HTMLInputElement).value)}
             clearable
         >
-            {filteredWorkspaces.map((workspace) => {
-                const displayText = workspace.displayName || workspace.id || 'Unknown Workspace';
-                const fullText = workspace.description ? `${displayText} - ${workspace.description}` : displayText;
+            {filteredCapacities.map((capacity) => {
+                const displayText = capacity.displayName || capacity.id;
+                const fullText = capacity.sku ? `${displayText} (${capacity.sku})` : displayText;
                 
                 return (
                     <Option 
-                        key={workspace.id} 
-                        value={workspace.id}
+                        key={capacity.id} 
+                        value={capacity.id}
                         text={fullText}
                     >
                         {fullText}

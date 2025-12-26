@@ -12,8 +12,8 @@ import {
 import { DeleteRegular, PlayRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { PackageDeployment, PackageInstallerItemDefinition, DeploymentStatus } from "./PackageInstallerItemModel";
-import { WorkspaceDisplayNameCell } from "./components/WorkspaceDisplayName";
-import { FolderDisplayNameCell } from "./components/FolderDisplayName";
+import { WorkspaceDisplayNameCell } from "../../components/WorkspaceDisplayName";
+import { FolderDisplayNameCell } from "../../components/FolderDisplayName";
 import { PackageDisplayNameCell } from "./components/PackageDisplayName";
 import { PackageInstallerContext } from "./package/PackageInstallerContext";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
@@ -108,12 +108,12 @@ export function PackageInstallerItemDefaultView({
                     </TableCell>
                     <TableCell>
                       <WorkspaceDisplayNameCell
-                        context={context}
+                        workloadClient={context.workloadClientAPI}
                         workspaceId={deployment.workspace?.id} />
                     </TableCell>
                     <TableCell>
                       <FolderDisplayNameCell
-                          context={context}
+                          workloadClient={context.workloadClientAPI}
                           workspaceId={deployment.workspace?.id} 
                           folderId={deployment.workspace?.folder?.id} />
                     </TableCell>

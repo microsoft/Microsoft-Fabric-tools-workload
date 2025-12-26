@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Body1, Text } from "@fluentui/react-components";
-import { PackageInstallerContext } from "../package/PackageInstallerContext";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { FabricPlatformAPIClient } from "../clients/FabricPlatformAPIClient";
 
 // Component to fetch and display folder name
-export function FolderDisplayNameLabel({context, workspaceId, folderId}: { workspaceId: string, folderId: string, context: PackageInstallerContext }) {
+export function FolderDisplayNameLabel({workloadClient, workspaceId, folderId}: { workspaceId: string, folderId: string, workloadClient: WorkloadClientAPI }) {
   const [folderName, setFolderName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -16,7 +17,8 @@ export function FolderDisplayNameLabel({context, workspaceId, folderId}: { works
       }
 
       try {
-        const folder = await context.fabricPlatformAPIClient.folders.getFolder(workspaceId, folderId);
+        const fabricAPI = new FabricPlatformAPIClient(workloadClient);
+        const folder = await fabricAPI.folders.getFolder(workspaceId, folderId);
         setFolderName(folder.displayName || folderId);
       } catch (error) {
         console.warn(`Failed to fetch folder name for ${folderId}:`, error);
@@ -27,7 +29,7 @@ export function FolderDisplayNameLabel({context, workspaceId, folderId}: { works
     }
 
     fetchFolderName();
-  }, [workspaceId, folderId, context.workloadClientAPI]);
+  }, [workspaceId, folderId, workloadClient]);
 
   if (isLoading) {
     return React.createElement(Body1, null, "Loading...");
@@ -38,7 +40,7 @@ export function FolderDisplayNameLabel({context, workspaceId, folderId}: { works
   }, folderName);
 }
 
-export function FolderDisplayNameCell({ context, workspaceId, folderId}: { workspaceId: string, folderId: string, context: PackageInstallerContext }) {
+export function FolderDisplayNameCell({ workloadClient, workspaceId, folderId}: { workspaceId: string, folderId: string, workloadClient: WorkloadClientAPI }) {
   const [folderName, setFolderName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -51,7 +53,8 @@ export function FolderDisplayNameCell({ context, workspaceId, folderId}: { works
       }
 
       try {
-        const folder = await context.fabricPlatformAPIClient.folders.getFolder(workspaceId, folderId);
+        const fabricAPI = new FabricPlatformAPIClient(workloadClient);
+        const folder = await fabricAPI.folders.getFolder(workspaceId, folderId);
         setFolderName(folder.displayName || folderId);
       } catch (error) {
         console.warn(`Failed to fetch folder name for ${folderId}:`, error);
@@ -62,7 +65,7 @@ export function FolderDisplayNameCell({ context, workspaceId, folderId}: { works
     }
 
     fetchFolderName();
-  }, [workspaceId, folderId, context.workloadClientAPI]);
+  }, [workspaceId, folderId, workloadClient]);
 
   if (isLoading) {
     return React.createElement(Text, null, "Loading...");

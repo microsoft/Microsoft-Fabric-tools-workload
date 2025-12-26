@@ -1,9 +1,28 @@
 import { Beaker24Regular, BrainCircuit24Regular, ChartMultiple24Regular, Code24Regular, Database24Regular, DatabaseSearch24Regular, DataTrending24Regular, DocumentDatabase24Regular, DocumentTable24Regular, Notebook24Regular, Question24Regular, Stream24Regular } from "@fluentui/react-icons";
 import React from "react";
 
+// Array of all Fabric core item types
+export const FABRIC_CORE_ITEM_TYPES = [
+  "Notebook",
+  "Report",
+  "SemanticModel",
+  "Lakehouse",
+  "Warehouse",
+  "KQLDatabase",
+  "KQLQueryset",
+  "KQLDashboard",
+  "DataPipeline",
+  "Dataflow",
+  "MLModel",
+  "MLExperiment",
+  "SparkJobDefinition",
+  "Environment",
+  "Eventstream",
+  "Dashboard"
+];
 
-  // Function to get icon component for a given item type
-  export function getItemTypeIcon(itemType: string): React.JSX.Element {
+// Function to get icon component for a given item type
+export function getItemTypeIcon(itemType: string): React.JSX.Element {
     switch (itemType.toLowerCase()) {
       case "notebook":
         return React.createElement(Notebook24Regular);
