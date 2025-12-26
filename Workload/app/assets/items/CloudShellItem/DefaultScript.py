@@ -21,7 +21,7 @@ print(f"Spark version: {spark.version}")
 
 
 # Example: Read parameters
-# Accessing a system parameter
+# Accessing a (system) parameter
 print(f"Workspace ID: {get_parameter('WORKSPACE_ID')}")
 print(f"Item ID: {get_parameter('ITEM_ID')}")
 

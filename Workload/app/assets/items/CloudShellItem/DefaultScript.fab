@@ -22,6 +22,8 @@ ls -l %WORKSPACE%
 # Get the details of the newly created lakehouse
 # get %WORKSPACE%/%newLakehouseName%.Lakehouse -q .
 
+# Delete the created Lakehouse 
+# rm %WORKSPACE%/%newLakehouseName%.Lakehouse -f
 
 
 
