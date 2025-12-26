@@ -193,7 +193,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                 }
 
                 case ScriptParameterType.ITEM_REFERENCE: {
-                    
+                    // Convert workspaceId/itemId to [ItemWorkspaceName].Workspace/[ItemName].[ItemType]
                     const itemReference = parameterValueToItemReference(value);
                     
                     // Fetch workspace and item details
