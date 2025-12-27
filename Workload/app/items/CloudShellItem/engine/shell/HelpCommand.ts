@@ -40,13 +40,13 @@ export class HelpCommand implements IConsoleCommand {
         }
 
         // Add available scripts
+        const availableScripts  = context.item.definition.scripts
+                    ?.filter(s => (context.commandType === CommandType.FAB_CLI && s.type === ScriptType.FAB_CLI) ||
+                                 (context.commandType === CommandType.PYTHON && s.type === ScriptType.PYTHON)) || [];
         sections.push(
             'Available scripts:',
-            context.item.definition?.scripts?.length > 0 
-                ? context.item.definition.scripts
-                    .filter(s => (context.commandType === CommandType.FAB_CLI && s.type === ScriptType.FAB_CLI) ||
-                                 (context.commandType === CommandType.PYTHON && s.type === ScriptType.PYTHON)) 
-                    .map(s => {
+            availableScripts?.length > 0 
+                ? availableScripts.map(s => {
                         const params = s.parameters && s.parameters.length > 0
                             ? ' ' + s.parameters
                                 .filter(p => !p.isSystemParameter)

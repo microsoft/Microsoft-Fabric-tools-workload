@@ -256,7 +256,6 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
               header={
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <strong>{param.name || t('CloudShellItem_Script_NewParameter', 'New Parameter')}</strong>
-                  {isSystemParam && <span style={{ fontSize: '10px', opacity: 0.7 }}>(System)</span>}
                 </div>
               }
               description={param.description && !isExpanded ? param.description : undefined}
