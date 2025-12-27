@@ -31,6 +31,7 @@ The Cloud Shell Item provides an interactive terminal for executing Fabric CLI c
 │                 │                 │   · ClearCommand         │
 │                 │                 │   · RunScriptCommand     │
 │                 │                 │   · ExecuteCommand       │
+│                 │                 │   · FabCLILoginCommand   │
 ├─────────────────┴─────────────────┴─────────────────────────────┤
 │                     Data Layer                                 │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
@@ -81,9 +82,7 @@ The Cloud Shell Item provides an interactive terminal for executing Fabric CLI c
 - Session controls (Start/Stop)
 - Create Script action
 - Lakehouse and environment selection
-- Execution mode dropdown
 - Settings and quick access actions
-- Terminal actions
 
 ### SparkLivycloudShellClient
 
@@ -215,11 +214,11 @@ value = get_parameter("myParam", "string")
 ```bash
 # In Fabric CLI script - use $param or %param% notation
 
-# System parameters for Fabric CLI scripts
+# System parameters for Fabric CLI scripts (auto-converted to Fabric CLI format)
 ls -l $WORKSPACE              # Lists items in "MyWorkspace.Workspace"
 ls -l %WORKSPACE%             # Alternative notation
 
-item get --item $ITEM         # References "MyItem.CloudShellItem"
+item get --item $ITEM         # References "MyWorkspace.Workspace/MyItem.CloudShellItem"
 item get --item %ITEM%        # Alternative notation
 
 # User-defined parameters
@@ -258,6 +257,62 @@ Script + Params → BaseScriptCommand → Generate Wrapper Content
 
 **Polling**: 10 attempts × 2s = 20s timeout
 
+## Authentication Architecture
+
+### Token Acquisition for Fabric CLI Scripts
+
+```typescript
+// CloudShellItemEngine.getAuthTokens()
+const [fabToken, onelakeToken] = await Promise.all([
+  acquireFrontendAccessToken(SCOPES.DEFAULT),           // Fabric API
+  acquireFrontendAccessToken(SCOPES.ONELAKE_STORAGE)    // OneLake
+]);
+
+// Scope adjustment: api.fabric.microsoft.com → analysis.windows.net/powerbi/api
+const adjustedScopes = scopes.split(' ').map(scope => 
+  scope.replace('https://api.fabric.microsoft.com/', 
+                'https://analysis.windows.net/powerbi/api/')
+);
+```
+
+### Authentication JSON Structure
+
+```json
+// OBO Authentication (default)
+{
+  "useFrontendToken": true,
+  "obo": {
+    "token": "eyJ...",           // Fabric API token
+    "tokenOnelake": "eyJ...",   // OneLake token
+    "tokenAzure": ""             // Not required for current operations
+  }
+}
+
+// Service Principal Authentication
+{
+  "useFrontendToken": false,
+  "client": {
+    "clientId": "abc-123",
+    "clientSecret": "secret",
+    "tenantId": "def-456"
+  }
+}
+```
+
+### Python Wrapper Authentication
+
+```python
+# FabCliScriptWrapper.py
+authConfig = json.loads(get_parameter("sys.fabCLIAuthInfo"))
+
+if authConfig.get("obo"):
+    os.environ["FAB_TOKEN"] = obo["token"]
+    os.environ["FAB_TOKEN_ONELAKE"] = obo["tokenOnelake"]
+    os.environ["FAB_TOKEN_AZURE"] = obo["tokenAzure"]
+elif authConfig.get("client"):
+    subprocess.run(f"fab auth login -u {clientId} -p {clientSecret} --tenant {tenantId}")
+```
+
 ## Design Patterns
 
 ### Command Pattern
@@ -284,11 +339,13 @@ IConsoleCommand (interface)
 
 ```typescript
 enum CommandType {
-  FAB_CLI = 'fabcli',   // Fabric CLI with 'fab' prefix (default)
-  PYTHON = 'python',    // Direct Python in Spark
-  SHELL = 'shell',      // Shell via subprocess
+  FAB_CLI = 'fabcli',   // Fabric CLI with 'fab>' prefix (default)
+  PYTHON = 'python',    // Direct Python in Spark with '>>>' prefix
+  SHELL = 'shell',      // Shell via subprocess with 'sh>' prefix
 }
 ```
+
+**Mode Selection**: Users can click the terminal prompt prefix (`fab>`, `>>>`, or `sh>`) to open a menu and switch execution modes.
 
 **Mode-Specific Wrapping**:
 - FAB_CLI/SHELL: Wrapped with subprocess.run() returning JSON
@@ -389,7 +446,11 @@ Poll Creation (2s, 20s timeout) → Return Batch ID
 
 ## Security
 
-- **Authentication**: Service Principal or OBO token (frontend user session)
+- **Authentication**: OBO token (frontend user session, default) or Service Principal
+  - **OBO Token**: Three tokens acquired automatically (fab, onelake, azure) via `acquireFrontendAccessToken()`
+  - **Service Principal**: Client credentials (clientId, clientSecret, tenantId) for automated scenarios
+  - **Scope Adjustment**: Fabric API audience URLs automatically converted to Power BI API format for compatibility
+  - **Token Injection**: Passed to Spark batch jobs via configuration as JSON with `obo` or `client` sub-objects
 - **Subprocess Execution**: Commands run in isolated Spark containers
 - **OneLake Permissions**: Enforced at platform level
 - **Input Handling**: Commands executed via Spark Livy (no direct shell access)

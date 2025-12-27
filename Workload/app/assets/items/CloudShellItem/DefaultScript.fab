@@ -4,8 +4,6 @@
 # Variables can be used with either syntax:
 #   $PARAM_NAME  or  %PARAM_NAME%
 
-# Make sure this script can run and you are logged in
-
 ##########################################################
 # Add your Fabric CLI commands below
 ##########################################################

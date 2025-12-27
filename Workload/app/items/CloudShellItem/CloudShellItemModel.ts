@@ -97,7 +97,7 @@ export enum ScriptType {
   /** Shell script (not currently supported) */
   //SHELL = 'shell',
   /** Fabric CLI script executed via FabCliScriptWrapper.py with authentication */
-  FABCLI = 'fabcli'
+  FAB_CLI = 'fabcli'
 }
 
 /**

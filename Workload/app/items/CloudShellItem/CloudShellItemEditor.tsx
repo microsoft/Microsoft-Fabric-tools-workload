@@ -360,12 +360,12 @@ export function CloudShellItemEditor(props: PageProps) {
     );
     const result = dialogResult?.value as (CreateScriptDialogResult & { scriptType?: ScriptType });
     if (result?.state === 'created' && result.scriptName) {
-      await handleScriptCreate(result.scriptName, result.scriptType || ScriptType.FABCLI);
+      await handleScriptCreate(result.scriptName, result.scriptType || ScriptType.FAB_CLI);
     }
   };
 
   // Script management handlers
-  const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.FABCLI) => {
+  const handleScriptCreate = async (name: string, type: ScriptType = ScriptType.FAB_CLI) => {
     if (!item) return;
 
     // Get system parameters based on script type
@@ -617,11 +617,11 @@ export function CloudShellItemEditor(props: PageProps) {
           onSessionCreated={handleSessionCreated}
           showSystemMessage={systemMessage}
           executionMode={executionMode}
+          onExecutionModeChange={setExecutionMode}
           scriptsMap={scriptsMap}
           onScriptSelect={handleScriptSelect}
           onScriptCreate={handleCreateScriptDialog}
           onScriptDelete={handleScriptDelete}
-          onScriptRun={handleScriptRunByName}
         />
       )
     },
@@ -653,7 +653,6 @@ export function CloudShellItemEditor(props: PageProps) {
           isSaveButtonEnabled={isUnsaved}
           onStartTerminal={handleStartSession}
           onStopSession={handleStopSession}
-          onClearTerminal={handleClearTerminal}
           sessionActive={sessionActive}
           onSelectLakehouse={handleSelectLakehouse}
           onSelectEnvironment={handleSelectEnvironment}
@@ -662,8 +661,6 @@ export function CloudShellItemEditor(props: PageProps) {
             displayName: env.displayName || env.id
           }))}
           selectedEnvironmentId={item?.definition?.selectedSparkEnvironment?.id}
-          onSelectExecutionMode={handleSelectExecutionMode}
-          selectedExecutionMode={executionMode}
           onCreateScript={handleCreateScriptDialog}
         />
       )}

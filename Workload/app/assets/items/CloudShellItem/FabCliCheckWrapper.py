@@ -1,3 +1,8 @@
+####################################################
+# FabCliCheckWrapper.py
+# Wrapper script to check Fabric CLI installation in a Spark environment.
+####################################################
+
 import subprocess;
 import json;
 

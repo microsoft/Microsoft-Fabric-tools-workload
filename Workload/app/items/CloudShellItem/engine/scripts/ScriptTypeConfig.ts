@@ -27,7 +27,7 @@ export interface ScriptTypeConfig {
  */
 export const SCRIPT_TYPE_CONFIGS: Record<ScriptType, ScriptTypeConfig> = {
   fabcli: {
-    type: ScriptType.FABCLI,
+    type: ScriptType.FAB_CLI,
     extension: '.fab',
     defaultTemplatePath: '/assets/items/CloudShellItem/DefaultScript.fab',
     fallbackContent: '# Fabric CLI script\nfab workspace list\n',

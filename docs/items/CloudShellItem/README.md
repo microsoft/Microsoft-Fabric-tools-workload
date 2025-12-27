@@ -178,7 +178,7 @@ Console commands take precedence over Fabric CLI commands.
 - **Lakehouse Selection**: Change target lakehouse dynamically
 - **Environment Selection**: Choose from available Spark environments
 - **Session Control**: Start/stop sessions from the ribbon
-- **Execution Mode Toggle**: Switch between Cloud Shell, Python, and shell modes via ribbon dropdown
+- **Execution Mode Toggle**: Switch between Cloud Shell (`fab>`), Python (`>>>`), and shell (`sh>`) modes by clicking the terminal prompt prefix
 
 ## Architecture
 
@@ -258,7 +258,6 @@ The main orchestrator component that:
 - Coordinates session state (sessionId, isConnecting, terminalEntries)
 - Maintains scriptsMap for efficient script content access
 - Handles lakehouse and environment selection
-- Controls execution mode switching via ribbon
 
 ### CloudShellItemRibbon
 
@@ -267,10 +266,8 @@ Ribbon integration providing:
 - **Save**: Save script changes and item definition
 - **Settings**: Open item settings panel
 - **Start/Stop Session**: Session lifecycle management for terminal
-- **Clear Terminal**: Clear all terminal entries
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
-- **Execution Mode Dropdown**: Switch between Python, Bash, and Cloud Shell modes (default: Cloud Shell)
 - **Create Script**: Create new Python script
 
 ### ScriptDetailView

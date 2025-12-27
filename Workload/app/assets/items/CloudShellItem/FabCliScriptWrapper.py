@@ -1,3 +1,8 @@
+####################################################
+# FabCliScriptWrapper.py
+# Wrapper script to run Fabric CLI commands with authentication in a Spark environment.
+####################################################
+
 import subprocess
 import sys
 import os
@@ -18,33 +23,76 @@ def get_parameter(param_name, default_value=""):
 
 def run_fab_cli_commands(cmd):
     """Run Fabric CLI commands with appropriate authentication."""
-    print(f"fab {cmd}")
-    result = subprocess.run(f"fab {cmd}", shell=True, capture_output=True, text=True)
-    print("\n" + result.stdout)
-    if result.stderr:
-        print("\n" + result.stderr, file=sys.stderr)
+    print(f"fab {cmd}", flush=True)
+    
+    # Run command without capturing output - let it stream directly to stdout/stderr
+    result = subprocess.run(f"fab {cmd}", shell=True)
+    
     if result.returncode != 0:
-        print(f"\nCommand failed with exit code {result.returncode}")
+        print(f"\nCommand failed with exit code {result.returncode}", flush=True)
         sys.exit(result.returncode)
 
+
+####################################################
+# Logic starts here
+####################################################
+printParameters = get_parameter("sys.printParameters", "false").lower() == "true"
+if(printParameters):
+    # Print all parameters
+    print("Script parameters:")
+    try:
+        all_conf = spark.sparkContext.getConf().getAll()
+        for key, value in all_conf:
+            if key.startswith("spark.script.param.") and not key.startswith("spark.script.param.sys"):
+                print(f"  {key[len('spark.script.param.'):]}: {value}")
+    except Exception as e:
+        print(f"Warning: Could not retrieve all parameters: {e}")   
+
+
 # Set up authentication for Fabric CLI
-if(get_parameter("fabCLIAuthInfo")):
-    fabCLIAuthInfo = json.loads(get_parameter("fabCLIAuthInfo"))
-    # Set environment variables for Fabric CLI authentication
-    if fabCLIAuthInfo.get("oboToken") and fabCLIAuthInfo.get("oboTokenOnelake"): # and fabCLIAuthInfo.get("oboTokenAzure"):
-        os.environ["FAB_TOKEN"] = fabCLIAuthInfo.get("oboToken", "")
-        os.environ["FAB_TOKEN_ONELAKE"] = fabCLIAuthInfo.get("oboTokenOnelake", "")
-        #os.environ["FAB_TOKEN_AZURE"] = fabCLIAuthInfo.get("oboTokenAzure", "")
-    elif fabCLIAuthInfo.get("clientId") and fabCLIAuthInfo.get("clientSecret") and fabCLIAuthInfo.get("tenantId"):
-        # Service principal authentication
-        clientId = fabCLIAuthInfo.get("clientId")
-        clientSecret = fabCLIAuthInfo.get("clientSecret")
-        tenantId = fabCLIAuthInfo.get("tentantId")
-        run_fab_cli_commands(f"auth login -u {clientId} -p {clientSecret} --tenant {tenantId}")
+fabCLIAuthInfo = get_parameter("sys.fabCLIAuthInfo")
+if fabCLIAuthInfo:
+    print("Configuring Fabric CLI authentication...")
+    authConfig = json.loads(fabCLIAuthInfo)
+    
+    # OBO token authentication
+    if authConfig.get("obo"):
+        print("Setting up OBO token authentication...")
+        obo = authConfig.get("obo")
+        
+        if obo.get("token"):
+            os.environ["FAB_TOKEN"] = obo.get("token", "")
+            print(f"FAB_TOKEN set: {len(obo.get('token', ''))} characters")
+        
+        if obo.get("tokenOnelake"):
+            os.environ["FAB_TOKEN_ONELAKE"] = obo.get("tokenOnelake", "")
+            print(f"FAB_TOKEN_ONELAKE set: {len(obo.get('tokenOnelake', ''))} characters")
+        
+        if obo.get("tokenAzure"):
+            os.environ["FAB_TOKEN_AZURE"] = obo.get("tokenAzure", "")
+            print(f"FAB_TOKEN_AZURE set: {len(obo.get('tokenAzure', ''))} characters")
+    
+    # Service principal authentication
+    elif authConfig.get("client"):
+        print("Using service principal authentication...")
+        client = authConfig.get("client")
+        clientId = client.get("clientId")
+        clientSecret = client.get("clientSecret")
+        tenantId = client.get("tenantId")
+        
+        if clientId and clientSecret and tenantId:
+            run_fab_cli_commands(f"auth login -u {clientId} -p {clientSecret} --tenant {tenantId}")
+        else:
+            print("Warning: Incomplete client credentials in fabCLIAuthInfo")
+    else:
+        print("Warning: No valid authentication configuration found in fabCLIAuthInfo")
+else:
+    print("Warning: No fabCLIAuthInfo parameter provided")
+
 
 
 # Run Fabric CLI commands passed as parameter
-commands = json.loads(get_parameter("commands", "[]"))
+commands = json.loads(get_parameter("sys.commands", "[]"))
 
 for cmd in commands:
     run_fab_cli_commands(cmd)

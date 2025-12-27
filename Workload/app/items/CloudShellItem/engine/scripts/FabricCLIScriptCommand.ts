@@ -87,30 +87,43 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
     protected async getAdditionalConf(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<{ [key: string]: string; }> {
         const retVal: { [key: string]: string; } = {};
         
+
         // Configure authentication based on fabCLIAuthInfo
-        if (context.fabCLIAuthInfo) {
-            const authInfo: {
-                clientId?: string;
-                clientSecret?: string;
-                tentantId?: string;
-                oboToken?: string;
-                oboTokenOnelake?: string;
-                oboTokenAzure?: string;
-            } = {
-                ...context.fabCLIAuthInfo,
-                oboToken: undefined,
-                oboTokenOnelake: undefined,
-                oboTokenAzure: undefined,
+        const authInfo: {
+            useFrontendToken?: boolean;
+            obo?: {
+                token: string;
+                tokenOnelake: string;
+                tokenAzure: string;
             };
-            
-            if(context.fabCLIAuthInfo.useFrontendToken) {
-                const fabTokens = await CloudShellItemEngine.getAuthTokens(context.workloadClient);
-                authInfo.oboToken = fabTokens.fab;
-                authInfo.oboTokenOnelake = fabTokens.onelake;
-                authInfo.oboTokenAzure = fabTokens.azure;
-            }
-            retVal[this.getParameterConfName("fabCLIAuthInfo")] = JSON.stringify(authInfo);
+            client?: {
+                clientId: string;
+                clientSecret: string;
+                tenantId: string;
+            };
+        } = {
+            useFrontendToken: context.fabCLIAuthInfo?.useFrontendToken,
+        };
+        
+        // Default to frontend tokens (useFrontendToken defaults to true)
+        if (context.fabCLIAuthInfo?.useFrontendToken !== false) {
+            // Acquire frontend tokens
+            const fabTokens = await CloudShellItemEngine.getAuthTokens(context.workloadClient);
+            authInfo.obo = {
+                token: fabTokens.fab,
+                tokenOnelake: fabTokens.onelake,
+                tokenAzure: fabTokens.azure
+            };
+        } else if (context.fabCLIAuthInfo?.clientId && context.fabCLIAuthInfo?.clientSecret && context.fabCLIAuthInfo?.tenantId) {
+            // Service principal credentials
+            authInfo.client = {
+                clientId: context.fabCLIAuthInfo.clientId,
+                clientSecret: context.fabCLIAuthInfo.clientSecret,
+                tenantId: context.fabCLIAuthInfo.tenantId
+            };
         }
+        
+        retVal[this.getParameterConfName("sys.fabCLIAuthInfo")] = JSON.stringify(authInfo);
 
         // Process script content to extract commands
         let commands = script.content
@@ -134,7 +147,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                         runtimeValue,
                         context.item, 
                         context.workloadClient, 
-                        FabricCLIScriptCommand.convertParameterValueForCLI
+                        this.convertParameterValueForCLI.bind(this)
                     );
                 })
             );
@@ -155,15 +168,13 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
             });
         }
         
-        retVal[this.getParameterConfName("commands")] = JSON.stringify(commands);
+        retVal[this.getParameterConfName("sys.commands")] = JSON.stringify(commands);
+        retVal[this.getParameterConfName("sys.printParameters")] = true.toString();
 
         return retVal;
     }
 
-    /**
-     * Acquire access token for specified scopes using current user session.
-     * 
-     * Used for OBO (On-Behalf-Of) authentication in Fabric CLI scripts.
+
     /**
      * Convert parameter value to Fabric CLI format.
      * 
@@ -176,7 +187,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * @param workloadClient Workload client for API calls
      * @returns Converted parameter value
      */
-    private static async convertParameterValueForCLI(
+    protected async convertParameterValueForCLI(
         paramType: ScriptParameterType,
         value: string,
         workloadClient: WorkloadClientAPI

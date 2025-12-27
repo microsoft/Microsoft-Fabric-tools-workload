@@ -1,3 +1,8 @@
+####################################################
+# CommandWrapper.py
+# Wrapper script to run Fabric CLI commands with authentication in a Spark environment.
+####################################################
+
 import os
 import subprocess;
 import json;

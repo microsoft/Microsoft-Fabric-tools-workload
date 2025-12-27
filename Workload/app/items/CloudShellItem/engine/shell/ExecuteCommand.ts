@@ -76,7 +76,8 @@ export class ExecuteCommand implements IConsoleCommand {
 
             // handle token replacement
             var fabTokens;
-            if(context.fabCLIAuthInfo?.useFrontendToken){
+            // Default to frontend tokens (useFrontendToken defaults to true)
+            if(context.fabCLIAuthInfo?.useFrontendToken !== false){
                 // Get workload client from engine
                 const workloadClient = context.engine.getWorkloadClient();
                 // Acquire all authentication tokens

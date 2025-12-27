@@ -62,7 +62,7 @@ export const PYTHON_SYSTEM_PARAMETERS: ScriptParameter[] = [
  */
 export function getSystemParametersForScriptType(scriptType: ScriptType): ScriptParameter[] {
     switch (scriptType) {
-        case ScriptType.FABCLI:
+        case ScriptType.FAB_CLI:
             return FABCLI_SYSTEM_PARAMETERS;
         case ScriptType.PYTHON:
             return PYTHON_SYSTEM_PARAMETERS;
@@ -81,17 +81,19 @@ export function getSystemParametersForScriptType(scriptType: ScriptType): Script
  * For ITEM/ITEM_NAME, uses the item's display name and type.
  * 
  * @param param Parameter to get value for
+ * @param value Optional runtime value that overrides both defaultValue and system parameters
  * @param item Item with workspace and item information
  * @param workloadClient Workload client for API calls
- * @param value Optional runtime value that overrides both defaultValue and system parameters
+ * @param convertValue Optional function to convert parameter value to specific format
  * @returns Parameter value (from value if provided, then context for system params, then param.defaultValue)
+ * @throws {Error} When parameter value fails type validation for non-system parameters
  */
 export async function getParameterValue(
     param: ScriptParameter, 
     value: string,
     item: ItemWithDefinition<CloudShellItemDefinition> | undefined, 
     workloadClient: WorkloadClientAPI,
-    convertValue?: (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => Promise<string>,
+    convertValue: (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => Promise<string>,
 ): Promise<string> {
 
 
@@ -107,11 +109,11 @@ export async function getParameterValue(
                 const fabricAPI = new FabricPlatformAPIClient(workloadClient);
                 const workspace = await fabricAPI.workspaces.getWorkspace(item.workspaceId);
                 paramValue = workspace.displayName;
-                break;
             } catch (error) {
                 console.error('Failed to fetch workspace name:', error);
                 return '';
             }
+            break;
         case 'WORKSPACE_ID':
             paramValue =  item?.workspaceId || '';
             break;
@@ -136,17 +138,20 @@ export async function getParameterValue(
 
     // Validate non system parameter values against the param.type
     // System parameters are set by the system and assumed valid
-    // parametes are considered optional
+    // parameters are considered optional
     if(!param.isSystemParameter && paramValue) {
         if (!validateParameterValue(param.type, paramValue)) {
             throw new Error(`Invalid value for parameter ${param.name}: ${paramValue}`);
         }
     }
 
-    // If a conversion function is provided, use it to convert the value
+    // Only convert value if it's not empty and convertValue function is provided
     if (convertValue) {
-        return await convertValue(param.type, paramValue, workloadClient);
+        paramValue = await convertValue(param.type, paramValue, workloadClient);
+    } else {
+        console.error('No convertValue function provided, skipping conversion for parameter:', param.name);
     }
+    
     return paramValue;
 }
 
@@ -188,10 +193,10 @@ export function validateParameterValue(
 /**
  * Convert an ItemReference to parameter value format.
  * 
- * Format: workspaceId/itemType/itemId
+ * Format: workspaceId/itemId
  * 
  * @param itemReference The item reference to convert
- * @returns String in format "workspaceId/itemType/itemId"
+ * @returns String in format "workspaceId/itemId"
  */
 export function itemReferenceToParameterValue(itemReference: ItemReference): string {
     if (!itemReference.workspaceId || !itemReference.id) {
@@ -203,21 +208,21 @@ export function itemReferenceToParameterValue(itemReference: ItemReference): str
 /**
  * Parse parameter value format to ItemReference object.
  * 
- * Format: workspaceId/itemType/itemId
+ * Format: workspaceId/itemId
  * 
- * @param parameterValue String in format "workspaceId/itemType/itemId"
+ * @param parameterValue String in format "workspaceId/itemId"
  * @returns ItemReference object
  * @throws Error if format is invalid
  */
 export function parameterValueToItemReference(parameterValue: string): ItemReference {
     const parts = parameterValue.split('/');
-    if (parts.length !== 3) {
+    if (parts.length !== 2) {
         throw new Error(`Invalid parameter value format: ${parameterValue}. Expected: workspaceId/itemId`);
     }
     
-    const [workspaceId, type, id] = parts;
+    const [workspaceId, id] = parts;
     
-    if (!workspaceId || !type || !id) {
+    if (!workspaceId || !id) {
         throw new Error(`Invalid parameter value: all parts (workspaceId, itemId) must be non-empty`);
     }
     

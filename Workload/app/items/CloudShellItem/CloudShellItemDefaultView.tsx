@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Stack } from "@fluentui/react";
 import {  
   Input, 
-  Button, 
+  Button,
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItem,
 } from "@fluentui/react-components";
 import { Send24Regular } from '@fluentui/react-icons';
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
@@ -35,11 +40,11 @@ interface CloudShellItemDefaultViewProps {
   onSessionCreated?: (sessionId: string) => void;
   showSystemMessage?: { message: string; timestamp: number };
   executionMode?: CommandType;
+  onExecutionModeChange?: (mode: CommandType) => void;
   scriptsMap?: Map<string, string>;
   onScriptSelect?: (scriptId: string) => void;
   onScriptCreate?: () => void;
   onScriptDelete?: (scriptId: string) => void;
-  onScriptRun?: (scriptId: string) => void | Promise<void>;
 }
 
 interface TerminalEntry {
@@ -65,10 +70,12 @@ export function CloudShellItemDefaultView({
   setIsConnecting,
   onSessionCreated,
   showSystemMessage: systemMessage,
-  executionMode: executionModeProp,  scriptsMap = new Map(),  onScriptSelect,
+  executionMode: executionModeProp,
+  onExecutionModeChange,
+  scriptsMap = new Map(),
+  onScriptSelect,
   onScriptCreate,
-  onScriptDelete,
-  onScriptRun
+  onScriptDelete
 }: CloudShellItemDefaultViewProps) {
   const { t } = useTranslation();
   
@@ -301,8 +308,8 @@ export function CloudShellItemDefaultView({
                 {entry.type === 'command' ? (
                   <React.Fragment>
                     <span className="prompt-symbol">
-                      {entry.executionMode === CommandType.PYTHON ? '>>> ' : 
-                       entry.executionMode === CommandType.FAB_CLI ? '> fab ' : '> '}
+                      {entry.executionMode === CommandType.PYTHON ? 'py> ' : 
+                       entry.executionMode === CommandType.FAB_CLI ? 'fab> ' : 'sh> '}
                     </span>
                     <span className="command">{entry.content}</span>
                   </React.Fragment>
@@ -317,10 +324,34 @@ export function CloudShellItemDefaultView({
         </div>
         
         <div className="terminal-input">
-          <span className="prompt-symbol">
-            {executionMode === CommandType.PYTHON ? '>>> ' : 
-             executionMode === CommandType.FAB_CLI ? '> fab ' : '> '}
-          </span>
+          <Menu>
+            <MenuTrigger disableButtonEnhancement>
+              <span className="prompt-symbol clickable-prefix" title="Click to change execution mode">
+                {executionMode === CommandType.PYTHON ? 'py> ' : 
+                 executionMode === CommandType.FAB_CLI ? 'fab> ' : 
+                 executionMode === CommandType.SHELL ? 'sh> ' : '&gt;'}
+              </span>
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem
+                  onClick={() => onExecutionModeChange?.(CommandType.FAB_CLI)}
+                >
+                  <span className="menu-prefix">fab&gt;</span> Fabric CLI
+                </MenuItem>
+                <MenuItem
+                  onClick={() => onExecutionModeChange?.(CommandType.PYTHON)}
+                >
+                  <span className="menu-prefix">py&gt;</span> Python
+                </MenuItem>
+                <MenuItem
+                  onClick={() => onExecutionModeChange?.(CommandType.SHELL)}
+                >
+                  <span className="menu-prefix">sh&gt;</span> Shell
+                </MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
           <Input
             className="command-input"
             value={command}

@@ -14,10 +14,12 @@ import { SparkLivyCloudShellClient } from "../SparkLivyCloudShellClient";
  * 
  * Authentication is injected into batch jobs via Spark configuration
  * and consumed by wrapper scripts (FabCliScriptWrapper.py).
+ * 
+ * @default useFrontendToken defaults to true when not specified
  */
 export interface AuthenticationInfo {
-    /** Use On-Behalf-Of token from current user session for Fabric API calls */
-    useFrontendToken: boolean;
+    /** Use On-Behalf-Of token from current user session for Fabric API calls (defaults to true) */
+    useFrontendToken?: boolean;
     
     /** Client ID for service principal authentication (optional) */
     clientId?: string;
@@ -26,7 +28,7 @@ export interface AuthenticationInfo {
     clientSecret?: string;
 
     /** Tenant ID for service principal authentication (optional) */
-    tentantId?: string;
+    tenantId?: string;
 }
 
 /**

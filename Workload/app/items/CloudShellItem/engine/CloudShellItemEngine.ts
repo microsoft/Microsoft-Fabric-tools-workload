@@ -49,7 +49,7 @@ export class CloudShellItemEngine {
         this.scriptCommands = new Map<ScriptType, IScriptCommand>([
             [ScriptType.PYTHON, new PythonScriptCommand()],
             //[ScriptType.SHELL, new ShellScriptCommand()],
-            [ScriptType.FABCLI, new FabricCLIScriptCommand()]
+            [ScriptType.FAB_CLI, new FabricCLIScriptCommand()]
         ]);
         // Register console command handlers (factories for stateful commands)
         this.consoleCommands = new Map<string, () => IConsoleCommand>([
@@ -73,7 +73,7 @@ export class CloudShellItemEngine {
         context: ScriptCommandContext,
         parameters?: Record<string, string>
     ): Promise<BatchResponse> {
-        const scriptType = script.type ?? ScriptType.FABCLI;
+        const scriptType = script.type ?? ScriptType.FAB_CLI;
         const command = this.scriptCommands.get(scriptType);
         if (!command) {
             throw new Error(`Unsupported script type: ${scriptType}`);
@@ -139,7 +139,7 @@ export class CloudShellItemEngine {
         return {
             fab: fabToken,
             onelake: onelakeToken,
-            azure: '' // TODO: Add Azure token acquisition
+            azure: '' // Azure token not required for current Fabric CLI operations
         };
     }
 

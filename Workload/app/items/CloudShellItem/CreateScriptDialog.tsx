@@ -18,7 +18,7 @@ export function CreateScriptDialog(props: PageProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const [scriptName, setScriptName] = useState("");
-  const [scriptType, setScriptType] = useState<ScriptType>(ScriptType.FABCLI);
+  const [scriptType, setScriptType] = useState<ScriptType>(ScriptType.FAB_CLI);
 
   // Parse existing script names from URL query params
   const existingScriptNames = useMemo(() => {

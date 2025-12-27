@@ -58,7 +58,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const [expandedParams, setExpandedParams] = useState<Set<number>>(new Set());
 
   // Get editor language from centralized configuration
-  const scriptType = script.type ?? ScriptType.FABCLI;
+  const scriptType = script.type ?? ScriptType.FAB_CLI;
   const language = getScriptTypeConfig(scriptType).editorLanguage;
 
   // Handle Monaco editor before mount to register custom language

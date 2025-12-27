@@ -1,7 +1,8 @@
+import { WorkloadClientAPI } from "src/clients";
 import { BatchRequest, BatchResponse } from "../../../../clients/FabricPlatformTypes";
 import { OneLakeStorageClient } from "../../../../clients/OneLakeStorageClient";
 import { EnvironmentConstants } from "../../../../constants";
-import { Script } from "../../CloudShellItemModel";
+import { Script, ScriptParameterType } from "../../CloudShellItemModel";
 import { IScriptCommand, ScriptCommandContext } from "./IScriptCommand";
 import { getParameterValue } from "./ScriptParameters";
 
@@ -124,7 +125,11 @@ export abstract class BaseScriptCommand implements IScriptCommand {
                 script.parameters.map(param => {
                     // Pass runtime value if provided for this parameter
                     const runtimeValue = parameters?.[param.name];
-                    return getParameterValue(param, runtimeValue, context.item, context.workloadClient, undefined
+                    return getParameterValue(param, 
+                        runtimeValue, 
+                        context.item, 
+                        context.workloadClient, 
+                        this.convertParameterValueForCLI.bind(this)
                     );
                 })
             );
@@ -136,6 +141,26 @@ export abstract class BaseScriptCommand implements IScriptCommand {
         
         return parameterConf;
     }
+
+    /**
+     * Convert parameter value to CLI-compatible format.
+     * 
+     * Base implementation returns value as-is without conversion.
+     * Override in subclasses (e.g., FabricCLIScriptCommand) to convert special types like
+     * WORKSPACE_REFERENCE or ITEM_REFERENCE to Fabric CLI format.
+     * 
+     * @param paramType Type of the parameter being converted
+     * @param value Parameter value to convert
+     * @param workloadClient Workload client for API calls if conversion requires API access
+     * @returns Promise resolving to converted parameter value
+     */
+    protected async convertParameterValueForCLI(
+            paramType: ScriptParameterType,
+            value: string,
+            workloadClient: WorkloadClientAPI
+        ): Promise<string> {
+            return value;
+        }
 
     /**
      * Get Spark configuration key for a parameter.
@@ -175,8 +200,8 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      * @returns ABFSS-formatted path for Spark batch file property
      */
     protected convertOneLakeLinkToABFSSLink(oneLakeLink: string, workspaceId: string): string {
-        let retVal = oneLakeLink.replace(`${workspaceId}/`, "");
-        retVal = retVal.replace("https://", `abfss://${workspaceId}@`);
-        return retVal;
+        let abfssPath = oneLakeLink.replace(`${workspaceId}/`, "");
+        abfssPath = abfssPath.replace("https://", `abfss://${workspaceId}@`);
+        return abfssPath;
     }
 }

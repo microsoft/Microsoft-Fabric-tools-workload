@@ -1,5 +1,5 @@
 import { IConsoleCommand, ConsoleCommandContext } from "./IConsoleCommand";
-import { Command, CommandType } from "../../CloudShellItemModel";
+import { Command, CommandType, ScriptType } from "../../CloudShellItemModel";
 
 /**
  * Help command - displays available commands and usage information
@@ -10,7 +10,7 @@ export class HelpCommand implements IConsoleCommand {
             'Available commands:',
             '  help              - Display this help message',
             '  clear             - Clear the terminal',
-            '  run {scriptName} [-myParameter1 value1 -myParameter2 value2 ...] - Execute a saved script with optional parameters',
+            '  run {scriptName}  - Execute a saved script with optional parameters',
             '',
         ];
 
@@ -28,8 +28,7 @@ export class HelpCommand implements IConsoleCommand {
         } else if (context.commandType === CommandType.SHELL) {
             sections.push(
                 'Shell Examples:',
-                '  fab ls -l MyWorkspace.Workspace  - Use Fabric CLI to list all items in a workspace',
-                '  echo "Hello World!"              - Display a message',
+                '  echo "Hello World!"    - Display a message',
                 '',
             );
         } else if (context.commandType === CommandType.PYTHON) {
@@ -44,7 +43,18 @@ export class HelpCommand implements IConsoleCommand {
         sections.push(
             'Available scripts:',
             context.item.definition?.scripts?.length > 0 
-                ? context.item.definition.scripts.map(s => `  - ${s.name} (${s.type})`).join('\n')
+                ? context.item.definition.scripts
+                    .filter(s => (context.commandType === CommandType.FAB_CLI && s.type === ScriptType.FAB_CLI) ||
+                                 (context.commandType === CommandType.PYTHON && s.type === ScriptType.PYTHON)) 
+                    .map(s => {
+                        const params = s.parameters && s.parameters.length > 0
+                            ? ' ' + s.parameters
+                                .filter(p => !p.isSystemParameter)
+                                .map(p => `-${p.name} <${p.type}>`)
+                                .join(' ')
+                            : '';
+                    return `  - run ${s.name}${params}`;
+                }).join('\n')
                 : '  (No scripts available)',
         );
 
