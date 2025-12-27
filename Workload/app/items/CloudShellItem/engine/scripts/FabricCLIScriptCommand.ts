@@ -95,14 +95,17 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                 tentantId?: string;
                 oboToken?: string;
                 oboTokenOnelake?: string;
+                oboTokenAzure?: string;
             } = {
                 ...context.fabCLIAuthInfo,
                 oboToken: undefined,
                 oboTokenOnelake: undefined,
+                oboTokenAzure: undefined,
             };
             if(context.fabCLIAuthInfo.useFrontendToken) {
                 authInfo.oboToken = await this.getTokenForScopes(context.workloadClient, SCOPES.DEFAULT);
                 authInfo.oboTokenOnelake = await this.getTokenForScopes(context.workloadClient, SCOPES.ONELAKE);
+                authInfo.oboTokenAzure = "";
             }
             retVal[this.getParameterConfName("fabCLIAuthInfo")] = JSON.stringify(authInfo);
         }
