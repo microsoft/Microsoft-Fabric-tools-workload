@@ -48,9 +48,10 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      * 
      * @param script Script to execute with content and parameters
      * @param context Execution context with item, clients, and authentication
+     * @param parameters Optional runtime parameter values (key-value pairs) that override script's default parameters
      * @returns Promise resolving to BatchResponse for monitoring
      */
-    async execute(script: Script, context: ScriptCommandContext): Promise<BatchResponse> {
+    async execute(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<BatchResponse> {
 
         const oneLakeClient = new OneLakeStorageClient(context.workloadClient);
         const timestamp = new Date().getTime();
@@ -79,8 +80,8 @@ export abstract class BaseScriptCommand implements IScriptCommand {
             conf: {
                 "spark.targetLakehouse": context.item.definition.selectedLakehouse.id!,
                 "spark.fabric.environmentDetails": `{"id" : "${context.item.definition.selectedSparkEnvironment.id!}"}`,
-                ...await this.getParameterConf(script, context),
-                ...await this.getAdditionalConf(script, context)
+                ...await this.getParameterConf(script, context, parameters),
+                ...await this.getAdditionalConf(script, context, parameters)
             },
             tags: {
                 source: "Cloud Shell Item",
@@ -105,19 +106,27 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      * System parameters (isSystemParameter=true) are populated from context at runtime,
      * not from the saved parameter value.
      * 
+     * Runtime parameters passed to execute() override both default values and system parameters.
+     * 
      * Scripts access these via spark.conf.get() with type conversion.
      * 
      * @param script Script with parameters to inject
      * @param context Execution context with item information for system parameters
+     * @param parameters Optional runtime parameter values that override script's default parameters
      * @returns Record of Spark configuration keys and values
      */
-    private async getParameterConf(script: Script, context: ScriptCommandContext): Promise<Record<string, string>> {
+    private async getParameterConf(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<Record<string, string>> {
         const parameterConf: Record<string, string> = {};
         
         if (script.parameters && script.parameters.length > 0) {
             // Parallelize parameter value resolution for better performance
             const parameterValues = await Promise.all(
-                script.parameters.map(param => getParameterValue(param, context.item, context.workloadClient))
+                script.parameters.map(param => {
+                    // Pass runtime value if provided for this parameter
+                    const runtimeValue = parameters?.[param.name];
+                    return getParameterValue(param, runtimeValue, context.item, context.workloadClient, undefined
+                    );
+                })
             );
             
             script.parameters.forEach((param, index) => {
@@ -148,9 +157,10 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      * 
      * @param script Script being executed
      * @param context Execution context
+     * @param parameters Optional runtime parameter values that override script's default parameters
      * @returns Promise resolving to additional Spark conf properties
      */
-    protected async getAdditionalConf(script: Script, context: ScriptCommandContext): Promise<Record<string, string>> {
+    protected async getAdditionalConf(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<Record<string, string>> {
         return {};
     }
 

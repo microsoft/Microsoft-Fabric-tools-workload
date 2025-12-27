@@ -55,6 +55,11 @@ export function CloudShellItemEditor(props: PageProps) {
 
   // Load item data from URL context
   async function loadDataFromUrl(pageContext: ContextProps, pathname: string): Promise<void> {
+    // Only reload if the item has changed
+    if (pageContext.itemObjectId && item?.id === pageContext.itemObjectId) {
+      return;
+    }
+
     setIsLoading(true);
     let loadedItem: ItemWithDefinition<CloudShellItemDefinition> = undefined;
     
@@ -75,6 +80,10 @@ export function CloudShellItemEditor(props: PageProps) {
         }
 
         setItem(loadedItem);
+        
+        // Clear history when loading a different item
+        setCommandHistory([]);
+        setTerminalEntries([]);
       } catch (error) {
         console.error('Failed to load CloudShell item:', error);
         callNotificationOpen(
@@ -361,8 +370,8 @@ export function CloudShellItemEditor(props: PageProps) {
 
     // Get system parameters based on script type
     const systemParameters: ScriptParameter[] = getSystemParametersForScriptType(type).map(param => ({
-      ...param,
-      value: '' // Don't save values, they're populated from context at runtime
+      ...param
+      // Don't set defaultValue - system parameters are always populated from context at runtime
     }));
 
     const newScript: ScriptMetadata = {
@@ -476,7 +485,7 @@ export function CloudShellItemEditor(props: PageProps) {
     await handleScriptRun({ ...scriptMeta, content });
   };
 
-  const handleScriptRun = async (script: Script) => {
+  const handleScriptRun = async (script: Script, runtimeParameters?: Record<string, string>) => {
     if (!item?.definition?.selectedLakehouse || !item?.definition?.selectedSparkEnvironment) {
       callNotificationOpen(
         workloadClient,
@@ -494,13 +503,18 @@ export function CloudShellItemEditor(props: PageProps) {
         workloadClient: workloadClient,
         cloudShellClient: engine.getCloudShellClient()
       };
-      const batchResponse = await engine.executeScript(script, scriptContext);
+      const batchResponse = await engine.executeScript(script, scriptContext, runtimeParameters);
       const jobId = batchResponse.id || batchResponse.artifactId || 'unknown';
+      
+      const paramInfo = runtimeParameters && Object.keys(runtimeParameters).length > 0
+        ? ` with runtime parameters: ${Object.keys(runtimeParameters).length}`
+        : '';
+      
       callNotificationOpen(
         workloadClient,
         t("CloudShellItem_Script_Run_Started_Title", "Script Execution Started"),
-        t("CloudShellItem_Script_Run_Started_Message", "Script '{{scriptName}}' submitted as batch job. Job ID: {{jobId}}", 
-          { scriptName: script.name, jobId }),
+        t("CloudShellItem_Script_Run_Started_Message", "Script '{{scriptName}}' submitted as batch job{{paramInfo}}. Job ID: {{jobId}}", 
+          { scriptName: script.name, jobId, paramInfo }),
         NotificationType.Success
       );
       // Optional: Wait for completion in the background and show result

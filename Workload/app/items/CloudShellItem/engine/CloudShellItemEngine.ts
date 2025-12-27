@@ -64,11 +64,13 @@ export class CloudShellItemEngine {
      * Execute a script as a batch job
      * @param script The script to execute
      * @param context The script execution context
+     * @param parameters Optional runtime parameter values (key-value pairs) that override script's default parameters
      * @returns Promise resolving to the batch response
      */
     async executeScript(
         script: Script,
-        context: ScriptCommandContext
+        context: ScriptCommandContext,
+        parameters?: Record<string, string>
     ): Promise<BatchResponse> {
         const scriptType = script.type ?? ScriptType.FABCLI;
         const command = this.scriptCommands.get(scriptType);
@@ -76,7 +78,7 @@ export class CloudShellItemEngine {
             throw new Error(`Unsupported script type: ${scriptType}`);
         }
 
-        return await command.execute(script, context);
+        return await command.execute(script, context, parameters);
     }
 
     /**

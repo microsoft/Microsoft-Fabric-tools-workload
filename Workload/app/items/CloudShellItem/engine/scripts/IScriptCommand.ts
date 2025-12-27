@@ -88,7 +88,8 @@ export interface IScriptCommand {
      * 
      * @param script Script object with content, parameters, and metadata
      * @param context Execution context with clients and authentication
+     * @param parameters Optional runtime parameter values (key-value pairs) that override script's default parameters
      * @returns Promise resolving to BatchResponse with ID for monitoring
      */
-    execute(script: Script, context: ScriptCommandContext): Promise<BatchResponse>;
+    execute(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<BatchResponse>;
 }

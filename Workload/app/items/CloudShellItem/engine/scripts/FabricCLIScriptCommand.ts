@@ -73,6 +73,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * - $paramName or %paramName% in commands replaced with parameter values
      * - Uses word boundary matching for $ format to avoid partial replacements
      * - Uses exact % delimiters for % format
+     * - Runtime parameters override default parameter values
      * 
      * Authentication Priority:
      * - If useFrontendToken=true: Acquire DEFAULT and ONELAKE tokens
@@ -80,9 +81,10 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * 
      * @param script Fabric CLI script with commands and parameters
      * @param context Execution context with authentication info
+     * @param parameters Optional runtime parameter values that override script's default parameters
      * @returns Promise resolving to Spark configuration object
      */
-    protected async getAdditionalConf(script: Script, context: ScriptCommandContext): Promise<{ [key: string]: string; }> {
+    protected async getAdditionalConf(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<{ [key: string]: string; }> {
         const retVal: { [key: string]: string; } = {};
         
         // Configure authentication based on fabCLIAuthInfo
@@ -120,8 +122,11 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
             // Parallelize parameter value resolution and conversion for better performance
             const parameterValues = await Promise.all(
                 script.parameters.map(async param => {
+                    // Pass runtime value if provided for this parameter
+                    const runtimeValue = parameters?.[param.name];
                     return await getParameterValue(
                         param, 
+                        runtimeValue,
                         context.item, 
                         context.workloadClient, 
                         FabricCLIScriptCommand.convertParameterValueForCLI

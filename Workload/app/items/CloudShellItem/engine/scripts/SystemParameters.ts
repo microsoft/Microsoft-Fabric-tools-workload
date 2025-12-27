@@ -16,7 +16,7 @@ import { CloudShellItemDefinition } from "../../CloudShellItemModel";
  * @param param Parameter to get value for
  * @param item Item with workspace and item information
  * @param workloadClient Workload client for API calls
- * @returns Parameter value (from context for system params, from param.value for others)
+ * @returns Parameter value (from context for system params, from param.defaultValue for others)
  */
 export async function getParameterValue(
     param: ScriptParameter, 
@@ -24,7 +24,7 @@ export async function getParameterValue(
     workloadClient: WorkloadClientAPI
 ): Promise<string> {
     if (!param.isSystemParameter) {
-        return param.value;
+        return param.defaultValue || '';
     }
     
     // Populate system parameters from context at runtime
@@ -41,7 +41,7 @@ export async function getParameterValue(
         case 'ITEM':
             return item?.displayName + "." + item?.type || '';
         default:
-            return param.value;
+            return param.defaultValue || '';
     }
 }
 
@@ -61,7 +61,7 @@ export function getParameterDisplayValue(
     item: ItemWithDefinition<CloudShellItemDefinition> | undefined
 ): string {
     if (!param.isSystemParameter) {
-        return param.value;
+        return param.defaultValue || '';
     }
     
     // Return current context value for system parameters (synchronous)
@@ -82,6 +82,6 @@ export function getParameterDisplayValue(
         case 'ITEM_ID':
             return item?.id || '';
         default:
-            return param.value;
+            return param.defaultValue || '';
     }
 }

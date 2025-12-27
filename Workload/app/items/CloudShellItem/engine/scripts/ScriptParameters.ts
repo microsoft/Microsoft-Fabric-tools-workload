@@ -12,14 +12,12 @@ export const FABCLI_SYSTEM_PARAMETERS: ScriptParameter[] = [
     {
         name: 'WORKSPACE',
         type: ScriptParameterType.WORKSPACE_REFERENCE,
-        value: '',
         description: 'Current workspace in Fabric CLI format (Name.Workspace)',
         isSystemParameter: true
     },
     {
         name: 'ITEM',
         type: ScriptParameterType.ITEM_REFERENCE,
-        value: '',
         description: 'Current item in Fabric CLI format (Name.ItemType)',
         isSystemParameter: true
     }
@@ -33,28 +31,24 @@ export const PYTHON_SYSTEM_PARAMETERS: ScriptParameter[] = [
     {
         name: 'WORKSPACE_NAME',
         type: ScriptParameterType.STRING,
-        value: '',
         description: 'Name of the current workspace',
         isSystemParameter: true
     },
     {
         name: 'WORKSPACE_ID',
         type: ScriptParameterType.GUID,
-        value: '',
         description: 'ID of the current workspace',
         isSystemParameter: true
     },
     {
         name: 'ITEM_NAME',
         type: ScriptParameterType.STRING,
-        value: '',
         description: 'Name of the current Cloud Shell item',
         isSystemParameter: true
     },
     {
         name: 'ITEM_ID',
         type: ScriptParameterType.GUID,
-        value: '',
         description: 'ID of the current Cloud Shell item',
         isSystemParameter: true
     }
@@ -89,16 +83,19 @@ export function getSystemParametersForScriptType(scriptType: ScriptType): Script
  * @param param Parameter to get value for
  * @param item Item with workspace and item information
  * @param workloadClient Workload client for API calls
- * @returns Parameter value (from context for system params, from param.value for others)
+ * @param value Optional runtime value that overrides both defaultValue and system parameters
+ * @returns Parameter value (from value if provided, then context for system params, then param.defaultValue)
  */
 export async function getParameterValue(
     param: ScriptParameter, 
+    value: string,
     item: ItemWithDefinition<CloudShellItemDefinition> | undefined, 
     workloadClient: WorkloadClientAPI,
-    convertValue?: (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => Promise<string>
+    convertValue?: (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => Promise<string>,
 ): Promise<string> {
 
-    let paramValue = param.value;
+
+    let paramValue = param.defaultValue;
     // Populate system parameters from context at runtime
     switch (param.name) {
         case 'WORKSPACE':
@@ -128,14 +125,64 @@ export async function getParameterValue(
             paramValue =  item?.id || '';
             break;
         default:
-            paramValue = param.value;
-            break
+            // If runtime value is provided, use it with highest priority
+            if (value !== undefined) {
+                paramValue = value;
+            } else {
+                paramValue = param.defaultValue;
+            }
+            break;  
     }
 
+    // Validate non system parameter values against the param.type
+    // System parameters are set by the system and assumed valid
+    // parametes are considered optional
+    if(!param.isSystemParameter && paramValue) {
+        if (!validateParameterValue(param.type, paramValue)) {
+            throw new Error(`Invalid value for parameter ${param.name}: ${paramValue}`);
+        }
+    }
+
+    // If a conversion function is provided, use it to convert the value
     if (convertValue) {
         return await convertValue(param.type, paramValue, workloadClient);
     }
     return paramValue;
+}
+
+
+/**
+ * Validate a parameter value against its type.
+ * 
+ * @param paramType The type of the parameter
+ * @param value The value to validate
+ * @returns True if the value is valid for the type, false otherwise
+ */
+export function validateParameterValue(
+    paramType: ScriptParameterType,
+    value: string)
+: boolean {
+    switch (paramType) {
+        case ScriptParameterType.INT:
+            return /^-?\d+$/.test(value);
+        case ScriptParameterType.FLOAT:
+            return /^-?\d+(\.\d+)?$/.test(value);
+        case ScriptParameterType.BOOL:
+            return /^(true|false)$/i.test(value);
+        case ScriptParameterType.DATE:
+            return !isNaN(Date.parse(value));
+        case ScriptParameterType.GUID:
+        case ScriptParameterType.WORKSPACE_REFERENCE:
+            return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
+        case ScriptParameterType.ITEM_REFERENCE:
+            // Basic validation for item/workspace reference format (workspaceId/itemId)
+            const parts = value.split('/');
+            return parts.length === 2 && parts[0].length > 0 && parts[1].length > 0;
+        case ScriptParameterType.STRING:
+            return true; // No validation needed for strings
+        default:
+            return false;
+    }
 }
 
 /**

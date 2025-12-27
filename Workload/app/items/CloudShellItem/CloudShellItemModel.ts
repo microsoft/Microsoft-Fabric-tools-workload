@@ -72,8 +72,8 @@ export interface ScriptParameter {
   name: string;
   /** Parameter type for type-safe conversion in scripts */
   type: ScriptParameterType;
-  /** Parameter value (stored as string, converted by type during script execution) */
-  value: string;
+  /** Default parameter value (stored as string, converted by type during script execution) */
+  defaultValue?: string;
   /** Optional description of the parameter's purpose */
   description?: string;
   /** If true, parameter is a system parameter that cannot be deleted or renamed */

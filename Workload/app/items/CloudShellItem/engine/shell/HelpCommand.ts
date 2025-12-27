@@ -10,7 +10,7 @@ export class HelpCommand implements IConsoleCommand {
             'Available commands:',
             '  help              - Display this help message',
             '  clear             - Clear the terminal',
-            '  run {scriptName}  - Execute a saved script',
+            '  run {scriptName} [-myParameter1 value1 -myParameter2 value2 ...] - Execute a saved script with optional parameters',
             '',
         ];
 
@@ -43,7 +43,7 @@ export class HelpCommand implements IConsoleCommand {
         // Add available scripts
         sections.push(
             'Available scripts:',
-            context.item.definition.scripts.length > 0 
+            context.item.definition?.scripts?.length > 0 
                 ? context.item.definition.scripts.map(s => `  - ${s.name} (${s.type})`).join('\n')
                 : '  (No scripts available)',
         );

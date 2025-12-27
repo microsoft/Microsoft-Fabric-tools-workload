@@ -9,6 +9,7 @@ import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular, Search20Re
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { CloudShellItemDefinition } from "./CloudShellItemModel";
 import { callDatahubOpen } from "../../controller/DataHubController";
+import { callDialogOpen } from "../../controller/DialogController";
 import { getConfiguredWorkloadItemTypes } from "../../controller/ConfigurationController";
 import { FABRIC_CORE_ITEM_TYPES } from "../../components/FabricCoreItemTypes";
 import { WorkspaceDropdown } from "../../components/WorkspaceDropdown";
@@ -30,7 +31,7 @@ export interface ScriptDetailViewProps {
   script: Script;
   currentTheme: string;
   onSave: (script: Script) => void;
-  onRun?: (script: Script) => void;
+  onRun?: (script: Script, runtimeParameters?: Record<string, string>) => void;
   isRunning?: boolean;
   item?: ItemWithDefinition<CloudShellItemDefinition>;
   workloadClient?: any;
@@ -113,7 +114,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
     const newParameter: ScriptParameter = {
       name: `myParameter`,
       type: ScriptParameterType.STRING,
-      value: ""
+      defaultValue: ""
     };
     const newIndex = parameters.length;
     setParameters([...parameters, newParameter]);
@@ -141,7 +142,13 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       value = value.replace(/[^a-zA-Z0-9_]/g, '');
     }
     
-    updated[index] = { ...updated[index], [field]: value };
+    // Convert empty string to undefined for optional defaultValue
+    if (field === 'defaultValue' && typeof value === 'string' && value === '') {
+      updated[index] = { ...updated[index], [field]: undefined };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
+    
     setParameters(updated);
     setIsDirty(true);
   };
@@ -184,19 +191,48 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
       if (result) {
         // Store the item reference as a formatted string: workspaceId/ItemId
         const itemReference = itemReferenceToParameterValue(result);
-        handleUpdateParameter(index, 'value', itemReference);
+        handleUpdateParameter(index, 'defaultValue', itemReference);
       }
     } catch (error) {
       console.error('Failed to select item:', error);
     }
   };
 
-  const handleRun = () => {
-    if (onRun) {
-      // Save before running
-      if (isDirty) {
-        handleSave();
+  const handleRun = async () => {
+    if (!onRun) return;
+    
+    // Save before running
+    if (isDirty) {
+      handleSave();
+    }
+    
+    // Filter user-defined parameters only
+    const userParameters = parameters.filter(p => !p.isSystemParameter);
+    
+    // If there are user-defined parameters, show dialog
+    if (userParameters.length > 0 && workloadClient && item) {
+      try {
+        const path = `/CloudShellItem-run-script/${item.id}?parameters=${encodeURIComponent(JSON.stringify(parameters))}`;
+        const dialogResult = await callDialogOpen(
+          workloadClient,
+          process.env.WORKLOAD_NAME,
+          path,
+          550,
+          Math.min(700, 200 + userParameters.length * 140),
+          true
+        );
+        
+        const result = dialogResult?.value as { state: 'run' | 'cancel'; parameters?: Record<string, string> };
+        if (result?.state === 'run') {
+          onRun({ ...script, content, parameters }, result.parameters);
+        }
+      } catch (error) {
+        console.error('Failed to open run dialog:', error);
+        // Fallback to running without dialog
+        onRun({ ...script, content, parameters });
       }
+    } else {
+      // No user parameters, run directly
       onRun({ ...script, content, parameters });
     }
   };
@@ -291,12 +327,12 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                 
                 
                 <div className="field-row">
-                  <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
+                  <Label size="small">{t('CloudShellItem_Script_ParameterDefaultValue', 'Default Value')}</Label>
                   {param.type === ScriptParameterType.ITEM_REFERENCE ? (
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <Input
                         size="small"
-                        value={(param.value || '')}
+                        value={(param.defaultValue || '')}
                         placeholder={t('CloudShellItem_Script_ItemReferencePlaceholder', 'Select an item...')}
                         disabled={true}
                         style={{ flex: 1 }}
@@ -322,15 +358,15 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                         <WorkspaceDropdown
                           key={`workspace-dropdown-${index}`}
                           workloadClient={workloadClient}
-                          selectedWorkspaceId={param.value || ''}
-                          onWorkspaceSelect={(workspaceId) => handleUpdateParameter(index, 'value', workspaceId)}
+                          selectedWorkspaceId={param.defaultValue || ''}
+                          onWorkspaceSelect={(workspaceId) => handleUpdateParameter(index, 'defaultValue', workspaceId)}
                           placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
                           disabled={isSystemParam}
                         />
                       ) : (
                         <Input
                           size="small"
-                          value={(param.value || '')}
+                          value={(param.defaultValue || '')}
                           placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
                           disabled={true}
                         />
@@ -339,8 +375,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   ) : (
                     <Input
                       size="small"
-                      value={(param.value || '')}
-                      onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
+                      value={(param.defaultValue || '')}
+                      onChange={(e) => handleUpdateParameter(index, 'defaultValue', e.target.value)}
                       placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
                       disabled={isSystemParam}
                     />
@@ -433,13 +469,13 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                 </div>
 
                 <div className="field-row">
-                  <Label size="small">{t('CloudShellItem_Script_ParameterValue', 'Value')}</Label>
+                  <Label size="small">{t('CloudShellItem_Script_ParameterDefaultValue', 'Default Value')}</Label>
                   {param.type === ScriptParameterType.WORKSPACE_REFERENCE ? (
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <WorkspaceDropdown
                         workloadClient={workloadClient}
-                        selectedWorkspaceId={param.value}
-                        onWorkspaceSelect={(workspaceId: string) => handleUpdateParameter(index, 'value', workspaceId)}
+                        selectedWorkspaceId={param.defaultValue}
+                        onWorkspaceSelect={(workspaceId: string) => handleUpdateParameter(index, 'defaultValue', workspaceId)}
                         placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
                       />
                     </div>
@@ -453,10 +489,10 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                       >
                         {t('CloudShellItem_Script_SelectItem', 'Select Item')}
                       </Button>
-                      {param.value && (
+                      {param.defaultValue && (
                         <Input
                           size="small"
-                          value={(param.value || '')}
+                          value={(param.defaultValue || '')}
                           placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
                           disabled={true}
                         />
@@ -465,8 +501,8 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   ) : (
                     <Input
                       size="small"
-                      value={(param.value || '')}
-                      onChange={(e) => handleUpdateParameter(index, 'value', e.target.value)}
+                      value={(param.defaultValue || '')}
+                      onChange={(e) => handleUpdateParameter(index, 'defaultValue', e.target.value)}
                       placeholder={t('CloudShellItem_Script_ParameterValuePlaceholder', 'Parameter value')}
                     />
                   )}

@@ -300,3 +300,36 @@
 .terminal-entry-content {
     white-space: pre-wrap;
 }
+
+/* Run Script Dialog Styles */
+.run-script-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.run-script-dialog-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.run-script-dialog-parameter-label {
+    display: flex;
+    align-items: center;
+}
+
+.run-script-dialog-parameter-description {
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+.run-script-dialog-parameter-input {
+    width: 100%;
+}
+
+.run-script-dialog-default-value {
+    opacity: 0.6;
+}
