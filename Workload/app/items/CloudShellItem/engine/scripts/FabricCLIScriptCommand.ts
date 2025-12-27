@@ -1,10 +1,10 @@
 import { Script, ScriptParameterType } from "../../CloudShellItemModel";
 import { ScriptCommandContext } from "./IScriptCommand";
 import { BaseScriptCommand } from "./BaseScriptCommand";
-import { SCOPES } from "../../../../clients/FabricPlatformScopes";
-import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { getParameterValue, parameterValueToItemReference } from "./ScriptParameters";
 import { FabricPlatformAPIClient } from "../../../../clients/FabricPlatformAPIClient";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { CloudShellItemEngine } from "../CloudShellItemEngine";
 
 /**
  * Command for executing Fabric CLI scripts as Spark batch jobs.
@@ -102,10 +102,12 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                 oboTokenOnelake: undefined,
                 oboTokenAzure: undefined,
             };
+            
             if(context.fabCLIAuthInfo.useFrontendToken) {
-                authInfo.oboToken = await this.getTokenForScopes(context.workloadClient, SCOPES.DEFAULT);
-                authInfo.oboTokenOnelake = await this.getTokenForScopes(context.workloadClient, SCOPES.ONELAKE);
-                authInfo.oboTokenAzure = "";
+                const fabTokens = await CloudShellItemEngine.getAuthTokens(context.workloadClient);
+                authInfo.oboToken = fabTokens.fab;
+                authInfo.oboTokenOnelake = fabTokens.onelake;
+                authInfo.oboTokenAzure = fabTokens.azure;
             }
             retVal[this.getParameterConfName("fabCLIAuthInfo")] = JSON.stringify(authInfo);
         }
@@ -162,18 +164,6 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * Acquire access token for specified scopes using current user session.
      * 
      * Used for OBO (On-Behalf-Of) authentication in Fabric CLI scripts.
-     * 
-     * @param workloadClient Workload client for token acquisition
-     * @param scopes Space-separated scopes string (e.g., SCOPES.DEFAULT)
-     * @returns Promise resolving to access token
-     */
-    private async getTokenForScopes(workloadClient: WorkloadClientAPI, scopes: string | undefined): Promise<string> {
-        const result = await workloadClient.auth.acquireFrontendAccessToken({ 
-            scopes: scopes?.length ? scopes.split(' ') : [] 
-        });
-        return result.token;
-    }
-
     /**
      * Convert parameter value to Fabric CLI format.
      * 

@@ -501,7 +501,10 @@ export function CloudShellItemEditor(props: PageProps) {
         item,
         engine,
         workloadClient: workloadClient,
-        cloudShellClient: engine.getCloudShellClient()
+        cloudShellClient: engine.getCloudShellClient(),
+        fabCLIAuthInfo: {
+          useFrontendToken: true
+        }
       };
       const batchResponse = await engine.executeScript(script, scriptContext, runtimeParameters);
       const jobId = batchResponse.id || batchResponse.artifactId || 'unknown';

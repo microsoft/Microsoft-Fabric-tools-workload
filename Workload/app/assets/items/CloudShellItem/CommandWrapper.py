@@ -7,10 +7,10 @@ fabToken = "REPLACE_WITH_FAB_TOKEN"
 fabTokenOnelake = "REPLACE_WITH_FAB_TOKEN_ONELAKE"
 fabTokenAzure = "REPLACE_WITH_AZURE_TOKEN"
 
-if fabToken and fabTokenOnelake and fabTokenAzure:
+if fabToken and fabTokenOnelake: # and fabTokenAzure:
     os.environ["FAB_TOKEN"] = fabToken
     os.environ["FAB_TOKEN_ONELAKE"] = fabTokenOnelake   
-    os.environ["FAB_TOKEN_AZURE"] = fabTokenAzure
+    #os.environ["FAB_TOKEN_AZURE"] = fabTokenAzure
     
 # Command to be executed
 command = "REPLACE_WITH_COMMAND"

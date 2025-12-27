@@ -2,8 +2,7 @@ import { StatementRequest } from "../../../../clients/FabricPlatformTypes";
 import { IConsoleCommand, ConsoleCommandContext } from "./IConsoleCommand";
 import { Command, CommandType } from "../../CloudShellItemModel";
 import { SessionKind } from "../SparkLivyCloudShellClient";
-import { SCOPES } from "../../../../clients/FabricPlatformScopes";
-import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { CloudShellItemEngine } from "../CloudShellItemEngine";
 
 /**
  * Execute command - executes Cloud Shell commands via Spark Livy session
@@ -76,21 +75,16 @@ export class ExecuteCommand implements IConsoleCommand {
             var code = await this.getPythonWrapperContent();
 
             // handle token replacement
-            var fabToken = '';
-            var fabTokenOnelake = '';
-            var fabTokenAzure = '';
+            var fabTokens;
             if(context.fabCLIAuthInfo?.useFrontendToken){
                 // Get workload client from engine
                 const workloadClient = context.engine.getWorkloadClient();
-                // Acquire OBO tokens (same as FabricCLIScriptCommand)
-                fabToken = await this.getTokenForScopes(workloadClient, SCOPES.DEFAULT);
-                fabTokenOnelake = await this.getTokenForScopes(workloadClient, SCOPES.ONELAKE);
-                //todo add azure Token
+                // Acquire all authentication tokens
+                fabTokens = await CloudShellItemEngine.getAuthTokens(workloadClient);
             }
-            code = code.replace('REPLACE_WITH_FAB_TOKEN', fabToken);
-            code = code.replace('REPLACE_WITH_FAB_TOKEN_ONELAKE', fabTokenOnelake);
-            code = code.replace('FAB_TOKEN_AZURE', fabTokenAzure);
-
+            code = code.replace('REPLACE_WITH_FAB_TOKEN', fabTokens?.fab || '');
+            code = code.replace('REPLACE_WITH_FAB_TOKEN_ONELAKE', fabTokens?.onelake || '');
+            code = code.replace('FAB_TOKEN_AZURE', fabTokens?.azure || '');
             // Insert the command text into the wrapper
             const fullCommand = await this.getCommandText(command, context);
             code = code.replace('REPLACE_WITH_COMMAND', fullCommand);
@@ -124,19 +118,6 @@ export class ExecuteCommand implements IConsoleCommand {
             ExecuteCommand.pythonWrapperContent = await response.text();
         }
         return ExecuteCommand.pythonWrapperContent;
-    }
-
-    /**
-     * Acquire authentication token for specified scopes
-     * @param workloadClient Workload client for token acquisition
-     * @param scopes Token scope string (space-separated if multiple)
-     * @returns Promise resolving to OBO token string
-     */
-    private async getTokenForScopes(workloadClient: WorkloadClientAPI, scopes: string | undefined): Promise<string> {
-        const result = await workloadClient.auth.acquireFrontendAccessToken({ 
-            scopes: scopes?.length ? scopes.split(' ') : [] 
-        });
-        return result.token;
     }
 
 }

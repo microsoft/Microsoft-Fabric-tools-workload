@@ -220,6 +220,9 @@ export function CloudShellItemDefaultView({
         state: sessionActive ? 'Scheduled' : null
       },
       engine: engine,
+      fabCLIAuthInfo: {
+        useFrontendToken: true
+      },
       onClearTerminal: () => setTerminalEntries([]),
       getScriptByName: async (scriptName: string): Promise<Script | null> => {
         const scriptMeta = scripts.find(s => s.name === scriptName);

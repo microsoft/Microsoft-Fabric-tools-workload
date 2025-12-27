@@ -31,10 +31,10 @@ def run_fab_cli_commands(cmd):
 if(get_parameter("fabCLIAuthInfo")):
     fabCLIAuthInfo = json.loads(get_parameter("fabCLIAuthInfo"))
     # Set environment variables for Fabric CLI authentication
-    if fabCLIAuthInfo.get("oboToken") and fabCLIAuthInfo.get("oboTokenOnelake") and fabCLIAuthInfo.get("oboTokenAzure"):
+    if fabCLIAuthInfo.get("oboToken") and fabCLIAuthInfo.get("oboTokenOnelake"): # and fabCLIAuthInfo.get("oboTokenAzure"):
         os.environ["FAB_TOKEN"] = fabCLIAuthInfo.get("oboToken", "")
         os.environ["FAB_TOKEN_ONELAKE"] = fabCLIAuthInfo.get("oboTokenOnelake", "")
-        os.environ["FAB_TOKEN_AZURE"] = fabCLIAuthInfo.get("oboTokenAzure", "")
+        #os.environ["FAB_TOKEN_AZURE"] = fabCLIAuthInfo.get("oboTokenAzure", "")
     elif fabCLIAuthInfo.get("clientId") and fabCLIAuthInfo.get("clientSecret") and fabCLIAuthInfo.get("tenantId"):
         # Service principal authentication
         clientId = fabCLIAuthInfo.get("clientId")

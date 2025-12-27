@@ -1,6 +1,7 @@
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { BatchResponse } from "../../../clients/FabricPlatformTypes";
 import { Script, Command, ScriptType } from "../CloudShellItemModel";
+import { FABRIC_BASE_SCOPES, SCOPES } from "../../../clients/FabricPlatformScopes";
 import { SparkLivyCloudShellClient } from "./SparkLivyCloudShellClient";
 import { IScriptCommand, ScriptCommandContext } from "./scripts/IScriptCommand";
 import { PythonScriptCommand } from "./scripts/PythonScriptCommand";
@@ -122,6 +123,44 @@ export class CloudShellItemEngine {
      */
     getWorkloadClient(): WorkloadClientAPI {
         return this.workloadClient;
+    }
+
+    /**
+     * Acquire all required authentication tokens for Fabric CLI
+     * @param workloadClient Workload client for token acquisition
+     * @returns Promise resolving to object with fab, onelake, and azure tokens
+     */
+    static async getAuthTokens(workloadClient: WorkloadClientAPI): Promise<{ fab: string; onelake: string; azure: string }> {
+        const [fabToken, onelakeToken] = await Promise.all([
+            CloudShellItemEngine.getTokenForScopes(workloadClient, SCOPES.DEFAULT),
+            CloudShellItemEngine.getTokenForScopes(workloadClient, FABRIC_BASE_SCOPES.ONELAKE_STORAGE)
+        ]);
+        
+        return {
+            fab: fabToken,
+            onelake: onelakeToken,
+            azure: '' // TODO: Add Azure token acquisition
+        };
+    }
+
+    /**
+     * Acquire authentication token for specified scopes
+     * @param workloadClient Workload client for token acquisition
+     * @param scopes Token scope string (space-separated if multiple)
+     * @returns Promise resolving to OBO token string
+     */
+    private static async getTokenForScopes(workloadClient: WorkloadClientAPI, scopes: string | undefined): Promise<string> {
+        // Split scopes and replace api.fabric.microsoft.com audience with analysis.windows.net/powerbi/api
+        // fabric cli does not work with api.fabric.microsoft.com audience
+        const scopeArray = scopes?.length ? scopes.split(' ') : [];
+        const adjustedScopes = scopeArray.map(scope => 
+            scope.replace('https://api.fabric.microsoft.com/', 'https://analysis.windows.net/powerbi/api/')
+        );
+        
+        const result = await workloadClient.auth.acquireFrontendAccessToken({ 
+            scopes: adjustedScopes
+        });
+        return result.token;
     }
 
 }
