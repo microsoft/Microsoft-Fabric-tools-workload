@@ -4,7 +4,7 @@ This document describes the architecture and design patterns of the Cloud Shell 
 
 ## Overview
 
-The Cloud Shell Item provides an interactive terminal interface for executing commands through Spark Livy sessions, along with Python script management and parameterized batch execution. It supports multiple execution modes with automatic session management, command history, and reusable scripts.
+The Cloud Shell Item provides an interactive terminal for executing Fabric CLI commands, Python code, and shell commands through Spark Livy sessions. It includes script management with parameterized batch execution, automatic session reuse, and command history.
 
 ## Architecture Diagram
 
@@ -15,27 +15,30 @@ The Cloud Shell Item provides an interactive terminal interface for executing co
 │                        UI Layer                                │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │ DefaultView     │ ScriptViews     │ Ribbon Controls            │
-│ - Terminal UI   │ - ScriptsList   │ - Session Control          │
-│ - Command Input │ - DetailView    │ - Script Actions           │
-│ - History       │ - Parameters    │ - Config Dropdowns         │
-│ - Scripts Panel │ - Monaco Editor │ - Mode Selection           │
+│ - Terminal UI   │ - ScriptsList   │ - Session Start/Stop       │
+│ - Command Input │ - DetailView    │ - Script Create            │
+│ - History       │ - Parameters    │ - Mode Selection           │
 ├─────────────────┴─────────────────┴─────────────────────────────┤
-│                   Business Logic Layer                         │
+│                   Engine Layer                               │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
-│ Editor          │ SparkLivy       │ State Management           │
-│ Orchestrator    │ Client          │ - Session State            │
-│ - Config Mgmt   │ - Session Mgmt  │ - Command History          │
-│ - Script Mgmt   │ - Command Exec  │ - Terminal Entries         │
-│ - Event Coord   │ - Batch Jobs    │ - Script Content Map       │
-│                 │ - OneLake Upload│ - Script Parameters        │
+│ CloudShellEngine│ SparkLivyClient │ Command Pattern            │
+│ - Command Router│ - Session Mgmt  │ - Script Commands (Batch)  │
+│ - Context Build │ - Statement Exec│   · BaseScriptCommand     │
+│                 │ - Batch Jobs    │   · PythonScriptCommand  │
+│                 │ - OneLake Upload│   · FabricCLIScriptCmd   │
+│                 │                 │ - Console Commands (Local) │
+│                 │                 │   · HelpCommand          │
+│                 │                 │   · ClearCommand         │
+│                 │                 │   · RunScriptCommand     │
+│                 │                 │   · ExecuteCommand       │
+│                 │                 │   · FabCLILoginCommand   │
 ├─────────────────┴─────────────────┴─────────────────────────────┤
 │                     Data Layer                                 │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │ Spark Livy APIs │ Item Definition │ OneLake Storage            │
-│ - Session CRUD  │ - Lakehouse     │ - Script Files             │
-│ - Statement Exec│ - Environment   │ - Session ID               │
-│ - Batch Jobs    │ - Scripts       │ - Validation               │
-│ - Batch Logs    │ - Parameters    │                            │
+│ - Session CRUD  │ - Lakehouse Ref │ - Script Files             │
+│ - Statement Exec│ - Environment   │ - Batch Uploads            │
+│ - Batch Jobs    │ - Scripts []    │                            │
 └─────────────────┴─────────────────┴─────────────────────────────┘
 ```
 
@@ -79,9 +82,7 @@ The Cloud Shell Item provides an interactive terminal interface for executing co
 - Session controls (Start/Stop)
 - Create Script action
 - Lakehouse and environment selection
-- Execution mode dropdown
 - Settings and quick access actions
-- Terminal actions
 
 ### SparkLivycloudShellClient
 
@@ -97,45 +98,31 @@ The Cloud Shell Item provides an interactive terminal interface for executing co
 
 ### Name-Based Identifiers
 
-Scripts use their name as the unique identifier, eliminating the need for separate IDs:
+Scripts use their name as the unique identifier:
 
-- **Script Path Pattern**: `{workspaceId}/{itemId}/Scripts/{scriptName}.py`
-- **No ID Management**: Names serve as both display and storage keys
-- **Validation**: Duplicate names prevented at creation time
-- **Refactoring Safety**: Renaming requires deletion and recreation
+- **Path Pattern**: `{workspaceId}/{itemId}/Scripts/{scriptName}`
+- **Extensions**: .py (Python), .fab (Fabric CLI)
+- **No Separate IDs**: Name serves as both identifier and display
+- **Validation**: Duplicate names prevented at creation
 
-### scriptsMap State Pattern
+### scriptsMap State
 
-The editor maintains a `Map<string, string>` for script content:
+Editor maintains `Map<string, string>` for script content:
 
 ```typescript
 const [scriptsMap, setScriptsMap] = useState<Map<string, string>>(new Map());
 
-// Loading from definition
-const loadScripts = async () => {
-  const map = new Map<string, string>();
-  for (const script of metadata.scripts) {
-    const content = await oneLakeClient.downloadFile(scriptPath);
-    map.set(script.name, content);
-  }
-  setScriptsMap(map);
-};
+// Loading
+for (const script of metadata.scripts) {
+  const content = await oneLakeClient.downloadFile(path);
+  map.set(script.name, content);
+}
 
-// Saving with override
-const saveItemInternal = async (
-  showNotification: boolean,
-  scriptsMapOverride?: Map<string, string>
-) => {
-  const scriptsToSave = scriptsMapOverride ?? scriptsMap;
-  // Build definition parts...
-};
+// Saving with override for async state
+await saveItemInternal(showNotification, scriptsMapOverride);
 ```
 
-**Key Benefits**:
-
-- **Immediate Access**: scriptsMapOverride allows saving during async state updates
-- **Efficient Lookups**: O(1) access by script name
-- **Clear Ownership**: Editor owns script content lifecycle
+**Benefits**: O(1) access, immediate state override, clear ownership
 
 ### Script Persistence
 
@@ -160,168 +147,255 @@ interface ScriptParameter {
 - **Content**: Stored in OneLake at `{workspaceId}/{itemId}/Scripts/{name}.py`
 - **Parameters**: Stored with metadata, injected at batch execution
 
-### Parameter System Design
+### Parameter System
 
-Parameters follow a type-safe pattern:
+Parameters follow type-safe injection pattern:
 
-1. **Definition**: User defines parameters in script metadata with type
-2. **Storage**: Parameters persist with script metadata
-3. **Injection**: At batch execution, converted to Spark configuration:
-   - `spark.script.param.<name>` = value
-   - `spark.script.param.<name>.type` = type
-4. **Access**: Scripts use `get_parameter` helper to retrieve typed values
+1. **Definition**: User defines parameters with type in script metadata
+2. **Storage**: Parameters persist in CloudShellItemDefinition.scripts[]
+3. **Injection**: At batch execution, converted to Spark config:
+   - `spark.script.param.{name}` = value
+4. **Variable Substitution**: 
+   - **Fabric CLI scripts**: Support both `$paramName` and `%paramName%` notation
+   - **Python scripts**: Use `get_parameter()` helper function for type-safe retrieval
+5. **Access**: Scripts use notation or helper functions based on script type
 
-**Type Conversion**:
+**Parameter Naming Rules**:
+- Only alphanumeric characters and underscores allowed
+- No spaces, dots, or special characters
+- Validated in UI during parameter creation
 
+**System Parameters** (Read-only, auto-populated):
+
+System parameters are automatically configured based on script type to match the language's idiomatic usage patterns:
+
+**Fabric CLI Scripts** (.fab):
+- `WORKSPACE` - Workspace name in Fabric CLI format (e.g., "MyWorkspace.Workspace")
+- `ITEM` - Item name in Fabric CLI format (e.g., "MyItem.CloudShellItem")
+
+**Python Scripts** (.py):
+- `WORKSPACE_NAME` - Plain workspace display name (e.g., "MyWorkspace")
+- `WORKSPACE_ID` - Workspace GUID
+- `ITEM_NAME` - Plain item display name (e.g., "MyItem")
+- `ITEM_ID` - Item GUID
+
+**Common Properties**:
+- Cannot be deleted or renamed by users
+- Values automatically populated from item context at runtime
+- Not saved in item definition (values are ephemeral)
+- Fetched dynamically for each script execution
+
+**Parameter Fields**:
+- `name` - Parameter identifier
+- `type` - Data type (string, int, float, bool, date)
+- `value` - Current value (empty string for system parameters)
+- `description` - Optional documentation
+- `isSystemParameter` - Marks read-only system parameters
+
+**Python Script Parameter Access**:
 ```python
-def get_parameter(name: str, default=None):
-    param_key = f"spark.script.param.{name}"
-    type_key = f"{param_key}.type"
-    
-    value = spark.conf.get(param_key, None)
-    param_type = spark.conf.get(type_key, "string")
-    
-    if param_type == "int":
-        return int(value)
-    elif param_type == "float":
-        return float(value)
-    elif param_type == "bool":
-        return value.lower() == "true"
-    # ...
+# In Python script - use get_parameter() helper
+def get_parameter(param_name, param_type="string", default_value=None):
+    value = spark.conf.get(f"spark.script.param.{param_name}", default_value)
+    # Type conversion logic...
+    return value
+
+# System parameters for Python scripts
+workspace_name = get_parameter("WORKSPACE_NAME", "string")  # "MyWorkspace"
+workspace_id = get_parameter("WORKSPACE_ID", "string")      # "abc123-..."
+item_name = get_parameter("ITEM_NAME", "string")            # "MyItem"
+item_id = get_parameter("ITEM_ID", "string")                # "def456-..."
+
+# User-defined parameters
+value = get_parameter("myParam", "string")
+```
+
+**Fabric CLI Script Parameter Access**:
+```bash
+# In Fabric CLI script - use $param or %param% notation
+
+# System parameters for Fabric CLI scripts (auto-converted to Fabric CLI format)
+ls -l $WORKSPACE              # Lists items in "MyWorkspace.Workspace"
+ls -l %WORKSPACE%             # Alternative notation
+
+item get --item $ITEM         # References "MyWorkspace.Workspace/MyItem.CloudShellItem"
+item get --item %ITEM%        # Alternative notation
+
+# User-defined parameters
+fab item get --workspace-id $workspaceId
+
+# Both formats supported:
+# $paramName - Unix/Linux style
+# %paramName% - Windows batch style
 ```
 
 ## Batch Execution Flow
 
-### Execution Flow
-
-Batch execution runs scripts as one-off Spark jobs with parameters:
-
 ```text
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ Script + Params│ → │ OneLake Upload│ → │ Spark Config │
-└──────────────┘    └──────────────┘    └──────────────┘
-                                               ↓
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ Poll Creation│ ← │  Create Batch │ ← │ Build Request│
-└──────────────┘    └──────────────┘    └──────────────┘
+Script + Params → BaseScriptCommand → Generate Wrapper Content
+       ↓
+   Upload to OneLake (timestamp_{name}.py)
+       ↓
+   Build Batch Request (lakehouse, environment, params)
+       ↓
+   Submit Batch → Poll Creation (20s timeout) → Return Batch ID
 ```
 
 ### Implementation
 
 ```typescript
-async runScriptAsBatch(
-  script: PythonScriptMetadata,
-  parameters?: ScriptParameter[]
-): Promise<BatchResponse> {
-  // 1. Upload script to OneLake (unchanged)
-  const scriptPath = `${workspaceId}/${itemId}/Scripts/${script.name}.py`;
-  await oneLakeClient.uploadFile(scriptPath, scriptContent);
+// BaseScriptCommand.execute()
+1. content = await getPythonWrapperContent(script, context);
+2. await oneLakeClient.writeFileAsText(path, content);
+3. batchRequest = { file: abfssPath, conf: {...params} };
+4. return await submitBatchJob(batchRequest);
 
-  // 2. Build Spark configuration with parameters
-  const parameterConf: { [key: string]: string } = {};
-  parameters?.forEach(p => {
-    parameterConf[`spark.script.param.${p.name}`] = p.value;
-    parameterConf[`spark.script.param.${p.name}.type`] = p.type;
-  });
+// Subclass wrappers:
+// - PythonScriptCommand: Returns script.content
+// - FabricCLIScriptCommand: Returns FabCliScriptWrapper.py (cached)
+```
 
-  // 3. Create batch job
-  const batchRequest = {
-    name: `${script.name}-${Date.now()}`,
-    file: oneLakePath,
-    conf: {
-      "spark.fabric.lakehouse.id": lakehouseId,
-      ...parameterConf
-    }
-  };
-  const response = await createBatch(batchRequest);
+**Polling**: 10 attempts × 2s = 20s timeout
 
-  // 4. Poll for creation completion
-  const batchId = await pollBatchCreation(response.id);
-  
-  return getBatch(batchId);
+## Authentication Architecture
+
+### Token Acquisition for Fabric CLI Scripts
+
+```typescript
+// CloudShellItemEngine.getAuthTokens()
+const [fabToken, onelakeToken] = await Promise.all([
+  acquireFrontendAccessToken(SCOPES.DEFAULT),           // Fabric API
+  acquireFrontendAccessToken(SCOPES.ONELAKE_STORAGE)    // OneLake
+]);
+
+// Scope adjustment: api.fabric.microsoft.com → analysis.windows.net/powerbi/api
+const adjustedScopes = scopes.split(' ').map(scope => 
+  scope.replace('https://api.fabric.microsoft.com/', 
+                'https://analysis.windows.net/powerbi/api/')
+);
+```
+
+### Authentication JSON Structure
+
+```json
+// OBO Authentication (default)
+{
+  "useFrontendToken": true,
+  "obo": {
+    "token": "eyJ...",           // Fabric API token
+    "tokenOnelake": "eyJ...",   // OneLake token
+    "tokenAzure": ""             // Not required for current operations
+  }
+}
+
+// Service Principal Authentication
+{
+  "useFrontendToken": false,
+  "client": {
+    "clientId": "abc-123",
+    "clientSecret": "secret",
+    "tenantId": "def-456"
+  }
 }
 ```
 
-### Polling Strategy
+### Python Wrapper Authentication
 
-Similar to session creation, batch creation uses polling:
+```python
+# FabCliScriptWrapper.py
+authConfig = json.loads(get_parameter("sys.fabCLIAuthInfo"))
 
-- **Interval**: 2 seconds
-- **Max Attempts**: 30 (60 seconds total)
-- **Success Criteria**: Batch appears in `listBatches` response
-- **Failure**: Timeout or error state
+if authConfig.get("obo"):
+    os.environ["FAB_TOKEN"] = obo["token"]
+    os.environ["FAB_TOKEN_ONELAKE"] = obo["tokenOnelake"]
+    os.environ["FAB_TOKEN_AZURE"] = obo["tokenAzure"]
+elif authConfig.get("client"):
+    subprocess.run(f"fab auth login -u {clientId} -p {clientSecret} --tenant {tenantId}")
+```
 
 ## Design Patterns
 
+### Command Pattern
+
+Two command hierarchies:
+
+**Script Commands** (Batch Jobs):
+```typescript
+BaseScriptCommand (abstract)
+  ├─ PythonScriptCommand
+  └─ FabricCLIScriptCommand
+```
+
+**Console Commands** (Local):
+```typescript
+IConsoleCommand (interface)
+  ├─ HelpCommand
+  ├─ ClearCommand
+  ├─ RunScriptCommand
+  └─ ExecuteCommand
+```
+
 ### Execution Mode Pattern
 
-Three distinct execution modes:
-
 ```typescript
-enum ExecutionMode {
-  NATIVE = 'NATIVE',          // Direct Python code
-  SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess
-  FAB_CLI = 'FAB_CLI'        // Cloud Shell with "fab" prefix
+enum CommandType {
+  FAB_CLI = 'fabcli',   // Fabric CLI with 'fab>' prefix (default)
+  PYTHON = 'python',    // Direct Python in Spark with '>>>' prefix
+  SHELL = 'shell',      // Shell via subprocess with 'sh>' prefix
 }
 ```
 
-**Mode-Specific Wrapping**:
+**Mode Selection**: Users can click the terminal prompt prefix (`fab>`, `>>>`, or `sh>`) to open a menu and switch execution modes.
 
-- **NATIVE**: Execute Python code directly in Spark session
-- **SUBPROCESS/FAB_CLI**: Wrap in `subprocess.run(command, shell=True, ...)` with JSON output
+**Mode-Specific Wrapping**:
+- FAB_CLI/SHELL: Wrapped with subprocess.run() returning JSON
+- PYTHON: Executed directly in Spark session
 
 ### Session Reuse Pattern
-
-Automatically validates and reuses existing sessions:
 
 ```typescript
 async reuseOrCreateSession(config, existingSessionId, onProgress) {
   if (existingSessionId && await validateSession(...)) {
-    return existingSession; // Reuse
+    await verifyFabricCLI(...);
+    return existingSession;
   }
-  return await initializeSession(config, onProgress); // Create new
+  return await initializeSession(config, onProgress);
 }
 ```
 
-**Validation Criteria**: `schedulerState === 'Scheduled'` AND `livyState === 'idle'`
-
-### State Management
-
-```typescript
-interface CloudShellItemDefinition {
-  selectedLakehouse?: ItemReference;      // Persisted
-  lastSparkSessionId?: string;            // Persisted for reuse
-  selectedSparkEnvironment?: ItemReference; // Persisted
-}
-```
-
-Runtime state (execution mode, history, entries) stored in component state only.
+**Validation**: schedulerState='Scheduled' AND livyState='idle' AND CLI verified
 
 ## Data Flow
 
 ### Session Initialization
 
 ```text
-User Clicks Start → Validate Existing Session → Reuse OR Create New
+User Clicks Start → Check lastSparkSessionId → Validate OR Create
      ↓
-Poll Session State → Wait for 'Scheduled' + 'idle' → Session Ready
+Poll Session (2s intervals, 5min timeout) → Scheduled + idle
+     ↓
+Verify Fabric CLI (fab --version) → Session Ready
 ```
 
 ### Command Execution
 
 ```text
-User Enters Command → Add to History → Mode-Specific Wrapper
+User Input → CloudShellItemEngine Router
      ↓
-Execute via Livy Statement API → Parse Result → Display in Terminal
+Console Command → Local Handler → Display
+     OR
+FAB_CLI/PYTHON/SHELL → ExecuteCommand → Livy Statement API → Display
 ```
 
-### Session Clearing
+### Script Batch Execution
 
-Session ID automatically cleared when:
-
-- User changes lakehouse
-- User stops session
-- Session validation fails
+```text
+Run Script → BaseScriptCommand.execute()
+     ↓
+Generate Wrapper → Upload OneLake → Submit Batch
+     ↓
+Poll Creation (2s, 20s timeout) → Return Batch ID
+```
 
 ## Integration Points
 
@@ -356,25 +430,27 @@ Session ID automatically cleared when:
 
 ## Performance Considerations
 
-### Optimization Strategies
+### Optimizations
 
-- Session reuse to avoid creation overhead
-- 2-second polling intervals with 5-minute timeout for sessions
-- 2-second polling intervals with 60-second timeout for batch creation
-- In-memory command history with efficient navigation
-- Debounced input and batched state updates
-- scriptsMap for O(1) script content access
+- **Session Reuse**: Avoids 5+ minute session startup
+- **Static Caching**: Wrapper files (FabCliCheckWrapper.py, FabCliScriptWrapper.py) cached
+- **Polling Intervals**: 2s for sessions/batches, 1s for statements
+- **scriptsMap**: O(1) content lookups by name
+- **Debounced Input**: Efficient terminal entry handling
 
-### Memory Management
+### Timeouts
 
-- Terminal entry limits for large outputs
-- Proper session cleanup on component unmount
-- Efficient result parsing
-- scriptsMap state management for large script sets
+- Session Creation: 5 minutes (150 attempts × 2s)
+- Batch Creation: 20 seconds (10 attempts × 2s)
+- Statement Execution: 60 seconds (60 attempts × 1s)
 
 ## Security
 
-- **Service Principal Only**: User authentication not yet supported
-- **Subprocess Isolation**: Commands execute in Spark context
+- **Authentication**: OBO token (frontend user session, default) or Service Principal
+  - **OBO Token**: Three tokens acquired automatically (fab, onelake, azure) via `acquireFrontendAccessToken()`
+  - **Service Principal**: Client credentials (clientId, clientSecret, tenantId) for automated scenarios
+  - **Scope Adjustment**: Fabric API audience URLs automatically converted to Power BI API format for compatibility
+  - **Token Injection**: Passed to Spark batch jobs via configuration as JSON with `obo` or `client` sub-objects
+- **Subprocess Execution**: Commands run in isolated Spark containers
 - **OneLake Permissions**: Enforced at platform level
-- **Input Sanitization**: Command escaping for shell execution
+- **Input Handling**: Commands executed via Spark Livy (no direct shell access)

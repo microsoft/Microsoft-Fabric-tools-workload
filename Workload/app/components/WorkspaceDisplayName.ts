@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Body1, Text } from "@fluentui/react-components";
-import { navigateToWorkspace } from "../../../controller/NavigationController";
-import { PackageInstallerContext } from "../package/PackageInstallerContext";
+import { navigateToWorkspace } from "../controller/NavigationController";
+import { WorkloadClientAPI } from "@ms-fabric/workload-client";
+import { FabricPlatformAPIClient } from "../clients/FabricPlatformAPIClient";
 
 // Component to fetch and display workspace name
-export function WorkspaceDisplayNameLabel({context , workspaceId }: { context: PackageInstallerContext, workspaceId: string }) {
+export function WorkspaceDisplayNameLabel({workloadClient , workspaceId }: { workloadClient: WorkloadClientAPI, workspaceId: string }) {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -17,7 +18,8 @@ export function WorkspaceDisplayNameLabel({context , workspaceId }: { context: P
       }
 
       try {
-        const workspace = await context.fabricPlatformAPIClient.workspaces.getWorkspace(workspaceId);
+        const fabricAPI = new FabricPlatformAPIClient(workloadClient);
+        const workspace = await fabricAPI.workspaces.getWorkspace(workspaceId);
         setWorkspaceName(workspace.displayName || workspaceId);
       } catch (error) {
         console.warn(`Failed to fetch workspace name for ${workspaceId}:`, error);
@@ -28,7 +30,7 @@ export function WorkspaceDisplayNameLabel({context , workspaceId }: { context: P
     }
 
     fetchWorkspaceName();
-  }, [workspaceId, context.workloadClientAPI]);
+  }, [workspaceId, workloadClient]);
 
   if (isLoading) {
     return React.createElement(Body1, null, "Loading...");
@@ -40,13 +42,13 @@ export function WorkspaceDisplayNameLabel({context , workspaceId }: { context: P
       color: "#0078d4",
       textDecoration: "underline"
     },
-    onClick: () => navigateToWorkspace(context.workloadClientAPI, workspaceId),
+    onClick: () => navigateToWorkspace(workloadClient, workspaceId),
     title: `Click to open workspace ${workspaceId}`
   }, workspaceName);
 }
 
 // Component to fetch and display workspace name in table cell format
-export function WorkspaceDisplayNameCell({context, workspaceId }: { workspaceId: string, context: PackageInstallerContext }) {
+export function WorkspaceDisplayNameCell({workloadClient, workspaceId }: { workspaceId: string, workloadClient: WorkloadClientAPI }) {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -59,7 +61,8 @@ export function WorkspaceDisplayNameCell({context, workspaceId }: { workspaceId:
       }
 
       try {
-        const workspace = await context.fabricPlatformAPIClient.workspaces.getWorkspace(workspaceId);
+        const fabricAPI = new FabricPlatformAPIClient(workloadClient);
+        const workspace = await fabricAPI.workspaces.getWorkspace(workspaceId);
         setWorkspaceName(workspace.displayName || workspaceId);
       } catch (error) {
         console.warn(`Failed to fetch workspace name for ${workspaceId}:`, error);
@@ -70,7 +73,7 @@ export function WorkspaceDisplayNameCell({context, workspaceId }: { workspaceId:
     }
 
     fetchWorkspaceName();
-  }, [workspaceId, context.workloadClientAPI]);
+  }, [workspaceId, workloadClient]);
 
   if (isLoading) {
     return React.createElement(Text, null, "Loading...");
@@ -84,7 +87,7 @@ export function WorkspaceDisplayNameCell({context, workspaceId }: { workspaceId:
     },
     onClick: (e: React.MouseEvent) => {
       e.stopPropagation();
-      navigateToWorkspace(context.workloadClientAPI, workspaceId);
+      navigateToWorkspace(workloadClient, workspaceId);
     },
     title: `Click to open workspace ${workspaceId}`
   }, workspaceName);

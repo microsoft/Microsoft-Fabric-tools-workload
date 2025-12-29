@@ -13,19 +13,18 @@ The Cloud Shell Item provides an interactive terminal interface for executing Cl
 
 The Cloud Shell Item enables users to:
 
-- **Execute Cloud Shell commands** through an integrated terminal interface
-- **Create and manage Python scripts** with parameter support
-- **Run scripts as batch jobs** with Spark configuration
-- **Manage Spark sessions** with automatic reuse and validation
-- **Select lakehouse and environment** for command execution context
+- **Execute Fabric CLI commands** through an integrated terminal interface with automatic 'fab' prefix
+- **Create and manage scripts** (Python and Fabric CLI) with parameter support
+- **Run scripts as Spark batch jobs** with parameter injection
+- **Manage Spark sessions** with automatic validation and reuse
+- **Select lakehouse and environment** for execution context
 - **Track command history** with arrow key navigation
 
-**Advanced Features** (optional):
+**Execution Modes**:
 
-- **Switch execution modes** to run native Python code or shell commands
-- **Execute Python directly** in Spark sessions for data processing
-- **Run shell commands** with subprocess support
-- **Parameterized scripts** with type-safe parameter injection
+- **FAB_CLI (Default)**: Fabric CLI commands with automatic 'fab' prefix
+- **PYTHON**: Direct Python code execution in Spark sessions
+- **SHELL**: Shell commands via subprocess wrapper
 
 For technical architecture details, see [Architecture.md](./Architecture.md).
 
@@ -33,13 +32,14 @@ For technical architecture details, see [Architecture.md](./Architecture.md).
 
 ### Script Management
 
-Create, edit, and manage Python scripts with full parameter support:
+Create, edit, and manage Python and Fabric CLI scripts with full parameter support:
 
 **Script Creation & Editing**
 
-- **Create Scripts**: Add new Python scripts with automatic `.py` extension
+- **Create Scripts**: Add Python (`.py`) or Fabric CLI (`.fab`) scripts
 - **Monaco Editor**: Full-featured code editor with syntax highlighting
 - **Script Parameters**: Define typed parameters (string, int, float, bool, date)
+- **Fabric CLI Scripts**: Multiple CLI commands in a single file with parameter substitution
 - **Parameter Panel**: Collapsible left panel for parameter configuration
 - **Auto-save**: Changes are automatically saved with notifications
 - **Delete Protection**: Confirmation dialog prevents accidental deletions
@@ -49,11 +49,23 @@ Create, edit, and manage Python scripts with full parameter support:
 Scripts support parameterized execution with type-safe configuration:
 
 - **Parameter Types**: string, int, float, bool, date
-- **Spark Configuration**: Parameters passed as `spark.script.param.<name>`
-- **Type Information**: Parameter types available as `spark.script.param.<name>.type`
-- **Reusable Scripts**: Same script file with different parameter values
+- **Parameter Description**: Optional description field for documentation
+- **System Parameters**: Pre-configured read-only parameters available in all scripts:
+  - `WORKSPACE_NAME` - Name of the current workspace
+  - `WORKSPACE_ID` - ID of the current workspace
+  - `ITEM_NAME` - Name of the current Cloud Shell item
+  - `ITEM_ID` - ID of the current Cloud Shell item
+- **Spark Configuration**: Python scripts access parameters via `spark.script.param.<name>`
+- **Variable Substitution**: Fabric CLI scripts support two formats:
+  - `$paramName` - Unix/Linux style (e.g., `$workspaceId`)
+  - `%paramName%` - Windows batch style (e.g., `%workspaceId%`)
+- **Reusable Scripts**: Same script with different parameter values per execution
+- **Batch Execution**: Both Python and Fabric CLI scripts can be executed as Spark batch jobs
+- **Parameter Naming**: Only alphanumeric characters and underscores allowed (no spaces, dots, or special characters)
 
 **Example Parameter Access**:
+
+**Python Scripts** - Use `get_parameter()` method:
 
 ```python
 from pyspark.sql import SparkSession
@@ -72,10 +84,35 @@ def get_parameter(param_name, param_type="string", default_value=None):
     else:  # string or date
         return value
 
-# Access parameters
+# Access custom parameters
 batch_size = get_parameter("batch_size", "int", "100")
 input_path = get_parameter("input_path", "string", "Files/data")
 enable_logging = get_parameter("enable_logging", "bool", "true")
+
+# Access system parameters (always available)
+workspace_id = get_parameter("WORKSPACE_ID", "string")
+item_name = get_parameter("ITEM_NAME", "string")
+print(f"Running in workspace: {workspace_id}, item: {item_name}")
+```
+
+**Fabric CLI Scripts** - Use `$param` or `%param%` notation:
+
+```bash
+# Both formats are supported:
+fab ls -l $workspaceName.Workspace
+fab ls -l %workspaceName%.Workspace
+
+# Example with multiple parameters:
+fab item get --workspace-id $workspaceId --item-id $itemId
+fab item get --workspace-id %workspaceId% --item-id %itemId%
+
+# Use system parameters (always available):
+fab ls -l $WORKSPACE_NAME.Workspace
+fab item get --workspace-id $WORKSPACE_ID --item-id $ITEM_ID
+
+# Parameters are replaced before execution
+# $workspaceId → actual-workspace-guid
+# %workspaceId% → actual-workspace-guid
 ```
 
 **Batch Execution**
@@ -86,33 +123,27 @@ enable_logging = get_parameter("enable_logging", "bool", "true")
 - **Progress Notifications**: Real-time feedback during job submission
 - **Job ID Tracking**: Batch job ID returned for monitoring
 
-### Cloud Shell Execution (Default)
+### Execution Modes
 
-**Cloud Shell (`FAB_CLI`)** - Default Mode
+**Fabric CLI (FAB_CLI)** - Default Mode
 
-- Execute Cloud Shell commands with automatic `fab` prefix
+- Execute Fabric CLI commands with automatic `fab` prefix
 - Integrated access to Fabric platform capabilities
-- Best for: Fabric resource management, platform operations
-- Example: `workspace list` (executed as `fab workspace list`)
+- **Authentication**: Currently supports Service Principal (Client ID + Client Secret only)
+  - OBO and certificate authentication are work in progress
+- Example: `ls -l MyWorkspace.Workspace` (executed as `fab ls -l MyWorkspace.Workspace`)
 
-### Advanced Execution Modes (Optional)
-
-To use Python or shell commands, select a different execution mode from the ribbon dropdown:
-
-**Native Python (`NATIVE`)**
+**Python (PYTHON)**
 
 - Execute Python code directly in the Spark session
-- Must be activated via ribbon execution mode dropdown
-- Best for: Data processing, Spark operations, Python scripts
+- Best for: Data processing, Spark operations, PySpark scripts
 - Example: `df = spark.read.parquet("Files/data.parquet")`
 
-**Subprocess (`SUBPROCESS`)**
+**Shell (SHELL)**
 
-- Execute shell commands via Python subprocess
-- Must be activated via ribbon execution mode dropdown
-- Supports pipes (`|`), redirections (`>`, `>>`), and complex shell operations
-- Best for: File operations, system commands, shell scripts
-- Example: `echo "Hello World" > myfile.txt`
+- Execute shell commands via Python subprocess wrapper
+- Supports pipes, redirections, and standard shell operations
+- Example: `echo "Hello World!"` or `fab ls -l MyWorkspace.Workspace`
 
 ### Session Management
 
@@ -128,14 +159,26 @@ To use Python or shell commands, select a different execution mode from the ribb
 - **Multi-line Output**: Proper formatting for complex command results
 - **System Messages**: Clear distinction between commands, results, and system notifications
 - **Error Handling**: Comprehensive error display with detailed messages
-- **Clear Command**: Reset terminal view with `clear` command
+
+### Console Commands
+
+The terminal supports built-in commands processed locally without Spark execution:
+
+- **`help`**: Display available commands with mode-specific examples
+- **`clear`**: Clear all terminal entries
+- **`run {scriptName}`**: Execute a saved script as a Spark batch job
+  - Example: `run MyAnalysis.py` executes the script with configured parameters
+  - Parameters automatically injected via Spark configuration
+  - Batch job ID returned for monitoring
+
+Console commands take precedence over Fabric CLI commands.
 
 ### Workspace Integration
 
 - **Lakehouse Selection**: Change target lakehouse dynamically
 - **Environment Selection**: Choose from available Spark environments
 - **Session Control**: Start/stop sessions from the ribbon
-- **Execution Mode Toggle** (Advanced): Switch to Python or shell modes via ribbon dropdown
+- **Execution Mode Toggle**: Switch between Cloud Shell (`fab>`), Python (`>>>`), and shell (`sh>`) modes by clicking the terminal prompt prefix
 
 ## Architecture
 
@@ -143,30 +186,44 @@ To use Python or shell commands, select a different execution mode from the ribb
 
 ```text
 CloudShellItem/
-├── CloudShellItemDefaultView.tsx          # Terminal UI and command execution
-├── CloudShellItemEditor.tsx               # Main editor orchestrator with script management
-├── CloudShellItemEmptyView.tsx            # Empty state component
-├── CloudShellItemRibbon.tsx               # Ribbon actions and controls
-├── CloudShellItemModel.ts                 # Data models and interfaces
+├── CloudShellItemDefaultView.tsx          # Terminal UI with command execution
+├── CloudShellItemEditor.tsx               # Editor orchestrator and state management
+├── CloudShellItemEmptyView.tsx            # Empty state view
+├── CloudShellItemRibbon.tsx               # Ribbon controls (session, scripts, settings)
+├── CloudShellItemModel.ts                 # Data models (CommandType, ScriptType, definitions)
 ├── ScriptDetailView.tsx                  # Script editor with parameter panel
-├── ScriptsList.tsx                       # Script list component
+├── ScriptsList.tsx                       # Script list display
 ├── CreateScriptDialog.tsx                # Script creation dialog
-├── SparkLivycloudShellClient.ts           # Spark Livy session and batch management
-└── CloudShellItem.scss                    # Centralized styling
+├── engine/
+│   ├── CloudShellItemEngine.ts           # Command routing engine
+│   ├── SparkLivyCloudShellClient.ts      # Session and batch job management
+│   ├── scripts/
+│   │   ├── BaseScriptCommand.ts          # Base class for batch execution
+│   │   ├── PythonScriptCommand.ts        # Python script handler
+│   │   └── FabricCLIScriptCommand.ts     # Fabric CLI script handler
+│   └── shell/
+│       ├── HelpCommand.ts                # Help console command
+│       ├── ClearCommand.ts               # Clear console command
+│       ├── RunScriptCommand.ts           # Run script console command
+│       └── ExecuteCommand.ts             # Statement execution handler
+└── CloudShellItem.scss                    # Styling
 ```
 
 ### Execution Flow
 
 ```text
-User Command → Cloud Shell Wrapper (default) → Spark Session
+User Input → CloudShellItemEngine → Command Type Router
      ↓
-FAB_CLI Mode (default) → subprocess.run("fab command", shell=True) → JSON Response
-     ↓
-Result Processing → Terminal Display → Command History
+Console Command → Local Handler → Terminal Display
+     |
+FAB_CLI/SHELL/PYTHON → Spark Session → Statement Execution → Result Display
+     |
+Script Execution → BaseScriptCommand → OneLake Upload → Batch Job → Job ID
 
-Advanced Modes (when activated):
-NATIVE Mode → Direct Python Code → Spark Execution
-SUBPROCESS Mode → subprocess.run(shell=True) → JSON Response
+Command Wrapping:
+FAB_CLI: subprocess.run("fab {command}") with JSON output
+SHELL: subprocess.run("{command}") with JSON output  
+PYTHON: Direct execution in Spark session
 ```
 
 ## Component Details
@@ -197,11 +254,10 @@ The main terminal component that:
 
 The main orchestrator component that:
 
-- Manages item loading and saving
-- Coordinates session state and configuration
+- Manages item loading and saving with definition parts
+- Coordinates session state (sessionId, isConnecting, terminalEntries)
+- Maintains scriptsMap for efficient script content access
 - Handles lakehouse and environment selection
-- Provides ribbon integration
-- Controls execution mode switching
 
 ### CloudShellItemRibbon
 
@@ -210,10 +266,8 @@ Ribbon integration providing:
 - **Save**: Save script changes and item definition
 - **Settings**: Open item settings panel
 - **Start/Stop Session**: Session lifecycle management for terminal
-- **Clear Terminal**: Clear all terminal entries
 - **Lakehouse Selection**: Change target lakehouse
 - **Environment Dropdown**: Select Spark environment with dynamic label
-- **Execution Mode Dropdown** (Advanced): Optionally switch to Native Python or Subprocess modes (default: Cloud Shell)
 - **Create Script**: Create new Python script
 
 ### ScriptDetailView
@@ -237,18 +291,17 @@ Script list component that:
 - Handles empty state with create script button
 - Supports script navigation
 
-### SparkLivycloudShellClient
+### SparkLivyCloudShellClient
 
-Session and batch management client that:
+Spark Livy client that:
 
-- Creates and validates Spark Livy sessions
-- Executes commands with mode-specific wrapping
-- Handles session reuse logic
-- Manages statement lifecycle
-- **Runs scripts as batch jobs** with parameter configuration
-- **Polls for batch creation** and state updates
-- **Uploads scripts to OneLake** for batch execution
-- Parses results based on execution mode
+- Creates and validates sessions with 5-minute polling timeout
+- Validates existing sessions for reuse (schedulerState='Scheduled', livyState='idle')
+- Verifies Fabric CLI availability on session creation
+- Executes statements with 60-second timeout
+- Submits batch jobs with parameter injection via Spark configuration
+- Polls for batch creation with 20-second timeout
+- Parses JSON-wrapped results from subprocess commands
 
 ## Data Models
 
@@ -256,21 +309,22 @@ Session and batch management client that:
 
 ```typescript
 interface CloudShellItemDefinition {
-  selectedLakehouse?: ItemReference;          // Selected lakehouse context
-  lastSparkSessionId?: string;                 // Last used session ID for reuse
-  selectedSparkEnvironment?: ItemReference;    // Selected Spark environment
-  scripts?: PythonScriptMetadata[];            // Python script metadata
+  selectedLakehouse?: ItemReference;          // Lakehouse for execution context
+  lastSparkSessionId?: string;                 // Session ID for automatic reuse
+  selectedSparkEnvironment?: ItemReference;    // Spark environment (packages, config)
+  scripts?: ScriptMetadata[];                  // Script metadata (content in OneLake)
 }
 ```
 
-### PythonScriptMetadata
+### ScriptMetadata
 
 ```typescript
-interface PythonScriptMetadata {
-  name: string;                    // Script name (includes .py extension, used as identifier)
-  parameters?: ScriptParameter[];  // Script parameters
-  createdAt?: string;              // Creation timestamp
-  modifiedAt?: string;             // Last modification timestamp
+interface ScriptMetadata {
+  name: string;                    // Unique script name with extension (.py, .fab)
+  type?: ScriptType;               // PYTHON or FABCLI (defaults to PYTHON)
+  parameters?: ScriptParameter[];  // Parameters for execution
+  createdAt?: string;              // ISO timestamp
+  modifiedAt?: string;             // ISO timestamp
 }
 ```
 
@@ -284,13 +338,13 @@ interface ScriptParameter {
 }
 ```
 
-### ExecutionMode Enum
+### CommandType Enum
 
 ```typescript
-enum ExecutionMode {
-  FAB_CLI = 'FAB_CLI',        // Cloud Shell with fab prefix (DEFAULT)
-  NATIVE = 'NATIVE',          // Native Python execution (Advanced)
-  SUBPROCESS = 'SUBPROCESS',  // Shell commands via subprocess (Advanced)
+enum CommandType {
+  FAB_CLI = 'fabcli',   // Fabric CLI with 'fab' prefix (DEFAULT)
+  PYTHON = 'python',    // Direct Python execution in Spark
+  SHELL = 'shell',      // Shell commands via subprocess
 }
 ```
 
@@ -317,24 +371,22 @@ interface TerminalEntry {
 
 ### Session Reuse Logic
 
-The client automatically attempts to reuse existing sessions:
+Automatic session validation and reuse to avoid 5+ minute startup:
 
 ```typescript
 async reuseOrCreateSession(config, existingSessionId, onProgress) {
   if (existingSessionId) {
-    const isValid = await validateSession(workspaceId, lakehouseId, existingSessionId);
-    if (isValid) {
-      return existingSession; // Reuse
+    const valid = await validateSession(...);
+    if (valid) {
+      await verifyFabricCLI(...); // Check CLI availability
+      return existingSession;
     }
   }
-  return await initializeSession(config, onProgress); // Create new
+  return await initializeSession(config, onProgress);
 }
 ```
 
-**Validation Criteria**:
-
-- `schedulerState === 'Scheduled'`
-- `livyState === 'idle'`
+**Validation**: schedulerState='Scheduled' AND livyState='idle' AND CLI verified
 
 ### Session Clearing
 
@@ -346,58 +398,47 @@ Session IDs are automatically cleared when:
 
 ## Command Execution
 
-### Cloud Shell Mode (FAB_CLI) - Default
+### Fabric CLI Mode (FAB_CLI) - Default
 
-Cloud Shell commands with automatic `fab` prefix:
+Fabric CLI commands with automatic `fab` prefix:
 
-```python
-# User input
-auth status
-
-# List all workspaces
-ls -l
-
-# List the content in a MyWorkspace
-ls MyWorkspace.Workspace -l
-
+```bash
+# User input → Executed command
+ls -l                        → fab ls -l
+ls -l MyWorkspace.Workspace  → fab ls -l MyWorkspace.Workspace  
+auth status                  → fab auth status
 ```
 
-**Example Commands**:
+**Common Commands**:
 
-- `workspace list` - List all workspaces
-- `item list --workspace-id <id>` - List items in a workspace
-- `lakehouse get --workspace-id <id> --item-id <id>` - Get lakehouse details
+- `ls -l` - List all workspaces
+- `ls -l {workspace}.Workspace` - List items in workspace
+- `item get --workspace-id {id} --item-id {id}` - Get item details
 
-For more examples, see the [Cloud Shell Examples Documentation](https://microsoft.github.io/fabric-cli/examples/item_examples/).
+For more examples, see [Fabric CLI Documentation](https://microsoft.github.io/fabric-cli/commands/).
 
-### Advanced Modes (Must be Activated in code)
+### Python Mode (PYTHON)
 
-These modes require manual activation via the ribbon execution mode dropdown.
-
-#### Native Python Mode (NATIVE)
-
-Direct Python code execution in Spark session:
+Direct Python execution in Spark session:
 
 ```python
-# User input
+# User input (executed as-is)
 df = spark.read.parquet("Files/data.parquet")
 df.show()
-
-# Executed as-is in Spark session
+print("Hello World!")
 ```
 
-#### Subprocess Mode (SUBPROCESS)
+### Shell Mode (SHELL)
 
-Shell commands via Python subprocess:
+Shell commands via subprocess wrapper:
 
-```python
+```bash
 # User input
-ls -la | grep txt
+echo "Hello World!"
+fab ls -l MyWorkspace.Workspace
 
-# Wrapped as
-import subprocess
-result = subprocess.run("ls -la | grep txt", shell=True, capture_output=True, text=True)
-print(json.dumps({"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode}))
+# Wrapped in Python subprocess with JSON output
+# Returns: {"returncode": 0, "stdout": "...", "stderr": "..."}  
 ```
 
 ## Error Handling

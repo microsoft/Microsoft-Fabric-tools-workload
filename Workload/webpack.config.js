@@ -22,6 +22,11 @@ module.exports = {
         path: path.resolve(__dirname, "dist"),
         publicPath: '/',
     },
+    cache: {
+        type: 'filesystem',
+        allowCollectingMemory: true,
+        compression: 'gzip',
+    },
     plugins: [
         new CleanWebpackPlugin(),
         new Webpack.DefinePlugin({
@@ -65,6 +70,13 @@ module.exports = {
                 test: /\.tsx?$/,
                 exclude: /node_modules/,
                 loader: "ts-loader",
+                options: {
+                    transpileOnly: true, // Skip type checking for faster builds
+                }
+            },
+            {
+                test: /\.css$/,
+                use: ["style-loader", "css-loader"],
             },
             {
                 test: /\.s[ac]ss$/i,

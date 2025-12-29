@@ -71,3 +71,16 @@ export {
 export type {
   DialogControlProps
 } from './Dialog/';
+
+// Fabric Platform Components - Workspace, Capacity, and Display Name utilities
+export { WorkspaceDropdown } from './WorkspaceDropdown';
+export type { WorkspaceDropdownProps } from './WorkspaceDropdown';
+
+export { CapacityDropdown } from './CapacityDropdown';
+export type { CapacityDropdownProps } from './CapacityDropdown';
+
+export { WorkspaceDisplayNameLabel, WorkspaceDisplayNameCell } from './WorkspaceDisplayName';
+export { FolderDisplayNameLabel, FolderDisplayNameCell } from './FolderDisplayName';
+
+// Fabric Core Item Types - Icon utilities for Fabric item types
+export { getItemTypeIcon, FABRIC_CORE_ITEM_TYPES } from './FabricCoreItemTypes';

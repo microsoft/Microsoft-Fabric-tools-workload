@@ -15,15 +15,20 @@ def get_parameter(param_name, default_value=""):
     conf_key = f"spark.script.param.{param_name}"
     return spark.conf.get(conf_key, default_value)
 
-# Example: Read parameters
-# Add your parameters in the Scripts panel and they will be available here
-# param_key = "param1"
-# param_value = get_parameter(param_key, "default_value")
-# print("Parameter " + param_key + ": " + param_value)
-
 # Your script logic here
 print("Script started successfully!")
 print(f"Spark version: {spark.version}")
+
+
+# Example: Read parameters
+# Accessing a (system) parameter
+print(f"Workspace ID: {get_parameter('WORKSPACE_ID')}")
+print(f"Item ID: {get_parameter('ITEM_ID')}")
+
+# Add your parameters in the Scripts panel and they will be available here
+# param_key = "myParameter"
+# param_value = get_parameter(param_key, "default_value")
+# print("Parameter " + param_key + ": " + param_value)
 
 # Example: Create a simple DataFrame
 data = [

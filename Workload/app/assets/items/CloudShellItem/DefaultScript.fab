@@ -1,0 +1,26 @@
+# Default Fabric CLI Script Template
+# This script demonstrates common Fabric CLI commands
+# 
+# Variables can be used with either syntax:
+#   $PARAM_NAME  or  %PARAM_NAME%
+
+##########################################################
+# Add your Fabric CLI commands below
+##########################################################
+
+# List all workspaces
+ls -l
+
+# List all items in the current workspace
+ls -l $WORKSPACE
+
+# Create a new Lakehouse using a parameter (lhName) for the name 
+# create $WORKSPACE/$lhName.Lakehouse
+
+# Get the details of the newly created lakehouse
+# get $WORKSPACE/$lhName.Lakehouse -q .
+
+# Delete the created Lakehouse 
+# rm $WORKSPACE/$lhName.Lakehouse -f
+
+

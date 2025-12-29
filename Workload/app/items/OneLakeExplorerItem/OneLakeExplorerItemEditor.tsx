@@ -16,9 +16,45 @@ import { ItemEditor } from "../../components/ItemEditor";
 import { OneLakeExplorerItemDefaultView } from "./OneLakeExplorerItemDefaultView";
 import "./OneLakeExplorerItem.scss";
 
+/**
+ * Centralized file type configuration
+ * Maps file extensions to Monaco editor language identifiers
+ */
+const FILE_TYPE_CONFIG: { [extension: string]: string } = {
+  'txt': 'plaintext',
+  'js': 'javascript',
+  'jsx': 'javascript',
+  'ts': 'typescript',
+  'tsx': 'typescript',
+  'ipynb': 'jupyter',
+  'py': 'python',
+  'html': 'html',
+  'css': 'css',
+  'scss': 'scss',
+  'sass': 'sass',
+  'json': 'json',
+  'xml': 'xml',
+  'md': 'markdown',
+  'yml': 'yaml',
+  'yaml': 'yaml',
+  'sql': 'sql',
+  'sh': 'shell',
+  'ps1': 'powershell',
+  'cs': 'csharp',
+  'java': 'java',
+  'cpp': 'cpp',
+  'c': 'c',
+  'php': 'php',
+  'rb': 'ruby',
+  'go': 'go',
+  'rs': 'rust',
+  'csv': 'plaintext',
+  'platform': 'json',
+  'fab': 'python'
+};
 
-
-const FILETYPES_ACCEPT = ".txt,.js,.ts,.html,.css,.json,.md,.py,.cs,.java,.cpp,.c,.php,.rb,.go,.rs,.xml,.yml,.yaml,.sql,.csv,.ipynb";
+// Generate accepted file types from FILE_TYPE_CONFIG
+const FILETYPES_ACCEPT = Object.keys(FILE_TYPE_CONFIG).map(ext => `.${ext}`).join(',');
 
 /**
  * Different views that are available for the OneLakeExplorer item
@@ -110,35 +146,7 @@ export function OneLakeExplorerItemEditor(props: PageProps) {
   // Helper function to detect language from file extension
   const detectLanguage = (fileName: string): string => {
     const extension = fileName.split('.').pop()?.toLowerCase();
-    const languageMap: { [key: string]: string } = {
-      'js': 'javascript',
-      'jsx': 'javascript',
-      'ts': 'typescript',
-      'ipynb': 'jupyter',
-      'tsx': 'typescript',
-      'py': 'python',
-      'html': 'html',
-      'css': 'css',
-      'scss': 'scss',
-      'sass': 'sass',
-      'json': 'json',
-      'xml': 'xml',
-      'md': 'markdown',
-      'yml': 'yaml',
-      'yaml': 'yaml',
-      'sql': 'sql',
-      'sh': 'shell',
-      'ps1': 'powershell',
-      'cs': 'csharp',
-      'java': 'java',
-      'cpp': 'cpp',
-      'c': 'c',
-      'php': 'php',
-      'rb': 'ruby',
-      'go': 'go',
-      'rs': 'rust'
-    };
-    return languageMap[extension || ''] || 'plaintext';
+    return FILE_TYPE_CONFIG[extension || ''] || 'plaintext';
   };
 
   useEffect(() => {

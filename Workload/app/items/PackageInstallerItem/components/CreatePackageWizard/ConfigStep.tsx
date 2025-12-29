@@ -6,7 +6,7 @@ import React from 'react';
 import { Text, Input, Textarea, Dropdown, Option, Checkbox } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { WizardStepProps } from '../../../../components';
-import { WorkspaceDropdown } from '../WorkspaceDropdown';
+import { WorkspaceDropdown } from '../../../../components/WorkspaceDropdown';
 import { DeploymentLocation } from '../../PackageInstallerItemModel';
 
 interface ConfigStepProps extends WizardStepProps {

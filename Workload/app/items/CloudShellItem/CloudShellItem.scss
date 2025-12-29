@@ -48,6 +48,25 @@
     font-family: Consolas, monospace;
 }
 
+.clickable-prefix {
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: var(--colorNeutralBackground3);
+    }
+}
+
+.menu-prefix {
+    font-family: Consolas, monospace;
+    color: var(--colorPaletteLightGreenForeground1);
+    font-weight: bold;
+    margin-right: 8px;
+}
+
 .command {
     color: var(--colorNeutralForeground1);
     font-weight: bold;
@@ -102,6 +121,20 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+}
+
+.scripts-list-category {
+    margin-bottom: 16px;
+}
+
+.scripts-list-category-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 600;
 }
 
 .scripts-list-empty {
@@ -214,10 +247,27 @@
     flex-direction: column;
     gap: 12px;
     padding: 12px;
+
+    .parameters-section-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--colorNeutralForeground2);
+        padding: 8px 0 4px 0;
+        border-bottom: 1px solid var(--colorNeutralStroke2);
+        margin-bottom: 4px;
+
+        &:not(:first-child) {
+            margin-top: 8px;
+        }
+    }
 }
 
 .parameter-card {
     margin-bottom: 8px;
+
+    &.system-parameter {
+        opacity: 0.9;
+    }
 }
 
 .parameter-fields {
@@ -234,10 +284,13 @@
 }
 
 .type-dropdown {
-    min-width: auto;
+    min-width: auto !important;
+    max-width: 100%;
     width: 100%;
 
     & > button {
+        min-width: auto !important;
+        max-width: 100%;
         width: 100%;
     }
 }
@@ -265,4 +318,37 @@
 /* Terminal Entry Styles */
 .terminal-entry-content {
     white-space: pre-wrap;
+}
+
+/* Run Script Dialog Styles */
+.run-script-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.run-script-dialog-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.run-script-dialog-parameter-label {
+    display: flex;
+    align-items: center;
+}
+
+.run-script-dialog-parameter-description {
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+.run-script-dialog-parameter-input {
+    width: 100%;
+}
+
+.run-script-dialog-default-value {
+    opacity: 0.6;
 }

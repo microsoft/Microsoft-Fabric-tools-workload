@@ -6,8 +6,8 @@ import React from 'react';
 import { Text, Input } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { WizardStepProps } from '../../../../components';
-import { CapacityDropdown } from '../CapacityDropdown';
-import { WorkspaceDropdown } from '../WorkspaceDropdown';
+import { CapacityDropdown } from '../../../../components/CapacityDropdown';
+import { WorkspaceDropdown } from '../../../../components/WorkspaceDropdown';
 
 interface ConfigureStepProps extends WizardStepProps {
     // Additional props specific to configure step

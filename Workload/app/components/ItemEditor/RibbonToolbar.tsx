@@ -22,9 +22,9 @@ export interface RibbonAction {
   key: string;
   
   /**
-   * The icon to display in the button
+   * The icon to display in the button (optional for dropdowns)
    */
-  icon: FluentIconComponent;
+  icon?: FluentIconComponent;
   
   /**
    * The label/tooltip text for the button (optional - can be handled at display level)
