@@ -145,7 +145,7 @@ export abstract class BaseScriptCommand implements IScriptCommand {
     /**
      * Convert parameter value to CLI-compatible format.
      * 
-     * Base implementation returns value as-is without conversion.
+     * Base implementation resolves VARIABLE types and returns other values as-is.
      * Override in subclasses (e.g., FabricCLIScriptCommand) to convert special types like
      * WORKSPACE_REFERENCE or ITEM_REFERENCE to Fabric CLI format.
      * 
@@ -159,6 +159,56 @@ export abstract class BaseScriptCommand implements IScriptCommand {
             value: string,
             workloadClient: WorkloadClientAPI
         ): Promise<string> {
+            // Handle VARIABLE type resolution in base class so all script types support it
+            if (paramType === ScriptParameterType.VARIABLE && value) {
+                try {
+                    // Parse the variable reference to extract type information
+                    // Format: VariableLibrary:<LibraryName>/<VariableName>:<Type>
+                    const typeMatch = value.match(/:([^:]+)$/);
+                    const variableType = typeMatch ? typeMatch[1] : 'String';
+                    
+                    // Type assertion needed since WorkloadClientAPI doesn't include variableLibrary in type def
+                    const client = workloadClient as any;
+                    const response = await client.variableLibrary.resolveVariableReferences({
+                        variableReferences: [{
+                            reference: value,
+                            type: variableType as any
+                        }]
+                    });
+
+                    if (response.resolvedVariableReferences && response.resolvedVariableReferences.length > 0) {
+                        const resolved = response.resolvedVariableReferences[0];
+                        if (resolved.status === 'Ok') {
+                            const resolvedValue = resolved.value || '';
+                            
+                            // If the variable contains an ItemReference or WorkspaceReference,
+                            // recursively convert it using the appropriate conversion logic
+                            const variableTypeUpper = variableType.toUpperCase();
+                            if (variableTypeUpper === 'ITEMREFERENCE') {
+                                return await this.convertParameterValueForCLI(
+                                    ScriptParameterType.ITEM_REFERENCE,
+                                    resolvedValue,
+                                    workloadClient
+                                );
+                            } else if (variableTypeUpper === 'WORKSPACEREFERENCE') {
+                                return await this.convertParameterValueForCLI(
+                                    ScriptParameterType.WORKSPACE_REFERENCE,
+                                    resolvedValue,
+                                    workloadClient
+                                );
+                            }
+                            
+                            return resolvedValue;
+                        } else {
+                            console.error(`Failed to resolve variable: ${resolved.status} - ${resolved.errorMessage}`);
+                            return value; // Fallback to reference if resolution fails
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to resolve variable reference:', error);
+                }
+            }
+            
             return value;
         }
 

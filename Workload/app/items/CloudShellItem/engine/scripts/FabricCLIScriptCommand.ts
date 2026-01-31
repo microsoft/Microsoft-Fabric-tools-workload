@@ -218,7 +218,8 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                 }
 
                 default:
-                    return value;
+                    // Delegate to base class for VARIABLE and other types
+                    return await super.convertParameterValueForCLI(paramType, value, workloadClient);
             }
         } catch (error) {
             console.error(`Failed to convert parameter value:`, error);

@@ -5,7 +5,7 @@ import { Script, ScriptParameter, ScriptType, ScriptParameterType } from "./Clou
 import { getScriptTypeConfig } from "./engine/scripts/ScriptTypeConfig";
 import { registerFabricCLILanguage } from "./engine/scripts/MonacoFabricCLILanguage";
 import { ItemEditorDetailView, DetailViewAction } from "../../components/ItemEditor";
-import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular, Search20Regular } from "@fluentui/react-icons";
+import { Save20Regular, Play20Regular, Add20Regular, Delete20Regular, Search20Regular, SearchRegular } from "@fluentui/react-icons";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { CloudShellItemDefinition } from "./CloudShellItemModel";
 import { callDatahubOpen } from "../../controller/DataHubController";
@@ -198,6 +198,27 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
     }
   };
 
+  const handleSelectVariable = async (index: number) => {
+    if (!workloadClient) {
+      return;
+    }
+
+    try {
+      // Open variable picker dialog
+      const result = await workloadClient.variableLibrary.openVariablePickerDialog({
+        title: t('CloudShellItem_Script_SelectVariable', 'Select Variable'),
+        allowMultipleSelection: false,
+      });
+
+      if (result.selectedVariables && result.selectedVariables.length > 0) {
+        const variableReference = result.selectedVariables[0];
+        handleUpdateParameter(index, 'defaultValue', variableReference);
+      }
+    } catch (error) {
+      console.error('Failed to select variable:', error);
+    }
+  };
+
   const handleRun = async () => {
     if (!onRun) return;
     
@@ -321,6 +342,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                     <Option value={ScriptParameterType.GUID}>GUID</Option>
                     <Option value={ScriptParameterType.ITEM_REFERENCE}>Item Reference</Option>
                     <Option value={ScriptParameterType.WORKSPACE_REFERENCE}>Workspace Reference</Option>
+                    <Option value={ScriptParameterType.VARIABLE}>Variable</Option>
                   </Dropdown>
                 </div>
                 
@@ -370,6 +392,30 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                           disabled={true}
                         />
                       )}
+                    </div>
+                  ) : param.type === ScriptParameterType.VARIABLE ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Input
+                        size="small"
+                        value={(param.defaultValue || '')}
+                        placeholder={t('CloudShellItem_Script_VariableReferencePlaceholder', 'Select a variable...')}
+                        disabled={true}
+                        style={{ flex: 1 }}
+                      />
+                      <Tooltip content={t('CloudShellItem_Script_SelectVariable', 'Select Variable')} relationship="label">
+                        <Button
+                          icon={<SearchRegular />}
+                          size="small"
+                          appearance="secondary"
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectVariable(index);
+                          }}
+                          disabled={isSystemParam}
+                          aria-label={t('CloudShellItem_Script_SelectVariable', 'Select Variable')}
+                        />
+                      </Tooltip>
                     </div>
                   ) : (
                     <Input
@@ -464,6 +510,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                     <Option value={ScriptParameterType.GUID}>GUID</Option>
                     <Option value={ScriptParameterType.WORKSPACE_REFERENCE}>Workspace Reference</Option>
                     <Option value={ScriptParameterType.ITEM_REFERENCE}>Item Reference</Option>
+                    <Option value={ScriptParameterType.VARIABLE}>Variable</Option>
                   </Dropdown>
                 </div>
 
@@ -496,6 +543,29 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                           disabled={true}
                         />
                       )}
+                    </div>
+                  ) : param.type === ScriptParameterType.VARIABLE ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Input
+                        size="small"
+                        value={(param.defaultValue || '')}
+                        placeholder={t('CloudShellItem_Script_VariableReferencePlaceholder', 'Select a variable...')}
+                        disabled={true}
+                        style={{ flex: 1 }}
+                      />
+                      <Tooltip content={t('CloudShellItem_Script_SelectVariable', 'Select Variable')} relationship="label">
+                        <Button
+                          icon={<SearchRegular />}
+                          size="small"
+                          appearance="secondary"
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectVariable(index);
+                          }}
+                          aria-label={t('CloudShellItem_Script_SelectVariable', 'Select Variable')}
+                        />
+                      </Tooltip>
                     </div>
                   ) : (
                     <Input
