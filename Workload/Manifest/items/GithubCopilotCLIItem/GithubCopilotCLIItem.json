@@ -1,0 +1,39 @@
+{
+    "name": "GithubCopilotCLI",
+    "version": "1.100",
+    "displayName": "GithubCopilotCLIItem_DisplayName",
+    "displayNamePlural": "GithubCopilotCLIItem_DisplayName_Plural",
+    "editor": {
+      "path": "/GithubCopilotCLIItem-editor"
+    },
+    "icon": {
+      "name": "assets/images/GithubCopilotCLIItem_Icon.png"
+    },
+    "activeIcon": {
+      "name": "assets/images/GithubCopilotCLIItem_Icon.png"
+    },
+    "contextMenuItems": [
+    ],
+    "quickActionItems": [
+    ],
+    "supportedInMonitoringHub": true,
+    "supportedInDatahubL1": true,
+    "itemJobActionConfig": {
+    },
+    "itemSettings": {
+      "getItemSettings": {
+            "action": "getItemSettings"
+      }
+    },
+    "editorTab": {
+      "onDeactivate": "item.tab.onDeactivate",
+      "canDeactivate": "item.tab.canDeactivate",
+      "canDestroy": "item.tab.canDestroy",
+      "onDestroy": "item.tab.onDestroy",
+      "onDelete": "item.tab.onDelete"
+    },
+    "createItemDialogConfig": {
+      "onCreationFailure": { "action": "item.onCreationFailure" },
+      "onCreationSuccess": { "action": "item.onCreationSuccess" }
+    }
+  }

@@ -1,0 +1,162 @@
+/**
+ * GitHub Copilot CLI Item Styles
+ * Item-specific styling using design tokens
+ */
+
+.github-copilot-cli-view {
+  padding: var(--spacingVerticalM, 12px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.copilot-terminal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--colorNeutralBackground1, #1e1e1e);
+  border-radius: var(--borderRadiusMedium, 4px);
+  overflow: hidden;
+}
+
+.copilot-terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+  background-color: var(--colorNeutralBackground3, #2d2d2d);
+  border-bottom: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    color: var(--colorNeutralForeground1, #ffffff);
+    font-weight: 600;
+  }
+
+  .model-selector {
+    min-width: 200px;
+  }
+}
+
+.copilot-terminal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacingVerticalM, 12px);
+  font-family: 'Cascadia Code', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--colorNeutralForeground1, #d4d4d4);
+
+  .terminal-entry {
+    margin-bottom: var(--spacingVerticalS, 8px);
+    
+    &.prompt {
+      color: var(--colorBrandForeground1, #58a6ff);
+      
+      .prompt-symbol {
+        color: var(--colorPaletteLightGreenForeground1, #3fb950);
+        margin-right: var(--spacingHorizontalS, 4px);
+      }
+    }
+
+    &.response {
+      color: var(--colorNeutralForeground1, #d4d4d4);
+      white-space: pre-wrap;
+      padding-left: var(--spacingHorizontalM, 16px);
+      border-left: 2px solid var(--colorBrandStroke1, #58a6ff);
+      margin-left: var(--spacingHorizontalS, 4px);
+    }
+
+    &.error {
+      color: var(--colorPaletteRedForeground1, #f85149);
+    }
+
+    &.system {
+      color: var(--colorNeutralForeground3, #8b949e);
+      font-style: italic;
+    }
+  }
+
+  .welcome-message {
+    color: var(--colorNeutralForeground3, #8b949e);
+    margin-bottom: var(--spacingVerticalL, 16px);
+
+    h3 {
+      color: var(--colorBrandForeground1, #58a6ff);
+      margin-bottom: var(--spacingVerticalS, 8px);
+    }
+
+    ul {
+      margin: var(--spacingVerticalS, 8px) 0;
+      padding-left: var(--spacingHorizontalL, 20px);
+    }
+  }
+}
+
+.copilot-terminal-input {
+  display: flex;
+  align-items: center;
+  padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+  background-color: var(--colorNeutralBackground3, #2d2d2d);
+  border-top: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+  gap: var(--spacingHorizontalS, 8px);
+
+  .prompt-indicator {
+    color: var(--colorPaletteLightGreenForeground1, #3fb950);
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .prompt-input {
+    flex: 1;
+    
+    input {
+      background-color: transparent;
+      border: none;
+      color: var(--colorNeutralForeground1, #d4d4d4);
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+      
+      &::placeholder {
+        color: var(--colorNeutralForeground4, #6e7681);
+      }
+    }
+  }
+}
+
+// Empty view styles
+.github-copilot-cli-empty-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: var(--spacingVerticalXXL, 48px);
+  
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: var(--spacingVerticalL, 24px);
+    color: var(--colorBrandForeground1, #58a6ff);
+  }
+  
+  .empty-title {
+    font-size: var(--fontSizeHero800, 28px);
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+    margin-bottom: var(--spacingVerticalM, 12px);
+  }
+  
+  .empty-description {
+    font-size: var(--fontSizeBase400, 16px);
+    color: var(--colorNeutralForeground2);
+    margin-bottom: var(--spacingVerticalL, 24px);
+    max-width: 500px;
+  }
+}

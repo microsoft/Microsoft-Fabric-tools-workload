@@ -15,6 +15,9 @@
     "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
     "CloudShellItem_DisplayName": "Cloud Shell",
     "CloudShellItem_DisplayName_Plural": "Cloud Shells",
-    "CloudShellItem_Description": "Interactive Cloud Shell for executing commands (Fabric CLI, Bash or Python) or Python scripts."   
+    "CloudShellItem_Description": "Interactive Cloud Shell for executing commands (Fabric CLI, Bash or Python) or Python scripts.",
+    "GithubCopilotCLIItem_DisplayName": "Github Copilot CLI",
+    "GithubCopilotCLIItem_DisplayName_Plural": "Github Copilot CLIs",
+    "GithubCopilotCLIItem_Description": "Interactive terminal with GitHub Copilot CLI for AI-assisted coding suggestions and explanations."   
 }
 

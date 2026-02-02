@@ -7,6 +7,7 @@ import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 import { CloudShellItemEditor, CreateScriptDialog, RunScriptDialog } from "./items/CloudShellItem/";
+import { GithubCopilotCLIItemEditor } from "./items/GithubCopilotCLIItem/";
 
 /*
     Add your Item Editor in the Route section of the App function below
@@ -96,6 +97,11 @@ export function App({ history, workloadClient }: AppProps) {
             <Route path="/CloudShellItem-run-script/:itemObjectId">
                 <RunScriptDialog
                     workloadClient={workloadClient} />
+            </Route>
+
+            <Route path="/GithubCopilotCLIItem-editor/:itemObjectId">
+                <GithubCopilotCLIItemEditor
+                    workloadClient={workloadClient} data-testid="GithubCopilotCLIItem-editor" />
             </Route>
 
             {/* Conditionally loaded playground routes (only in development) */}
