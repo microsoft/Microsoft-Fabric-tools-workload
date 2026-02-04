@@ -1,22 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
-  Input, 
   Button,
-  Dropdown,
-  Option,
-  Label,
+  Tooltip,
+  Spinner,
 } from "@fluentui/react-components";
-import { Send24Regular, Sparkle24Regular } from "@fluentui/react-icons";
+import { Dismiss24Regular } from "@fluentui/react-icons";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
 import { 
   GithubCopilotCLIItemDefinition, 
   TerminalEntry, 
-  COPILOT_MODELS,
-  CopilotModelId 
+  CopilotModelId,
+  WorkspaceContext
 } from "./GithubCopilotCLIItemModel";
+import { GithubCopilotCLI, ExecutionContext } from "./engine";
 import "./GithubCopilotCLIItem.scss";
 
 interface GithubCopilotCLIItemDefaultViewProps {
@@ -29,6 +27,10 @@ interface GithubCopilotCLIItemDefaultViewProps {
   selectedModel: CopilotModelId;
   onModelChange: (model: CopilotModelId) => void;
   onDefinitionChange?: (definition: GithubCopilotCLIItemDefinition) => void;
+  /** Active session ID for command execution */
+  sessionId?: string | null;
+  /** Callback to execute a command in the Spark session */
+  onExecuteCommand?: (command: string) => Promise<{ success: boolean; output: string }>;
 }
 
 export function GithubCopilotCLIItemDefaultView({
@@ -40,13 +42,95 @@ export function GithubCopilotCLIItemDefaultView({
   setCommandHistory,
   selectedModel,
   onModelChange,
-  onDefinitionChange
+  onDefinitionChange,
+  sessionId,
+  onExecuteCommand
 }: GithubCopilotCLIItemDefaultViewProps) {
-  const { t } = useTranslation();
-  const [prompt, setPrompt] = useState('');
+  const [command, setCommand] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Build workspace context from item
+  const workspaceContext = useMemo<WorkspaceContext>(() => {
+    const ctx: WorkspaceContext = {};
+    
+    if (item) {
+      // Get workspace info from item
+      ctx.workspaceId = item.workspaceId;
+      ctx.itemId = item.id;
+      ctx.itemName = item.displayName;
+      
+      // Get lakehouse info from item definition
+      if (item.definition?.selectedLakehouse) {
+        ctx.lakehouseId = item.definition.selectedLakehouse.id;
+        ctx.lakehouseName = item.definition.selectedLakehouse.displayName;
+      }
+    }
+    
+    return ctx;
+  }, [item, item?.definition?.selectedLakehouse]);
+
+  // Build execution context from item definition
+  const executionContext = useMemo<ExecutionContext>(() => {
+    return {
+      sessionId: sessionId || item?.definition?.sessionId,
+      lakehouseId: item?.definition?.selectedLakehouse?.id,
+      environmentId: item?.definition?.environmentId || undefined
+    };
+  }, [sessionId, item?.definition?.sessionId, item?.definition?.selectedLakehouse?.id, item?.definition?.environmentId]);
+
+  // Create CLI instance with workspace and execution context
+  const cli = useMemo(() => {
+    return new GithubCopilotCLI(workloadClient, selectedModel, workspaceContext, executionContext);
+  }, [workloadClient, selectedModel, workspaceContext, executionContext]);
+
+  // Generate dynamic welcome message with context
+  const getWelcomeMessage = useMemo(() => {
+    const hasContext = workspaceContext.workspaceId || workspaceContext.itemId;
+    
+    let contextInfo = '';
+    if (hasContext) {
+      contextInfo = `\n  ✓ Connected to Fabric workspace`;
+      if (workspaceContext.lakehouseId) {
+        contextInfo += ` with lakehouse`;
+      }
+      contextInfo += `\n  Type 'context' to see available variables\n`;
+    }
+
+    return `
+ ██████╗ ██╗████████╗██╗  ██╗██╗   ██╗██████╗      ██████╗ ██████╗ ██████╗ ██╗██╗      ██████╗ ████████╗
+██╔════╝ ██║╚══██╔══╝██║  ██║██║   ██║██╔══██╗    ██╔════╝██╔═══██╗██╔══██╗██║██║     ██╔═══██╗╚══██╔══╝
+██║  ███╗██║   ██║   ███████║██║   ██║██████╔╝    ██║     ██║   ██║██████╔╝██║██║     ██║   ██║   ██║   
+██║   ██║██║   ██║   ██╔══██║██║   ██║██╔══██╗    ██║     ██║   ██║██╔═══╝ ██║██║     ██║   ██║   ██║   
+╚██████╔╝██║   ██║   ██║  ██║╚██████╔╝██████╔╝    ╚██████╗╚██████╔╝██║     ██║███████╗╚██████╔╝   ██║   
+ ╚═════╝ ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝      ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ ╚═════╝    ╚═╝   
+
+Welcome to GitHub Copilot in the CLI!
+Version 1.0.0 (Fabric Edition)
+${contextInfo}
+I'm your AI pair programmer in the terminal. I can help you:
+  - suggest  Get command suggestions for what you want to do
+  - explain  Understand what a shell command does
+  - context  Show your workspace context and variables
+  - help     Show all available commands
+
+Examples:
+  suggest "list all files in the current directory"
+  suggest "list lakehouses in my workspace"
+  explain "fab lakehouse list"
+
+Type 'help' for more information.
+`;
+  }, [workspaceContext]);
+
+  // Show welcome message on first load
+  useEffect(() => {
+    if (terminalEntries.length === 0) {
+      showWelcome();
+    }
+  }, []);
 
   // Auto-scroll to bottom when new entries are added
   useEffect(() => {
@@ -55,45 +139,75 @@ export function GithubCopilotCLIItemDefaultView({
     }
   }, [terminalEntries]);
 
-  const addSystemMessage = (message: string) => {
-    setTerminalEntries(prev => [...prev, { 
-      type: 'system', 
-      content: message, 
-      timestamp: new Date() 
+  // Focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const showWelcome = () => {
+    setTerminalEntries([{
+      type: 'system',
+      content: getWelcomeMessage,
+      timestamp: new Date()
     }]);
   };
 
-  const executePrompt = async () => {
-    if (!prompt.trim() || isProcessing) return;
+  const executeCommand = async () => {
+    if (!command.trim() || isProcessing) return;
 
-    const userPrompt = prompt.trim();
+    const inputCommand = command.trim();
     
-    // Add user prompt to terminal
+    // Add command to terminal
     setTerminalEntries(prev => [...prev, {
       type: 'prompt',
-      content: userPrompt,
-      timestamp: new Date(),
-      model: selectedModel
+      content: inputCommand,
+      timestamp: new Date()
     }]);
 
     // Add to history
-    setCommandHistory(prev => [...prev, userPrompt]);
+    setCommandHistory(prev => [...prev, inputCommand]);
     setHistoryIndex(-1);
-    setPrompt('');
+    setCommand('');
     setIsProcessing(true);
 
     try {
-      // Simulate Copilot CLI response
-      // In a real implementation, this would call the gh copilot CLI
-      // For now, we'll show a placeholder response
-      const response = await simulateCopilotResponse(userPrompt, selectedModel);
-      
-      setTerminalEntries(prev => [...prev, {
-        type: 'response',
-        content: response,
-        timestamp: new Date(),
-        model: selectedModel
-      }]);
+      // Parse and execute the command
+      const parsed = cli.parseCommand(inputCommand);
+      const result = await cli.execute(parsed);
+
+      // Handle special clear command
+      if (result.output === '__CLEAR__') {
+        setTerminalEntries([]);
+        showWelcome();
+      } else if (result.requiresExecution && result.commandToExecute && onExecuteCommand) {
+        // This command needs to be executed in the Spark session
+        setTerminalEntries(prev => [...prev, {
+          type: 'system',
+          content: `Executing: ${result.commandToExecute}`,
+          timestamp: new Date()
+        }]);
+        
+        try {
+          const execResult = await onExecuteCommand(result.commandToExecute);
+          setTerminalEntries(prev => [...prev, {
+            type: execResult.success ? 'response' : 'error',
+            content: execResult.output,
+            timestamp: new Date()
+          }]);
+        } catch (execError: any) {
+          setTerminalEntries(prev => [...prev, {
+            type: 'error',
+            content: `Execution failed: ${execError.message}`,
+            timestamp: new Date()
+          }]);
+        }
+      } else {
+        setTerminalEntries(prev => [...prev, {
+          type: result.isError ? 'error' : 'response',
+          content: result.output,
+          timestamp: new Date()
+        }]);
+      }
     } catch (error: any) {
       setTerminalEntries(prev => [...prev, {
         type: 'error',
@@ -102,22 +216,14 @@ export function GithubCopilotCLIItemDefaultView({
       }]);
     } finally {
       setIsProcessing(false);
+      inputRef.current?.focus();
     }
   };
 
-  // Simulate Copilot response (placeholder for actual CLI integration)
-  const simulateCopilotResponse = async (prompt: string, model: CopilotModelId): Promise<string> => {
-    // Add a small delay to simulate processing
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const modelInfo = COPILOT_MODELS.find(m => m.id === model);
-    return `[${modelInfo?.name || model}] Response to: "${prompt}"\n\nThis is a placeholder response. In the actual implementation, this would execute:\n\n  gh copilot suggest "${prompt}" --model ${model}\n\nThe GitHub Copilot CLI would provide contextual code suggestions and explanations based on your prompt.`;
-  };
-
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter') {
       event.preventDefault();
-      executePrompt();
+      executeCommand();
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       if (commandHistory.length === 0) return;
@@ -127,7 +233,7 @@ export function GithubCopilotCLIItemDefaultView({
         : Math.max(0, historyIndex - 1);
       
       setHistoryIndex(newIndex);
-      setPrompt(commandHistory[newIndex]);
+      setCommand(commandHistory[newIndex]);
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       if (historyIndex === -1) return;
@@ -136,103 +242,88 @@ export function GithubCopilotCLIItemDefaultView({
       
       if (newIndex >= commandHistory.length) {
         setHistoryIndex(-1);
-        setPrompt('');
+        setCommand('');
       } else {
         setHistoryIndex(newIndex);
-        setPrompt(commandHistory[newIndex]);
+        setCommand(commandHistory[newIndex]);
       }
+    } else if (event.key === 'l' && event.ctrlKey) {
+      event.preventDefault();
+      setTerminalEntries([]);
+      showWelcome();
     }
   };
 
-  const handleModelChange = (event: any, data: any) => {
-    const newModel = data.optionValue as CopilotModelId;
-    onModelChange(newModel);
-    addSystemMessage(t('GithubCopilotCLIItem_ModelChanged', 'Model changed to {{model}}', { 
-      model: COPILOT_MODELS.find(m => m.id === newModel)?.name || newModel 
-    }));
+  const clearTerminal = () => {
+    setTerminalEntries([]);
+    showWelcome();
   };
-
-  const selectedModelInfo = COPILOT_MODELS.find(m => m.id === selectedModel);
 
   const content = (
     <div className="github-copilot-cli-view">
-      <div className="copilot-terminal-container">
+      <div className="copilot-terminal-container cli-mode">
         <div className="copilot-terminal-header">
           <div className="header-title">
-            <Sparkle24Regular />
-            <span>{t('GithubCopilotCLIItem_Terminal_Title', 'GitHub Copilot')}</span>
+            <span className="gh-icon">⌘</span>
+            <span>gh copilot</span>
           </div>
-          <div className="model-selector">
-            <Dropdown
-              value={selectedModelInfo?.name || selectedModel}
-              selectedOptions={[selectedModel]}
-              onOptionSelect={handleModelChange}
-              disabled={isProcessing}
-            >
-              {COPILOT_MODELS.map(model => (
-                <Option key={model.id} value={model.id} text={model.name}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{model.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--colorNeutralForeground3)' }}>
-                      {model.description}
-                    </div>
-                  </div>
-                </Option>
-              ))}
-            </Dropdown>
+          <div className="header-actions">
+            <Tooltip content="Clear terminal (Ctrl+L)" relationship="label">
+              <Button
+                icon={<Dismiss24Regular />}
+                appearance="subtle"
+                onClick={clearTerminal}
+                size="small"
+              />
+            </Tooltip>
           </div>
         </div>
 
-        <div className="copilot-terminal-body" ref={terminalBodyRef}>
-          {terminalEntries.length === 0 ? (
-            <div className="welcome-message">
-              <h3>{t('GithubCopilotCLIItem_Welcome_Title', '👋 Welcome to GitHub Copilot CLI')}</h3>
-              <p>{t('GithubCopilotCLIItem_Welcome_Description', 
-                'Ask questions, get code suggestions, or request explanations. Examples:'
-              )}</p>
-              <ul>
-                <li>{t('GithubCopilotCLIItem_Example_1', '"How do I create a REST API in Python?"')}</li>
-                <li>{t('GithubCopilotCLIItem_Example_2', '"Explain this error: TypeError: undefined is not a function"')}</li>
-                <li>{t('GithubCopilotCLIItem_Example_3', '"Write a function to sort an array in JavaScript"')}</li>
-              </ul>
+        <div className="copilot-terminal-body cli-body" ref={terminalBodyRef}>
+          {terminalEntries.map((entry, index) => (
+            <div key={index} className={`terminal-entry ${entry.type}`}>
+              {entry.type === 'prompt' && (
+                <div className="cli-prompt-line">
+                  <span className="cli-prompt">$ gh copilot</span>
+                  <span className="cli-command">{entry.content}</span>
+                </div>
+              )}
+              {entry.type === 'response' && (
+                <div className="cli-response">
+                  <pre>{entry.content}</pre>
+                </div>
+              )}
+              {entry.type === 'error' && (
+                <div className="cli-error">
+                  <pre>{entry.content}</pre>
+                </div>
+              )}
+              {entry.type === 'system' && (
+                <div className="cli-system">
+                  <pre>{entry.content}</pre>
+                </div>
+              )}
             </div>
-          ) : (
-            terminalEntries.map((entry, index) => (
-              <div key={index} className={`terminal-entry ${entry.type}`}>
-                {entry.type === 'prompt' && (
-                  <>
-                    <span className="prompt-symbol">❯</span>
-                    {entry.content}
-                  </>
-                )}
-                {entry.type === 'response' && entry.content}
-                {entry.type === 'error' && entry.content}
-                {entry.type === 'system' && entry.content}
-              </div>
-            ))
-          )}
+          ))}
           {isProcessing && (
-            <div className="terminal-entry system">
-              {t('GithubCopilotCLIItem_Processing', 'Thinking...')}
+            <div className="terminal-entry processing">
+              <Spinner size="tiny" />
+              <span>Thinking...</span>
             </div>
           )}
         </div>
 
-        <div className="copilot-terminal-input">
-          <span className="prompt-indicator">❯</span>
-          <Input
-            className="prompt-input"
-            value={prompt}
-            onChange={(e, data) => setPrompt(data.value)}
+        <div className="copilot-terminal-input cli-input">
+          <span className="cli-prompt-indicator">$ gh copilot</span>
+          <input
+            ref={inputRef}
+            className="cli-text-input"
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t('GithubCopilotCLIItem_Prompt_Placeholder', 'Ask Copilot anything...')}
+            placeholder="suggest, explain, or help..."
             disabled={isProcessing}
-          />
-          <Button
-            icon={<Send24Regular />}
-            onClick={executePrompt}
-            disabled={isProcessing || !prompt.trim()}
-            appearance="primary"
+            autoFocus
           />
         </div>
       </div>

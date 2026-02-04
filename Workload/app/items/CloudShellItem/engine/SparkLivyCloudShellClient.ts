@@ -104,7 +104,7 @@ export class SparkLivyCloudShellClient {
      * **Session Creation Flow**:
      * 1. Create session request with lakehouse and environment binding
      * 2. Poll for session to reach 'Scheduled' + 'idle' state (max 5 minutes)
-     * 3. Verify Fabric CLI availability using FabCliCheckWrapper.py
+     * 3. Verify Fabric CLI availability using FabCliCheckWrapper.py (optional)
      * 4. Return ready session or throw error
      * 
      * **State Monitoring**:
@@ -114,17 +114,19 @@ export class SparkLivyCloudShellClient {
      * 
      * **CLI Verification**:
      * - Runs "fab --version" to verify ms-cloud-shell package
-     * - Session cancelled if CLI not available
+     * - Session cancelled if CLI not available (when skipCliCheck is false)
      * - Provides setup instructions on failure
      * 
      * @param config Session configuration with workspace, lakehouse, and environment
      * @param onProgress Callback for progress updates (session creation status messages)
+     * @param skipCliCheck Optional - skip the Fabric CLI availability check (default: false)
      * @returns Promise resolving to ready SessionResponse
      * @throws Error if session creation times out, CLI not available, or other failures
      */
     async initializeSession(
         config: CloudShellSessionConfig,
-        onProgress: (message: string) => void
+        onProgress: (message: string) => void,
+        skipCliCheck: boolean = false
     ): Promise<SessionResponse> {
         const { workspaceId, lakehouseId, environmentId, sessionKind } = config;
 
@@ -201,53 +203,57 @@ export class SparkLivyCloudShellClient {
             throw new Error('Session creation timed out - session did not reach ready state');
         }
 
-        // Verify Cloud Shell is available in the environment (only in fab mode)
-        onProgress('Verifying Cloud Shell installation...');
-        try {
-            // Build verification statement
-            const wrapperCode = await SparkLivyCloudShellClient.getFabCliCheckWrapperContent();
-            const verifyStatement: StatementRequest = {
-                code: wrapperCode,
-                kind: SessionKind.PYTHON
-            };
-            
-            const response = await this.executeStatement(
-                workspaceId,
-                lakehouseId,
-                foundSession.id!.toString(),
-                verifyStatement
-            );
+        // Verify Cloud Shell is available in the environment (skip if requested)
+        if (!skipCliCheck) {
+            onProgress('Verifying Cloud Shell installation...');
+            try {
+                // Build verification statement
+                const wrapperCode = await SparkLivyCloudShellClient.getFabCliCheckWrapperContent();
+                const verifyStatement: StatementRequest = {
+                    code: wrapperCode,
+                    kind: SessionKind.PYTHON
+                };
+                
+                const response = await this.executeStatement(
+                    workspaceId,
+                    lakehouseId,
+                    foundSession.id!.toString(),
+                    verifyStatement
+                );
 
-            if (response.isError) {
+                if (response.isError) {
+                    throw new Error(
+                        'Cloud Shell is not available in this environment.\n\n' +
+                        'Please add the "ms-cloud-shell" package to the Spark environment being used.\n' +
+                        'You can do this by:\n' +
+                        '1. Opening your Spark environment settings\n' +
+                        '2. Adding "ms-cloud-shell" to the Python packages list\n' +
+                        '3. Saving the environment and waiting for it to be ready' +
+                        '4. Publishing the environment and retrying\n\n'
+                    );
+                }
+
+                onProgress(`Cloud Shell verified: ${response.output}`);
+            } catch (error: any) {
+                // Cancel the session since it's not usable
+                try {
+                    await this.sparkClient.cancelSession(workspaceId, lakehouseId, foundSession.id!.toString());
+                } catch (cancelError) {
+                    console.warn('Failed to cancel session after CLI verification failure:', cancelError);
+                }
+
                 throw new Error(
                     'Cloud Shell is not available in this environment.\n\n' +
                     'Please add the "ms-cloud-shell" package to the Spark environment being used.\n' +
                     'You can do this by:\n' +
                     '1. Opening your Spark environment settings\n' +
                     '2. Adding "ms-cloud-shell" to the Python packages list\n' +
-                    '3. Saving the environment and waiting for it to be ready' +
-                    '4. Publishing the environment and retrying\n\n'
+                    '3. Saving the environment and waiting for it to be ready\n\n' +
+                    `Original error: ${error.message}`
                 );
             }
-
-            onProgress(`Cloud Shell verified: ${response.output}`);
-        } catch (error: any) {
-            // Cancel the session since it's not usable
-            try {
-                await this.sparkClient.cancelSession(workspaceId, lakehouseId, foundSession.id!.toString());
-            } catch (cancelError) {
-                console.warn('Failed to cancel session after CLI verification failure:', cancelError);
-            }
-
-            throw new Error(
-                'Cloud Shell is not available in this environment.\n\n' +
-                'Please add the "ms-cloud-shell" package to the Spark environment being used.\n' +
-                'You can do this by:\n' +
-                '1. Opening your Spark environment settings\n' +
-                '2. Adding "ms-cloud-shell" to the Python packages list\n' +
-                '3. Saving the environment and waiting for it to be ready\n\n' +
-                `Original error: ${error.message}`
-            );
+        } else {
+            onProgress('Session ready (CLI check skipped).');
         }
 
         return foundSession;
