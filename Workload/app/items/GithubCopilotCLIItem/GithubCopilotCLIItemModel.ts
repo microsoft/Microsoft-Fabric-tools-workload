@@ -3,6 +3,8 @@
  * Defines the data structure for persisting Copilot CLI item configuration
  */
 
+import { Item } from "../../clients/FabricPlatformTypes";
+
 /**
  * Available Copilot models for selection
  */
@@ -21,10 +23,18 @@ export type CopilotModelId = typeof COPILOT_MODELS[number]['id'];
  * Terminal entry for command history display
  */
 export interface TerminalEntry {
-  type: 'prompt' | 'response' | 'error' | 'system';
+  type: 'prompt' | 'response' | 'error' | 'system' | 'action';
   content: string;
   timestamp: Date;
   model?: CopilotModelId;
+  /** For action entries - the suggested action that can be executed */
+  action?: {
+    type: 'fab_cli' | 'python' | 'info';
+    command?: string;
+    description: string;
+  };
+  /** Whether an action has been executed */
+  actionExecuted?: boolean;
 }
 
 /**
@@ -37,4 +47,29 @@ export interface GithubCopilotCLIItemDefinition {
   commandHistory?: string[];
   /** Last used prompt */
   lastPrompt?: string;
+  /** Selected Lakehouse for Fabric actions */
+  selectedLakehouse?: Item | null;
+  /** Active session ID for command execution */
+  sessionId?: string | null;
+  /** Spark environment ID */
+  environmentId?: string | null;
 }
+
+/**
+ * Workspace context for GitHub Copilot CLI
+ */
+export interface WorkspaceContext {
+  /** Current workspace ID */
+  workspaceId?: string;
+  /** Current workspace name */
+  workspaceName?: string;
+  /** Current item ID */
+  itemId?: string;
+  /** Current item name */
+  itemName?: string;
+  /** Selected lakehouse ID */
+  lakehouseId?: string;
+  /** Selected lakehouse name */
+  lakehouseName?: string;
+}
+

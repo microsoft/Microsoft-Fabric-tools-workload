@@ -119,15 +119,59 @@ export function CloudShellItemEditor(props: PageProps) {
     const loadEnvironments = async () => {
       // Load environments from the lakehouse's workspace, not the item's workspace
       const workspaceId = item?.definition?.selectedLakehouse?.workspaceId;
-      if (!workspaceId) return;
+      console.log('[CloudShell] Loading environments, workspaceId:', workspaceId);
       
-      try {
-        const itemClient = new ItemClient(workloadClient);
-        const workspaceItems = await itemClient.listItems(workspaceId, { type: 'Environment' });
-        setAvailableEnvironments(workspaceItems.value);
-      } catch (error) {
-        console.error('Failed to load environments:', error);
+      if (!workspaceId) {
+        console.log('[CloudShell] No lakehouse workspace ID available, skipping environment load');
+        return;
       }
+      
+      const itemClient = new ItemClient(workloadClient);
+      let environments: Item[] = [];
+      
+      // Try the dedicated environments endpoint first
+      try {
+        console.log('[CloudShell] Trying dedicated /environments endpoint for workspace:', workspaceId);
+        const environmentsResult = await itemClient.listEnvironments(workspaceId);
+        console.log('[CloudShell] Dedicated environments API response:', environmentsResult);
+        environments = environmentsResult.value || [];
+      } catch (error: any) {
+        console.warn('[CloudShell] Dedicated /environments endpoint failed, trying fallback:', {
+          message: error?.message,
+          status: error?.statusCode,
+          errorCode: error?.errorCode
+        });
+        
+        // Fallback: Try listing all items and filter by type
+        try {
+          console.log('[CloudShell] Fallback: Listing all items and filtering by Environment type');
+          const allItems = await itemClient.listItems(workspaceId);
+          console.log('[CloudShell] All items in workspace:', allItems.value?.length || 0);
+          console.log('[CloudShell] Item types found:', [...new Set(allItems.value?.map(i => i.type) || [])]);
+          
+          environments = (allItems.value || []).filter(item => 
+            item.type === 'Environment' || 
+            item.type?.toLowerCase().includes('environment')
+          );
+        } catch (fallbackError: any) {
+          console.error('[CloudShell] Fallback also failed:', {
+            message: fallbackError?.message,
+            status: fallbackError?.statusCode,
+            errorCode: fallbackError?.errorCode
+          });
+        }
+      }
+      
+      console.log('[CloudShell] Final environments count:', environments.length);
+      
+      if (environments.length === 0) {
+        console.log('[CloudShell] No environments found. Possible causes:');
+        console.log('  1. No Environment items exist in the lakehouse workspace');
+        console.log('  2. User lacks Workspace.Read.All permission');
+        console.log('  3. Livy API tenant setting may not be enabled');
+      }
+      
+      setAvailableEnvironments(environments);
     };
     
     loadEnvironments();

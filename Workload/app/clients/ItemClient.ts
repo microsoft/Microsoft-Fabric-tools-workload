@@ -86,6 +86,62 @@ export class ItemClient extends FabricPlatformClient {
     return this.getAllPages<Item>(`/workspaces/${workspaceId}/items`);
   }
 
+  // ============================
+  // Environment Management
+  // ============================
+
+  /**
+   * Returns a list of environments from the specified workspace
+   * Uses the dedicated environments endpoint: GET /workspaces/{workspaceId}/environments
+   * 
+   * Note: This is different from listItems with type='Environment' as it uses
+   * the dedicated Environment API which ensures all environments are returned.
+   * 
+   * @param workspaceId The workspace ID
+   * @param options Optional pagination options
+   * @param options.continuationToken Token for pagination
+   * @param options.recursive Include items from subfolders
+   * @param options.rootFolderId Filter items within a specific folder
+   * @returns Promise<PaginatedResponse<Item>>
+   */
+  async listEnvironments(
+    workspaceId: string,
+    options?: {
+      continuationToken?: string;
+      recursive?: boolean;
+      rootFolderId?: string;
+    }
+  ): Promise<PaginatedResponse<Item>> {
+    let endpoint = `/workspaces/${workspaceId}/environments`;
+    const params: string[] = [];
+    
+    if (options?.continuationToken) {
+      params.push(`continuationToken=${encodeURIComponent(options.continuationToken)}`);
+    }
+    if (options?.recursive !== undefined) {
+      params.push(`recursive=${options.recursive}`);
+    }
+    if (options?.rootFolderId) {
+      params.push(`rootFolderId=${encodeURIComponent(options.rootFolderId)}`);
+    }
+    
+    if (params.length > 0) {
+      endpoint += `?${params.join('&')}`;
+    }
+    
+    return this.get<PaginatedResponse<Item>>(endpoint);
+  }
+
+  /**
+   * Gets all environments from the specified workspace (handles pagination automatically)
+   * Uses the dedicated environments endpoint for complete results.
+   * @param workspaceId The workspace ID
+   * @returns Promise<Item[]>
+   */
+  async getAllEnvironments(workspaceId: string): Promise<Item[]> {
+    return this.getAllPages<Item>(`/workspaces/${workspaceId}/environments`);
+  }
+
   /**
    * Creates a new item in the specified workspace
    * @param workspaceId The workspace ID

@@ -38,6 +38,12 @@
     font-weight: 600;
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+  }
+
   .model-selector {
     min-width: 200px;
   }
@@ -62,23 +68,84 @@
         color: var(--colorPaletteLightGreenForeground1, #3fb950);
         margin-right: var(--spacingHorizontalS, 4px);
       }
+
+      .prompt-entry {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacingHorizontalS, 4px);
+
+        .prompt-text {
+          flex: 1;
+        }
+      }
     }
 
     &.response {
       color: var(--colorNeutralForeground1, #d4d4d4);
-      white-space: pre-wrap;
       padding-left: var(--spacingHorizontalM, 16px);
       border-left: 2px solid var(--colorBrandStroke1, #58a6ff);
       margin-left: var(--spacingHorizontalS, 4px);
+
+      .response-entry {
+        .response-content {
+          pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-family: inherit;
+          }
+        }
+
+        .action-bar {
+          display: flex;
+          align-items: center;
+          gap: var(--spacingHorizontalM, 12px);
+          margin-top: var(--spacingVerticalM, 12px);
+          padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+          background-color: var(--colorNeutralBackground4, #252526);
+          border-radius: var(--borderRadiusSmall, 2px);
+          border: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+
+          .action-command {
+            flex: 1;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 12px;
+            color: var(--colorPaletteLightGreenForeground1, #3fb950);
+            background-color: transparent;
+            padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
+            border-radius: var(--borderRadiusSmall, 2px);
+          }
+        }
+      }
     }
 
     &.error {
       color: var(--colorPaletteRedForeground1, #f85149);
+      
+      .error-entry {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacingHorizontalS, 8px);
+
+        .error-icon {
+          flex-shrink: 0;
+        }
+      }
     }
 
     &.system {
       color: var(--colorNeutralForeground3, #8b949e);
       font-style: italic;
+
+      &.processing {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS, 8px);
+      }
+
+      .system-entry {
+        display: block;
+      }
     }
   }
 
@@ -94,6 +161,18 @@
     ul {
       margin: var(--spacingVerticalS, 8px) 0;
       padding-left: var(--spacingHorizontalL, 20px);
+
+      li {
+        margin-bottom: var(--spacingVerticalXS, 4px);
+      }
+    }
+
+    .session-hint {
+      margin-top: var(--spacingVerticalL, 16px);
+      padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+      background-color: var(--colorNeutralBackground4, #252526);
+      border-radius: var(--borderRadiusSmall, 2px);
+      border-left: 3px solid var(--colorPaletteYellowForeground1, #d29922);
     }
   }
 }
@@ -130,6 +209,127 @@
   }
 }
 
+// CLI Mode styles
+.copilot-terminal-container.cli-mode {
+  background-color: #0d1117;
+  
+  .copilot-terminal-header {
+    background-color: #161b22;
+    border-bottom: 1px solid #30363d;
+    
+    .header-title {
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 14px;
+      
+      .gh-icon {
+        color: #58a6ff;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .cli-body {
+    background-color: #0d1117;
+    
+    .terminal-entry {
+      margin-bottom: 16px;
+      
+      &.prompt .cli-prompt-line {
+        display: flex;
+        gap: 8px;
+        
+        .cli-prompt {
+          color: #8b949e;
+          white-space: nowrap;
+        }
+        
+        .cli-command {
+          color: #58a6ff;
+        }
+      }
+      
+      &.response .cli-response {
+        margin-top: 8px;
+        
+        pre {
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          color: #c9d1d9;
+          font-family: 'Cascadia Code', 'Consolas', monospace;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+      }
+      
+      &.error .cli-error {
+        margin-top: 8px;
+        
+        pre {
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          color: #f85149;
+          font-family: 'Cascadia Code', 'Consolas', monospace;
+          font-size: 13px;
+        }
+      }
+      
+      &.system .cli-system {
+        pre {
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          color: #8b949e;
+          font-family: 'Cascadia Code', 'Consolas', monospace;
+          font-size: 13px;
+          line-height: 1.4;
+        }
+      }
+      
+      &.processing {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #58a6ff;
+        font-style: italic;
+      }
+    }
+  }
+  
+  .cli-input {
+    background-color: #161b22;
+    border-top: 1px solid #30363d;
+    padding: 12px 16px;
+    
+    .cli-prompt-indicator {
+      color: #8b949e;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+      white-space: nowrap;
+      margin-right: 8px;
+    }
+    
+    .cli-text-input {
+      flex: 1;
+      background-color: transparent;
+      border: none;
+      outline: none;
+      color: #c9d1d9;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+      
+      &::placeholder {
+        color: #484f58;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+  }
+}
+
 // Empty view styles
 .github-copilot-cli-empty-view {
   display: flex;
@@ -158,5 +358,266 @@
     color: var(--colorNeutralForeground2);
     margin-bottom: var(--spacingVerticalL, 24px);
     max-width: 500px;
+  }
+}
+
+// Chat-style AI interface
+.config-banner {
+  margin-bottom: var(--spacingVerticalM, 12px);
+}
+
+.copilot-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--colorNeutralBackground1, #1e1e1e);
+  border-radius: var(--borderRadiusMedium, 4px);
+  overflow: hidden;
+  border: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+}
+
+.copilot-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+  background-color: var(--colorNeutralBackground3, #2d2d2d);
+  border-bottom: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    color: var(--colorNeutralForeground1, #ffffff);
+    font-weight: 600;
+
+    .copilot-icon {
+      font-size: 20px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: normal;
+      padding: 2px 8px;
+      border-radius: 12px;
+      
+      &.connected {
+        background-color: rgba(63, 185, 80, 0.2);
+        color: #3fb950;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXS, 4px);
+  }
+}
+
+.copilot-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacingVerticalM, 12px);
+
+  .chat-entry {
+    margin-bottom: var(--spacingVerticalM, 12px);
+
+    &.processing {
+      .chat-message {
+        .message-content {
+          display: flex;
+          align-items: center;
+          gap: var(--spacingHorizontalS, 8px);
+        }
+      }
+    }
+  }
+
+  .chat-message {
+    display: flex;
+    gap: var(--spacingHorizontalM, 12px);
+    max-width: 90%;
+
+    .message-avatar {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background-color: var(--colorNeutralBackground4, #252526);
+      border-radius: 50%;
+    }
+
+    .message-content {
+      flex: 1;
+      
+      .message-text {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 0;
+        color: var(--colorNeutralForeground1, #d4d4d4);
+      }
+    }
+
+    &.user-message {
+      margin-left: auto;
+      flex-direction: row-reverse;
+      
+      .message-content {
+        background-color: var(--colorBrandBackground, #0d419d);
+        padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+        border-radius: 12px 12px 0 12px;
+        
+        .message-text {
+          color: white;
+          font-family: inherit;
+        }
+      }
+
+      .message-avatar {
+        background-color: var(--colorBrandBackground, #0d419d);
+        color: white;
+      }
+    }
+
+    &.ai-message {
+      .message-content {
+        background-color: var(--colorNeutralBackground4, #252526);
+        padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+        border-radius: 12px 12px 12px 0;
+        
+        pre.message-text {
+          font-family: 'Cascadia Code', 'Consolas', monospace;
+          font-size: 13px;
+        }
+      }
+
+      .message-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+    }
+
+    &.error-message {
+      .message-content {
+        background-color: rgba(248, 81, 73, 0.15);
+        padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+        border-radius: 12px;
+        border-left: 3px solid #f85149;
+        
+        .message-text {
+          color: #f85149;
+        }
+      }
+    }
+
+    &.system-message {
+      max-width: 100%;
+      justify-content: center;
+      
+      .message-text {
+        font-family: 'Cascadia Code', 'Consolas', monospace;
+        font-size: 12px;
+        color: var(--colorNeutralForeground3, #8b949e);
+        text-align: center;
+        padding: var(--spacingVerticalS, 8px);
+      }
+    }
+
+    &.action-message {
+      max-width: 100%;
+      
+      .action-prompt {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacingVerticalS, 8px);
+        padding: var(--spacingVerticalM, 12px);
+        background-color: var(--colorNeutralBackground4, #252526);
+        border-radius: 8px;
+        border-left: 3px solid var(--colorPaletteLightGreenForeground1, #3fb950);
+
+        code {
+          display: block;
+          padding: var(--spacingVerticalS, 8px);
+          background-color: var(--colorNeutralBackground1, #1e1e1e);
+          border-radius: 4px;
+          font-family: 'Cascadia Code', 'Consolas', monospace;
+          font-size: 12px;
+          color: var(--colorPaletteLightGreenForeground1, #3fb950);
+          white-space: pre-wrap;
+        }
+
+        .no-session-hint {
+          font-size: 11px;
+          color: var(--colorNeutralForeground3, #8b949e);
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+.copilot-chat-input {
+  display: flex;
+  align-items: center;
+  padding: var(--spacingVerticalM, 12px);
+  background-color: var(--colorNeutralBackground3, #2d2d2d);
+  border-top: 1px solid var(--colorNeutralStroke1, #3d3d3d);
+
+  .chat-text-input {
+    flex: 1;
+    
+    input {
+      background-color: var(--colorNeutralBackground1, #1e1e1e) !important;
+      border: 1px solid var(--colorNeutralStroke1, #3d3d3d) !important;
+      border-radius: 20px !important;
+      padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 16px) !important;
+      color: var(--colorNeutralForeground1, #d4d4d4);
+      font-size: 14px;
+      
+      &::placeholder {
+        color: var(--colorNeutralForeground3, #8b949e);
+      }
+      
+      &:focus {
+        border-color: var(--colorBrandStroke1, #58a6ff) !important;
+      }
+    }
+  }
+}
+
+// Configuration dialog styles
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 16px);
+  margin-top: var(--spacingVerticalM, 16px);
+
+  .config-help {
+    margin-top: var(--spacingVerticalM, 16px);
+    padding: var(--spacingVerticalM, 12px);
+    background-color: var(--colorNeutralBackground4, #f5f5f5);
+    border-radius: 4px;
+    font-size: 13px;
+    
+    p {
+      margin: 0 0 var(--spacingVerticalS, 8px) 0;
+      font-weight: 600;
+    }
+    
+    ol {
+      margin: 0;
+      padding-left: var(--spacingHorizontalL, 20px);
+      
+      li {
+        margin-bottom: var(--spacingVerticalXS, 4px);
+      }
+    }
   }
 }
