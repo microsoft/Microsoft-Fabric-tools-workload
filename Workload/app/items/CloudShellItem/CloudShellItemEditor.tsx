@@ -362,12 +362,17 @@ export function CloudShellItemEditor(props: PageProps) {
       const sparkComputeContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Setting/Sparkcompute.yml').then(r => r.text());
       const librariesContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Libraries/PublicLibraries/enviroment.yml').then(r => r.text());
         
-      // Create item with definition
       const itemClient = new ItemClient(workloadClient);
+      
+      // Step 1: Create item WITHOUT definition to get ID and displayName synchronously
       const newEnvironment = await itemClient.createItem(workspaceId, {
         displayName: environmentName,
         description: `Environment for ${item.displayName}`,
-        type: 'Environment',
+        type: 'Environment'
+      });
+      
+      // Step 2: Update the definition asynchronously
+      await itemClient.updateItemDefinition(workspaceId, newEnvironment.id, {
         definition: {
           parts: [
             {
@@ -385,10 +390,7 @@ export function CloudShellItemEditor(props: PageProps) {
       });
 
       // Add the new environment to the list immediately with the correct display name
-      const updatedEnvironments = [...availableEnvironments, {
-        ...newEnvironment,
-        displayName: environmentName // Ensure displayName is set
-      }];
+      const updatedEnvironments = [...availableEnvironments, newEnvironment];
       setAvailableEnvironments(updatedEnvironments);
       
       // Auto-select the newly created environment using the environment object directly

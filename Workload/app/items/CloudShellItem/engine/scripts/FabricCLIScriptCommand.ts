@@ -137,6 +137,10 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
 
         // Replace variables $variableName or %variableName% with the actual value from script parameters
         if (script.parameters && script.parameters.length > 0) {
+            // Create a converter function that includes the context
+            const converter = (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) =>
+                this.convertParameterValueForCLI(paramType, value, workloadClient, context);
+            
             // Parallelize parameter value resolution and conversion for better performance
             const parameterValues = await Promise.all(
                 script.parameters.map(async param => {
@@ -147,7 +151,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
                         runtimeValue,
                         context.item, 
                         context.workloadClient, 
-                        this.convertParameterValueForCLI.bind(this)
+                        converter
                     );
                 })
             );
@@ -185,12 +189,14 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
      * @param paramType Type of parameter (WORKSPACE_REFERENCE, ITEM_REFERENCE, etc.)
      * @param value Current parameter value to convert
      * @param workloadClient Workload client for API calls
+     * @param context Script execution context
      * @returns Converted parameter value
      */
     protected async convertParameterValueForCLI(
         paramType: ScriptParameterType,
         value: string,
-        workloadClient: WorkloadClientAPI
+        workloadClient: WorkloadClientAPI,
+        context: ScriptCommandContext
     ): Promise<string> {
         const fabricAPI = new FabricPlatformAPIClient(workloadClient);
 
@@ -219,7 +225,7 @@ export class FabricCLIScriptCommand extends BaseScriptCommand {
 
                 default:
                     // Delegate to base class for VARIABLE and other types
-                    return await super.convertParameterValueForCLI(paramType, value, workloadClient);
+                    return await super.convertParameterValueForCLI(paramType, value, workloadClient, context);
             }
         } catch (error) {
             console.error(`Failed to convert parameter value:`, error);

@@ -56,6 +56,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   const [parameters, setParameters] = useState<ScriptParameter[]>(script.parameters || []);
   const [isDirty, setIsDirty] = useState(false);
   const [expandedParams, setExpandedParams] = useState<Set<number>>(new Set());
+  const [monacoInstance, setMonacoInstance] = useState<any>(null);
 
   // Get editor language from centralized configuration
   const scriptType = script.type ?? ScriptType.FAB_CLI;
@@ -63,6 +64,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   // Handle Monaco editor before mount to register custom language
   const handleEditorWillMount = (monaco: any) => {
+    setMonacoInstance(monaco);
     if (language === 'fabriccli') {
       try {
         // Check if language is already registered
@@ -82,8 +84,21 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
 
   // Handle editor mount to verify language is set
   const handleEditorDidMount = (editor: any, monaco: any) => {
-    // Language configuration verified during mount
+    setMonacoInstance(monaco);
   };
+
+  // Update autocomplete when parameters change
+  useEffect(() => {
+    if (monacoInstance && language === 'fabriccli') {
+      try {
+        // Re-register the language with updated parameter names
+        const parameterNames = parameters.map(p => p.name);
+        registerFabricCLILanguage(monacoInstance, parameterNames);
+      } catch (error) {
+        console.error('Failed to update Fabric CLI language:', error);
+      }
+    }
+  }, [parameters, monacoInstance, language]);
 
   // Update content and parameters when script changes
   useEffect(() => {
@@ -199,19 +214,20 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
   };
 
   const handleSelectVariable = async (index: number) => {
-    if (!workloadClient) {
+    if (!workloadClient || !item) {
       return;
     }
 
     try {
-      // Open variable picker dialog
+ 
+      // Open variable picker dialog with proper configuration
       const result = await workloadClient.variableLibrary.openVariablePickerDialog({
-        title: t('CloudShellItem_Script_SelectVariable', 'Select Variable'),
-        allowMultipleSelection: false,
+        workspaceObjectId: item.workspaceId,
+        filters: undefined
       });
 
       if (result.selectedVariables && result.selectedVariables.length > 0) {
-        const variableReference = result.selectedVariables[0];
+        const variableReference = result.selectedVariables[0].variableReference;
         handleUpdateParameter(index, 'defaultValue', variableReference);
       }
     } catch (error) {
