@@ -27,6 +27,24 @@ import {
 import "./CloudShellItem.scss";
 import { itemReferenceToParameterValue } from "./engine/scripts/ScriptParameters";
 
+/**
+ * Get user-friendly display label for parameter type
+ */
+const getParameterTypeLabel = (type: ScriptParameterType): string => {
+  switch (type) {
+    case ScriptParameterType.STRING: return 'String';
+    case ScriptParameterType.INT: return 'Integer';
+    case ScriptParameterType.FLOAT: return 'Float';
+    case ScriptParameterType.BOOL: return 'Boolean';
+    case ScriptParameterType.DATE: return 'Date';
+    case ScriptParameterType.GUID: return 'GUID';
+    case ScriptParameterType.ITEM_REFERENCE: return 'Item Reference';
+    case ScriptParameterType.WORKSPACE_REFERENCE: return 'Workspace Reference';
+    case ScriptParameterType.VARIABLE: return 'Variable';
+    default: return type;
+  }
+};
+
 export interface ScriptDetailViewProps {
   script: Script;
   currentTheme: string;
@@ -345,7 +363,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   <Dropdown
                     className="type-dropdown"
                     size="small"
-                    value={param.type}
+                    value={getParameterTypeLabel(param.type)}
                     selectedOptions={[param.type]}
                     onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
                     disabled={isSystemParam}
@@ -420,7 +438,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                       />
                       <Tooltip content={t('CloudShellItem_Script_SelectVariable', 'Select Variable')} relationship="label">
                         <Button
-                          icon={<SearchRegular />}
+                          icon={<Search20Regular />}
                           size="small"
                           appearance="secondary"
                           onClick={(e: React.MouseEvent) => {
@@ -515,7 +533,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                   <Dropdown
                     className="type-dropdown"
                     size="small"
-                    value={param.type}
+                    value={getParameterTypeLabel(param.type)}
                     selectedOptions={[param.type]}
                     onOptionSelect={(e, data) => handleUpdateParameter(index, 'type', data.optionValue as string)}
                   >
@@ -542,23 +560,28 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                       />
                     </div>
                   ) : param.type === ScriptParameterType.ITEM_REFERENCE ? (
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <Button
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Input
                         size="small"
-                        icon={<Search20Regular />}
-                        onClick={() => handleSelectItemReference(index)}
-                        disabled={!workloadClient}
-                      >
-                        {t('CloudShellItem_Script_SelectItem', 'Select Item')}
-                      </Button>
-                      {param.defaultValue && (
-                        <Input
+                        value={(param.defaultValue || '')}
+                        placeholder={t('CloudShellItem_Script_ItemReferencePlaceholder', 'Select an item...')}
+                        disabled={true}
+                        style={{ flex: 1 }}
+                      />
+                      <Tooltip content={t('CloudShellItem_Script_SelectItem', 'Select')} relationship="label">
+                        <Button
+                          icon={<Search20Regular />}
                           size="small"
-                          value={(param.defaultValue || '')}
-                          placeholder={t('CloudShellItem_Script_WorkspaceReferencePlaceholder', 'Select a workspace...')}
-                          disabled={true}
+                          appearance="secondary"
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectItemReference(index);
+                          }}
+                          disabled={!workloadClient}
+                          aria-label={t('CloudShellItem_Script_SelectItem', 'Select')}
                         />
-                      )}
+                      </Tooltip>
                     </div>
                   ) : param.type === ScriptParameterType.VARIABLE ? (
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -571,7 +594,7 @@ export const ScriptDetailView: React.FC<ScriptDetailViewProps> = ({
                       />
                       <Tooltip content={t('CloudShellItem_Script_SelectVariable', 'Select Variable')} relationship="label">
                         <Button
-                          icon={<SearchRegular />}
+                          icon={<Search20Regular />}
                           size="small"
                           appearance="secondary"
                           onClick={(e: React.MouseEvent) => {
