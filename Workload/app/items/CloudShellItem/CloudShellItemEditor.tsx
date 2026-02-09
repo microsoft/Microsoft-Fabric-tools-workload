@@ -340,6 +340,74 @@ export function CloudShellItemEditor(props: PageProps) {
     });
   };
 
+  const handleCreateEnvironment = async () => {
+    if (!item) return;
+    
+    const workspaceId = item.definition?.selectedLakehouse?.workspaceId;
+    if (!workspaceId) {
+      callNotificationOpen(
+        workloadClient,
+        t("CloudShellItem_CreateEnvironment_Error_Title", "Cannot Create Environment"),
+        t("CloudShellItem_CreateEnvironment_NoLakehouse", "Please select a lakehouse first."),
+        NotificationType.Error
+      );
+      return;
+    }
+
+    try {
+      // Create environment name based on Cloud Shell item name
+      const environmentName = `${item.displayName}_Environment`;
+      
+      // Load default environment specification files
+      const sparkComputeContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Setting/Sparkcompute.yml').then(r => r.text());
+      const librariesContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Libraries/PublicLibraries/enviroment.yml').then(r => r.text());
+        
+      // Create item with definition
+      const itemClient = new ItemClient(workloadClient);
+      const newEnvironment = await itemClient.createItem(workspaceId, {
+        displayName: environmentName,
+        description: `Environment for ${item.displayName}`,
+        type: 'Environment',
+        definition: {
+          parts: [
+            {
+              path: 'Setting/Sparkcompute.yml',
+              payload: btoa(sparkComputeContent),
+              payloadType: 'InlineBase64'
+            },
+            {
+              path: 'Libraries/PublicLibraries/enviroment.yml',
+              payload: btoa(librariesContent),
+              payloadType: 'InlineBase64'
+            }
+          ]
+        }
+      });
+
+      // Refresh available environments
+      const workspaceItems = await itemClient.listItems(workspaceId, { type: 'Environment' });
+      setAvailableEnvironments(workspaceItems.value);
+      
+      // Auto-select the newly created environment
+      await handleSelectEnvironment(newEnvironment.id);
+      
+      callNotificationOpen(
+        workloadClient,
+        t("CloudShellItem_CreateEnvironment_Success_Title", "Environment Created"),
+        t("CloudShellItem_CreateEnvironment_Success_Message", "Environment {{name}} created successfully.", { name: environmentName }),
+        NotificationType.Success
+      );
+    } catch (error: any) {
+      console.error('Failed to create environment:', error);
+      callNotificationOpen(
+        workloadClient,
+        t("CloudShellItem_CreateEnvironment_Error_Title", "Failed to Create Environment"),
+        t("CloudShellItem_CreateEnvironment_Error_Message", "Could not create the environment: {{error}}", { error: error.message }),
+        NotificationType.Error
+      );
+    }
+  };
+
   const handleSelectExecutionMode = (mode: CommandType) => {
     setExecutionMode(mode);
   };
@@ -656,6 +724,7 @@ export function CloudShellItemEditor(props: PageProps) {
           sessionActive={sessionActive}
           onSelectLakehouse={handleSelectLakehouse}
           onSelectEnvironment={handleSelectEnvironment}
+          onCreateEnvironment={handleCreateEnvironment}
           availableEnvironments={availableEnvironments.map(env => ({
             id: env.id,
             displayName: env.displayName || env.id

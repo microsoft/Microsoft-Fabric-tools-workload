@@ -30,6 +30,7 @@ export interface CloudShellItemRibbonProps extends PageProps {
   // Configuration
   onSelectLakehouse?: () => void;
   onSelectEnvironment?: (environmentId: string) => void;
+  onCreateEnvironment?: () => void;
   availableEnvironments?: Array<{ id: string; displayName: string }>;
   selectedEnvironmentId?: string;
   
@@ -52,12 +53,25 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
     key: "select-environment",
     label: environmentLabel,
     onClick: () => {}, // Required but overridden by dropdown items
-    dropdownItems: props.availableEnvironments?.map(env => ({
-      key: env.id,
-      label: env.displayName,
-      onClick: () => props.onSelectEnvironment?.(env.id),
-      checked: env.id === props.selectedEnvironmentId
-    })) || [],
+    dropdownItems: [
+      ...(props.availableEnvironments?.map(env => ({
+        key: env.id,
+        label: env.displayName,
+        onClick: () => props.onSelectEnvironment?.(env.id),
+        checked: env.id === props.selectedEnvironmentId
+      })) || []),
+      {
+        key: "create-environment-divider",
+        label: "-",
+        onClick: () => {},
+      },
+      {
+        key: "create-environment",
+        label: t("CloudShellItem_CreateEnvironment", "Create Environment"),
+        onClick: () => props.onCreateEnvironment?.(),
+        checked: false
+      }
+    ],
     showDividerAfter: false
   };
 
