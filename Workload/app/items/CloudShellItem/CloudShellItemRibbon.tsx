@@ -57,19 +57,13 @@ export function CloudShellItemRibbon(props: CloudShellItemRibbonProps) {
       ...(props.availableEnvironments?.map(env => ({
         key: env.id,
         label: env.displayName,
-        onClick: () => props.onSelectEnvironment?.(env.id),
-        checked: env.id === props.selectedEnvironmentId
+        onClick: () => props.onSelectEnvironment?.(env.id)
       })) || []),
-      {
-        key: "create-environment-divider",
-        label: "-",
-        onClick: () => {},
-      },
       {
         key: "create-environment",
         label: t("CloudShellItem_CreateEnvironment", "Create Environment"),
         onClick: () => props.onCreateEnvironment?.(),
-        checked: false
+        showDividerBefore: true
       }
     ],
     showDividerAfter: false

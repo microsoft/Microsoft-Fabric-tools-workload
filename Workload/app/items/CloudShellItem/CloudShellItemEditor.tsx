@@ -384,19 +384,39 @@ export function CloudShellItemEditor(props: PageProps) {
         }
       });
 
-      // Refresh available environments
-      const workspaceItems = await itemClient.listItems(workspaceId, { type: 'Environment' });
-      setAvailableEnvironments(workspaceItems.value);
+      // Add the new environment to the list immediately with the correct display name
+      const updatedEnvironments = [...availableEnvironments, {
+        ...newEnvironment,
+        displayName: environmentName // Ensure displayName is set
+      }];
+      setAvailableEnvironments(updatedEnvironments);
       
-      // Auto-select the newly created environment
-      await handleSelectEnvironment(newEnvironment.id);
+      // Auto-select the newly created environment using the environment object directly
+      const updatedItem = {
+        ...item,
+        definition: {
+          ...item.definition,
+          selectedSparkEnvironment: {
+            id: newEnvironment.id,
+            workspaceId: newEnvironment.workspaceId,
+            displayName: environmentName, // Use the name we set
+            type: newEnvironment.type
+          }
+        }
+      };
+      setItem(updatedItem);
       
-      callNotificationOpen(
-        workloadClient,
-        t("CloudShellItem_CreateEnvironment_Success_Title", "Environment Created"),
-        t("CloudShellItem_CreateEnvironment_Success_Message", "Environment {{name}} created successfully.", { name: environmentName }),
-        NotificationType.Success
-      );
+      // Auto-save the environment selection
+      const success = await saveItemInternal(updatedItem);
+      
+      // Add system message to terminal
+      setSystemMessage({
+        message: success 
+          ? t("CloudShellItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: environmentName })
+          : t("CloudShellItem_SelectEnvironment_Error", "Could not save environment selection."),
+        timestamp: Date.now()
+      });
+      
     } catch (error: any) {
       console.error('Failed to create environment:', error);
       callNotificationOpen(
