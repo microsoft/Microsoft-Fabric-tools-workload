@@ -4,6 +4,7 @@ import { ItemClient } from "./ItemClient";
 import { FolderClient } from "./FolderClient";
 import { CapacityClient } from "./CapacityClient";
 import { ConnectionClient } from "./ConnectionClient";
+import { GitClient } from "./GitClient";
 import { JobSchedulerClient } from "./JobSchedulerClient";
 import { OneLakeShortcutClient } from "./OneLakeShortcutClient";
 import { LongRunningOperationsClient } from "./LongRunningOperationsClient";
@@ -26,6 +27,7 @@ export class FabricPlatformAPIClient {
   public readonly folders: FolderClient;
   public readonly capacities: CapacityClient;
   public readonly connections: ConnectionClient;
+  public readonly git: GitClient;
   public readonly scheduler: JobSchedulerClient;
   public readonly shortcuts: OneLakeShortcutClient;
   public readonly operations: LongRunningOperationsClient;
@@ -43,6 +45,7 @@ export class FabricPlatformAPIClient {
     this.folders = new FolderClient(workloadClient);
     this.capacities = new CapacityClient(workloadClient);
     this.connections = new ConnectionClient(workloadClient);
+    this.git = new GitClient(workloadClient);
     this.scheduler = new JobSchedulerClient(workloadClient);
     this.shortcuts = new OneLakeShortcutClient(workloadClient);
     this.operations = new LongRunningOperationsClient(workloadClient);
@@ -92,6 +95,7 @@ export class FabricPlatformAPIClient {
     client.folders.updateAuthenticationConfig(authConfig);
     client.capacities.updateAuthenticationConfig(authConfig);
     client.connections.updateAuthenticationConfig(authConfig);
+    client.git.updateAuthenticationConfig(authConfig);
     client.scheduler.updateAuthenticationConfig(authConfig);
     client.shortcuts.updateAuthenticationConfig(authConfig);
     client.operations.updateAuthenticationConfig(authConfig);
@@ -125,6 +129,7 @@ export class FabricPlatformAPIClient {
     client.folders.updateAuthenticationConfig(authConfig);
     client.capacities.updateAuthenticationConfig(authConfig);
     client.connections.updateAuthenticationConfig(authConfig);
+    client.git.updateAuthenticationConfig(authConfig);
     client.scheduler.updateAuthenticationConfig(authConfig);
     client.shortcuts.updateAuthenticationConfig(authConfig);
     client.operations.updateAuthenticationConfig(authConfig);

@@ -59,6 +59,9 @@ export const FABRIC_BASE_SCOPES = {
   GATEWAY_READ: "https://api.fabric.microsoft.com/Gateway.Read.All",
   GATEWAY_READWRITE: "https://api.fabric.microsoft.com/Gateway.ReadWrite.All",
 
+  // Git operations
+  GIT_UPDATE: "https://api.fabric.microsoft.com/Workspace.GitUpdate.All",
+
 };
 
 // Predefined scope combinations for different clients
@@ -245,6 +248,18 @@ export const SCOPES = {
   GATEWAY_READ: [
     FABRIC_BASE_SCOPES.GATEWAY_READ
   ].join(" "),
+  
+  // Git Client - focused on Git integration operations
+  GIT: [
+    FABRIC_BASE_SCOPES.WORKSPACE_READWRITE,
+    FABRIC_BASE_SCOPES.GIT_UPDATE
+  ].join(" "),
+  
+  // Git Client - read-only operations
+  GIT_READ: [
+    FABRIC_BASE_SCOPES.WORKSPACE_READ,
+    FABRIC_BASE_SCOPES.GIT_UPDATE
+  ].join(" "),
 };
 
 /**
@@ -311,6 +326,10 @@ export const SCOPE_PAIRS: Record<string, ScopePair> = {
   GATEWAY: {
     read: SCOPES.GATEWAY_READ,
     write: SCOPES.GATEWAY
+  },
+  GIT: {
+    read: SCOPES.GIT_READ,
+    write: SCOPES.GIT
   }
 };
 

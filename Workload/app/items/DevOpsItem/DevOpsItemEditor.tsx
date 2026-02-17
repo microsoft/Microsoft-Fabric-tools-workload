@@ -49,6 +49,7 @@ export function DevOpsItemEditor(props: PageProps) {
   const [currentDefinition, setCurrentDefinition] = useState<DevOpsItemDefinition>({});
   const [showWarning, setShowWarning] = useState<boolean>(false);
   const [viewSetter, setViewSetter] = useState<((view: string) => void) | null>(null);
+  const [scanWorkspaces, setScanWorkspaces] = useState<(() => Promise<void>) | null>(null);
 
   const { pathname } = useLocation();
 
@@ -74,10 +75,8 @@ export function DevOpsItemEditor(props: PageProps) {
           LoadedItem = {
             ...LoadedItem,
             definition: {
-              repositoryOwner: undefined,
-              repositoryName: undefined,
-              githubToken: undefined,
-              lastRefreshed: undefined,
+              workspaceGitConnections: undefined,
+              lastScanned: undefined,
             }
           };
         }
@@ -120,7 +119,6 @@ export function DevOpsItemEditor(props: PageProps) {
     setSaveStatus(SaveStatus.Saving);
     item.definition = {
       ...currentDefinition,
-      lastRefreshed: new Date().toISOString()
     }
     setCurrentDefinition(item.definition)
 
@@ -168,12 +166,9 @@ export function DevOpsItemEditor(props: PageProps) {
     if (currentView === EDITOR_VIEW_TYPES.EMPTY) {
       return false;
     } else {
-      if (saveStatus === SaveStatus.Saved) {
-        return false;
-      }
-      // Enable save if configuration has changed
-      const hasConfig = currentDefinition.repositoryOwner && currentDefinition.repositoryName;
-      return hasConfig && saveStatus === SaveStatus.NotSaved;
+      // Always allow save if there are scanned connections to persist
+      const hasConnections = currentDefinition.workspaceGitConnections && currentDefinition.workspaceGitConnections.length > 0;
+      return hasConnections && saveStatus === SaveStatus.NotSaved;
     }
   };
 
@@ -185,8 +180,7 @@ export function DevOpsItemEditor(props: PageProps) {
       <DevOpsItemEmptyView
         workloadClient={workloadClient}
         item={item}
-        onNavigateToConfiguration={() => {
-          setSaveStatus(SaveStatus.NotSaved);
+        onStartScan={() => {
           setCurrentView(EDITOR_VIEW_TYPES.DEFAULT);
         }}
       />
@@ -210,6 +204,10 @@ export function DevOpsItemEditor(props: PageProps) {
             setCurrentDefinition(newDefinition);
             setSaveStatus(SaveStatus.NotSaved);
           }}
+          onScanCallback={(scanFn) => {
+            // Store the scan function so we can trigger it from the ribbon
+            setScanWorkspaces(() => scanFn);
+          }}
         />
       )
     }
@@ -219,8 +217,8 @@ export function DevOpsItemEditor(props: PageProps) {
   useEffect(() => {
     if (!isLoading && item && viewSetter) {
       // Determine the correct view based on item state
-      const hasConfig = item?.definition?.repositoryOwner && item?.definition?.repositoryName;
-      const correctView = !hasConfig ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
+      const hasConnections = item?.definition?.workspaceGitConnections && item?.definition?.workspaceGitConnections.length > 0;
+      const correctView = !hasConnections ? EDITOR_VIEW_TYPES.EMPTY : EDITOR_VIEW_TYPES.DEFAULT;   
       viewSetter(correctView);
     }
   }, [isLoading, item, viewSetter]);
@@ -233,7 +231,7 @@ export function DevOpsItemEditor(props: PageProps) {
       component: showWarning ? (
         <MessageBar intent="info" icon={<Warning20Filled />}>
           <MessageBarBody>
-            {t('DevOpsItem_Info', 'Branch information is refreshed when you save changes.')}
+            {t('DevOpsItem_Info', 'Use the Refresh action in the ribbon to re-scan workspaces for updated Git connections.')}
           </MessageBarBody>
           <MessageBarActions
             containerAction={
@@ -257,6 +255,7 @@ export function DevOpsItemEditor(props: PageProps) {
       ribbon={(context) => (
         <DevOpsItemRibbon
           {...props}
+          scanWorkspacesCallback={scanWorkspaces}
           viewContext={context}
           isSaveButtonEnabled={isSaveEnabled(context.currentView)}
           saveItemCallback={saveItem}

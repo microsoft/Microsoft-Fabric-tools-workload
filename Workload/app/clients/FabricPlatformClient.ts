@@ -235,8 +235,8 @@ export abstract class FabricPlatformClient {
    * @param endpoint The API endpoint
    * @returns Promise<T>
    */
-  protected get<T>(endpoint: string): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: 'GET' });
+  protected get<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: 'GET', ...options });
   }
 
   /**

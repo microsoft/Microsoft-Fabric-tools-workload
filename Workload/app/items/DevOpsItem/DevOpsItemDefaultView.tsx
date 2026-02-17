@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Input,
-  Label,
   Text,
   Spinner,
   DataGrid,
@@ -14,11 +12,13 @@ import {
   TableColumnDefinition,
   createTableColumn,
   TableCellLayout,
+  Badge,
 } from "@fluentui/react-components";
 import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { ItemWithDefinition } from "../../controller/ItemCRUDController";
-import { DevOpsItemDefinition } from "./DevOpsItemDefinition";
+import { DevOpsItemDefinition, WorkspaceGitConnection } from "./DevOpsItemDefinition";
 import { ItemEditorDefaultView } from "../../components/ItemEditor";
+import { FabricPlatformAPIClient } from "../../clients/FabricPlatformAPIClient";
 import "./DevOpsItem.scss";
 
 interface DevOpsItemDefaultViewProps {
@@ -26,14 +26,7 @@ interface DevOpsItemDefaultViewProps {
   item?: ItemWithDefinition<DevOpsItemDefinition>;
   definition: DevOpsItemDefinition;
   onDefinitionChange: (newDefinition: DevOpsItemDefinition) => void;
-}
-
-interface GitHubBranch {
-  name: string;
-  commitSha: string;
-  commitMessage: string;
-  commitAuthor: string;
-  commitDate: string;
+  onScanCallback?: (scanFn: () => Promise<void>) => void;
 }
 
 export function DevOpsItemDefaultView({
@@ -41,258 +34,255 @@ export function DevOpsItemDefaultView({
   item,
   definition,
   onDefinitionChange,
+  onScanCallback,
 }: DevOpsItemDefaultViewProps) {
   const { t } = useTranslation();
-  const [branches, setBranches] = useState<GitHubBranch[]>([]);
-  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const [workspaceConnections, setWorkspaceConnections] = useState<WorkspaceGitConnection[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // Fetch branches from GitHub API
-  const fetchBranches = async () => {
-    if (!definition.repositoryOwner || !definition.repositoryName) {
-      return;
-    }
-
-    setIsLoadingBranches(true);
+  // Scan all workspaces for Git connections
+  const scanWorkspaces = async () => {
+    setIsScanning(true);
     setErrorMessage("");
 
     try {
-      const headers: HeadersInit = {
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28'
-      };
+      const fabricAPI = FabricPlatformAPIClient.create(workloadClient);
+      
+      // Get all workspaces the user has access to
+      const workspaces = await fabricAPI.workspaces.getAllWorkspaces();
+      
+      // Scan each workspace for Git connections
+      const connections: WorkspaceGitConnection[] = [];
+      
+      for (const workspace of workspaces) {
+        try {
+          // Try to get Git connection for this workspace
+          const gitConnection = await fabricAPI.git.getGitConnection(workspace.id);
+          
+          // Check if Git is actually enabled by verifying GitStatus
+          let gitStatus;
+          try {
+            gitStatus = await fabricAPI.git.getGitStatus(workspace.id);
+          } catch (statusError) {
+            // If we can't get status, Git might not be fully enabled
+            console.warn(`Could not get Git status for workspace ${workspace.id}:`, statusError);
+            continue; // Skip this workspace
+          }
+          
+          // If GitStatus is empty/null, Git is not enabled
+          if (!gitStatus || !gitStatus.workspaceHead) {
+            continue; // Skip workspaces without active Git status
+          }
+          
+          // Get connection state for last sync time
+          let lastSyncTime: string | undefined;
+          let gitSyncStatus: string | undefined;
+          try {
+            const connectionState = await fabricAPI.git.getGitConnectionState(workspace.id);
+            lastSyncTime = connectionState.lastSyncTime;
+            gitSyncStatus = connectionState.gitSyncStatus;
+          } catch (stateError) {
+            // State might not be available, continue without it
+            console.warn(`Could not get connection state for workspace ${workspace.id}:`, stateError);
+          }
 
-      // Add authentication if token is provided
-      if (definition.githubToken) {
-        headers['Authorization'] = `Bearer ${definition.githubToken}`;
-      }
-
-      const response = await fetch(
-        `https://api.github.com/repos/${definition.repositoryOwner}/${definition.repositoryName}/branches`,
-        { headers }
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Repository not found. Please check the owner and repository name.');
-        } else if (response.status === 401) {
-          throw new Error('Authentication failed. Please check your GitHub token.');
-        } else {
-          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+          connections.push({
+            workspaceId: workspace.id,
+            workspaceName: workspace.displayName,
+            organizationName: gitConnection.organizationName,
+            projectName: gitConnection.projectName,
+            repositoryName: gitConnection.repositoryName,
+            branchName: gitConnection.branchName,
+            gitProviderType: gitConnection.gitProviderType,
+            lastSyncTime,
+            gitSyncStatus,
+          });
+        } catch (error: any) {
+          // 404 means no Git connection for this workspace, skip it
+          if (error?.status !== 404) {
+            console.warn(`Error getting Git connection for workspace ${workspace.displayName}:`, error);
+          }
         }
       }
 
-      const data = await response.json();
+      setWorkspaceConnections(connections);
       
-      // Fetch detailed commit info for each branch
-      const branchesWithCommits = await Promise.all(
-        data.map(async (branch: any) => {
-          try {
-            const commitResponse = await fetch(branch.commit.url, { headers });
-            const commitData = await commitResponse.json();
-            
-            return {
-              name: branch.name,
-              commitSha: branch.commit.sha.substring(0, 7),
-              commitMessage: commitData.commit.message.split('\n')[0], // First line only
-              commitAuthor: commitData.commit.author.name,
-              commitDate: new Date(commitData.commit.author.date).toLocaleString(),
-            };
-          } catch (error) {
-            return {
-              name: branch.name,
-              commitSha: branch.commit.sha.substring(0, 7),
-              commitMessage: 'Unable to fetch commit details',
-              commitAuthor: '',
-              commitDate: '',
-            };
-          }
-        })
-      );
-
-      setBranches(branchesWithCommits);
-    } catch (error) {
-      setErrorMessage(error.message || 'Failed to fetch branches');
-      console.error('Error fetching branches:', error);
+      // Update definition with scan results
+      onDefinitionChange({
+        ...definition,
+        workspaceGitConnections: connections,
+        lastScanned: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Failed to scan workspaces');
+      console.error('Error scanning workspaces:', error);
     } finally {
-      setIsLoadingBranches(false);
+      setIsScanning(false);
     }
   };
 
-  // Auto-fetch branches when definition changes
+  // Load cached connections on mount or scan if none cached
   useEffect(() => {
-    if (definition.repositoryOwner && definition.repositoryName) {
-      fetchBranches();
+    if (definition.workspaceGitConnections && definition.workspaceGitConnections.length > 0) {
+      setWorkspaceConnections(definition.workspaceGitConnections);
+    } else {
+      // Auto-scan on first load
+      scanWorkspaces();
     }
-  }, [definition.repositoryOwner, definition.repositoryName, definition.githubToken]);
+    
+    // Expose scan function to parent via callback
+    if (onScanCallback) {
+      onScanCallback(scanWorkspaces);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Define table columns
-  const columns: TableColumnDefinition<GitHubBranch>[] = [
-    createTableColumn<GitHubBranch>({
-      columnId: 'name',
-      compare: (a, b) => a.name.localeCompare(b.name),
+  const columns: TableColumnDefinition<WorkspaceGitConnection>[] = [
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'workspaceName',
+      compare: (a, b) => a.workspaceName.localeCompare(b.workspaceName),
+      renderHeaderCell: () => t('DevOpsItem_Column_Workspace', 'Workspace'),
+      renderCell: (item) => (
+        <TableCellLayout>
+          <Text weight="semibold">{item.workspaceName}</Text>
+        </TableCellLayout>
+      ),
+    }),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'gitProviderType',
+      renderHeaderCell: () => t('DevOpsItem_Column_Provider', 'Provider'),
+      renderCell: (item) => (
+        <TableCellLayout>
+          <Badge appearance="tint" color={item.gitProviderType === 'AzureDevOps' ? 'brand' : 'important'}>
+            {item.gitProviderType}
+          </Badge>
+        </TableCellLayout>
+      ),
+    }),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'organizationName',
+      renderHeaderCell: () => t('DevOpsItem_Column_Organization', 'Organization'),
+      renderCell: (item) => item.organizationName,
+    }),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'projectName',
+      renderHeaderCell: () => t('DevOpsItem_Column_Project', 'Project'),
+      renderCell: (item) => item.projectName,
+    }),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'repositoryName',
+      renderHeaderCell: () => t('DevOpsItem_Column_Repository', 'Repository'),
+      renderCell: (item) => item.repositoryName,
+    }),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'branchName',
       renderHeaderCell: () => t('DevOpsItem_Column_Branch', 'Branch'),
       renderCell: (item) => (
         <TableCellLayout>
-          <Text weight="semibold">{item.name}</Text>
+          <Text font="monospace">{item.branchName}</Text>
         </TableCellLayout>
       ),
     }),
-    createTableColumn<GitHubBranch>({
-      columnId: 'commitSha',
-      renderHeaderCell: () => t('DevOpsItem_Column_Commit', 'Commit'),
-      renderCell: (item) => (
-        <TableCellLayout>
-          <Text font="monospace">{item.commitSha}</Text>
-        </TableCellLayout>
-      ),
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'gitSyncStatus',
+      renderHeaderCell: () => t('DevOpsItem_Column_Status', 'Status'),
+      renderCell: (item) => {
+        if (!item.gitSyncStatus) return '-';
+        
+        const statusColor = 
+          item.gitSyncStatus === 'Synchronized' ? 'success' :
+          item.gitSyncStatus === 'Conflict' ? 'danger' :
+          item.gitSyncStatus === 'UpdateRequired' ? 'warning' :
+          item.gitSyncStatus === 'Updating' ? 'informative' :
+          'subtle';
+        
+        return (
+          <TableCellLayout>
+            <Badge appearance="filled" color={statusColor}>
+              {item.gitSyncStatus}
+            </Badge>
+          </TableCellLayout>
+        );
+      },
     }),
-    createTableColumn<GitHubBranch>({
-      columnId: 'commitMessage',
-      renderHeaderCell: () => t('DevOpsItem_Column_Message', 'Message'),
-      renderCell: (item) => (
-        <TableCellLayout truncate>
-          {item.commitMessage}
-        </TableCellLayout>
-      ),
-    }),
-    createTableColumn<GitHubBranch>({
-      columnId: 'commitAuthor',
-      renderHeaderCell: () => t('DevOpsItem_Column_Author', 'Author'),
-      renderCell: (item) => item.commitAuthor,
-    }),
-    createTableColumn<GitHubBranch>({
-      columnId: 'commitDate',
-      renderHeaderCell: () => t('DevOpsItem_Column_Date', 'Date'),
-      renderCell: (item) => item.commitDate,
+    createTableColumn<WorkspaceGitConnection>({
+      columnId: 'lastSyncTime',
+      renderHeaderCell: () => t('DevOpsItem_Column_LastSync', 'Last Sync'),
+      renderCell: (item) => 
+        item.lastSyncTime 
+          ? new Date(item.lastSyncTime).toLocaleString() 
+          : t('DevOpsItem_NoSyncTime', 'Never'),
     }),
   ];
 
-  // Configuration panel (left side)
-  const configurationPanel = (
-    <div className="devops-item-config">
-      <div className="config-section">
-        <Label htmlFor="repo-owner" required>
-          {t('DevOpsItem_RepoOwner_Label', 'Repository Owner')}
-        </Label>
-        <Input
-          id="repo-owner"
-          value={definition.repositoryOwner || ''}
-          onChange={(e, data) => onDefinitionChange({ 
-            ...definition, 
-            repositoryOwner: data.value 
-          })}
-          placeholder="microsoft"
-        />
-      </div>
-
-      <div className="config-section">
-        <Label htmlFor="repo-name" required>
-          {t('DevOpsItem_RepoName_Label', 'Repository Name')}
-        </Label>
-        <Input
-          id="repo-name"
-          value={definition.repositoryName || ''}
-          onChange={(e, data) => onDefinitionChange({ 
-            ...definition, 
-            repositoryName: data.value 
-          })}
-          placeholder="fabric-samples"
-        />
-      </div>
-
-      <div className="config-section">
-        <Label htmlFor="github-token">
-          {t('DevOpsItem_Token_Label', 'GitHub Token (Optional)')}
-        </Label>
-        <Input
-          id="github-token"
-          type="password"
-          value={definition.githubToken || ''}
-          onChange={(e, data) => onDefinitionChange({ 
-            ...definition, 
-            githubToken: data.value 
-          })}
-          placeholder="ghp_..."
-        />
-        <Text size={200}>
-          {t('DevOpsItem_Token_Help', 'Required for private repos or higher rate limits')}
-        </Text>
-      </div>
-
-      {definition.lastRefreshed && (
-        <div className="config-section">
-          <Text size={200}>
-            {t('DevOpsItem_LastRefreshed', 'Last refreshed: {{date}}', {
-              date: new Date(definition.lastRefreshed).toLocaleString()
-            })}
-          </Text>
-        </div>
-      )}
-    </div>
-  );
-
-  // Branches panel (center)
-  const branchesPanel = (
-    <div className="devops-item-branches">
-      {isLoadingBranches ? (
+  // Main content panel
+  const contentPanel = (
+    <div className="devops-item-content">
+      {isScanning ? (
         <div className="loading-container">
-          <Spinner label={t('DevOpsItem_Loading', 'Loading branches...')} />
+          <Spinner label={t('DevOpsItem_Loading', 'Scanning workspaces for Git connections...')} />
         </div>
       ) : errorMessage ? (
         <div className="error-container">
           <Text>{errorMessage}</Text>
         </div>
-      ) : branches.length === 0 ? (
+      ) : workspaceConnections.length === 0 ? (
         <div className="empty-container">
           <Text>
-            {t('DevOpsItem_NoBranches', 
-              'Configure your repository to see branches and commits.')}
+            {t('DevOpsItem_NoConnections', 
+              'No workspaces with Git integration found. Connect your workspaces to Azure DevOps or GitHub.')}
           </Text>
         </div>
       ) : (
-        <DataGrid
-          items={branches}
-          columns={columns}
-          sortable
-          selectionMode="single"
-          size="small"
-          className="branches-grid"
-        >
-          <DataGridHeader>
-            <DataGridRow>
-              {({ renderHeaderCell }) => (
-                <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-              )}
-            </DataGridRow>
-          </DataGridHeader>
-          <DataGridBody<GitHubBranch>>
-            {({ item, rowId }) => (
-              <DataGridRow<GitHubBranch> key={rowId}>
-                {({ renderCell }) => (
-                  <DataGridCell>{renderCell(item)}</DataGridCell>
+        <>
+          {definition.lastScanned && (
+            <div className="info-section">
+              <Text size={200}>
+                {t('DevOpsItem_LastScanned', 'Last scanned: {{date}} • Found {{count}} workspace(s) with Git integration', {
+                  date: new Date(definition.lastScanned).toLocaleString(),
+                  count: workspaceConnections.length,
+                })}
+              </Text>
+            </div>
+          )}
+          <DataGrid
+            items={workspaceConnections}
+            columns={columns}
+            sortable
+            selectionMode="single"
+            size="small"
+            className="git-connections-grid"
+          >
+            <DataGridHeader>
+              <DataGridRow>
+                {({ renderHeaderCell }) => (
+                  <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
                 )}
               </DataGridRow>
-            )}
-          </DataGridBody>
-        </DataGrid>
+            </DataGridHeader>
+            <DataGridBody<WorkspaceGitConnection>>
+              {({ item, rowId }) => (
+                <DataGridRow<WorkspaceGitConnection> key={rowId}>
+                  {({ renderCell }) => (
+                    <DataGridCell>{renderCell(item)}</DataGridCell>
+                  )}
+                </DataGridRow>
+              )}
+            </DataGridBody>
+          </DataGrid>
+        </>
       )}
     </div>
   );
 
   return (
     <ItemEditorDefaultView
-      left={{
-        content: configurationPanel,
-        width: 320,
-        minWidth: 280,
-        title: t('DevOpsItem_Config_Title', 'Configuration'),
-        enableUserResize: true,
-        collapsible: true
-      }}
       center={{
-        content: branchesPanel
+        content: contentPanel
       }}
     />
   );
 }
+

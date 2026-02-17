@@ -112,6 +112,41 @@ export interface UpdateWorkspaceRoleAssignmentRequest {
 
 export type WorkspaceRole = 'Admin' | 'Member' | 'Contributor' | 'Viewer';
 
+// Git Integration types
+export interface GitConnection {
+  organizationName: string;
+  projectName: string;
+  gitProviderType: GitProviderType;
+  repositoryName: string;
+  branchName: string;
+  directoryName: string;
+}
+
+export interface GitConnectionState {
+  lastSyncTime?: string;
+  gitSyncStatus: GitSyncStatus;
+}
+
+export interface GitStatus {
+  workspaceHead: string;
+  gitProviderSyncDetails?: GitProviderSyncDetails[];
+}
+
+export interface GitProviderSyncDetails {
+  gitProviderHead: string;
+  gitItemDetails: GitItemDetails[];
+}
+
+export interface GitItemDetails {
+  logicalId: string;
+  itemType: string;
+  objectId: string;
+  remoteLogicalPath: string;
+}
+
+export type GitProviderType = 'AzureDevOps' | 'GitHub';
+export type GitSyncStatus = 'None' | 'Synchronized' | 'Conflict' | 'UpdateRequired' | 'Updating';
+
 // Capacity types
 export interface Capacity {
   id: string;

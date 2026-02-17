@@ -9,11 +9,11 @@
  * ## Design Principles
  * - Uses Fabric UX design tokens for consistency
  * - Minimal custom styling - leverages standard patterns where possible
- * - Item-specific: Configuration panel and branches grid layout
+ * - Item-specific: Git connections grid layout and info section
  * 
  * ## What's Item-Specific Here
- * - Configuration panel layout
- * - Branches grid container styling
+ * - Git connections content area styling
+ * - Info section for scan metadata
  * - Loading and error state containers
  * 
  * ## What Uses Standards
@@ -24,46 +24,33 @@
  */
 
 // ============================================================================
-// Configuration Panel (Left Panel)
+// Content Panel (Center Panel)
 // ============================================================================
 
-.devops-item-config {
-  padding: var(--spacingVerticalM, 12px);
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacingVerticalL, 16px);
-}
-
-.config-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacingVerticalS, 6px);
-  width: 100%;
-}
-
-.config-section label {
-  color: var(--colorNeutralForeground1);
-  font-weight: var(--fontWeightSemibold, 600);
-}
-
-// ============================================================================
-// Branches Panel (Center Panel)
-// ============================================================================
-
-.devops-item-branches {
+.devops-item-content {
   padding: var(--spacingVerticalM, 12px);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalM, 12px);
 }
 
-.branches-grid {
+// Info section showing scan metadata
+.info-section {
+  padding: var(--spacingVerticalS, 6px) var(--spacingHorizontalM, 12px);
+  background-color: var(--colorNeutralBackground2);
+  border-radius: var(--borderRadiusMedium, 4px);
+  color: var(--colorNeutralForeground2);
+}
+
+// Git connections data grid
+.git-connections-grid {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  overflow: auto;
 }
 
 // Loading state
@@ -100,3 +87,4 @@
   color: var(--colorNeutralForeground2);
   text-align: center;
 }
+

@@ -19,6 +19,7 @@ export interface DevOpsItemRibbonProps extends PageProps {
   viewContext: ViewContext;
   saveItemCallback: () => Promise<void>;
   openSettingsCallback: () => Promise<void>;
+  scanWorkspacesCallback: (() => Promise<void>) | null;
 }
 
 /**
@@ -46,11 +47,14 @@ export function DevOpsItemRibbon(props: DevOpsItemRibbonProps) {
     icon: ArrowClockwise24Regular,
     label: t("DevOpsItem_Ribbon_Refresh_Label", "Refresh"),
     onClick: async () => {
-      // Trigger a save which will refresh the data
-      await props.saveItemCallback();
+      // Trigger a workspace rescan if the callback is available
+      if (props.scanWorkspacesCallback) {
+        await props.scanWorkspacesCallback();
+      }
     },
     testId: 'ribbon-refresh-btn',
-    tooltip: t("DevOpsItem_Ribbon_Refresh_Tooltip", "Refresh branch information")
+    tooltip: t("DevOpsItem_Ribbon_Refresh_Tooltip", "Re-scan workspaces for Git connections"),
+    disabled: !props.scanWorkspacesCallback
   };
 
   // Define home toolbar actions - these appear on the mandatory Home toolbar

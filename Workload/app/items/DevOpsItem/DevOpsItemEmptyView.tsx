@@ -10,34 +10,33 @@ import "./DevOpsItem.scss";
 interface DevOpsItemEmptyViewProps {
   workloadClient: WorkloadClientAPI;
   item?: ItemWithDefinition<DevOpsItemDefinition>;
-  onNavigateToConfiguration: () => void;
+  onStartScan: () => void;
 }
 
 /**
  * Empty state component - the first screen users see
- * Guides users to configure their GitHub repository connection
+ * Guides users to scan their workspaces for Git connections
  */
 export function DevOpsItemEmptyView({
   workloadClient,
   item,
-  onNavigateToConfiguration
+  onStartScan
 }: DevOpsItemEmptyViewProps) {
   const { t } = useTranslation();
 
   // Define onboarding tasks
   const tasks: EmptyStateTask[] = [
     {
-      id: 'configure',
-      label: t('DevOpsItemEmptyView_ConfigureButton', 'Configure Repository'),
-      onClick: onNavigateToConfiguration,
-      appearance: 'primary'
+      id: 'scan',
+      label: t('DevOpsItemEmptyView_ScanButton', 'Scan Workspaces'),
+      onClick: onStartScan
     }
   ];
 
   return (
     <ItemEditorEmptyView
       title={t('DevOpsItemEmptyView_Title', 'Welcome to DevOps Item!')}
-      description={t('DevOpsItemEmptyView_Description', 'Track GitHub branches and their latest commits. Start by configuring your repository connection.')}
+      description={t('DevOpsItemEmptyView_Description', 'View all your workspaces connected to Azure DevOps or GitHub. Start by scanning your accessible workspaces.')}
       imageSrc="/assets/items/DevOpsItem/EditorEmpty.svg"
       imageAlt="Empty state illustration"
       tasks={tasks}

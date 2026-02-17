@@ -9,6 +9,7 @@ export { WorkspaceClient as WorkspaceController } from './WorkspaceClient';
 export { ItemClient as ItemController } from './ItemClient';
 export { FolderClient } from './FolderClient';
 export { CapacityClient } from './CapacityClient';
+export { GitClient } from './GitClient';
 export { JobSchedulerClient } from './JobSchedulerClient';
 export { OneLakeShortcutClient } from './OneLakeShortcutClient';
 export { LongRunningOperationsClient } from './LongRunningOperationsClient';
