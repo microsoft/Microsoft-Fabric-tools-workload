@@ -1,0 +1,102 @@
+/**
+ * ============================================================================
+ * DevOps Item - Specific Styles
+ * ============================================================================
+ * 
+ * This file contains styles specific to the DevOps item.
+ * All styles are prefixed with "devops-" or "devops-item-" to clearly indicate they are item-specific.
+ * 
+ * ## Design Principles
+ * - Uses Fabric UX design tokens for consistency
+ * - Minimal custom styling - leverages standard patterns where possible
+ * - Item-specific: Configuration panel and branches grid layout
+ * 
+ * ## What's Item-Specific Here
+ * - Configuration panel layout
+ * - Branches grid container styling
+ * - Loading and error state containers
+ * 
+ * ## What Uses Standards
+ * - All spacing uses design tokens (--spacing*)
+ * - All colors uses design tokens (--color*)
+ * - Border radius uses design tokens (--borderRadius*)
+ * - Font sizes use design tokens where applicable (--fontSize*)
+ */
+
+// ============================================================================
+// Configuration Panel (Left Panel)
+// ============================================================================
+
+.devops-item-config {
+  padding: var(--spacingVerticalM, 12px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalL, 16px);
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacingVerticalS, 6px);
+  width: 100%;
+}
+
+.config-section label {
+  color: var(--colorNeutralForeground1);
+  font-weight: var(--fontWeightSemibold, 600);
+}
+
+// ============================================================================
+// Branches Panel (Center Panel)
+// ============================================================================
+
+.devops-item-branches {
+  padding: var(--spacingVerticalM, 12px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.branches-grid {
+  width: 100%;
+  height: 100%;
+}
+
+// Loading state
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+// Error state
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  padding: var(--spacingVerticalXL, 20px);
+  color: var(--colorPaletteRedForeground1);
+}
+
+// Empty state
+.empty-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  padding: var(--spacingVerticalXL, 20px);
+  color: var(--colorNeutralForeground2);
+  text-align: center;
+}

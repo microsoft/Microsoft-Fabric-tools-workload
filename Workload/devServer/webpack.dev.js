@@ -19,20 +19,18 @@ console.log('process.env.DEV_AAD_CONFIG_BE_AUDIENCE: ' + process.env.DEV_AAD_CON
 console.log('*********************************************************************');
 
 
-module.exports = merge(baseConfig, {
+module.exports = {
+    ...baseConfig,
     mode: "development",
     devtool: "eval-cheap-module-source-map",
-    cache: {
-        type: 'filesystem',
-        allowCollectingMemory: true,
-        compression: 'gzip',
-    },
+    cache: false,
     optimization: {
         removeAvailableModules: false,
         removeEmptyChunks: false,
         splitChunks: false,
     },
     plugins: [
+        ...baseConfig.plugins,
         new Webpack.DefinePlugin({
             "process.env.DEV_AAD_CONFIG_FE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_FE_APPID),
             "process.env.DEV_AAD_CONFIG_BE_APPID": JSON.stringify(process.env.DEV_AAD_CONFIG_BE_APPID),
@@ -80,4 +78,4 @@ module.exports = merge(baseConfig, {
             return middlewares;
         },
     }
-});
+};

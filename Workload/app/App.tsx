@@ -5,6 +5,7 @@ import { WorkloadClientAPI } from "@ms-fabric/workload-client";
 import { PackageInstallerItemEditor, CreatePackageWizardWrapper, DeployPackageWizardWrapper, UploadPackageWizardWrapper } from "./items/PackageInstallerItem";
 import { OneLakeExplorerItemEditor } from "./items/OneLakeExplorerItem";
 import { HelloWorldItemEditor} from "./items/HelloWorldItem";
+import { DevOpsItemEditor } from "./items/DevOpsItem";
 import { ConditionalPlaygroundRoutes } from "./playground/ConditionalPlaygroundRoutes";
 import { CloudShellItemEditor, CreateScriptDialog, RunScriptDialog } from "./items/CloudShellItem/";
 
@@ -96,6 +97,11 @@ export function App({ history, workloadClient }: AppProps) {
             <Route path="/CloudShellItem-run-script/:itemObjectId">
                 <RunScriptDialog
                     workloadClient={workloadClient} />
+            </Route>
+
+            <Route path="/DevOpsItem-editor/:itemObjectId">
+                <DevOpsItemEditor
+                    workloadClient={workloadClient} data-testid="DevOpsItem-editor" />
             </Route>
 
             {/* Conditionally loaded playground routes (only in development) */}

@@ -90,6 +90,27 @@
               "onCreationFailure": { "action": "item.onCreationFailure" },
               "onCreationSuccess": { "action": "item.onCreationSuccess" }
             }
+          },
+          {
+            "title": "DevOpsItem_DisplayName",
+            "description": "DevOpsItem_Description",
+            "icon": {
+              "name": "assets/images/DevOpsItem_Icon.png"
+            },
+            "icon_small": {
+              "name": "assets/images/DevOpsItem_Icon.png"
+            },
+            "availableIn": [
+              "home",
+              "create-hub",
+              "workspace-plus-new",
+              "workspace-plus-new-teams"
+            ],
+            "itemType": "DevOps",
+            "createItemDialogConfig": {
+              "onCreationFailure": { "action": "item.onCreationFailure" },
+              "onCreationSuccess": { "action": "item.onCreationSuccess" }
+            }
           }
         ]
     },

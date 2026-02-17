@@ -15,6 +15,9 @@
     "OneLakeExplorerItem_Description": "An item that provides OneLake file exploration and editing capabilities.",
     "CloudShellItem_DisplayName": "Cloud Shell",
     "CloudShellItem_DisplayName_Plural": "Cloud Shells",
-    "CloudShellItem_Description": "Interactive Cloud Shell for executing commands (Fabric CLI, Bash or Python) or Python scripts."   
+    "CloudShellItem_Description": "Interactive Cloud Shell for executing commands (Fabric CLI, Bash or Python) or Python scripts.",
+    "DevOpsItem_DisplayName": "Developer & Operations",
+    "DevOpsItem_DisplayName_Plural": "Developer & Operations Items",
+    "DevOpsItem_Description": "Track GitHub repository branches and their latest commit information in relationship to the workspaces they are used in."   
 }
 

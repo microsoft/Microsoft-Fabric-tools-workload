@@ -70,6 +70,26 @@
     "CloudShellItem_Script_Run": "Run",
     "CloudShellItem_Script_Running": "Running...",
     "CloudShellItem_Script_RunTooltip": "Run this script in the terminal",
-    "CloudShellItem_Script_Running_Message": "Running script: {{scriptName}}"
+    "CloudShellItem_Script_Running_Message": "Running script: {{scriptName}}",
+    "DevOpsItemEditor_Loading": "Loading DevOps item...",
+    "DevOpsItemEmptyView_Title": "Welcome to DevOps Item!",
+    "DevOpsItemEmptyView_Description": "Track GitHub branches and their latest commits. Start by configuring your repository connection.",
+    "DevOpsItemEmptyView_ConfigureButton": "Configure Repository",
+    "DevOpsItem_Config_Title": "Configuration",
+    "DevOpsItem_RepoOwner_Label": "Repository Owner",
+    "DevOpsItem_RepoName_Label": "Repository Name",
+    "DevOpsItem_Token_Label": "GitHub Token (Optional)",
+    "DevOpsItem_Token_Help": "Required for private repos or higher rate limits",
+    "DevOpsItem_LastRefreshed": "Last refreshed: {{date}}",
+    "DevOpsItem_Column_Branch": "Branch",
+    "DevOpsItem_Column_Commit": "Commit",
+    "DevOpsItem_Column_Message": "Message",
+    "DevOpsItem_Column_Author": "Author",
+    "DevOpsItem_Column_Date": "Date",
+    "DevOpsItem_Loading": "Loading branches...",
+    "DevOpsItem_NoBranches": "Configure your repository to see branches and commits.",
+    "DevOpsItem_Ribbon_Refresh_Label": "Refresh",
+    "DevOpsItem_Ribbon_Refresh_Tooltip": "Refresh branch information",
+    "DevOpsItem_Info": "Branch information is refreshed when you save changes."
 }
   
