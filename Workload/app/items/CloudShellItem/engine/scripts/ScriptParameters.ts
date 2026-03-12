@@ -183,6 +183,10 @@ export function validateParameterValue(
             // Basic validation for item/workspace reference format (workspaceId/itemId)
             const parts = value.split('/');
             return parts.length === 2 && parts[0].length > 0 && parts[1].length > 0;
+        case ScriptParameterType.VARIABLE:
+            // Variable references should start with a valid variable library prefix
+            // Format: VariableLibrary:<LibraryName>/<VariableName> or similar
+            return value.length > 0; // Basic validation - any non-empty string is acceptable
         case ScriptParameterType.STRING:
             return true; // No validation needed for strings
         default:

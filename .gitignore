@@ -420,6 +420,7 @@ scripts/Setup/My*
 Workload/node_modules/*
 Workload/package-lock.json
 Workload/dist/*
+Workload/app/temp/*
 
 # Fabric environment files
 .env.*
