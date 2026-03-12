@@ -6,16 +6,22 @@
     This script fetches and merges changes from the main branch of the official
     fabric-extensibility-toolkit repository while excluding specific files and directories
     that are customized for this community tools workload.
+    
+    By default, excludes:
+    - docs/ (all documentation, including release notes)
+    - docs/ReleaseNotes/ (explicitly excluded to prevent upstream release notes)
+    - *.md (all markdown files in root)
+    - LICENSE (license file)
 
 .PARAMETER Excluded
-    Array of paths to exclude from the sync. Defaults to docs/, *.md files, and LICENSE.
+    Array of paths to exclude from the sync. Defaults to docs/, docs/ReleaseNotes/, *.md files, and LICENSE.
 
 .EXAMPLE
     .\Sync-FromFET.ps1
     Syncs changes using default exclusions.
 
 .EXAMPLE
-    .\Sync-FromFET.ps1 -Excluded @('docs/', '*.md', 'LICENSE', 'custom-folder/')
+    .\Sync-FromFET.ps1 -Excluded @('docs/', 'docs/ReleaseNotes/', '*.md', 'LICENSE', 'custom-folder/')
     Syncs changes with custom exclusions.
 
 .NOTES
@@ -28,6 +34,7 @@ param(
     [Parameter(Mandatory = $false)]
     [string[]]$Excluded = @(
         'docs/',
+        'docs/ReleaseNotes/',
         '*.md',
         'LICENSE'
     )

@@ -7,11 +7,11 @@ import {
   MessageBarActions,
   MessageBarBody
 } from "@fluentui/react-components";
-import { NotificationType } from "@ms-fabric/workload-client";
 import {
   Dismiss20Regular,
   Warning20Filled
 } from "@fluentui/react-icons";
+import { NotificationType } from "@ms-fabric/workload-client";
 import { PageProps, ContextProps } from "../../App";
 import { ItemWithDefinition, getWorkloadItem, callGetItem, saveWorkloadItem } from "../../controller/ItemCRUDController";
 import { callOpenSettings } from "../../controller/SettingsController";
@@ -119,11 +119,11 @@ export function HelloWorldItemEditor(props: PageProps) {
 
   async function saveItem() {
     setSaveStatus(SaveStatus.Saving);
-    item.definition = {
+    
+    const definitionToSave = {
       ...currentDefinition,
       message: currentDefinition.message || "Hello, Fabric!"
-    }
-    setCurrentDefinition(item.definition)
+    };
 
     let successResult;
     let errorMessage = "";
@@ -131,7 +131,7 @@ export function HelloWorldItemEditor(props: PageProps) {
     try {
       successResult = await saveWorkloadItem<HelloWorldItemDefinition>(
         workloadClient,
-        item,
+        { ...item, definition: definitionToSave },
       );
     } catch (error) {
       errorMessage = error?.message;
@@ -140,6 +140,9 @@ export function HelloWorldItemEditor(props: PageProps) {
     const wasSaved = Boolean(successResult);
 
     if (wasSaved) {
+      // Only update item.definition when save succeeds
+      item.definition = definitionToSave;
+      setCurrentDefinition(definitionToSave);
       setSaveStatus(SaveStatus.Saved);
       callNotificationOpen(
         props.workloadClient,

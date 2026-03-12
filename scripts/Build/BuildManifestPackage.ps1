@@ -104,11 +104,11 @@ if (Test-Path $itemsPath) {
 }
 
 # Process all XML, JSON, and nuspec files to replace placeholders
-# Exclude assets folder and binary files from variable replacement
-$filesToProcess = Get-ChildItem -Path $tempPath -Recurse -Include "*.xml", "*.json", "*.nuspec" | Where-Object { $_.FullName -notlike "*\assets\*" }
+# Include asset JSON files (like translations.json) but exclude binary files (images, etc.)
+$filesToProcess = Get-ChildItem -Path $tempPath -Recurse -Include "*.xml", "*.json", "*.nuspec"
 
 Write-Host "Processing $($filesToProcess.Count) files for variable replacement..."
-Write-Host "Assets folder and binary files will be copied without modification."
+Write-Host "Binary files (images, etc.) will be copied without modification."
 
 foreach ($file in $filesToProcess) {
     $content = Get-Content $file.FullName -Raw -Encoding UTF8

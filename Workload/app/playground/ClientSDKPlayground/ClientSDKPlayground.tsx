@@ -18,6 +18,7 @@ import { ApiData } from './ApiData';
 import { UIComponentsExample } from './UIComponents';
 import { ApiAuthenticationFrontend } from './ApiAuthenticationFrontend';
 import { ApiAuthentication } from './ApiAuthentication';
+import { ApiVariableLibrary } from './ApiVariableLibrary';
 import { PageProps } from '../../App';
 import { callNavigationBeforeNavigateAway, callNavigationNavigate } from "../../controller/NavigationController";
 import "../Playground.scss";
@@ -53,6 +54,7 @@ export function ClientSDKPlayground(props: TabContentProps) {
         <Tab value="apiPanelSettings">Panel & Settings</Tab>
         <Tab value="apiNavigation">Navigation</Tab>
         <Tab value="dataHub">Data Hub</Tab>
+        <Tab value="variableLibrary">Variable Library</Tab>
         <Tab value="uiComponents">UI Components</Tab>
         <Tab value="authenticationFrontend">Frontend Authentication</Tab>
       </TabList>
@@ -81,6 +83,9 @@ export function ClientSDKPlayground(props: TabContentProps) {
         )}
         {selectedApiTab === 'dataHub' && (
           <ApiData workloadClient={workloadClient} sampleWorkloadName={sampleWorkloadName} />
+        )}
+        {selectedApiTab === 'variableLibrary' && (
+          <ApiVariableLibrary workloadClient={workloadClient} />
         )}
         {selectedApiTab === 'uiComponents' && (
           <UIComponentsExample workloadClient={workloadClient} />

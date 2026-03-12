@@ -34,6 +34,7 @@ import { NotificationType } from "@ms-fabric/workload-client";
 import { OneLakeStorageClient } from "../../clients/OneLakeStorageClient";
 import { callNotificationOpen } from "../../controller/NotificationController";
 import { callDialogOpenMsgBox } from "../../controller/DialogController";
+import { useTranslation } from "react-i18next";
 
 /**
  * OneLakeView - Core tree functionality for exploring OneLake items
@@ -57,6 +58,7 @@ import { callDialogOpenMsgBox } from "../../controller/DialogController";
  * @see {@link ./OneLakeViewController.ts} - OneLake data operations controller
  */
 export function OneLakeView(props: OneLakeViewProps) {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState<OneLakeViewItem>(null);
   const [tablesInItem, setTablesInItem] = useState<TableMetadata[]>(null);
   const [filesInItem, setFilesInItem] = useState<FileMetadata[]>(null);
@@ -139,14 +141,10 @@ export function OneLakeView(props: OneLakeViewProps) {
     return false;
   }
 
-  function getFullObjectPath(oneLakeObject: { prefix: string; path: string }): string {
-    return `${oneLakeObject.prefix}/${oneLakeObject.path}`;
-  }
-
   function tableSelectedCallback(tableSelected: TableMetadata) {
-    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(tableSelected));
+    const tableFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, tableSelected.relativePath);
     // Update selection state without modifying the tables array
-    setSelectedTablePath(tableSelected.path); // Keep original path for selection comparison
+    setSelectedTablePath(tableSelected.relativePath); // Keep original path for selection comparison
     setSelectedFilePath(null); // Clear file selection when table is selected
     if (props.callbacks.onTableSelected && tableSelected.name) {
       props.callbacks.onTableSelected(tableSelected.name, tableFilePath);
@@ -154,9 +152,9 @@ export function OneLakeView(props: OneLakeViewProps) {
   }
 
   async function fileSelectedCallback(fileSelected: FileMetadata) {
-    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, getFullObjectPath(fileSelected));
+    const fullFilePath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, fileSelected.relativePath);
     // Update selection state without modifying the files array
-    setSelectedFilePath(fileSelected.path);
+    setSelectedFilePath(fileSelected.relativePath);
     setSelectedTablePath(null); // Clear table selection when file is selected
     if (props.callbacks.onFileSelected && fileSelected.name) {
       await props.callbacks.onFileSelected(fileSelected.name, fullFilePath);
@@ -168,12 +166,12 @@ export function OneLakeView(props: OneLakeViewProps) {
     const fileName = filePath.split('/').pop() || filePath; // Get just the filename
     const clickedButton = await callDialogOpenMsgBox(
       props.workloadClient,
-      "Delete File",
-      `Are you sure you want to delete the file "${fileName}"?\n\nThis action cannot be undone.`,
-      ["Yes", "No"]
+      t("OneLakeView_DeleteFile_Title", "Delete File"),
+      t("OneLakeView_DeleteFile_Message", { fileName, defaultValue: `Are you sure you want to delete the file "${fileName}"?\n\nThis action cannot be undone.` }),
+      [t("OneLakeView_Yes", "Yes"), t("OneLakeView_No", "No")]
     );
     
-    if (clickedButton !== "Yes") {
+    if (clickedButton !== t("OneLakeView_Yes", "Yes")) {
       return; // User cancelled, don't delete
     }
 
@@ -188,40 +186,40 @@ export function OneLakeView(props: OneLakeViewProps) {
       console.error("Failed to delete file:", error);
       await callNotificationOpen(
         props.workloadClient,
-        "Delete Failed",
-        "Failed to delete file. Please try again.",
+        t("OneLakeView_DeleteFailed_Title", "Delete Failed"),
+        t("OneLakeView_DeleteFileFailed_Message", "Failed to delete file. Please try again."),
         NotificationType.Error
       );
     }
   }
 
-  async function deleteFolderCallback(folderPath: string) {
+  async function deleteShortcutCallback(shortcutPath: string) {
     // Show confirmation dialog for folder deletion
-    const folderName = folderPath.split('/').pop() || folderPath; // Get just the folder name
+    const folderName = shortcutPath.split('/').pop() || shortcutPath; // Get just the folder name
     const clickedButton = await callDialogOpenMsgBox(
       props.workloadClient,
-      "Delete Shortcut Folder",
-      `Are you sure you want to delete the shortcut folder "${folderName}"?\n\nThis will remove the shortcut but not the original data.\nThis action cannot be undone.`,
-      ["Yes", "No"]
+      t("OneLakeView_DeleteShortcut_Title", "Delete Shortcut"),
+      t("OneLakeView_DeleteShortcut_Message", { folderName, defaultValue: `Are you sure you want to delete the shortcut folder "${folderName}"?\n\nThis will remove the shortcut but not the original data.\nThis action cannot be undone.` }),
+      [t("OneLakeView_Yes", "Yes"), t("OneLakeView_No", "No")]
     );
     
-    if (clickedButton !== "Yes") {
+    if (clickedButton !== t("OneLakeView_Yes", "Yes")) {
       return; // User cancelled, don't delete
     }
 
     try {
-      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, folderPath);
+      const fullFolderPath = OneLakeStorageClient.getPath(selectedItem.workspaceId, selectedItem.id, shortcutPath);
       const oneLakeClient = new OneLakeStorageClient(props.workloadClient);
       await oneLakeClient.deleteFile(fullFolderPath);
       
       // Refresh the file list after deletion
       await setTablesAndFiles(null);
     } catch (error) {
-      console.error("Failed to delete folder:", error);
+      console.error("Failed to delete shortcut:", error);
       await callNotificationOpen(
         props.workloadClient,
-        "Delete Failed",
-        "Failed to delete folder. Please try again.",
+        t("OneLakeView_DeleteShortcutFailed_Title", "Delete Shortcut failed"),
+        t("OneLakeView_DeleteShortcutFailed_Message", "Failed to delete shortcut. Please try again."),
         NotificationType.Error
       );
     }
@@ -229,7 +227,7 @@ export function OneLakeView(props: OneLakeViewProps) {
 
   async function createFolderCallback(parentPath: string) {
     // Get folder name from user - using prompt as placeholder until custom dialog is implemented
-    const folderName = "New Folder"
+    const folderName = t("OneLakeView_NewFolder_DefaultName", "New Folder");
     
     if (!folderName || !folderName.trim()) {
       return; // User cancelled or entered empty name
@@ -247,8 +245,8 @@ export function OneLakeView(props: OneLakeViewProps) {
       // Show success notification
       await callNotificationOpen(
         props.workloadClient,
-        "Folder Created",
-        `Folder "${folderName.trim()}" created successfully.`,
+        t("OneLakeView_CreateFolderSuccess_Title", "Folder Created"),
+        t("OneLakeView_CreateFolderSuccess_Message", { folderName: folderName.trim(), defaultValue: `Folder "${folderName.trim()}" created successfully.` }),
         NotificationType.Success
       );
       
@@ -259,8 +257,8 @@ export function OneLakeView(props: OneLakeViewProps) {
       console.error("Failed to create folder:", error);
       await callNotificationOpen(
         props.workloadClient,
-        "Create Folder Failed",
-        "Failed to create folder. Please try again.",
+        t("OneLakeView_CreateFolderFailed_Title", "Create Folder Failed"),
+        t("OneLakeView_CreateFolderFailed_Message", "Failed to create folder. Please try again."),
         NotificationType.Error
       );
     }
@@ -272,8 +270,8 @@ export function OneLakeView(props: OneLakeViewProps) {
       const targetItemAndPath = await callDatahubWizardOpen(
         props.workloadClient,
         props.config.allowedItemTypes || ["Lakehouse"],
-        "Create Shortcut",
-        "Select a target location to create a shortcut to",
+        t("OneLakeView_CreateShortcut_Title", "Create Shortcut"),
+        t("OneLakeView_CreateShortcut_Description", "Select a target location to create a shortcut to"),
         false, // Single selection
         true,  // Show files folder
         true   // Workspace navigation enabled
@@ -305,8 +303,8 @@ export function OneLakeView(props: OneLakeViewProps) {
       // Show success notification
       await callNotificationOpen(
         props.workloadClient,
-        "Shortcut Created",
-        `Shortcut "${shortcutName}" created successfully.`,
+        t("OneLakeView_CreateShortcutSuccess_Title", "Shortcut Created"),
+        t("OneLakeView_CreateShortcutSuccess_Message", { shortcutName, defaultValue: `Shortcut "${shortcutName}" created successfully.` }),
         NotificationType.Success
       );
       
@@ -316,8 +314,8 @@ export function OneLakeView(props: OneLakeViewProps) {
       console.error("Failed to create shortcut:", error);
       await callNotificationOpen(
         props.workloadClient,
-        "Create Shortcut Failed",
-        "Failed to create shortcut. Please try again.",
+        t("OneLakeView_CreateShortcutFailed_Title", "Create Shortcut Failed"),
+        t("OneLakeView_CreateShortcutFailed_Message", "Failed to create shortcut. Please try again."),
         NotificationType.Error
       );
     }
@@ -359,7 +357,7 @@ export function OneLakeView(props: OneLakeViewProps) {
     const result = await callDatahubOpen(
       props.workloadClient,
       [...props.config.allowedItemTypes || getDefaultItemTypes()],
-      "Select an item to use for OneLake Explorer",
+      t("OneLakeView_SelectOneLakeItem_Title", "Select an item to use for OneLake Explorer"),
       false
     );
 
@@ -374,11 +372,11 @@ export function OneLakeView(props: OneLakeViewProps) {
       <div className="onelake-view__container">
         <Stack className="onelake-view__empty" verticalAlign="center" horizontalAlign="center" tokens={{ childrenGap: 5 }} style={{ flex: 1 }}>
           <Image src="/assets/components/OneLakeView/EmptyIcon.svg" />
-          <span className="add">Add an item</span>
+          <span className="add">{t("OneLakeView_SelectItem_Text", "Select an item")}</span>
           {props.config?.allowItemSelection && (
-            <Tooltip content={"Open Datahub Explorer"} relationship="label">
+            <Tooltip content={t("OneLakeView_OpenDatahub_Tooltip", "Open Datahub Explorer")} relationship="label">
               <Button className="add-button" size="small" onClick={() => onDatahubClicked()} appearance="primary">
-                Add
+                {t("OneLakeView_SelectItem_Button", "Select Item")}
               </Button>
             </Tooltip>
           )}
@@ -392,7 +390,7 @@ export function OneLakeView(props: OneLakeViewProps) {
     return (
       <div className="onelake-view__container">
         <div className="onelake-view__loading">
-          <Spinner label="Loading Data" />
+          <Spinner label={t("OneLakeView_LoadingData_Label", "Loading Data")} />
         </div>
       </div>
     );
@@ -403,8 +401,8 @@ export function OneLakeView(props: OneLakeViewProps) {
     return (
       <div className="onelake-view__container">
         <div className="onelake-view__error">
-          <Subtitle2>Error loading data</Subtitle2>
-          <p>Do you have permission to view this Item?</p>
+          <Subtitle2>{t("OneLakeView_ErrorLoadingData_Title", "Error loading data")}</Subtitle2>
+          <p>{t("OneLakeView_PermissionError_Message", "Do you have permission to view this Item?")}</p>
         </div>
       </div>
     );
@@ -448,7 +446,7 @@ export function OneLakeView(props: OneLakeViewProps) {
                 style={{ cursor: 'pointer' }}
               >
                 <TreeItemLayout>
-                  Tables
+                  {t("OneLakeView_Tables_Label", "Tables")}
                 </TreeItemLayout>
               </div>
             </MenuTrigger>
@@ -458,7 +456,7 @@ export function OneLakeView(props: OneLakeViewProps) {
                   icon={<Link20Regular />}
                   onClick={handleCreateShortcutFromTablesNode}
                 >
-                  Create Shortcut
+                  {t("OneLakeView_CreateShortcut_MenuItem", "Create Shortcut")}
                 </MenuItem>
               </MenuList>
             </MenuPopover>
@@ -508,7 +506,7 @@ export function OneLakeView(props: OneLakeViewProps) {
                 style={{ cursor: 'pointer' }}
               >
                 <TreeItemLayout>
-                  Files
+                  {t("OneLakeView_Files_Label", "Files")}
                 </TreeItemLayout>
               </div>
             </MenuTrigger>
@@ -518,13 +516,13 @@ export function OneLakeView(props: OneLakeViewProps) {
                   icon={<FolderAdd20Regular />}
                   onClick={handleCreateFolderFromFilesNode}
                 >
-                  Create Folder
+                  {t("OneLakeView_CreateFolder_MenuItem", "Create Folder")}
                 </MenuItem>
                 <MenuItem 
                   icon={<Link20Regular />}
                   onClick={handleCreateShortcutFromFilesNode}
                 >
-                  Create Shortcut
+                  {t("OneLakeView_CreateShortcut_MenuItem", "Create Shortcut")}
                 </MenuItem>
               </MenuList>
             </MenuPopover>
@@ -535,7 +533,7 @@ export function OneLakeView(props: OneLakeViewProps) {
               selectedFilePath={selectedFilePath}
               onSelectFileCallback={fileSelectedCallback}
               onDeleteFileCallback={deleteFileCallback}
-              onDeleteFolderCallback={deleteFolderCallback}
+              onDeleteFolderCallback={deleteShortcutCallback}
               onCreateFolderCallback={createFolderCallback}
               onCreateShortcutCallback={createShortcutCallback}
               workloadClient={props.workloadClient}
