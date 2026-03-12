@@ -54,6 +54,11 @@ export abstract class BaseScriptCommand implements IScriptCommand {
      */
     async execute(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<BatchResponse> {
 
+        // Step 1: Generate Python content to upload
+        const parameterConf = await this.getParameterConf(script, context, parameters);
+        const additionalConf = await this.getAdditionalConf(script, context, parameters);
+
+        // Step 2: Upload script content to OneLake
         const oneLakeClient = new OneLakeStorageClient(context.workloadClient);
         const timestamp = new Date().getTime();
         const sanitizedScriptName = script.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -73,16 +78,16 @@ export abstract class BaseScriptCommand implements IScriptCommand {
         const scriptUrl = `${EnvironmentConstants.OneLakeDFSBaseUrl}/${scriptFullPath}`;
         const scriptAbfss = this.convertOneLakeLinkToABFSSLink(scriptUrl, 
             context.item.definition.selectedLakehouse.workspaceId);
-
         
+        // Step 3: Build batch request with configuration and parameters
         const batchRequest: BatchRequest = {
             name: `CloudShell Script: ${script.name} - ${new Date().toISOString()}`,
             file: scriptAbfss,
             conf: {
                 "spark.targetLakehouse": context.item.definition.selectedLakehouse.id!,
                 "spark.fabric.environmentDetails": `{"id" : "${context.item.definition.selectedSparkEnvironment.id!}"}`,
-                ...await this.getParameterConf(script, context, parameters),
-                ...await this.getAdditionalConf(script, context, parameters)
+                ...parameterConf,
+                ...additionalConf
             },
             tags: {
                 source: "Cloud Shell Item",
@@ -119,24 +124,36 @@ export abstract class BaseScriptCommand implements IScriptCommand {
     private async getParameterConf(script: Script, context: ScriptCommandContext, parameters?: Record<string, string>): Promise<Record<string, string>> {
         const parameterConf: Record<string, string> = {};
         
-        if (script.parameters && script.parameters.length > 0) {
-            // Parallelize parameter value resolution for better performance
-            const parameterValues = await Promise.all(
-                script.parameters.map(param => {
-                    // Pass runtime value if provided for this parameter
-                    const runtimeValue = parameters?.[param.name];
-                    return getParameterValue(param, 
-                        runtimeValue, 
-                        context.item, 
-                        context.workloadClient, 
-                        this.convertParameterValueForCLI.bind(this)
-                    );
-                })
-            );
-            
-            script.parameters.forEach((param, index) => {
-                parameterConf[this.getParameterConfName(param.name)] = parameterValues[index];
-            });
+        if (!script.parameters || script.parameters.length === 0) {
+            return parameterConf;
+        }
+
+        // Create a converter function that includes the context
+        const converter = async (paramType: ScriptParameterType, value: string, workloadClient: WorkloadClientAPI) => {
+            try {
+                return await this.convertParameterValueForCLI(paramType, value, workloadClient, context);
+            } catch (error) {
+                console.error(`[BaseScriptCommand] Error converting parameter value (type: ${paramType}):`, error);
+                return value; // Fallback to original value on error
+            }
+        };
+        
+        // Process parameters sequentially to avoid race conditions with Variable Library API
+        for (const param of script.parameters) {
+            try {
+                // Pass runtime value if provided for this parameter
+                const runtimeValue = parameters?.[param.name];
+                const paramValue = await getParameterValue(param, 
+                    runtimeValue, 
+                    context.item, 
+                    context.workloadClient, 
+                    converter
+                );
+                parameterConf[this.getParameterConfName(param.name)] = paramValue;
+            } catch (error) {
+                console.error(`[BaseScriptCommand] Error resolving parameter ${param.name}:`, error);
+                parameterConf[this.getParameterConfName(param.name)] = param.defaultValue || ''; // Fallback to default value
+            }
         }
         
         return parameterConf;
@@ -145,21 +162,90 @@ export abstract class BaseScriptCommand implements IScriptCommand {
     /**
      * Convert parameter value to CLI-compatible format.
      * 
-     * Base implementation returns value as-is without conversion.
+     * Base implementation resolves VARIABLE types and returns other values as-is.
      * Override in subclasses (e.g., FabricCLIScriptCommand) to convert special types like
      * WORKSPACE_REFERENCE or ITEM_REFERENCE to Fabric CLI format.
      * 
      * @param paramType Type of the parameter being converted
      * @param value Parameter value to convert
      * @param workloadClient Workload client for API calls if conversion requires API access
+     * @param context Script execution context containing item information
      * @returns Promise resolving to converted parameter value
      */
     protected async convertParameterValueForCLI(
             paramType: ScriptParameterType,
             value: string,
-            workloadClient: WorkloadClientAPI
+            workloadClient: WorkloadClientAPI,
+            context: ScriptCommandContext
         ): Promise<string> {
+            // Handle VARIABLE type resolution in base class so all script types support it
+            if (paramType === ScriptParameterType.VARIABLE && value) {
+                return await this.handleVariableLibraryType(value, workloadClient, context);
+            }
+            
             return value;
+        }
+
+    /**
+     * Resolve a VARIABLE type parameter by calling the Variable Library API.
+     * 
+     * Resolves the variable reference and recursively converts the resolved value
+     * to the appropriate parameter type (Integer → INT, ItemReference → ITEM_REFERENCE, etc.)
+     * 
+     * @param value Variable reference identifier from Variable Library picker
+     * @param workloadClient Workload client for API calls
+     * @param context Script execution context containing item information
+     * @returns Promise resolving to the resolved and converted variable value
+     */
+    private async handleVariableLibraryType(
+            value: string,
+            workloadClient: WorkloadClientAPI,
+            context: ScriptCommandContext
+        ): Promise<string> {
+            try {
+                // Ensure we have a valid item ID for the consuming item
+                if (!context?.item?.id) {
+                    throw new Error('Cannot resolve variable: context.item.id is undefined');
+                }
+
+                // Variable reference format from Variable Library picker
+                // The API will resolve this to the actual value
+                const response = await workloadClient.variableLibrary.resolveVariableReferences({
+                    consumingItemObjectId: context.item.id,
+                    variableReferences: [value]
+                });
+
+                if (response.results && response.results.length > 0) {
+                    const resolved = response.results[0];
+                    if (resolved.status === 'Ok') {
+                        // Recursively convert resolved variables using the appropriate parameter type
+                        const resolvedType = resolved.type || '';
+                        const resolvedValue = resolved.value as any;
+                        
+                        // For ItemReference type, recursively convert to get proper formatting
+                        if (resolvedType === 'ItemReference' && resolvedValue?.workspaceId && resolvedValue?.itemId) {
+                            return await this.convertParameterValueForCLI(
+                                ScriptParameterType.ITEM_REFERENCE,
+                                `${resolvedValue.workspaceId}/${resolvedValue.itemId}`,
+                                workloadClient,
+                                context
+                            );
+                        }
+                        
+                        // For simple types, just return the string value directly
+                        return String(resolvedValue || '');
+                        
+                    } else {
+                        console.error(`Failed to resolve variable: ${resolved.status} - Reference: ${value}`);
+                        return value; // Fallback to reference if resolution fails
+                    }
+                }
+                
+                return value;
+            } catch (error) {
+                console.error('[BaseScriptCommand] Failed to resolve variable reference:', error);
+                return value; // Return original reference on error
+            }
         }
 
     /**

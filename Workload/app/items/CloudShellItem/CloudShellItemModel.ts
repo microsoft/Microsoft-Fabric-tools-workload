@@ -47,6 +47,8 @@ export enum ScriptParameterType {
   GUID = 'guid',
   /** Item reference parameter (Fabric item ID) */
   ITEM_REFERENCE = 'itemReference',
+  /** Variable parameter */
+  VARIABLE = 'variable',
   /** Workspace reference parameter (Fabric workspace ID) */
   WORKSPACE_REFERENCE = 'workspaceReference'
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from '@fluentui/react-components';
+import { Button, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, MenuDivider } from '@fluentui/react-components';
 import { ChevronDown24Regular } from '@fluentui/react-icons';
 import { FluentIconComponent } from './RibbonToolbarAction';
 
@@ -36,6 +36,11 @@ export interface DropdownMenuItem {
    * Whether this menu item should be hidden
    */
   hidden?: boolean;
+  
+  /**
+   * Whether to show a divider before this menu item
+   */
+  showDividerBefore?: boolean;
 }
 
 /**
@@ -245,14 +250,16 @@ export const RibbonActionButtonImpl: React.FC<RibbonActionButtonImplProps> = ({
       <MenuPopover>
         <MenuList>
           {visibleDropdownItems.map((item: DropdownMenuItem) => (
-            <MenuItem
-              key={item.key}
-              disabled={item.disabled}
-              onClick={handleMenuItemClick(item.onClick)}
-              icon={item.icon ? <item.icon /> : undefined}
-            >
-              {item.label}
-            </MenuItem>
+            <React.Fragment key={item.key}>
+              {item.showDividerBefore && <MenuDivider />}
+              <MenuItem
+                disabled={item.disabled}
+                onClick={handleMenuItemClick(item.onClick)}
+                icon={item.icon ? <item.icon /> : undefined}
+              >
+                {item.label}
+              </MenuItem>
+            </React.Fragment>
           ))}
         </MenuList>
       </MenuPopover>

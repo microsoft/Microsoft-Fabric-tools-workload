@@ -340,6 +340,96 @@ export function CloudShellItemEditor(props: PageProps) {
     });
   };
 
+  const handleCreateEnvironment = async () => {
+    if (!item) return;
+    
+    const workspaceId = item.definition?.selectedLakehouse?.workspaceId;
+    if (!workspaceId) {
+      callNotificationOpen(
+        workloadClient,
+        t("CloudShellItem_CreateEnvironment_Error_Title", "Cannot Create Environment"),
+        t("CloudShellItem_CreateEnvironment_NoLakehouse", "Please select a lakehouse first."),
+        NotificationType.Error
+      );
+      return;
+    }
+
+    try {
+      // Create environment name based on Cloud Shell item name
+      const environmentName = `${item.displayName}_Environment`;
+      
+      // Load default environment specification files
+      const sparkComputeContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Setting/Sparkcompute.yml').then(r => r.text());
+      const librariesContent = await fetch('/assets/items/CloudShellItem/DefaultEnviroment/Libraries/PublicLibraries/enviroment.yml').then(r => r.text());
+        
+      const itemClient = new ItemClient(workloadClient);
+      
+      // Step 1: Create item WITHOUT definition to get ID and displayName synchronously
+      const newEnvironment = await itemClient.createItem(workspaceId, {
+        displayName: environmentName,
+        description: `Environment for ${item.displayName}`,
+        type: 'Environment'
+      });
+      
+      // Step 2: Update the definition asynchronously
+      await itemClient.updateItemDefinition(workspaceId, newEnvironment.id, {
+        definition: {
+          parts: [
+            {
+              path: 'Setting/Sparkcompute.yml',
+              payload: btoa(sparkComputeContent),
+              payloadType: 'InlineBase64'
+            },
+            {
+              path: 'Libraries/PublicLibraries/enviroment.yml',
+              payload: btoa(librariesContent),
+              payloadType: 'InlineBase64'
+            }
+          ]
+        }
+      });
+
+      // Add the new environment to the list immediately with the correct display name
+      const updatedEnvironments = [...availableEnvironments, newEnvironment];
+      setAvailableEnvironments(updatedEnvironments);
+      
+      // Auto-select the newly created environment using the environment object directly
+      const updatedItem = {
+        ...item,
+        definition: {
+          ...item.definition,
+          selectedSparkEnvironment: {
+            id: newEnvironment.id,
+            workspaceId: newEnvironment.workspaceId,
+            displayName: environmentName, // Use the name we set
+            type: newEnvironment.type
+          }
+        }
+      };
+      setItem(updatedItem);
+      
+      // Auto-save the environment selection
+      const success = await saveItemInternal(updatedItem);
+      
+      // Add system message to terminal
+      setSystemMessage({
+        message: success 
+          ? t("CloudShellItem_EnvironmentSelected_Message", "Selected environment: {{environmentName}}", { environmentName: environmentName })
+          : t("CloudShellItem_SelectEnvironment_Error", "Could not save environment selection."),
+        timestamp: Date.now()
+      });
+      
+    } catch (error: any) {
+      console.error('Failed to create environment:', error);
+      callNotificationOpen(
+        workloadClient,
+        t("CloudShellItem_CreateEnvironment_Error_Title", "Failed to Create Environment"),
+        t("CloudShellItem_CreateEnvironment_Error_Message", "Could not create the environment: {{error}}", { error: error.message }),
+        NotificationType.Error
+      );
+    }
+  };
+
   const handleSelectExecutionMode = (mode: CommandType) => {
     setExecutionMode(mode);
   };
@@ -656,6 +746,7 @@ export function CloudShellItemEditor(props: PageProps) {
           sessionActive={sessionActive}
           onSelectLakehouse={handleSelectLakehouse}
           onSelectEnvironment={handleSelectEnvironment}
+          onCreateEnvironment={handleCreateEnvironment}
           availableEnvironments={availableEnvironments.map(env => ({
             id: env.id,
             displayName: env.displayName || env.id
