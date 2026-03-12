@@ -421,3 +421,8 @@ Workload/node_modules/*
 Workload/package-lock.json
 Workload/dist/*
 
+# Fabric environment files
+.env.*
+!.env.template
+
+.vscode/

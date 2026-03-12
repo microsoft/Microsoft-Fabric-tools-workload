@@ -44,6 +44,9 @@ if (url.pathname?.startsWith(redirectUriPath)) {
         // close the window in case there are no errors
         window.close();
     }
+    // IMPORTANT: Stop execution here - don't continue to bootstrap
+    // The window.close() may not work immediately, so we prevent further execution
+    throw new Error('Redirect URI handler - stopping execution after close attempt');
 }
 
 console.log('****Runtime: Environment Variables****');

@@ -117,11 +117,13 @@ Write-Host "🔧 Generating DevGateway configuration..." -ForegroundColor Blue
 
 $WorkloadName = $EnvConfig['WORKLOAD_NAME']
 $WorkloadVersion = $EnvConfig['WORKLOAD_VERSION']
+$FrontendUrl = $EnvConfig['FRONTEND_URL']
 $ManifestPath = Join-Path $ManifestDir "$WorkloadName.$WorkloadVersion.nupkg"
 
 $DevGatewayConfig = @{
     WorkspaceGuid = $DevWorkspaceId
     ManifestPackageFilePath = $ManifestPath
+    WorkloadEndpointURL = $FrontendUrl
 }
 
 $DevGatewayFile = Join-Path $DevGatewayDir "workload-dev-mode.json"
@@ -134,7 +136,7 @@ Write-Host ""
 Write-Host "📋 Configuration Summary:" -ForegroundColor Yellow
 Write-Host "  Development Workspace: $DevWorkspaceId" -ForegroundColor Cyan
 Write-Host "  Workload Name: $WorkloadName" -ForegroundColor Cyan
-Write-Host "  Frontend URL: $FrontendBaseUrl" -ForegroundColor Cyan
+Write-Host "  Frontend URL: $FrontendUrl" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "📁 Generated files:" -ForegroundColor Yellow
 Write-Host "  ✅ $DevGatewayFile" -ForegroundColor Green

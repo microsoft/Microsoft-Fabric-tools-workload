@@ -57,7 +57,7 @@ if($IsWindows) {
     if ($InteractiveLogin -and [string]::IsNullOrEmpty($token)) {
         # Use interactive mode only when explicitly requested and no token available
         Write-Host "Starting DevGateway in interactive mode..." -ForegroundColor Green
-        & $fileExe -DevMode:LocalConfigFilePath $CONFIGURATIONFILE
+        & $fileExe -LogLevel $logLevel -DevMode:LocalConfigFilePath $CONFIGURATIONFILE
     } else {
         # Use token-based authentication
         Write-Host "Starting DevGateway with token-based authentication..." -ForegroundColor Green

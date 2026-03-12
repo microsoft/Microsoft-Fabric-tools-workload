@@ -94,7 +94,11 @@
         ]
     },
     "productDetail": {
+<<<<<<< HEAD
       "publisher": "Microsoft",
+=======
+      "publisher": "Name of publisher",
+>>>>>>> upstream-fet/main
       "slogan": "Workload_Hub_Slogan",
       "description": "Workload_Hub_Description",
       "image": {
@@ -108,11 +112,15 @@
         },
         {
           "mediaType": 0,
+<<<<<<< HEAD
           "source": "assets/images/OneLakeExplorerItem_Slideware.png"
         },
         {
           "mediaType": 0,
           "source": "assets/images/CloudShellItem_Slideware.png"
+=======
+          "source": "assets/images/Workload_Hub_SlideMedia_1.png"
+>>>>>>> upstream-fet/main
         }
       ],
         "supportLink": {

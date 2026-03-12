@@ -3,11 +3,18 @@ import {
     InitParams,
     ItemLikeV2,
     ItemSettingContext,
+    // [JOB_SUPPORT] Job scheduling - To enable, run: scripts/Setup/CreateJob.ps1
+    // ItemActionContext,
+    // [JOB_SUPPORT] Job scheduling - To enable, run: scripts/Setup/CreateJob.ps1
+    // ItemJobData,
     NotificationToastDuration,
     NotificationType
 } from '@ms-fabric/workload-client';
 import { callPageOpen } from './controller/PageController';
 import { callNotificationOpen } from './controller/NotificationController';
+// [JOB_SUPPORT] Job scheduling - To enable, run: scripts/Setup/CreateJob.ps1
+// import { callRunItemJob } from './controller/JobSchedulerController';
+// import { getJobDetailsPane } from './utils/jobUtils';
 import { t } from 'i18next';
 
 /*
@@ -94,6 +101,35 @@ export async function initialize(params: InitParams) {
                     NotificationType.Success,
                     NotificationToastDuration.Medium);
             }
+            // [JOB_SUPPORT] Job scheduling - To enable, run: scripts/Setup/CreateJob.ps1
+            // case 'run.helloworld.job': {
+            //     // Handle job execution triggered from context menu
+            //     const { item } = data as ItemActionContext;
+            //     const jobType = `${item.itemType}.RunJob`;
+            //     
+            //     try {
+            //         await callRunItemJob(workloadClient, item.objectId, jobType);
+            //         return callNotificationOpen(
+            //             workloadClient,
+            //             t('Job_Started_Title', 'Job Started'),
+            //             t('Job_Started_Message', 'The job has been started successfully.'),
+            //             NotificationType.Success,
+            //             NotificationToastDuration.Medium
+            //         );
+            //     } catch (error) {
+            //         return callNotificationOpen(
+            //             workloadClient,
+            //             t('Job_Failed_Title', 'Job Failed'),
+            //             t('Job_Failed_Message', 'Failed to start the job. Please try again.'),
+            //             NotificationType.Error,
+            //             NotificationToastDuration.Medium
+            //         );
+            //     }
+            // }
+            // case 'item.job.detail': {
+            //     const jobDetailsData = data as ItemJobData;
+            //     return getJobDetailsPane(jobDetailsData);
+            // }
             default:
                 throw new Error('Unknown action received');
         }
