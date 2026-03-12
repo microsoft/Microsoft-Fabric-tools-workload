@@ -4,11 +4,11 @@
   "description": "Microsoft Fabric - Developer Sample App",
   "scripts": {
     "start": "npm run start:devServer",
-    "start:devServer": "cross-env NODE_OPTIONS=--max-old-space-size=8192 env-cmd -f .env.dev webpack serve --open --config ./devServer/webpack.dev.js",
+    "start:devServer": "set NODE_OPTIONS=--max-old-space-size=8192 && env-cmd -f .env.dev webpack serve --open --config ./devServer/webpack.dev.js",
     "start:devGateway": "node ./devServer/start-devGateway.js",
-    "start:codespace": "cross-env NODE_OPTIONS=--max-old-space-size=8192 env-cmd -f .env.dev webpack serve --open --config ./devServer/webpack.dev.js --no-hot",
-    "build:test": "cross-env NODE_OPTIONS=--max-old-space-size=8192 env-cmd -f .env.test webpack --config ./webpack.config.js --output-path ../build/Frontend --progress",
-    "build:prod": "cross-env NODE_OPTIONS=--max-old-space-size=8192 env-cmd -f .env.prod webpack --config ./webpack.config.js --output-path ../build/Frontend --mode production --progress"
+    "start:codespace": "node --max-old-space-size=8192 ./node_modules/.bin/env-cmd -f .env.dev webpack serve --open --config ./devServer/webpack.dev.js --no-hot",
+    "build:test": "env-cmd -f .env.test webpack --config ./webpack.config.js --output-path ../build/Frontend --progress",
+    "build:prod": "env-cmd -f .env.prod webpack --config ./webpack.config.js --output-path ../build/Frontend --mode production --progress"
   },
   "author": "",
   "license": "ISC",
@@ -17,7 +17,7 @@
     "@fluentui/react-components": "^9.7.2",
     "@fluentui/react-icons": "2.0.226",
     "@monaco-editor/react": "^4.7.0",
-    "@ms-fabric/workload-client": "^3.0.0",
+    "@ms-fabric/workload-client": "^3.1.1",
     "@reduxjs/toolkit": "^2.6.0",
     "history": "^4.9.0",
     "i18next": "^25.4.1",
@@ -43,6 +43,7 @@
     "css-loader": "^6.5.1",
     "dotenv": "^16.4.5",
     "env-cmd": "^10.1.0",
+    "express-rate-limit": "^8.2.1",
     "html-webpack-plugin": "^5.5.0",
     "nuget-bin": "^4.0.0",
     "sass": "^1.79.3",

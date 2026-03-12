@@ -11,9 +11,6 @@
     This script should be run once when initially setting up the workload.
     For ongoing development, use SetupDevEnvironment.ps1 instead.
 
-.PARAMETER HostingType
-    The hosting type for the workload (currently only "FERemote" is supported)
-
 .PARAMETER WorkloadName
     Name of the workload (will be used in configuration and AAD app names)
     Should follow the pattern "Org.YourProjectName"
@@ -37,7 +34,7 @@
     .\SetupWorkload.ps1 -WorkloadName "Org.MyWorkload"
     
 .EXAMPLE  
-    .\SetupWorkload.ps1 -WorkloadName "Org.MyWorkload" -FrontendAppId "12345678-1234-1234-1234-123456789012" -Force
+    .\SetupWorkload.ps1 -WorkloadName "Org.MyWorkload" -FrontendAppId "12345678-1234-1234-1234-123456789012" -Force $true
 
 .NOTES
     Run this script from the scripts/Setup directory
@@ -45,8 +42,6 @@
 #>
 
 param ( 
-    #Only the FERemote hosting type is supported for now   
-    [string]$HostingType = "FERemote",
     # The name of the workload, used for the Entra App and the workload in the Fabric portal
     [String]$WorkloadName = "",
     # The display name of the workload, used in the Fabric portal
@@ -64,6 +59,12 @@ param (
     # The version of the workload, used for the manifest package
     [String]$WorkloadVersion = "1.0.0"
 )
+
+# Check for PowerShell 7+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "This script requires PowerShell 7 or later. Please install PowerShell 7+ (https://aka.ms/powershell) and try again."
+    exit 1
+}
 
 # check if the setup has already been done and ask if you want to force it 
 
@@ -100,7 +101,7 @@ if ([string]::IsNullOrWhiteSpace($FrontendAppId) -or $FrontendAppId -eq "0000000
             $createDevAppScript = Join-Path $PSScriptRoot "..\Setup\CreateDevAADApp.ps1"
             if (Test-Path $createDevAppScript) { 
                 $TenantId = Read-Host "Provide your Entra Tenant Id"             
-                $FrontendAppId = & $createDevAppScript -HostingType $HostingType -WorkloadName $WorkloadName -ApplicationName $WorkloadName -TenantId $TenantId
+                $FrontendAppId = & $createDevAppScript -HostingType "FERemote" -WorkloadName $WorkloadName -ApplicationName $WorkloadName -TenantId $TenantId
             } else {
                 Write-Error "SetupDevGateway.ps1 not found at $setupDevGatewayScript"
                 exit 1
@@ -127,7 +128,7 @@ if ((Test-Path $envDevFile) -and -not $Force) {
     Write-Host "This indicates the workload has already been set up."
     Write-Host "Use -Force parameter to overwrite existing configuration, or run SetupDevEnvironment.ps1 for development setup."
     Write-Host ""
-    Write-Host "To force setup: .\SetupWorkload.ps1 -WorkloadName '$WorkloadName' -Force"
+    Write-Host "To force setup: .\SetupWorkload.ps1 -WorkloadName '$WorkloadName' -Force $true"
     exit 0
 }
 
@@ -170,7 +171,6 @@ if (Test-Path $itemsDir) {
 
 # Define placeholder replacements for different environments
 $placeholders = @{
-    "{{WORKLOAD_HOSTING_TYPE}}" = $HostingType
     "{{WORKLOAD_VERSION}}" = $WorkloadVersion
     "{{WORKLOAD_NAME}}" = $WorkloadName
     "{{ITEM_NAMES}}" = $itemNames
@@ -183,14 +183,20 @@ $environments = @{
     "dev" = @{
         "{{FRONTEND_URL}}" = "http://localhost:60006/"
         "{{LOG_LEVEL}}" = "debug"
+        "{{ENVIRONMENT_DISPLAY_NAME_SUFFIX}}" = "-dev"
+        "{{ENABLE_PLAYGROUND}}" = "true"
     }
     "test" = @{
-        "{{FRONTEND_URL}}" = "https://your-staging-url.azurestaticapps.net/"
+        "{{FRONTEND_URL}}" = "https://test-fe.yourappdomain.com/"
         "{{LOG_LEVEL}}" = "info"
+        "{{ENVIRONMENT_DISPLAY_NAME_SUFFIX}}" = "-test"
+        "{{ENABLE_PLAYGROUND}}" = "true"
     }
     "prod" = @{
-        "{{FRONTEND_URL}}" = "https://your-production-url.azurestaticapps.net/"
+        "{{FRONTEND_URL}}" = "https://prod-fe.yourappdomain.com/"
         "{{LOG_LEVEL}}" = "warn"
+        "{{ENVIRONMENT_DISPLAY_NAME_SUFFIX}}" = ""
+        "{{ENABLE_PLAYGROUND}}" = "false"
     }
 }
 

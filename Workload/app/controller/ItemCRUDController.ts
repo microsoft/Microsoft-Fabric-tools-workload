@@ -56,7 +56,7 @@ export async function callGetItem(
 
         return item;
     } catch (exception) {
-        console.error(`Failed locating item with ObjectID ${itemId}`, exception);
+        console.error("Failed locating item with ObjectID %s", itemId, exception);
         return undefined;
     }
 }
@@ -207,7 +207,7 @@ export async function callUpdateItemDefinition(
             updateMetadata: updateMetadata
         });
     } catch (exception) {
-        console.error(`Failed updating Item definition ${itemId}`, exception);
+        console.error("Failed updating Item definition %s", itemId, exception);
         return undefined
     }
 }
@@ -229,10 +229,10 @@ export async function callGetItemDefinition(
         const itemDefinition: GetItemDefinitionResult = await workloadClient.itemCrud.getItemDefinition({
             itemId: itemId,
         });
-        console.log(`Successfully fetched item definition for item ${itemId}: ${itemDefinition}`);
+        console.log("Successfully fetched item definition for item %s: %o", itemId, itemDefinition);
         return itemDefinition;
     } catch (exception) {
-        console.error(`Failed getting Item definition ${itemId}`, exception);
+        console.error("Failed getting Item definition %s", itemId, exception);
         return undefined;
     }
 }

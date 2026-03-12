@@ -1,7 +1,7 @@
 import React from "react";
 import { PageProps } from '../../App';
-import { 
-  Ribbon, 
+import {
+  Ribbon,
   RibbonAction,
   RibbonActionButton,
   createSaveAction,
@@ -36,17 +36,16 @@ export interface HelloWorldItemRibbonProps extends PageProps {
  */
 export function HelloWorldItemRibbon(props: HelloWorldItemRibbonProps) {
   const { viewContext } = props;
-  
+
   // Use the action factories for automatic translation and consistent styling
   const saveAction = createSaveAction(
     props.saveItemCallback,
     !props.isSaveButtonEnabled
   );
-  
+
   const settingsAction = createSettingsAction(
     props.openSettingsCallback
   );
-  
 
   const ribbonActions: RibbonActionButton[] = [
     // Uncoment when you want to see how the action looks

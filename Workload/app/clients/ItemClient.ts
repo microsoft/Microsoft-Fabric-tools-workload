@@ -7,6 +7,9 @@ import {
   UpdateItemRequest,
   ItemDefinitionResponse,
   UpdateItemDefinitionRequest,
+  MoveItemRequest,
+  BulkMoveItemsRequest,
+  MovedItems,
   PaginatedResponse,
   AsyncOperationIndicator
 } from "./FabricPlatformTypes";
@@ -209,6 +212,27 @@ export class ItemClient extends FabricPlatformClient {
     const operationsClient = new LongRunningOperationsClient(this.workloadClient);    
     return await operationsClient.waitForSuccessAndGetResult(response);
 
+  }
+
+  /**
+   * Moves an item to a folder within the same workspace
+   * @param workspaceId The workspace ID
+   * @param itemId The item ID
+   * @param request MoveItemRequest
+   * @returns Promise<MovedItems>
+   */
+  async moveItem(workspaceId: string, itemId: string, request: MoveItemRequest): Promise<MovedItems> {
+    return this.post<MovedItems>(`/workspaces/${workspaceId}/items/${itemId}/move`, request);
+  }
+
+  /**
+   * Moves multiple items to a folder within the same workspace
+   * @param workspaceId The workspace ID
+   * @param request BulkMoveItemsRequest
+   * @returns Promise<MovedItems>
+   */
+  async bulkMoveItems(workspaceId: string, request: BulkMoveItemsRequest): Promise<MovedItems> {
+    return this.post<MovedItems>(`/workspaces/${workspaceId}/items/bulkMove`, request);
   }
 
   // ============================

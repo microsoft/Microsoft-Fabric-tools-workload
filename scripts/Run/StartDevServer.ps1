@@ -1,9 +1,4 @@
 ################################################
-# Make sure Manifest is built
-################################################
-# Not needed any more as this is now build as part of the nmp start commands 
-
-################################################
 # Starting the DevServer
 ################################################
 Write-Host ""
