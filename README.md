@@ -52,9 +52,9 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 
 ## Latest Release
 
-📋 **[v2025.11 - Standardized Base Components](docs/ReleaseNotes/2025/v2025.11.md)**
+📋 **[v2026.3 - Cloud Shell Item & Toolkit v2026.03](docs/ReleaseNotes/2026/v2026.3.md)**
 
-This release introduces comprehensive standardized base components, SCSS architecture improvements, and enhanced HelloWorld reference implementation. [View all release notes →](docs/ReleaseNotes/)
+This release introduces the **Cloud Shell Item** - a comprehensive interactive terminal and script management interface with parameterized execution, variable picker integration, and Spark batch job support. Includes upstream Fabric Extensibility Toolkit updates v2026.01 and v2026.03. [View all release notes →](docs/ReleaseNotes/)
 
 > [!NOTE]
 > For comprehensive information about Microsoft Fabric, workloads, and items, please refer to the **[official Fabric Extensibility Toolkit repository](https://github.com/microsoft/fabric-extensibility-toolkit)** and the [Microsoft Fabric documentation](https://learn.microsoft.com/fabric/extensibility-toolkit).
