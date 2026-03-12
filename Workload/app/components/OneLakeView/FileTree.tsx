@@ -3,6 +3,7 @@ import { Document20Regular, FolderRegular, Delete20Regular, FolderAdd20Regular, 
 import { Tree, TreeItem, TreeItemLayout, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import { FileMetadata, OneLakeViewFilesTreeProps } from "./OneLakeViewModel";
 import { getShortcutContents } from "./OneLakeViewController";
+import { useTranslation } from "react-i18next";
 
 interface TreeNode {
     metadata: FileMetadata;
@@ -14,7 +15,8 @@ interface TreeNode {
 type FolderMap = Map<string, TreeNode>;
 
 export function FileTree(props: OneLakeViewFilesTreeProps) {
-    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback, onCreateFolderCallback, onCreateShortcutCallback, workloadClient, workspaceId, itemId, mode} = props;
+    const { t } = useTranslation();
+    const {allFilesInItem: allFilesInOneLake, selectedFilePath, onSelectFileCallback, onDeleteFileCallback, onDeleteFolderCallback: onDeleteShortcutCallback, onCreateFolderCallback, onCreateShortcutCallback, workloadClient, workspaceId, itemId, mode} = props;
     const [openMenu, setOpenMenu] = useState<string | null>(null);
     const [expandedShortcuts, setExpandedShortcuts] = useState<Set<string>>(new Set());
     const [shortcutContents, setShortcutContents] = useState<Map<string, FileMetadata[]>>(new Map());
@@ -69,11 +71,11 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
             
             // If it's a directory, store it in our folders map for later reference
             if (metadata.isDirectory) {
-                folders.set(metadata.path, node);
+                folders.set(metadata.relativePath, node);
             }
 
             // Add to parent folder or root
-            const segments = metadata.path.split('/').filter(s => s);
+            const segments = metadata.relativePath.split('/').filter(s => s);
             if (segments.length > 1) {
                 const parentPath = segments.slice(0, -1).join('/');
                 const parent = folders.get(parentPath);
@@ -109,7 +111,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                     // Adjust the path to be relative to the shortcut
                     const adjustedItem: FileMetadata = {
                         ...contentItem,
-                        path: shortcutPath + '/' + contentItem.path
+                        relativePath: shortcutPath + '/' + contentItem.relativePath
                     };
                     const childNode: TreeNode = {
                         metadata: adjustedItem,
@@ -142,7 +144,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
     const handleCreateFolder = async (metadata: FileMetadata) => {
         if (onCreateFolderCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
+            const fullPath = metadata ? metadata.relativePath : "Files";
             await onCreateFolderCallback(fullPath);
         }
     };
@@ -150,23 +152,20 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
     const handleCreateShortcut = async (metadata: FileMetadata) => {
         if (onCreateShortcutCallback) {
             // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
+           const fullPath = metadata ? metadata.relativePath : "Files";
             await onCreateShortcutCallback(fullPath);
         }
     };
 
     const handleDeleteFile = async (metadata: FileMetadata) => {
-        if (onDeleteFileCallback) {
-            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
-            await onDeleteFileCallback(fullPath);
+        if (onDeleteFileCallback && metadata?.relativePath) {
+            await onDeleteFileCallback(metadata.relativePath);
         }
     };
 
-    const handleDeleteFolder = async (metadata: FileMetadata) => {
-        if (onDeleteFolderCallback) {
-            // Ensure the path includes the Files prefix since FileTree is within the Files directory
-            const fullPath = metadata ? `${metadata.prefix}/${metadata.path}` : "Files";
-            await onDeleteFolderCallback(fullPath);
+    const handleDeleteShortcut = async (metadata: FileMetadata) => {
+        if (onDeleteShortcutCallback && metadata?.relativePath) {
+            await onDeleteShortcutCallback(metadata.relativePath);
         }
     };
 
@@ -178,10 +177,10 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
             const folderIcon = metadata.isShortcut ? <FolderLink20Regular /> : <FolderRegular />;
             
             return (
-                <TreeItem key={metadata.path} itemType="branch">
+                <TreeItem key={metadata.relativePath} itemType="branch">
                     <Menu 
-                        open={openMenu === metadata.path}
-                        onOpenChange={(e, data) => setOpenMenu(data.open ? metadata.path : null)}
+                        open={openMenu === metadata.relativePath}
+                        onOpenChange={(e, data) => setOpenMenu(data.open ? metadata.relativePath : null)}
                     >
                         <MenuTrigger disableButtonEnhancement>
                             <Tooltip relationship="label" content={metadata.name}>
@@ -189,19 +188,19 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                                     iconBefore={folderIcon}
                                     onClick={async (e) => {
                                         // Handle shortcut expansion on click
-                                        if (metadata.isShortcut && !expandedShortcuts.has(metadata.path)) {
+                                        if (metadata.isShortcut && !expandedShortcuts.has(metadata.relativePath)) {
                                             e.stopPropagation();
-                                            await loadShortcutContents(metadata.path);
+                                            await loadShortcutContents(metadata.relativePath);
                                         }
                                     }}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        setOpenMenu(metadata.path);
+                                        setOpenMenu(metadata.relativePath);
                                     }}
                                 >
                                     {metadata.name}
-                                    {loadingShortcuts.has(metadata.path) && (
-                                        <span style={{ marginLeft: '8px', fontSize: '12px' }}>Loading...</span>
+                                    {loadingShortcuts.has(metadata.relativePath) && (
+                                        <span style={{ marginLeft: '8px', fontSize: '12px' }}>{t('Loading...')}</span>
                                     )}
                                 </TreeItemLayout>
                             </Tooltip>
@@ -217,7 +216,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                                             setOpenMenu(null);
                                         }}
                                     >
-                                        Create Folder
+                                        {t('Create Folder')}
                                     </MenuItem>
                                 )}
                                 {onCreateShortcutCallback && !metadata.isShortcut && (
@@ -228,19 +227,19 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                                             setOpenMenu(null);
                                         }}
                                     >
-                                        Create Shortcut
+                                        {t('Create Shortcut')}
                                     </MenuItem>
                                 )}
                                 {/* Only show delete option for shortcut folders */}
-                                {onDeleteFolderCallback && metadata.isShortcut && (
+                                {onDeleteShortcutCallback && metadata.isShortcut && (
                                     <MenuItem 
                                         icon={<Delete20Regular />}
                                         onClick={() => {
-                                            handleDeleteFolder(metadata);
+                                            handleDeleteShortcut(metadata);
                                             setOpenMenu(null);
                                         }}
                                     >
-                                        Delete Shortcut
+                                        {t('Delete Shortcut')}
                                     </MenuItem>
                                 )}
                             </MenuList>
@@ -254,23 +253,23 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
         } else {
             return (
                 <TreeItem
-                    key={metadata.path}
+                    key={metadata.relativePath}
                     itemType="leaf"
                 >
                     <Menu 
-                        open={openMenu === metadata.path}
+                        open={openMenu === metadata.relativePath}
                         onOpenChange={(e, data) => {
                             // Only allow opening on right-click context menu
                             if (data.open && e.type !== 'contextmenu') {
                                 return;
                             }
-                            setOpenMenu(data.open ? metadata.path : null);
+                            setOpenMenu(data.open ? metadata.relativePath : null);
                         }}
                     >
                         <MenuTrigger disableButtonEnhancement>
                             <Tooltip relationship="label" content={metadata.name}>
                                 <TreeItemLayout
-                                    className={selectedFilePath === metadata.path ? "selected" : ""}
+                                    className={selectedFilePath === metadata.relativePath ? "selected" : ""}
                                     iconBefore={<Document20Regular />}
                                     onClick={(e) => {
                                         // Left click - select file
@@ -282,7 +281,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                                         if (mode === "edit") {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            setOpenMenu(metadata.path);
+                                            setOpenMenu(metadata.relativePath);
                                         }
                                     }}
                                 >
@@ -300,7 +299,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                                             setOpenMenu(null);
                                         }}
                                     >
-                                        Delete File
+                                        {t('Delete File')}
                                     </MenuItem>
                                 )}
                             </MenuList>
@@ -357,7 +356,7 @@ export function FileTree(props: OneLakeViewFilesTreeProps) {
                             }
                         }}
                     >
-                        {mode === "edit" ? "Right-click or click here to create a folder or shortcut" : "Files folder is empty"}
+                        {mode === "edit" ? t("Right-click or click here to create a folder or shortcut") : t("Files folder is empty")}
                     </div>
                 )
             )}

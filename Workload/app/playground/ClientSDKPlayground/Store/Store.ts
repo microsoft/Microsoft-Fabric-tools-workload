@@ -6,6 +6,7 @@ import apiDataReducer from "./apiDataSlice";
 import apiPanelSettingsReducer from "./apiPanelSettingsSlice";
 import apiAuthenticationReducer from "./apiAuthenticationSlice";
 import uiComponentsReducer from "./uiComponentsSlice";
+import variableLibraryReducer from "./variableLibrarySlice";
 
 export const ClientSDKStore = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const ClientSDKStore = configureStore({
     apiPanelSettings: apiPanelSettingsReducer,
     apiAuthentication: apiAuthenticationReducer,
     uiComponents: uiComponentsReducer,
+    variableLibrary: variableLibraryReducer,
   },
 });
 

@@ -11,15 +11,15 @@ export function TableTreeWithoutSchema(props: OneLakeViewTablesTreeProps) {
                 allTablesInOneLake.map((table) => (
                     <TreeItem 
                     key={table.name} 
-                    accessKey={table.path} 
+                    accessKey={table.relativePath} 
                     itemType="leaf" 
                     onClick={() => onSelectTableCallback(table)}
                     >
                         <Tooltip
-                        relationship="label"
-                        content={table.name}>
+                            relationship="label"
+                            content={table.name}>
                             <TreeItemLayout
-                                className={(selectedTablePath === table.path ? "selected" : "")}
+                                className={(selectedTablePath === table.relativePath ? "selected" : "")}
                                 iconBefore={<Table20Regular />}>
                                 {table.name}
                             </TreeItemLayout>

@@ -14,19 +14,19 @@ import { ItemReference } from "../../controller/ItemCRUDController";
 // ============================================================================
 
 export interface OneLakeObjectMetadata {
-    prefix: string;
+    rootFolder: string;
     name: string;
-    path: string;
+    relativePath: string;
     isShortcut?: boolean;
 }
 
 export interface TableMetadata extends OneLakeObjectMetadata {
-    prefix: "Tables";
+    rootFolder: "Tables";
     schema?: string;
 }
 
 export interface FileMetadata extends OneLakeObjectMetadata {
-    prefix: "Files";
+    rootFolder: "Files";
     isDirectory: boolean;
 }
 

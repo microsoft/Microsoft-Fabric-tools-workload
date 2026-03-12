@@ -22,6 +22,15 @@
                               </xs:sequence>
                             </xs:complexType>
                           </xs:element>
+                          <xs:element name="AADBEApp" minOccurs="0" maxOccurs="1">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="AppId" type="xs:string"/>
+                                <xs:element name="RedirectUri" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                <xs:element name="ResourceId" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
                           <xs:element name="EnableSandboxRelaxation" type="xs:boolean"/>
                           <xs:element name="Endpoints">
                             <xs:complexType>

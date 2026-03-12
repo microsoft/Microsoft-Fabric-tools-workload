@@ -38,7 +38,7 @@ $releaseDir = Resolve-Path $releaseDir
 $buildManifestPackageScript = Join-Path $PSScriptRoot "..\Build\BuildManifestPackage.ps1"
 if (Test-Path $buildManifestPackageScript) {
     $buildManifestPackageScript = (Resolve-Path $buildManifestPackageScript).Path
-    & $buildManifestPackageScript -Environment "prod"
+    & $buildManifestPackageScript -Environment $Environment
 } else {
     Write-Host "BuildManifestPackage.ps1 not found at $buildManifestPackageScript"
     exit 1
@@ -69,6 +69,15 @@ try {
     npm run build:$Environment
     if (!(Test-Path $releaseAppDir)) {
         New-Item -ItemType Directory -Path $releaseAppDir | Out-Null
+    }
+
+    # Copy the built files to the release directory
+    $buildFrontendDir = Join-Path $PSScriptRoot "..\..\build\Frontend"
+    if (Test-Path $buildFrontendDir) {
+        Copy-Item -Path "$buildFrontendDir\*" -Destination $releaseAppDir -Recurse -Force
+        Write-Host "✅ Copied app release files to $releaseAppDir" -ForegroundColor Blue
+    } else {
+        Write-Host "⚠️  Warning: Frontend build directory not found at $buildFrontendDir" -ForegroundColor Yellow
     }
 
 } finally {

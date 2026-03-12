@@ -28,18 +28,18 @@
   min-width: 400px;
   max-height: 90vh;
   max-width: 90vw;
-  background-color: white;
+  background-color: var(--colorNeutralBackground1, #ffffff);
 
   // Header area with title
   &__header {
     padding: 20px;
-    background-color: white;
-    border-bottom: 1px solid #e1dfdd;
+    background-color: var(--colorNeutralBackground1, #ffffff);
+    border-bottom: 1px solid var(--colorNeutralStroke2, #e1dfdd);
     flex-shrink: 0;
   }
 
   &__title {
-    color: #323130;
+    color: var(--colorNeutralForeground1, #323130);
     margin: 0;
   }
 
@@ -47,15 +47,15 @@
   &__content {
     flex: 1 1 auto;
     padding: 20px;
-    background-color: white;
+    background-color: var(--colorNeutralBackground1, #ffffff);
     overflow: auto;
     min-height: 60px; // Ensure minimum content space
   }
 
   // Footer area with buttons
   &__footer {
-    border-top: 1px solid #e1dfdd;
-    background-color: white;
+    border-top: 1px solid var(--colorNeutralStroke2, #e1dfdd);
+    background-color: var(--colorNeutralBackground1, #ffffff);
     padding: 8px 20px;
     display: flex;
     justify-content: flex-end;
