@@ -39,11 +39,7 @@
   }
 
   &__title {
-<<<<<<< HEAD
-    color: #323130;
-=======
     color: var(--colorNeutralForeground1, #323130);
->>>>>>> upstream-fet/main
     margin: 0;
   }
 
@@ -51,24 +47,15 @@
   &__content {
     flex: 1 1 auto;
     padding: 20px;
-<<<<<<< HEAD
-    background-color: white;
-=======
     background-color: var(--colorNeutralBackground1, #ffffff);
->>>>>>> upstream-fet/main
     overflow: auto;
     min-height: 60px; // Ensure minimum content space
   }
 
   // Footer area with buttons
   &__footer {
-<<<<<<< HEAD
-    border-top: 1px solid #e1dfdd;
-    background-color: white;
-=======
     border-top: 1px solid var(--colorNeutralStroke2, #e1dfdd);
     background-color: var(--colorNeutralBackground1, #ffffff);
->>>>>>> upstream-fet/main
     padding: 8px 20px;
     display: flex;
     justify-content: flex-end;
